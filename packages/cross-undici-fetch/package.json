@@ -1,0 +1,30 @@
+{
+  "name": "cross-undici-fetch",
+  "version": "0.0.26",
+  "description": "Cross Platform Fetch Wrapper with Key Value Cache support",
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "ardatan/w3-server",
+    "directory": "packages/fetchache"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "dist/node-ponyfill.js",
+  "browser": "dist/global-ponyfill.js",
+  "react-native": "dist/global-ponyfill.js",
+  "types": "dist/index.d.ts",
+  "denoify": {
+    "index": "dist/deno-ponyfill.ts"
+  },
+  "dependencies": {
+    "abort-controller": "^3.0.0",
+    "form-data": "^4.0.0",
+    "node-fetch": "^2.6.5",
+    "undici": "^4.9.3"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  }
+}

@@ -71,15 +71,11 @@ jobs:
       - name: Type Check
         run: yarn ts:check
   test:
-    name: Unit Test on Node ${{matrix.node-version}} (${{matrix.os}})
-    runs-on: ${{matrix.os}}
+    name: Unit Test on Node ${{matrix.node-version}}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest] # remove windows to speed up the tests
         node-version: [12, 17]
-        include:
-          - node-version: 14
-            os: windows-latest
     steps:
       - name: Checkout Master
         uses: actions/checkout@v2

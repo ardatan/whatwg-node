@@ -1,6 +1,7 @@
 import { create } from 'w3-server';
 import { createServer, Server } from 'http';
 import { Request, Response, ReadableStream, fetch } from 'cross-undici-fetch';
+import { Readable } from 'stream';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -23,18 +24,13 @@ async function compareRequest(toBeChecked: Request, expected: Request) {
 
 async function compareReadableStream(toBeChecked: ReadableStream | null, expected: BodyInit | null) {
   if (expected) {
-    const expectedReadableStream = new Response(expected).body;
-    const expectedReader = expectedReadableStream!.getReader();
-    expect(toBeChecked).toBeTruthy();
-    const toBeCheckedReader = toBeChecked!.getReader();
-    while (true) {
-      const expectedResult = await expectedReader.read();
-      if (expectedResult.done) {
-        break;
-      }
-      const toBeCheckedResult = await toBeCheckedReader.read();
-      if (expectedResult.value) {
-        expect(Buffer.from(toBeCheckedResult.value).toString()).toBe(Buffer.from(expectedResult.value).toString());
+    const expectedBody = new Response(expected).body;
+    const expectedStream = Readable.from(expectedBody as any);
+    const toBeCheckedIterator = Readable.from(toBeChecked as any)[Symbol.asyncIterator]();
+    for await (const expectedValue of expectedStream) {
+      const toBeCheckedResult = await toBeCheckedIterator.next();
+      if (expectedValue) {
+        expect(Buffer.from(toBeCheckedResult.value).toString()).toBe(Buffer.from(expectedValue).toString());
       }
     }
   }
@@ -92,7 +88,7 @@ function getRegularRequestBody() {
 }
 
 function getRegularResponseBody() {
-  return JSON.stringify({ responseFoo: 'requresponseFooestFoo' });
+  return JSON.stringify({ responseFoo: 'responseFoo' });
 }
 
 function getIncrementalRequestBody() {
@@ -100,7 +96,7 @@ function getIncrementalRequestBody() {
     async start(controller) {
       for (let i = 0; i < 2; i++) {
         await new Promise(resolve => setTimeout(resolve, 30));
-        controller.enqueue(`data: request_${i.toString()}`);
+        controller.enqueue(`data: request_${i.toString()}\n`);
       }
       controller.close();
     },
@@ -112,7 +108,7 @@ function getIncrementalResponseBody() {
     async start(controller) {
       for (let i = 0; i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 30));
-        controller.enqueue(`data: response_${i.toString()}`);
+        controller.enqueue(`data: response_${i.toString()}\n`);
       }
       controller.close();
     },
@@ -123,7 +119,6 @@ describe('Test', () => {
   afterEach(async () => {
     await new Promise(resolve => httpServer?.close(resolve));
   });
-
   [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
     it(`should handle regular requests with ${method}`, async () => {
       const port = 3000;
@@ -154,34 +149,6 @@ describe('Test', () => {
         port,
       });
     });
-    it(`should handle incremental requests with ${method}`, async () => {
-      const port = 3000;
-      const requestInit: RequestInit = {
-        method,
-        headers: {
-          accept: 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      };
-      if (methodsWithBody.includes(method)) {
-        requestInit.body = getIncrementalRequestBody();
-      }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
-      const expectedResponse = new Response(getRegularResponseBody(), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      });
-      await runTestForRequestAndResponse({
-        expectedRequest,
-        getRequestBody: getIncrementalRequestBody,
-        expectedResponse,
-        getResponseBody: getRegularResponseBody,
-        port,
-      });
-    });
     it(`should handle incremental responses with ${method}`, async () => {
       const port = 3000;
       const requestInit: RequestInit = {
@@ -207,6 +174,36 @@ describe('Test', () => {
         getRequestBody: getRegularRequestBody,
         expectedResponse,
         getResponseBody: getIncrementalResponseBody,
+        port,
+      });
+    });
+  });
+  methodsWithBody.forEach(method => {
+    it(`should handle incremental requests with ${method}`, async () => {
+      const port = 3000;
+      const requestInit: RequestInit = {
+        method,
+        headers: {
+          accept: 'application/json',
+          'random-header': Date.now().toString(),
+        },
+      };
+      if (methodsWithBody.includes(method)) {
+        requestInit.body = getIncrementalRequestBody();
+      }
+      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
+      const expectedResponse = new Response(getRegularResponseBody(), {
+        status: 200,
+        headers: {
+          'content-type': 'application/json',
+          'random-header': Date.now().toString(),
+        },
+      });
+      await runTestForRequestAndResponse({
+        expectedRequest,
+        getRequestBody: getIncrementalRequestBody,
+        expectedResponse,
+        getResponseBody: getRegularResponseBody,
         port,
       });
     });

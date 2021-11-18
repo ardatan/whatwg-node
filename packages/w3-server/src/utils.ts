@@ -42,18 +42,30 @@ export async function sendToServerResponse(response: Response, serverResponse: S
   if (responseBody == null) {
     throw new Error('Response body is not supported');
   }
-  const reader = responseBody.getReader();
-  while (true) {
-    const { done, value } = await reader.read();
-    if (value) {
-      serverResponse.write(value);
+  if (responseBody instanceof Uint8Array) {
+    serverResponse.write(responseBody);
+    serverResponse.end();
+  } else if (Symbol.asyncIterator in responseBody) {
+    for await (const chunk of responseBody as any) {
+      if (chunk) {
+        serverResponse.write(chunk);
+      }
     }
-    if (done) {
-      serverResponse.end();
-      break;
+    serverResponse.end();
+  } else if ('getReader' in responseBody) {
+    const reader = responseBody.getReader();
+    serverResponse.on('close', () => {
+      reader.releaseLock();
+    });
+    while (true) {
+      const { done, value } = await reader.read();
+      if (value) {
+        serverResponse.write(value);
+      }
+      if (done) {
+        serverResponse.end();
+        break;
+      }
     }
   }
-  serverResponse.on('close', () => {
-    reader.releaseLock();
-  });
 }

@@ -1,12 +1,12 @@
 {
-  "name": "w3-server",
-  "version": "0.0.0",
-  "description": "Fetch API compliant HTTP Server adapter",
+  "name": "fetchache",
+  "version": "0.1.0",
+  "description": "Cross Platform Fetch Wrapper with Key Value Cache support",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
     "url": "ardatan/w3-server",
-    "directory": "packages/w3-server"
+    "directory": "packages/fetchache"
   },
   "license": "MIT",
   "sideEffects": false,
@@ -29,12 +29,15 @@
   "buildOptions": {
     "input": "./src/index.ts"
   },
+  "dependencies": {
+    "http-cache-semantics": "^4.1.0",
+    "tslib": "^2.3.1"
+  },
+  "devDependencies": {
+    "@types/http-cache-semantics": "4.0.0"
+  },
   "publishConfig": {
     "access": "public",
     "directory": "dist"
-  },
-  "dependencies": {
-    "cross-undici-fetch": "^0.0.26",
-    "tslib": "^2.3.1"
   }
 }
