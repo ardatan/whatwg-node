@@ -1,15 +1,14 @@
-export class FetchEventImpl extends Event implements FetchEvent {
+export class FetchEvent {
   clientId: string;
   handled: Promise<undefined>;
   request: Request;
   resultingClientId: string;
   constructor(
-    type: "fetch",
+    _type: 'fetch',
     eventInitDict: FetchEventInit,
     private onResponse: (response: Response) => Promise<void> | void,
     private onError: (error: any) => Promise<void> | void
   ) {
-    super(type, eventInitDict);
     this.handled = Promise.resolve(undefined);
     this.clientId = eventInitDict.clientId || Date.now().toString();
     this.resultingClientId = eventInitDict.resultingClientId || this.clientId;
@@ -20,11 +19,11 @@ export class FetchEventImpl extends Event implements FetchEvent {
 
   respondWith(response$: Response | PromiseLike<Response>): void {
     Promise.resolve(response$)
-      .then(async (response) => {
+      .then(async response => {
         await Promise.all(this.waitUntil$);
         return this.onResponse?.(response);
       })
-      .catch((error) => {
+      .catch(error => {
         return this.onError?.(error);
       });
   }

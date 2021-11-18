@@ -1,22 +1,18 @@
 /* eslint-disable no-console */
-const semver = require("semver");
-const cp = require("child_process");
-const { basename } = require("path");
+const semver = require('semver');
+const cp = require('child_process');
+const { basename } = require('path');
 
-const { read: readConfig } = require("@changesets/config");
-const readChangesets = require("@changesets/read").default;
-const assembleReleasePlan =
-  require("@changesets/assemble-release-plan").default;
-const applyReleasePlan = require("@changesets/apply-release-plan").default;
-const { getPackages } = require("@manypkg/get-packages");
+const { read: readConfig } = require('@changesets/config');
+const readChangesets = require('@changesets/read').default;
+const assembleReleasePlan = require('@changesets/assemble-release-plan').default;
+const applyReleasePlan = require('@changesets/apply-release-plan').default;
+const { getPackages } = require('@manypkg/get-packages');
 
 function getNewVersion(version, type) {
   let npmVersionSuffix = process.env.NPM_VERSION_SUFFIX;
   if (!npmVersionSuffix) {
-    const gitHash = cp
-      .spawnSync("git", ["rev-parse", "--short", "HEAD"])
-      .stdout.toString()
-      .trim();
+    const gitHash = cp.spawnSync('git', ['rev-parse', '--short', 'HEAD']).stdout.toString().trim();
     npmVersionSuffix = `alpha-${gitHash}`;
   }
   return semver.inc(version, `pre${type}`, true, npmVersionSuffix);
@@ -24,18 +20,16 @@ function getNewVersion(version, type) {
 
 function getRelevantChangesets(baseBranch) {
   const comparePoint = cp
-    .spawnSync("git", ["merge-base", `origin/${baseBranch}`, "HEAD"])
+    .spawnSync('git', ['merge-base', `origin/${baseBranch}`, 'HEAD'])
     .stdout.toString()
     .trim();
   const listModifiedFiles = cp
-    .spawnSync("git", ["diff", "--name-only", comparePoint])
+    .spawnSync('git', ['diff', '--name-only', comparePoint])
     .stdout.toString()
     .trim()
-    .split("\n");
+    .split('\n');
 
-  return listModifiedFiles
-    .filter((f) => f.startsWith(".changeset"))
-    .map((f) => basename(f, ".md"));
+  return listModifiedFiles.filter(f => f.startsWith('.changeset')).map(f => basename(f, '.md'));
 }
 
 async function updateVersions() {
@@ -45,34 +39,22 @@ async function updateVersions() {
   const modifiedChangesets = getRelevantChangesets(config.baseBranch);
   const allChangesets = await readChangesets(cwd);
   const changesets =
-    process.env.ON_DEMAND === "yes"
+    process.env.ON_DEMAND === 'yes'
       ? allChangesets
-      : allChangesets.filter((change) =>
-          modifiedChangesets.includes(change.id)
-        );
+      : allChangesets.filter(change => modifiedChangesets.includes(change.id));
 
   if (changesets.length === 0) {
-    console.warn(
-      `Unable to find any relevant package for canary publishing. Please make sure changesets exists!`
-    );
+    console.warn(`Unable to find any relevant package for canary publishing. Please make sure changesets exists!`);
     process.exit(1);
   } else {
-    const releasePlan = assembleReleasePlan(
-      changesets,
-      packages,
-      config,
-      [],
-      false
-    );
+    const releasePlan = assembleReleasePlan(changesets, packages, config, [], false);
 
     if (releasePlan.releases.length === 0) {
-      console.warn(
-        `Unable to find any relevant package for canary releasing. Please make sure changesets exists!`
-      );
+      console.warn(`Unable to find any relevant package for canary releasing. Please make sure changesets exists!`);
       process.exit(1);
     } else {
       for (const release of releasePlan.releases) {
-        if (release.type !== "none") {
+        if (release.type !== 'none') {
           release.newVersion = getNewVersion(release.oldVersion, release.type);
         }
       }
@@ -95,7 +77,7 @@ updateVersions()
   .then(() => {
     console.info(`Done!`);
   })
-  .catch((err) => {
+  .catch(err => {
     console.error(err);
     process.exit(1);
   });

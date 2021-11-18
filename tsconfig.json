@@ -29,6 +29,5 @@
       "w3-server": ["packages/w3-server/src/index.ts"]
     }
   },
-  "include": ["packages"],
   "exclude": ["**/node_modules", "**/dist", "**/test-files"]
 }

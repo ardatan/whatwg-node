@@ -1,31 +1,30 @@
-import { IncomingMessage, ServerResponse } from "http";
-import { Response } from "cross-undici-fetch";
-import { FetchEventImpl } from "./FetchEvent";
-import { createRequestFromIncomingMessage, sendToServerResponse } from "./utils";
+import { IncomingMessage, ServerResponse } from 'http';
+import { Response } from 'cross-undici-fetch';
+import { FetchEvent } from './FetchEvent';
+import { createRequestFromIncomingMessage, sendToServerResponse } from './utils';
+import { EventEmitter } from 'events';
 
 export function create() {
-    const eventTarget = new EventTarget();
-    return {
-        requestListener(
-            incomingMessage: IncomingMessage,
-            serverResponse: ServerResponse
-        ) {
-            const request = createRequestFromIncomingMessage(incomingMessage);
-            const fetchEvent = new FetchEventImpl(
-                "fetch",
-                {
-                    request,
-                },
-                (response) => sendToServerResponse(response, serverResponse),
-                (error) => {
-                    console.error(error);
-                    return sendToServerResponse(new Response(error.message, { status: 500 }), serverResponse);
-                }
-            );
-            eventTarget.dispatchEvent(fetchEvent);
+  const eventEmitter = new EventEmitter();
+  eventEmitter.setMaxListeners(Infinity);
+  return {
+    requestListener(incomingMessage: IncomingMessage, serverResponse: ServerResponse) {
+      const request = createRequestFromIncomingMessage(incomingMessage);
+      const fetchEvent = new FetchEvent(
+        'fetch',
+        {
+          request,
         },
-        addEventListener(listener: (event: FetchEvent) => void) {
-            return eventTarget.addEventListener("fetch", listener as EventListener);
-        },
-    };
+        response => sendToServerResponse(response, serverResponse),
+        error => {
+          console.error(error);
+          return sendToServerResponse(new Response(error.message, { status: 500 }), serverResponse);
+        }
+      );
+      eventEmitter.emit('fetch', fetchEvent);
+    },
+    addEventListener(listener: (event: FetchEvent) => void) {
+      return eventEmitter.addListener('fetch', listener);
+    },
+  };
 }
