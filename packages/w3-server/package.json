@@ -1,0 +1,40 @@
+{
+  "name": "w3-server",
+  "version": "0.0.0",
+  "description": "Fetch API compliant HTTP Server adapter",
+  "repository": {
+    "type": "git",
+    "url": "ardatan/w3-server",
+    "directory": "packages/w3-server"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./*": {
+      "require": "./dist/*.js",
+      "import": "./dist/*.mjs"
+    }
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  },
+  "buildOptions": {
+    "input": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  },
+  "dependencies": {
+    "@types/node": "16.11.7",
+    "cross-undici-fetch": "0.0.26",
+    "tslib": "2.3.1"
+  }
+}
