@@ -68,6 +68,51 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
     return this._readable.removeListener(...args);
   }
 
+  const parseMultipartData = require('parse-multipart-data');
+
+  undici.File.prototype.createReadStream = function createReadStream() {
+    return streams.Readable.from(this.stream());
+  }
+
+  undici.File.prototype.then = function createReadStream() {
+    return this;
+  }
+  
+  Object.defineProperties(undici.File.prototype, {
+    filename: {
+      get: () => this.name,
+    },
+    mimetype: {
+      get: () => this.type,
+    },
+  })
+
+  const existingFormDataMethod = undici.Request.prototype.formData;
+  undici.Request.prototype.formData = async function formData(...args) {
+    const contentType = this.headers.get('Content-Type');
+    
+    if (/multipart\/form-data/.test(contentType)) {
+      const formData = new exports.FormData();
+      const boundary = parseMultipartData.getBoundary(contentType);
+
+      if (this.body) {
+        const arrayBuffer = await this.arrayBuffer();
+        const allParts = parseMultipartData.parse(Buffer.from(arrayBuffer), boundary);
+        for (const part of allParts) {
+          if (part.type) {
+            formData.append(part.name, new undici.File([part.data], part.filename, { type: part.type }), part.filename);
+          } else {
+            formData.append(part.name, part.data.toString('utf8'));
+          }
+        }
+        return formData
+      }
+
+    } else {
+      return existingFormDataMethod.apply(this, args);
+    }
+  }
+
   // Needed for TypeScript consumers without esModuleInterop.
   exports.default = fetch;
 } else {
