@@ -12,8 +12,8 @@ module.exports = class ReadableStream extends Readable {
       error: (e) => this.destroy(e),
       close: () => this.push(null),
     };
-    this.underlyingSource.start?.(this.controller);
-    this.on("close", () => this.underlyingSource.cancel?.(this.controller));
+    this.underlyingSource.start && this.underlyingSource.start(this.controller);
+    this.on("close", () => this.underlyingSource.cancel && this.underlyingSource.cancel(this.controller));
   }
 
   get locked() {
@@ -28,9 +28,9 @@ module.exports = class ReadableStream extends Readable {
     const asyncIterator = this[Symbol.asyncIterator]();
     return {
       read: () => asyncIterator.next(),
-      releaseLock: () => asyncIterator.return?.(),
-      close: () => asyncIterator.return?.(),
-      cancel: e => e ? asyncIterator?.throw(e) : asyncIterator.return?.(),
+      releaseLock: () => asyncIterator.return && asyncIterator.return(),
+      close: () => asyncIterator.return && asyncIterator.return(),
+      cancel: e => e ? (asyncIterator.throw && asyncIterator.throw()) : (asyncIterator.return && asyncIterator.return()),
     };
   }
 

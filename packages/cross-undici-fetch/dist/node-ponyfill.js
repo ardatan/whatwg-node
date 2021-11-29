@@ -68,7 +68,7 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
     return this._readable.removeListener(...args);
   }
 
-  const parseMultipartData = require('parse-multipart-data');
+  const parseMultipartData = require('./multipart');
 
   undici.File.prototype.createReadStream = function createReadStream() {
     return streams.Readable.from(this.stream());

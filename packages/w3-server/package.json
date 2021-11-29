@@ -34,7 +34,7 @@
     "directory": "dist"
   },
   "dependencies": {
-    "cross-undici-fetch": "^0.0.26",
+    "cross-undici-fetch": "^0.1.0",
     "tslib": "^2.3.1"
   }
 }
