@@ -45,6 +45,7 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   exports.AbortController = globalThis.AbortController;
 
   const streamsWeb = require("stream/web");
+  const streams = require("stream");
 
   exports.ReadableStream = streamsWeb.ReadableStream;
   exports.ReadableStream.prototype.pipe = function pipe(...args) {
@@ -68,8 +69,6 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
     return this._readable.removeListener(...args);
   }
 
-  const parseMultipartData = require('./multipart');
-
   undici.File.prototype.createReadStream = function createReadStream() {
     return streams.Readable.from(this.stream());
   }
@@ -87,31 +86,8 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
     },
   })
 
-  const existingFormDataMethod = undici.Request.prototype.formData;
-  undici.Request.prototype.formData = async function formData(...args) {
-    const contentType = this.headers.get('Content-Type');
-    
-    if (/multipart\/form-data/.test(contentType)) {
-      const formData = new exports.FormData();
-      const boundary = parseMultipartData.getBoundary(contentType);
-
-      if (this.body) {
-        const arrayBuffer = await this.arrayBuffer();
-        const allParts = parseMultipartData.parse(Buffer.from(arrayBuffer), boundary);
-        for (const part of allParts) {
-          if (part.type) {
-            formData.append(part.name, new undici.File([part.data], part.filename, { type: part.type }), part.filename);
-          } else {
-            formData.append(part.name, part.data.toString('utf8'));
-          }
-        }
-        return formData
-      }
-
-    } else {
-      return existingFormDataMethod.apply(this, args);
-    }
-  }
+  const addFormDataToRequest = require('./add-formdata-to-request');
+  addFormDataToRequest(undici.Request, undici.File, undici.FormData);
 
   // Needed for TypeScript consumers without esModuleInterop.
   exports.default = fetch;
@@ -137,19 +113,37 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   module.exports = exports = fetch;
   exports.fetch = fetch;
   exports.Headers = nodeFetch.Headers;
-  exports.Request = nodeFetch.Request;
+  const formDataEncoderModule = require("form-data-encoder");
+  const streams = require("stream");
+  exports.Request = function(info, init) {
+    if (info instanceof nodeFetch.Request) {
+      return info.clone();
+    }
+    if (init && init.body && init.body instanceof formDataModule.FormData){
+      init.headers = new nodeFetch.Headers(init.headers || {});
+      const encoder = new formDataEncoderModule.FormDataEncoder(init.body)
+      for (const headerKey in encoder.headers) {
+        init.headers.set(headerKey, encoder.headers[headerKey])
+      }
+      init.body = streams.Readable.from(encoder.encode());
+    }
+    return new nodeFetch.Request(info, init);
+  };
   exports.Response = nodeFetch.Response;
 
   const abortControllerModule = require("abort-controller");
   exports.AbortController =
     abortControllerModule.default || abortControllerModule;
 
-  const formDataModule = require("form-data");
-  exports.FormData = formDataModule.default || formDataModule;
+  const formDataModule = require("formdata-node");
+  exports.FormData = formDataModule.FormData
 
   const readableStreamModule = require("./readable-stream");
   exports.ReadableStream = readableStreamModule.default || readableStreamModule;
 
   // Needed for TypeScript consumers without esModuleInterop.
   exports.default = fetch;
+
+  const addFormDataToRequest = require('./add-formdata-to-request');
+  addFormDataToRequest(nodeFetch.Request, formDataModule.File, exports.FormData);
 }
