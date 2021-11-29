@@ -47,6 +47,26 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   const streamsWeb = require("stream/web");
 
   exports.ReadableStream = streamsWeb.ReadableStream;
+  exports.ReadableStream.prototype.pipe = function pipe(...args) {
+    if (!this._readable) {
+      this._readable = streams.Readable.from(this);
+    }
+    return this._readable.pipe(...args);
+  }
+
+  exports.ReadableStream.prototype.on = function on(...args) {
+    if (!this._readable) {
+      this._readable = streams.Readable.from(this);
+    }
+    return this._readable.on(...args);
+  }
+
+  exports.ReadableStream.prototype.removeListener = function on(...args) {
+    if (!this._readable) {
+      this._readable = streams.Readable.from(this);
+    }
+    return this._readable.removeListener(...args);
+  }
 
   // Needed for TypeScript consumers without esModuleInterop.
   exports.default = fetch;

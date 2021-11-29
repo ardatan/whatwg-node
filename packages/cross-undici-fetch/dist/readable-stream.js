@@ -25,15 +25,12 @@ module.exports = class ReadableStream extends Readable {
   }
 
   getReader() {
+    const asyncIterator = this[Symbol.asyncIterator]();
     return {
-      read: () =>
-        new Promise((resolve) => {
-          this.once("data", (value) => resolve({ value, done: false }));
-          this.once("close", () => resolve({ done: true }));
-        }),
-      releaseLock: () => this.push(null),
-      close: () => this.push(null),
-      cancel: (e) => this.destroy(e),
+      read: () => asyncIterator.next(),
+      releaseLock: () => asyncIterator.return?.(),
+      close: () => asyncIterator.return?.(),
+      cancel: e => e ? asyncIterator?.throw(e) : asyncIterator.return?.(),
     };
   }
 
