@@ -1,6 +1,6 @@
 {
   "name": "w3-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Fetch API compliant HTTP Server adapter",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
@@ -34,7 +34,7 @@
     "directory": "dist"
   },
   "dependencies": {
-    "cross-undici-fetch": "^0.0.26",
+    "cross-undici-fetch": "^0.1.0",
     "tslib": "^2.3.1"
   }
 }
