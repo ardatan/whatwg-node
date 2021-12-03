@@ -11,38 +11,36 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
 
   const fetch = function (requestOrUrl, options) {
     if (typeof requestOrUrl === "string") {
-      return fetch(new Request(requestOrUrl, options));
+      return fetch(new exports.Request(requestOrUrl, options));
     }
-    Object.defineProperty(requestOrUrl, 'headers', {
-      value: requestOrUrl.headers || new undici.Headers({})
-    });
-    requestOrUrl.headers.delete("connection");
     return undici.fetch(requestOrUrl);
   };
-
-  function Request(requestOrUrl, options) {
-    if (typeof requestOrUrl === "string") {
-      options = options || {};
-      options.headers = options.headers || {};
-      delete options.headers.connection;
-      delete options.headers.Connection;
-      return new undici.Request(requestOrUrl, options);
-    }
-    const newRequestObj = requestOrUrl.clone();
-    newRequestObj.headers = newRequestObj.headers || new undici.Headers({});
-    newRequestObj.headers.delete("connection");
-    return newRequestObj;
-  }
 
   fetch.ponyfill = true;
 
   module.exports = exports = fetch;
   exports.fetch = fetch;
   exports.Headers = undici.Headers;
-  exports.Request = Request;
+  exports.Request = function Request(requestOrUrl, options) {
+    if (typeof requestOrUrl === "string") {
+      options = options || {};
+      options.headers = new exports.Headers(options.headers || {});
+      options.headers.delete("connection");
+      return new undici.Request(requestOrUrl, options);
+    }
+    const newRequestObj = requestOrUrl.clone();
+    Object.defineProperty(newRequestObj, 'headers', {
+      value: newRequestObj.headers || new exports.Headers({})
+    });
+    newRequestObj.headers.delete("connection");
+    return newRequestObj;
+  };
   exports.Response = undici.Response;
   exports.FormData = undici.FormData;
   exports.AbortController = globalThis.AbortController;
+
+  const bufferModule = require('buffer')
+  exports.Blob = bufferModule.Blob;
 
   const streamsWeb = require("stream/web");
   const streams = require("stream");
@@ -69,14 +67,12 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
     return this._readable.removeListener(...args);
   }
 
+  exports.File = undici.File
+
   undici.File.prototype.createReadStream = function createReadStream() {
     return streams.Readable.from(this.stream());
   }
 
-  undici.File.prototype.then = function createReadStream() {
-    return this;
-  }
-  
   Object.defineProperties(undici.File.prototype, {
     filename: {
       get: () => this.name,
@@ -97,14 +93,8 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
 
   const fetch = function (requestOrUrl, options) {
     if (typeof requestOrUrl === "string") {
-      // Support schemaless URIs on the server for parity with the browser.
-      // Ex: //github.com/ -> https://github.com/
-      if (/^\/\//.test(requestOrUrl)) {
-        requestOrUrl = "https:" + requestOrUrl;
-      }
-      return fetch(new nodeFetch.Request(requestOrUrl, options));
+      return fetch(new exports.Request(requestOrUrl, options));
     }
-    requestOrUrl.headers.set("Connection", "keep-alive");
     return realFetch(requestOrUrl);
   };
 
@@ -115,19 +105,27 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   exports.Headers = nodeFetch.Headers;
   const formDataEncoderModule = require("form-data-encoder");
   const streams = require("stream");
-  exports.Request = function(info, init) {
-    if (info instanceof nodeFetch.Request) {
-      return info.clone();
-    }
-    if (init && init.body && init.body instanceof formDataModule.FormData){
-      init.headers = new nodeFetch.Headers(init.headers || {});
-      const encoder = new formDataEncoderModule.FormDataEncoder(init.body)
-      for (const headerKey in encoder.headers) {
-        init.headers.set(headerKey, encoder.headers[headerKey])
+  exports.Request = function (requestOrUrl, options) {
+    if (typeof requestOrUrl === "string") {
+      // Support schemaless URIs on the server for parity with the browser.
+      // Ex: //github.com/ -> https://github.com/
+      if (/^\/\//.test(requestOrUrl)) {
+        requestOrUrl = "https:" + requestOrUrl;
       }
-      init.body = streams.Readable.from(encoder.encode());
+      options = options || {};
+      options.headers = new nodeFetch.Headers(options.headers || {});
+      options.headers.set('Connection', 'keep-alive');
+      if (options.body instanceof formDataModule.FormData) {
+        options.headers = new nodeFetch.Headers(options.headers || {});
+        const encoder = new formDataEncoderModule.FormDataEncoder(options.body)
+        for (const headerKey in encoder.headers) {
+          options.headers.set(headerKey, encoder.headers[headerKey])
+        }
+        options.body = streams.Readable.from(encoder.encode());
+      }
+      return new nodeFetch.Request(requestOrUrl, options);
     }
-    return new nodeFetch.Request(info, init);
+    return requestOrUrl.clone();
   };
   exports.Response = nodeFetch.Response;
 
@@ -137,6 +135,8 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
 
   const formDataModule = require("formdata-node");
   exports.FormData = formDataModule.FormData
+  exports.Blob = formDataModule.Blob
+  exports.File = formDataModule.File
 
   const readableStreamModule = require("./readable-stream");
   exports.ReadableStream = readableStreamModule.default || readableStreamModule;

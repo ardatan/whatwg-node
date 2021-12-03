@@ -5,6 +5,8 @@ const Headers = globalThis.Headers;
 const FormData = globalThis.FormData;
 const AbortController = globalThis.AbortController;
 const ReadableStream = globalThis.ReadableStream;
+const Blob = globalThis.Blob;
+const File = globalThis.File;
 
 export default fetch;
 export {
@@ -15,4 +17,6 @@ export {
   FormData,
   AbortController,
   ReadableStream,
+  Blob,
+  File,
 };

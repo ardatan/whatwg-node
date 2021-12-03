@@ -7,3 +7,5 @@ module.exports.Response = global.Response;
 module.exports.FormData = global.FormData;
 module.exports.AbortController = global.AbortController;
 module.exports.ReadableStream = global.ReadableStream;
+module.exports.Blob = global.Blob;
+module.exports.File = global.File;
