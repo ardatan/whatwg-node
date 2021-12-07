@@ -32,15 +32,17 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
       return storeResponseAndReturnClone(cache, response, policy, cacheKey);
     }
 
-    const { policy: policyRaw, body } = typeof entry === 'string' ? JSON.parse(entry) : entry;
+    const { policy: policyRaw, bytes } = typeof entry === 'string' ? JSON.parse(entry) : entry;
 
     const policy = CachePolicy.fromObject(policyRaw);
     // Remove url from the policy, because otherwise it would never match a request with a custom cache key
     (policy as any)._url = undefined;
 
+    const bodyInit = new Uint8Array(bytes);
+
     if (policy.satisfiesWithoutRevalidation(policyRequestFrom(request))) {
       const headers = policy.responseHeaders() as HeadersInit;
-      return new Response(body, {
+      return new Response(bodyInit, {
         url: (policy as any)._url,
         status: (policy as any)._status,
         headers,
@@ -57,12 +59,15 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
         policyResponseFrom(revalidationResponse)
       );
 
+      const newArrayBuffer = await revalidationResponse.arrayBuffer();
+      const newBody: BodyInit = modified ? newArrayBuffer : bodyInit;
+
       return storeResponseAndReturnClone(
         cache,
-        new Response(modified ? await revalidationResponse.text() : body, {
+        new Response(newBody, {
           url: (revalidatedPolicy as any)._url,
           status: (revalidatedPolicy as any)._status,
-          headers: (revalidatedPolicy as any).responseHeaders(),
+          headers: revalidatedPolicy.responseHeaders(),
         } as ResponseInit),
         revalidatedPolicy,
         cacheKey
@@ -85,10 +90,11 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
       ttl *= 2;
     }
 
-    const body = await response.text();
+    const arrayBuffer = await response.arrayBuffer();
+    const uint8array = new Uint8Array(arrayBuffer);
     const entry = {
       policy: policy.toObject(),
-      body,
+      bytes: [...uint8array],
     };
 
     await cache.set(cacheKey, entry, {
@@ -99,7 +105,7 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
     // body can only be used once.
     // To avoid https://github.com/bitinn/node-fetch/issues/151, we don't use
     // response.clone() but create a new response from the consumed body
-    return new Response(body, {
+    return new Response(uint8array, {
       url: response.url,
       status: response.status,
       statusText: response.statusText,

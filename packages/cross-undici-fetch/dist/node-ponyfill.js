@@ -69,19 +69,6 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
 
   exports.File = undici.File
 
-  undici.File.prototype.createReadStream = function createReadStream() {
-    return streams.Readable.from(this.stream());
-  }
-
-  Object.defineProperties(undici.File.prototype, {
-    filename: {
-      get: () => this.name,
-    },
-    mimetype: {
-      get: () => this.type,
-    },
-  })
-
   const addFormDataToRequest = require('./add-formdata-to-request');
   addFormDataToRequest(undici.Request, undici.File, undici.FormData);
 
