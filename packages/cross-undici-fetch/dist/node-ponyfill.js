@@ -21,6 +21,13 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   module.exports = exports = fetch;
   exports.fetch = fetch;
   exports.Headers = undici.Headers;
+
+  const patchHeadersList = require("./patch-headers-list");
+  const HeadersList = require('undici/lib/fetch/headers');
+  patchHeadersList(undici.HeadersList);
+  
+  require("./patch-text-encoder-decoder");
+
   exports.Request = function Request(requestOrUrl, options) {
     if (typeof requestOrUrl === "string") {
       options = options || {};
