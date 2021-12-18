@@ -1,6 +1,32 @@
 const { validateHeaderName, validateHeaderValue } = require('http')
 const binarySearch = require('./binary-search')
 
+const {
+  InvalidHTTPTokenError,
+  HTTPInvalidHeaderValueError
+} = require('undici/lib/core/errors')
+
+function normalizeAndValidateHeaderName (name) {
+  if (name === undefined) {
+    throw new InvalidHTTPTokenError(`Header name ${name}`)
+  }
+  const normalizedHeaderName = name.toLocaleLowerCase()
+  validateHeaderName(normalizedHeaderName)
+  return normalizedHeaderName
+}
+
+function normalizeAndValidateHeaderValue (name, value) {
+  if (value === undefined) {
+    throw new HTTPInvalidHeaderValueError(value, name)
+  }
+  const normalizedHeaderValue = `${value}`.replace(
+    /^[\n\t\r\x20]+|[\n\t\r\x20]+$/g,
+    ''
+  )
+  validateHeaderValue(name, normalizedHeaderValue)
+  return normalizedHeaderValue
+}
+
 module.exports = function patchHeadersList(HeadersList) {
   Object.defineProperties(HeadersList.prototype, {
     append: {
