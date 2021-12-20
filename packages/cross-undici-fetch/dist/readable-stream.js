@@ -1,10 +1,9 @@
 const { Readable } = require("stream");
 
 module.exports = class ReadableStream extends Readable {
-  constructor(underlyingSource) {
-    super({
-      read() {},
-    });
+  started = false;
+  constructor(underlyingSource, opts) {
+    super(opts);
     this.underlyingSource = underlyingSource;
     this.controller = {
       desiredSize: Infinity,
@@ -12,8 +11,27 @@ module.exports = class ReadableStream extends Readable {
       error: (e) => this.destroy(e),
       close: () => this.push(null),
     };
-    this.underlyingSource.start && this.underlyingSource.start(this.controller);
-    this.on("close", () => this.underlyingSource.cancel && this.underlyingSource.cancel(this.controller));
+  }
+
+  _read() {
+    if (!this.started) {
+      this.started = true;
+      if (this.underlyingSource.start) {
+        this.underlyingSource.start(this.controller).then(() => {
+          this.underlyingSource.pull(this.controller);
+        });
+      }
+    } else {
+      if (this.underlyingSource.pull) {
+        this.underlyingSource.pull(this.controller);
+      }
+    }
+  }
+
+  _destroy(reason) {
+    if (this.underlyingSource.cancel) {
+      this.underlyingSource.cancel(reason);
+    }
   }
 
   get locked() {

@@ -53,6 +53,7 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   const streams = require("stream");
 
   exports.ReadableStream = streamsWeb.ReadableStream;
+
   exports.ReadableStream.prototype.pipe = function pipe(...args) {
     if (!this._readable) {
       this._readable = streams.Readable.from(this);
