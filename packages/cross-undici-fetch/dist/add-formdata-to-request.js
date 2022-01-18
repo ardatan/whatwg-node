@@ -13,7 +13,12 @@ module.exports = function addFormDataToRequest(Request, File, FormData) {
         const allParts = parseMultipartData.parse(Buffer.from(arrayBuffer), boundary);
         for (const part of allParts) {
           if (part.type) {
-            formData.append(part.name, File ? new File([part.data], part.filename, { type: part.type }) : part.data, part.filename);
+            if (File) {
+              const file = new File([part.data], part.filename, { type: part.type });
+              formData.append(part.name, file);
+            } else {
+              formData.append(part.name, part.data, part.filename);
+            }
           } else {
             formData.append(part.name, part.data.toString('utf8'));
           }

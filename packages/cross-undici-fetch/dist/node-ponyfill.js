@@ -26,8 +26,6 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   const { HeadersList } = require('undici/lib/fetch/headers');
   patchHeadersList(HeadersList);
 
-  require("./patch-text-encoder-decoder");
-
   exports.Request = function Request(requestOrUrl, options) {
     if (typeof requestOrUrl === "string") {
       options = options || {};
@@ -50,30 +48,10 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   exports.Blob = bufferModule.Blob;
 
   const streamsWeb = require("stream/web");
-  const streams = require("stream");
 
   exports.ReadableStream = streamsWeb.ReadableStream;
-
-  exports.ReadableStream.prototype.pipe = function pipe(...args) {
-    if (!this._readable) {
-      this._readable = streams.Readable.from(this);
-    }
-    return this._readable.pipe(...args);
-  }
-
-  exports.ReadableStream.prototype.on = function on(...args) {
-    if (!this._readable) {
-      this._readable = streams.Readable.from(this);
-    }
-    return this._readable.on(...args);
-  }
-
-  exports.ReadableStream.prototype.removeListener = function on(...args) {
-    if (!this._readable) {
-      this._readable = streams.Readable.from(this);
-    }
-    return this._readable.removeListener(...args);
-  }
+  exports.WritableStream = streamsWeb.WritableStream;
+  exports.TransformStream = streamsWeb.TransformStream;
 
   exports.File = undici.File
 
@@ -122,7 +100,13 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
     }
     return requestOrUrl.clone();
   };
-  exports.Response = nodeFetch.Response;
+  exports.Response = function Response(body, init) {
+    if (body instanceof exports.ReadableStream) {
+      // Polyfill ReadableStream is not working well with node-fetch's Response
+      return new nodeFetch.Response(streams.Readable.from(body), init);
+    }
+    return new nodeFetch.Response(body, init);
+  };
 
   const abortControllerModule = require("abort-controller");
   exports.AbortController =
@@ -133,8 +117,10 @@ if (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5)) {
   exports.Blob = formDataModule.Blob
   exports.File = formDataModule.File
 
-  const readableStreamModule = require("./readable-stream");
-  exports.ReadableStream = readableStreamModule.default || readableStreamModule;
+  const streamsWeb = require("web-streams-polyfill/ponyfill");
+  exports.ReadableStream = streamsWeb.ReadableStream;
+  exports.WritableStream = streamsWeb.WritableStream;
+  exports.TransformStream = streamsWeb.TransformStream;
 
   // Needed for TypeScript consumers without esModuleInterop.
   exports.default = fetch;

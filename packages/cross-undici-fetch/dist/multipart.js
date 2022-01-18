@@ -95,35 +95,6 @@ function getBoundary(header) {
     return '';
 }
 exports.getBoundary = getBoundary;
-function DemoData() {
-    var body = 'trash1\r\n';
-    body += '------WebKitFormBoundaryvef1fLxmoUdYZWXp\r\n';
-    body +=
-        'Content-Disposition: form-data; name="uploads[]"; filename="A.txt"\r\n';
-    body += 'Content-Type: text/plain\r\n';
-    body += '\r\n';
-    body += '@11X';
-    body += '111Y\r\n';
-    body += '111Z\rCCCC\nCCCC\r\nCCCCC@\r\n\r\n';
-    body += '------WebKitFormBoundaryvef1fLxmoUdYZWXp\r\n';
-    body +=
-        'Content-Disposition: form-data; name="uploads[]"; filename="B.txt"\r\n';
-    body += 'Content-Type: text/plain\r\n';
-    body += '\r\n';
-    body += '@22X';
-    body += '222Y\r\n';
-    body += '222Z\r222W\n2220\r\n666@\r\n';
-    body += '------WebKitFormBoundaryvef1fLxmoUdYZWXp\r\n';
-    body += 'Content-Disposition: form-data; name="input1"\r\n';
-    body += '\r\n';
-    body += 'value1\r\n';
-    body += '------WebKitFormBoundaryvef1fLxmoUdYZWXp--\r\n';
-    return {
-        body: Buffer.from(body),
-        boundary: '----WebKitFormBoundaryvef1fLxmoUdYZWXp'
-    };
-}
-exports.DemoData = DemoData;
 function process(part) {
     // will transform this object:
     // { header: 'Content-Disposition: form-data; name="uploads[]"; filename="A.txt"',
@@ -131,19 +102,6 @@ function process(part) {
     // part: 'AAAABBBB' }
     // into this one:
     // { filename: 'A.txt', type: 'text/plain', data: <Buffer 41 41 41 41 42 42 42 42> }
-    var obj = function (str) {
-        var k = str.split('=');
-        var a = k[0].trim();
-        var b = JSON.parse(k[1].trim());
-        var o = {};
-        Object.defineProperty(o, a, {
-            value: b,
-            writable: true,
-            enumerable: true,
-            configurable: true
-        });
-        return o;
-    };
     var [,nameData, filenameData] = part.header.split(';');
     var input = {};
         Object.defineProperty(input, 'name', {

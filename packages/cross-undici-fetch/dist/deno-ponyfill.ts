@@ -5,6 +5,8 @@ const Headers = globalThis.Headers;
 const FormData = globalThis.FormData;
 const AbortController = globalThis.AbortController;
 const ReadableStream = globalThis.ReadableStream;
+const WritableStream = globalThis.WritableStream;
+const TransformStream = globalThis.TransformStream;
 const Blob = globalThis.Blob;
 const File = globalThis.File;
 
@@ -17,6 +19,8 @@ export {
   FormData,
   AbortController,
   ReadableStream,
+  WritableStream,
+  TransformStream,
   Blob,
   File,
 };

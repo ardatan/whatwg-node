@@ -1,6 +1,6 @@
 {
   "name": "cross-undici-fetch",
-  "version": "0.1.10",
+  "version": "0.1.16",
   "description": "Cross Platform Fetch Wrapper with Key Value Cache support",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
@@ -22,7 +22,8 @@
     "form-data-encoder": "^1.7.1",
     "formdata-node": "^4.3.1",
     "node-fetch": "^2.6.5",
-    "undici": "^4.9.3"
+    "undici": "^4.9.3",
+    "web-streams-polyfill": "^3.2.0"
   },
   "publishConfig": {
     "access": "public",
