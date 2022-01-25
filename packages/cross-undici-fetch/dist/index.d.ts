@@ -24,6 +24,5 @@ declare module "cross-undici-fetch" {
   export const TransformStream: typeof _ReadableStream;
   export const Blob: typeof _Blob;
   export const File: typeof _File;
-  export default fetch;
 }
 
