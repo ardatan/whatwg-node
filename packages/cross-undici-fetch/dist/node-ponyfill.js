@@ -16,8 +16,6 @@ if (!exports.AbortController) {
     abortControllerModule.default || abortControllerModule;
 }
 
-exports.Blob = global.Blob;
-
 if (!exports.Blob) {
   const bufferModule = require('buffer')
   exports.Blob = bufferModule.Blob;
@@ -123,14 +121,18 @@ if (!exports.fetch) {
           }
           options.body = streams.Readable.from(encoder.encode());
         }
+        if (options.body instanceof exports.ReadableStream) {
+          options.body = streams.Readable.from(options.body);
+        }
         return new nodeFetch.Request(requestOrUrl, options);
       }
       return requestOrUrl.clone();
     };
     exports.Response = function Response(body, init) {
       if (body instanceof exports.ReadableStream) {
+        const actualBody = streams.Readable.from(body);
         // Polyfill ReadableStream is not working well with node-fetch's Response
-        return new nodeFetch.Response(streams.Readable.from(body), init);
+        return new nodeFetch.Response(actualBody, init);
       }
       return new nodeFetch.Response(body, init);
     };

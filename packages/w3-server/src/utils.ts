@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Headers, ReadableStream, Request } from 'cross-undici-fetch';
-import { inspect } from 'util';
+import { Readable } from 'stream'
 
 export function createRequestFromIncomingMessage(incomingMessage: IncomingMessage) {
   const headers = new Headers();
@@ -33,44 +33,14 @@ export function createRequestFromIncomingMessage(incomingMessage: IncomingMessag
   return new Request(fullUrl, requestInit);
 }
 
-export async function sendToServerResponse(response: Response, serverResponse: ServerResponse) {
-  response.headers.forEach((value, name) => {
-    serverResponse.setHeader(name, value);
-  });
-  serverResponse.statusCode = response.status;
-  serverResponse.statusMessage = response.statusText;
-  const responseBody = response.body;
-  if (responseBody != null) {
-    if (responseBody instanceof Uint8Array) {
-      serverResponse.write(responseBody);
-    } else if (Symbol.asyncIterator in responseBody) {
-      for await (const chunk of responseBody as any) {
-        if (chunk) {
-          serverResponse.write(chunk);
-        }
-      }
-    } else if (typeof responseBody.getReader === 'function') {
-      const reader = responseBody.getReader();
-      serverResponse.on('close', () => {
-        reader.releaseLock();
-      });
-      while (true) {
-        const { done, value } = await reader.read();
-        if (value) {
-          serverResponse.write(value);
-        }
-        if (done) {
-          break;
-        }
-      }
-    } else {
-      serverResponse.statusCode = 500;
-      serverResponse.statusMessage = 'Internal Server Error';
-      serverResponse.writeHead(500, 'Internal Server Error', {
-        'Content-Type': 'text/plain',
-      });
-      serverResponse.write(`Unsupported response body type: ${inspect(responseBody)}`);
-    }
-  }
-  serverResponse.end();
+export async function sendToServerResponse(responseResult: Response, serverResponse: ServerResponse) {
+  responseResult.headers.forEach((value, name) => {
+    serverResponse.setHeader(name, value)
+  })
+  serverResponse.statusCode = responseResult.status
+  serverResponse.statusMessage = responseResult.statusText
+  // Some fetch implementations like `node-fetch`, return `Response.body` as Promise
+  const responseBody = await (responseResult.body as unknown as Promise<any>)
+  const nodeReadable = Readable.from(responseBody)
+  nodeReadable.pipe(serverResponse)
 }

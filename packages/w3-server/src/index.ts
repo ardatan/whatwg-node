@@ -18,7 +18,6 @@ export function create() {
         response => sendToServerResponse(response, serverResponse),
         error => {
           console.error(error);
-          return sendToServerResponse(new Response(error.message, { status: 500 }), serverResponse);
         }
       );
       eventEmitter.emit('fetch', fetchEvent);

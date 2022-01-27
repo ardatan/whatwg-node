@@ -115,13 +115,13 @@ function getIncrementalResponseBody() {
   });
 }
 
+const port = 9876;
 describe('Test', () => {
   afterEach(async () => {
     await new Promise(resolve => httpServer?.close(resolve));
   });
   [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
     it(`should handle regular requests with ${method}`, async () => {
-      const port = 3000;
       const requestInit: RequestInit = {
         method,
         headers: {
@@ -150,7 +150,6 @@ describe('Test', () => {
       });
     });
     it(`should handle incremental responses with ${method}`, async () => {
-      const port = 3000;
       const requestInit: RequestInit = {
         method,
         headers: {
@@ -180,7 +179,6 @@ describe('Test', () => {
   });
   methodsWithBody.forEach(method => {
     it(`should handle incremental requests with ${method}`, async () => {
-      const port = 3000;
       const requestInit: RequestInit = {
         method,
         headers: {
