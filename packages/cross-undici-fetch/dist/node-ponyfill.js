@@ -41,7 +41,12 @@ if (!exports.ReadableStream) {
   }
 }
 
-if (!exports.fetch) {
+// If any of classes of Fetch API is missing, we need to ponyfill them.
+if (!exports.fetch ||
+  !exports.Headers ||
+  !exports.Response ||
+  !exports.FormData ||
+  !exports.File) {
 
   const [
     nodeMajorStr,
