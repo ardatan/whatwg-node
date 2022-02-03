@@ -43,10 +43,9 @@ if (!exports.ReadableStream) {
 
 // If any of classes of Fetch API is missing, we need to ponyfill them.
 if (!exports.fetch ||
+  !exports.Request ||
   !exports.Headers ||
-  !exports.Response ||
-  !exports.FormData ||
-  !exports.File) {
+  !exports.Response) {
 
   const [
     nodeMajorStr,
@@ -74,11 +73,26 @@ if (!exports.fetch ||
     const { HeadersList } = require('undici/lib/fetch/headers');
     patchHeadersList(HeadersList);
 
+    const streams = require("stream");
+
     exports.Request = function Request(requestOrUrl, options) {
       if (typeof requestOrUrl === "string") {
         options = options || {};
         options.headers = new exports.Headers(options.headers || {});
         options.headers.delete("connection");
+        if (options.body instanceof streams.Readable) {
+          const readable = options.body;
+          options.body = new exports.ReadableStream({
+            start(controller) {
+              readable.on('data', chunk => {
+                controller.enqueue(chunk)
+              })
+              readable.on('end', () => {
+                controller.close()
+              })
+            }
+          })
+        }
         return new undici.Request(requestOrUrl, options);
       }
       const newRequestObj = requestOrUrl.clone();
