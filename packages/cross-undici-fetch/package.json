@@ -1,12 +1,12 @@
 {
   "name": "cross-undici-fetch",
-  "version": "0.1.24",
-  "description": "Cross Platform Fetch Wrapper with Key Value Cache support",
+  "version": "0.1.25",
+  "description": "Cross Platform Smart Fetch Ponyfill",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
     "url": "ardatan/w3-server",
-    "directory": "packages/fetchache"
+    "directory": "packages/cross-undici-fetch"
   },
   "license": "MIT",
   "sideEffects": false,

@@ -45,7 +45,9 @@ if (!exports.ReadableStream) {
 if (!exports.fetch ||
   !exports.Request ||
   !exports.Headers ||
-  !exports.Response) {
+  !exports.Response ||
+  // If it is pollyfilled with node-fetch, we should ignore it
+  exports.Request.prototype.textConverted) {
 
   const [
     nodeMajorStr,
@@ -162,9 +164,3 @@ if (!exports.fetch ||
     addFormDataToRequest(nodeFetch.Request, formDataModule.File, formDataModule.FormData);
   }
 }
-
-const streams = require("stream");
-Object.defineProperty(streams.Readable.prototype, '_writableState', {
-  value: {},
-  writable: true,
-})
