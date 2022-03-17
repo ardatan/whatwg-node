@@ -9,8 +9,8 @@ declare const _AbortController: typeof AbortController;
 declare const _ReadableStream: typeof ReadableStream;
 declare const _WritableStream: typeof WritableStream;
 declare const _TransformStream: typeof TransformStream;
-declare const _Blob = Blob;
-declare const _File = File;
+declare const _Blob: typeof Blob;
+declare const _File: typeof File;
 
 declare module "cross-undici-fetch" {
   export const fetch: typeof _fetch;

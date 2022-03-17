@@ -1,11 +1,11 @@
 {
   "name": "cross-undici-fetch",
-  "version": "0.1.25",
+  "version": "0.1.27",
   "description": "Cross Platform Smart Fetch Ponyfill",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "ardatan/w3-server",
+    "url": "ardatan/whatwg-node",
     "directory": "packages/cross-undici-fetch"
   },
   "license": "MIT",
