@@ -1,5 +1,4 @@
 import { IncomingMessage, ServerResponse } from 'http';
-import { Response } from 'cross-undici-fetch';
 import { FetchEvent } from './FetchEvent';
 import { createRequestFromIncomingMessage, sendToServerResponse } from './utils';
 import { EventEmitter } from 'events';
