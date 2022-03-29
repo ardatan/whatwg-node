@@ -1,6 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { Headers, ReadableStream, Request } from 'cross-undici-fetch';
-import { Readable } from 'stream'
+import { Readable } from 'stream';
 
 export function createRequestFromIncomingMessage(incomingMessage: IncomingMessage) {
   const headers = new Headers();
@@ -35,12 +35,12 @@ export function createRequestFromIncomingMessage(incomingMessage: IncomingMessag
 
 export async function sendToServerResponse(responseResult: Response, serverResponse: ServerResponse) {
   responseResult.headers.forEach((value, name) => {
-    serverResponse.setHeader(name, value)
-  })
-  serverResponse.statusCode = responseResult.status
-  serverResponse.statusMessage = responseResult.statusText
+    serverResponse.setHeader(name, value);
+  });
+  serverResponse.statusCode = responseResult.status;
+  serverResponse.statusMessage = responseResult.statusText;
   // Some fetch implementations like `node-fetch`, return `Response.body` as Promise
-  const responseBody = await (responseResult.body as unknown as Promise<any>)
-  const nodeReadable = Readable.from(responseBody)
-  nodeReadable.pipe(serverResponse)
+  const responseBody = await (responseResult.body as unknown as Promise<any>);
+  const nodeReadable = Readable.from(responseBody);
+  nodeReadable.pipe(serverResponse);
 }
