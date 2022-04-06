@@ -17,7 +17,7 @@
     "release:canary": "(node scripts/canary-release.js && yarn build && yarn changeset publish --tag $NPM_TAG) || echo Skipping Canary..."
   },
   "devDependencies": {
-    "@babel/core": "7.17.8",
+    "@babel/core": "7.17.9",
     "@babel/plugin-proposal-class-properties": "7.16.7",
     "@babel/preset-env": "7.16.11",
     "@babel/preset-typescript": "7.16.7",
