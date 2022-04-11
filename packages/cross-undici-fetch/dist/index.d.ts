@@ -21,8 +21,9 @@ declare module "cross-undici-fetch" {
   export const AbortController: typeof _AbortController;
   export const ReadableStream: typeof _ReadableStream;
   export const WritableStream: typeof _WritableStream;
-  export const TransformStream: typeof _ReadableStream;
+  export const TransformStream: typeof _TransformStream;
   export const Blob: typeof _Blob;
   export const File: typeof _File;
+  export const configure: (opts?: { useNodeFetch?: boolean }) => void;
 }
 

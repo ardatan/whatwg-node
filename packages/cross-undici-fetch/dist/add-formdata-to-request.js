@@ -1,4 +1,8 @@
 module.exports = function addFormDataToRequest(Request, File, FormData) {
+  if (Request.FORMDATA_PATCHED) {
+    return;
+  }
+  Request.FORMDATA_PATCHED = true;
   const existingFormDataMethod = Request.prototype.formData;
   Request.prototype.formData = async function formData(...args) {
     try {

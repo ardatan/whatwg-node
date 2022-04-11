@@ -9,3 +9,4 @@ module.exports.WritableStream = globalThis.WritableStream;
 module.exports.TransformStream = globalThis.TransformStream;
 module.exports.Blob = globalThis.Blob;
 module.exports.File = globalThis.File;
+module.exports.configure = () => {};

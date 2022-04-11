@@ -11,6 +11,7 @@ const Blob = globalThis.Blob;
 const File = globalThis.File;
 
 export default fetch;
+export const configure = () => {};
 export {
   fetch,
   Headers,
