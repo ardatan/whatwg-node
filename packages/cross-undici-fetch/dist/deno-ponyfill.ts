@@ -9,9 +9,9 @@ const WritableStream = globalThis.WritableStream;
 const TransformStream = globalThis.TransformStream;
 const Blob = globalThis.Blob;
 const File = globalThis.File;
+const crypto = globalThis.crypto;
 
-export default fetch;
-export const configure = () => {};
+export const create = () => globalThis;
 export {
   fetch,
   Headers,
@@ -24,4 +24,5 @@ export {
   TransformStream,
   Blob,
   File,
+  crypto,
 };

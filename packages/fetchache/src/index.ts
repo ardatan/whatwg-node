@@ -135,7 +135,7 @@ function policyResponseFrom(response: Response) {
 
 function headersToObject(headers: Headers) {
   const object = Object.create(null);
-  headers.forEach((val, key) => {
+  headers?.forEach((val, key) => {
     object[key] = val;
   });
   return object;
