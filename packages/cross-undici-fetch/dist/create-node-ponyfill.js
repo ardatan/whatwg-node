@@ -54,6 +54,8 @@ module.exports = function createNodePonyfill(opts = {}) {
     !ponyfills.Request ||
     !ponyfills.Headers ||
     !ponyfills.Response ||
+    !ponyfills.FormData ||
+    !ponyfills.File ||
     // If it is pollyfilled with node-fetch, we should ignore it
     ponyfills.Request.prototype.textConverted ||
     opts.useNodeFetch) {
