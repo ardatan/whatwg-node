@@ -74,10 +74,6 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       ponyfills.Headers = undici.Headers;
 
-      const patchHeadersList = require("./patch-headers-list");
-      const { HeadersList } = require('undici/lib/fetch/headers');
-      patchHeadersList(HeadersList);
-
       const streams = require("stream");
 
       function Request(requestOrUrl, options) {
