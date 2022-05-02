@@ -95,7 +95,12 @@ module.exports = function createNodePonyfill(opts = {}) {
               }
             })
           }
-          return new undici.Request(requestOrUrl, options);
+          const undiciRequest = new undici.Request(requestOrUrl, options);
+          const contentType = undiciRequest.headers.get("content-type");
+          if (contentType && contentType.startsWith("multipart/form-data")) {
+            undiciRequest.headers.set("content-type", contentType.split(', ')[0]);
+          }
+          return undiciRequest;
         }
         return requestOrUrl;
       }
