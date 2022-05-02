@@ -79,8 +79,6 @@ module.exports = function createNodePonyfill(opts = {}) {
       function Request(requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
           options = options || {};
-          options.headers = new undici.Headers(options.headers || {});
-          options.headers.delete("connection");
           if (options.body != null && options.body.read && options.body.on) {
             const readable = options.body;
             options.body = new ponyfills.ReadableStream({
@@ -99,12 +97,7 @@ module.exports = function createNodePonyfill(opts = {}) {
           }
           return new undici.Request(requestOrUrl, options);
         }
-        const newRequestObj = requestOrUrl.clone();
-        Object.defineProperty(newRequestObj, 'headers', {
-          value: newRequestObj.headers || new undici.Headers({})
-        });
-        newRequestObj.headers.delete("connection");
-        return newRequestObj;
+        return requestOrUrl;
       }
 
       ponyfills.Request = Request;
