@@ -120,7 +120,7 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       ponyfills.FormData = undici.FormData;
       ponyfills.File = undici.File
-      addFormDataToRequest(undici.Request, undici.File, undici.FormData);
+      addFormDataToRequest(undici.Request, opts.formDataLimits);
     } else {
       const nodeFetch = require("node-fetch");
       const realFetch = nodeFetch.default || nodeFetch;
@@ -175,7 +175,7 @@ module.exports = function createNodePonyfill(opts = {}) {
       const formDataModule = require("formdata-node");
       ponyfills.FormData = formDataModule.FormData
       ponyfills.File = formDataModule.File
-      addFormDataToRequest(nodeFetch.Request, formDataModule.File, formDataModule.FormData);
+      addFormDataToRequest(nodeFetch.Request, opts.formDataLimits);
     }
   }
   return ponyfills;

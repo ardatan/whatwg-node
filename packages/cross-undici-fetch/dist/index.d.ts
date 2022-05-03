@@ -26,7 +26,23 @@ declare module "cross-undici-fetch" {
   export const Blob: typeof _Blob;
   export const File: typeof _File;
   export const crypto: typeof _crypto;
-  export const create: (opts?: { useNodeFetch?: boolean }) => ({
+  export interface FormDataLimits {
+    /* Max field name size (in bytes). Default: 100. */
+    fieldNameSize?: number;
+    /* Max field value size (in bytes). Default: 1MB. */
+    fieldSize?: number;
+    /* Max number of fields. Default: Infinity. */
+    fields?: number;
+    /* For multipart forms, the max file size (in bytes). Default: Infinity. */
+    fileSize?: number;
+    /* For multipart forms, the max number of file fields. Default: Infinity. */
+    files?: number;
+    /* For multipart forms, the max number of parts (fields + files). Default: Infinity. */
+    parts?: number;
+    /* For multipart forms, the max number of header key-value pairs to parse. Default: 2000. */
+    headerSize?: number;
+  }
+  export const create: (opts?: { useNodeFetch?: boolean; formDataLimits?: FormDataLimits }) => ({
     fetch: typeof _fetch,
     Request: typeof _Request,
     Response: typeof _Response,
