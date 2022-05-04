@@ -67,7 +67,7 @@ module.exports = function createNodePonyfill(opts = {}) {
 
     const nodeMajor = parseInt(nodeMajorStr);
     const nodeMinor = parseInt(nodeMinorStr);
-    const addFormDataToRequest = require('./add-formdata-to-request');
+    const getFormDataMethod = require('./getFormDataMethod');
 
     if (!opts.useNodeFetch && (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5))) {
       const undici = require("undici");
@@ -76,33 +76,36 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       const streams = require("stream");
 
-      function Request(requestOrUrl, options) {
-        if (typeof requestOrUrl === "string") {
-          options = options || {};
-          if (options.body != null && options.body.read && options.body.on) {
-            const readable = options.body;
-            options.body = new ponyfills.ReadableStream({
-              pull(controller) {
-                const chunk = readable.read();
-                if (chunk != null) {
-                  controller.enqueue(chunk);
-                } else {
-                  controller.close();
+      class Request extends undici.Request {
+        constructor(requestOrUrl, options) {
+          if (typeof requestOrUrl === "string") {
+            options = options || {};
+            if (options.body != null && options.body.read && options.body.on) {
+              const readable = options.body;
+              options.body = new ponyfills.ReadableStream({
+                pull(controller) {
+                  const chunk = readable.read();
+                  if (chunk != null) {
+                    controller.enqueue(chunk);
+                  } else {
+                    controller.close();
+                  }
+                },
+                close(e) {
+                  readable.destroy(e);
                 }
-              },
-              close(e) {
-                readable.destroy(e);
-              }
-            })
+              })
+            }
+            super(requestOrUrl, options);
+            const contentType = this.headers.get("content-type");
+            if (contentType && contentType.startsWith("multipart/form-data")) {
+              this.headers.set("content-type", contentType.split(', ')[0]);
+            }
+          } else {
+            super(requestOrUrl);
           }
-          const undiciRequest = new undici.Request(requestOrUrl, options);
-          const contentType = undiciRequest.headers.get("content-type");
-          if (contentType && contentType.startsWith("multipart/form-data")) {
-            undiciRequest.headers.set("content-type", contentType.split(', ')[0]);
-          }
-          return undiciRequest;
+          this.formData = getFormDataMethod(undici.File, opts.formDataLimits);
         }
-        return requestOrUrl;
       }
 
       ponyfills.Request = Request;
@@ -120,14 +123,18 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       ponyfills.FormData = undici.FormData;
       ponyfills.File = undici.File
-      addFormDataToRequest(undici.Request, opts.formDataLimits);
     } else {
       const nodeFetch = require("node-fetch");
       const realFetch = nodeFetch.default || nodeFetch;
       ponyfills.Headers = nodeFetch.Headers;
       const formDataEncoderModule = require("form-data-encoder");
       const streams = require("stream");
-      function Request (requestOrUrl, options) {
+      const formDataModule = require("formdata-node");
+      ponyfills.FormData = formDataModule.FormData
+      ponyfills.File = formDataModule.File
+
+      class Request extends nodeFetch.Request {
+        constructor(requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
           // Support schemaless URIs on the server for parity with the browser.
           // Ex: //github.com/ -> https://github.com/
@@ -149,10 +156,13 @@ module.exports = function createNodePonyfill(opts = {}) {
               options.body = streams.Readable.from(options.body);
             }
           }
-          return new nodeFetch.Request(requestOrUrl, options);
+          super(requestOrUrl, options);
+        } else {
+          super(requestOrUrl);
         }
-        return requestOrUrl.clone();
-      };
+          this.formData = getFormDataMethod(formDataModule.File, opts.formDataLimits);
+        }
+      }
       ponyfills.Request = Request;
       const fetch = function (requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
@@ -172,10 +182,6 @@ module.exports = function createNodePonyfill(opts = {}) {
         return new nodeFetch.Response(body, init);
       };
 
-      const formDataModule = require("formdata-node");
-      ponyfills.FormData = formDataModule.FormData
-      ponyfills.File = formDataModule.File
-      addFormDataToRequest(nodeFetch.Request, opts.formDataLimits);
     }
   }
   return ponyfills;
