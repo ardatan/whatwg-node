@@ -1,16 +1,20 @@
 module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
-  ponyfills.fetch = globalThis.fetch; // To enable: import {fetch} from 'cross-fetch'
-  ponyfills.Headers = globalThis.Headers;
-  ponyfills.Request = globalThis.Request;
-  ponyfills.Response = globalThis.Response;
-  ponyfills.FormData = globalThis.FormData;
+
+  if (!opts.useNodeFetch) {
+    ponyfills.fetch = globalThis.fetch; // To enable: import {fetch} from 'cross-fetch'
+    ponyfills.Headers = globalThis.Headers;
+    ponyfills.Request = globalThis.Request;
+    ponyfills.Response = globalThis.Response;
+    ponyfills.FormData = globalThis.FormData;
+    ponyfills.File = globalThis.File;
+  }
+
   ponyfills.AbortController = globalThis.AbortController;
   ponyfills.ReadableStream = globalThis.ReadableStream;
   ponyfills.WritableStream = globalThis.WritableStream;
   ponyfills.TransformStream = globalThis.TransformStream;
   ponyfills.Blob = globalThis.Blob;
-  ponyfills.File = globalThis.File;
   ponyfills.crypto = globalThis.crypto;
 
   if (!ponyfills.AbortController) {
@@ -56,8 +60,6 @@ module.exports = function createNodePonyfill(opts = {}) {
     !ponyfills.Response ||
     !ponyfills.FormData ||
     !ponyfills.File ||
-    // If it is pollyfilled with node-fetch, we should ignore it
-    ponyfills.Request.prototype.textConverted ||
     opts.useNodeFetch) {
 
     const [
@@ -72,11 +74,15 @@ module.exports = function createNodePonyfill(opts = {}) {
     if (!opts.useNodeFetch && (nodeMajor > 16 || (nodeMajor === 16 && nodeMinor >= 5))) {
       const undici = require("undici");
 
-      ponyfills.Headers = undici.Headers;
+      if (!ponyfills.Headers) {
+        ponyfills.Headers = undici.Headers;
+      }
 
       const streams = require("stream");
 
-      class Request extends undici.Request {
+      const OriginalRequest = ponyfills.Request || undici.Request;
+
+      class Request extends OriginalRequest {
         constructor(requestOrUrl, options) {
           if (typeof requestOrUrl === "string") {
             options = options || {};
@@ -109,31 +115,48 @@ module.exports = function createNodePonyfill(opts = {}) {
       }
 
       ponyfills.Request = Request;
+
+      const originalFetch = ponyfills.fetch || undici.fetch;
       
       const fetch = function (requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
           return fetch(new Request(requestOrUrl, options));
         }
-        return undici.fetch(requestOrUrl);
+        return originalFetch(requestOrUrl);
       };
 
       ponyfills.fetch = fetch;
 
-      ponyfills.Response = undici.Response;
+      if (!ponyfills.Response) {
+        ponyfills.Response = undici.Response;
+      }
 
-      ponyfills.FormData = undici.FormData;
-      ponyfills.File = undici.File
+      if (!ponyfills.FormData) {
+        ponyfills.FormData = undici.FormData;
+      }
+
+      if (!ponyfills.File) {
+        ponyfills.File = undici.File
+      }
     } else {
       const nodeFetch = require("node-fetch");
-      const realFetch = nodeFetch.default || nodeFetch;
-      ponyfills.Headers = nodeFetch.Headers;
+      const realFetch = ponyfills.fetch || nodeFetch.default || nodeFetch;
+      if (!ponyfills.Headers) {
+        ponyfills.Headers = nodeFetch.Headers;
+      }
       const formDataEncoderModule = require("form-data-encoder");
       const streams = require("stream");
       const formDataModule = require("formdata-node");
-      ponyfills.FormData = formDataModule.FormData
-      ponyfills.File = formDataModule.File
+      if (!ponyfills.FormData) {
+        ponyfills.FormData = formDataModule.FormData
+      }
+      if (!ponyfills.File) {
+        ponyfills.File = formDataModule.File
+      }
 
-      class Request extends nodeFetch.Request {
+      const OriginalRequest = ponyfills.Request || nodeFetch.Request;
+
+      class Request extends OriginalRequest {
         constructor(requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
           // Support schemaless URIs on the server for parity with the browser.
@@ -142,7 +165,7 @@ module.exports = function createNodePonyfill(opts = {}) {
             requestOrUrl = "https:" + requestOrUrl;
           }
           options = options || {};
-          options.headers = new nodeFetch.Headers(options.headers || {});
+          options.headers = new ponyfills.Headers(options.headers || {});
           options.headers.set('Connection', 'keep-alive');
           if (options.body != null) {
             if (options.body[Symbol.toStringTag] === 'FormData') {
@@ -173,13 +196,14 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       ponyfills.fetch = fetch;
 
+      const OriginalResponse = ponyfills.Response || nodeFetch.Response;
       ponyfills.Response = function Response(body, init) {
         if (body != null && body[Symbol.toStringTag] === 'ReadableStream') {
           const actualBody = streams.Readable.from(body);
           // Polyfill ReadableStream is not working well with node-fetch's Response
-          return new nodeFetch.Response(actualBody, init);
+          return new OriginalResponse(actualBody, init);
         }
-        return new nodeFetch.Response(body, init);
+        return new OriginalResponse(body, init);
       };
 
     }

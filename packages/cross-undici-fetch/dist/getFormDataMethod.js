@@ -13,6 +13,7 @@ module.exports = function getFormDataMethod(File, limits) {
         'content-type': contentType
       },
       limits,
+      defParamCharset: 'utf-8'
     });
     return new Promise((resolve, reject) => {
       const formData = new Map();
