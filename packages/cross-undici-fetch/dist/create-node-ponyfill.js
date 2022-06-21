@@ -1,3 +1,5 @@
+const handleFileRequest = require("./handle-file-request");
+
 module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
 
@@ -122,6 +124,9 @@ module.exports = function createNodePonyfill(opts = {}) {
         if (typeof requestOrUrl === "string") {
           return fetch(new Request(requestOrUrl, options));
         }
+        if (requestOrUrl.url.startsWith('file:')) {
+          return handleFileRequest(requestOrUrl.url, ponyfills.Response);
+        }
         return originalFetch(requestOrUrl);
       };
 
@@ -190,6 +195,9 @@ module.exports = function createNodePonyfill(opts = {}) {
       const fetch = function (requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
           return fetch(new Request(requestOrUrl, options));
+        }
+        if (requestOrUrl.url.startsWith('file:')) {
+          return handleFileRequest(requestOrUrl.url, ponyfills.Response);
         }
         return realFetch(requestOrUrl);
       };
