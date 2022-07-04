@@ -1,6 +1,6 @@
 {
   "name": "cross-undici-fetch",
-  "version": "0.4.9",
+  "version": "0.4.11",
   "description": "Cross Platform Smart Fetch Ponyfill",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
