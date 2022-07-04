@@ -1,6 +1,6 @@
 {
   "name": "cross-undici-fetch",
-  "version": "0.4.8",
+  "version": "0.4.9",
   "description": "Cross Platform Smart Fetch Ponyfill",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
@@ -23,7 +23,7 @@
     "form-data-encoder": "^1.7.1",
     "formdata-node": "^4.3.1",
     "node-fetch": "^2.6.7",
-    "undici": "^5.1.0",
+    "undici": "5.5.1",
     "web-streams-polyfill": "^3.2.0"
   },
   "publishConfig": {
