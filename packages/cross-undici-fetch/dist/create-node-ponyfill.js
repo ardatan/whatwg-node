@@ -67,12 +67,15 @@ module.exports = function createNodePonyfill(opts = {}) {
     [Symbol.asyncIterator]() {
       const asyncIterator = super[Symbol.asyncIterator]();
       return {
-        ...asyncIterator,
-        return: async (value) => {
-          const originalResult = await asyncIterator.return(value);
+        next: (...args) => asyncIterator.next(...args),
+        throw: (...args) => asyncIterator.throw(...args),
+        return: async (e) => {
+          const originalResult = await asyncIterator.return(e);
           if (!this.cancelled) {
             this.cancelled = true;
-            await this.underlyingSource.cancel();
+            if (this.underlyingSource.cancel) {
+              await this.underlyingSource.cancel(e);
+            }
           }
           return originalResult;
         }
@@ -82,7 +85,9 @@ module.exports = function createNodePonyfill(opts = {}) {
       const originalResult = !super.locked && await super.cancel(e);
       if (!this.cancelled) {
         this.cancelled = true;
-        await this.underlyingSource.cancel(e);
+        if (this.underlyingSource.cancel) {
+          await this.underlyingSource.cancel(e);
+        }
       }
       return originalResult;
     }
@@ -245,7 +250,13 @@ module.exports = function createNodePonyfill(opts = {}) {
       const OriginalResponse = ponyfills.Response || nodeFetch.Response;
       ponyfills.Response = function Response(body, init) {
         if (body != null && body[Symbol.toStringTag] === 'ReadableStream') {
-          const actualBody = streams.Readable.fromWeb ? streams.Readable.fromWeb(body) : streams.Readable.from(body);
+          const actualBody = streams.Readable.fromWeb ? streams.Readable.fromWeb(body) : streams.Readable.from(body, {
+            emitClose: true,
+            autoDestroy: true,
+          });
+          actualBody.on('pause', () => {
+            body.cancel();
+          })
           actualBody.on('close', () => {
             body.cancel();
           })
