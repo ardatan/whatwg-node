@@ -50,6 +50,44 @@ module.exports = function createNodePonyfill(opts = {}) {
     }
   }
 
+  // ReadableStream doesn't handle aborting properly, so we need to patch it
+  ponyfills.ReadableStream = class PonyfillReadableStream extends ponyfills.ReadableStream {
+    constructor(underlyingSource, ...opts) {
+      super({
+        ...underlyingSource,
+        cancel: (e) => {
+          this.cancelled = true;
+          if (underlyingSource.cancel) {
+            return underlyingSource.cancel(e);
+          }
+        }
+      }, ...opts);
+      this.underlyingSource = underlyingSource;
+    }
+    [Symbol.asyncIterator]() {
+      const asyncIterator = super[Symbol.asyncIterator]();
+      return {
+        ...asyncIterator,
+        return: async (value) => {
+          const originalResult = await asyncIterator.return(value);
+          if (!this.cancelled) {
+            this.cancelled = true;
+            await this.underlyingSource.cancel();
+          }
+          return originalResult;
+        }
+      }
+    }
+    async cancel(e) {
+      const originalResult = !super.locked && await super.cancel(e);
+      if (!this.cancelled) {
+        this.cancelled = true;
+        await this.underlyingSource.cancel(e);
+      }
+      return originalResult;
+    }
+  }
+
   if (!ponyfills.crypto) {
     const cryptoModule = require("crypto");
     ponyfills.crypto = cryptoModule.webcrypto;
@@ -119,7 +157,7 @@ module.exports = function createNodePonyfill(opts = {}) {
       ponyfills.Request = Request;
 
       const originalFetch = ponyfills.fetch || undici.fetch;
-      
+
       const fetch = function (requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
           return fetch(new Request(requestOrUrl, options));
@@ -163,31 +201,31 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       class Request extends OriginalRequest {
         constructor(requestOrUrl, options) {
-        if (typeof requestOrUrl === "string") {
-          // Support schemaless URIs on the server for parity with the browser.
-          // Ex: //github.com/ -> https://github.com/
-          if (/^\/\//.test(requestOrUrl)) {
-            requestOrUrl = "https:" + requestOrUrl;
-          }
-          options = options || {};
-          options.headers = new ponyfills.Headers(options.headers || {});
-          options.headers.set('Connection', 'keep-alive');
-          if (options.body != null) {
-            if (options.body[Symbol.toStringTag] === 'FormData') {
-              const encoder = new formDataEncoderModule.FormDataEncoder(options.body)
-              for (const headerKey in encoder.headers) {
-                options.headers.set(headerKey, encoder.headers[headerKey])
+          if (typeof requestOrUrl === "string") {
+            // Support schemaless URIs on the server for parity with the browser.
+            // Ex: //github.com/ -> https://github.com/
+            if (/^\/\//.test(requestOrUrl)) {
+              requestOrUrl = "https:" + requestOrUrl;
+            }
+            options = options || {};
+            options.headers = new ponyfills.Headers(options.headers || {});
+            options.headers.set('Connection', 'keep-alive');
+            if (options.body != null) {
+              if (options.body[Symbol.toStringTag] === 'FormData') {
+                const encoder = new formDataEncoderModule.FormDataEncoder(options.body)
+                for (const headerKey in encoder.headers) {
+                  options.headers.set(headerKey, encoder.headers[headerKey])
+                }
+                options.body = streams.Readable.from(encoder.encode());
               }
-              options.body = streams.Readable.from(encoder.encode());
+              if (options.body[Symbol.toStringTag] === 'ReadableStream') {
+                options.body = streamsWeb.Readable.fromWeb ? streams.Readable.fromWeb(options.body) : streams.Readable.from(options.body);
+              }
             }
-            if (options.body[Symbol.toStringTag] === 'ReadableStream') {
-              options.body = streams.Readable.from(options.body);
-            }
+            super(requestOrUrl, options);
+          } else {
+            super(requestOrUrl);
           }
-          super(requestOrUrl, options);
-        } else {
-          super(requestOrUrl);
-        }
           this.formData = getFormDataMethod(formDataModule.File, opts.formDataLimits);
         }
       }
@@ -207,7 +245,10 @@ module.exports = function createNodePonyfill(opts = {}) {
       const OriginalResponse = ponyfills.Response || nodeFetch.Response;
       ponyfills.Response = function Response(body, init) {
         if (body != null && body[Symbol.toStringTag] === 'ReadableStream') {
-          const actualBody = streams.Readable.from(body);
+          const actualBody = streams.Readable.fromWeb ? streams.Readable.fromWeb(body) : streams.Readable.from(body);
+          actualBody.on('close', () => {
+            body.cancel();
+          })
           // Polyfill ReadableStream is not working well with node-fetch's Response
           return new OriginalResponse(actualBody, init);
         }
