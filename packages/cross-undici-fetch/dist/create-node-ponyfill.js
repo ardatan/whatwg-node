@@ -191,6 +191,15 @@ module.exports = function createNodePonyfill(opts = {}) {
       const realFetch = ponyfills.fetch || nodeFetch.default || nodeFetch;
       if (!ponyfills.Headers) {
         ponyfills.Headers = nodeFetch.Headers;
+        // Sveltekit
+        if (globalThis.Headers) {
+          Object.defineProperty(globalThis.Headers, Symbol.hasInstance, {
+            value(obj) {
+              return obj.get && obj.set && obj.delete && obj.has && obj.append;
+            },
+            configurable: true,
+          })
+        }
       }
       const formDataEncoderModule = require("form-data-encoder");
       const streams = require("stream");

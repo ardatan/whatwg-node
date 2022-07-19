@@ -50,6 +50,9 @@ module.exports = function getFormDataMethod(File, limits) {
       bb.on('close', () => {
         resolve(formData);
       });
+      bb.on('error', err => {
+        reject(err);
+      })
       nodeReadable.pipe(bb);
     })
   }
