@@ -27,7 +27,6 @@
     "web-streams-polyfill": "^3.2.0"
   },
   "publishConfig": {
-    "access": "public",
-    "directory": "dist"
+    "access": "public"
   }
 }
