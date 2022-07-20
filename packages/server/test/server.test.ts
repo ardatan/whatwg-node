@@ -1,6 +1,6 @@
-import { create } from 'w3-server';
+import { createServerAdapter } from '@whatwg-node/server';
 import { createServer, Server } from 'http';
-import { Request, Response, ReadableStream, fetch } from 'cross-undici-fetch';
+import { Request, Response, ReadableStream, fetch } from '@whatwg-node/fetch';
 import { Readable } from 'stream';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
@@ -23,10 +23,12 @@ async function compareRequest(toBeChecked: Request, expected: Request) {
 }
 
 async function compareReadableStream(toBeChecked: ReadableStream | null, expected: BodyInit | null) {
-  if (expected) {
+  if (expected != null) {
+    expect(toBeChecked).toBeTruthy();
     const expectedBody = new Response(expected).body;
     const expectedStream = Readable.from(expectedBody as any);
-    const toBeCheckedIterator = Readable.from(toBeChecked as any)[Symbol.asyncIterator]();
+    const toBeCheckedStream = Readable.from(toBeChecked as any);
+    const toBeCheckedIterator = toBeCheckedStream[Symbol.asyncIterator]();
     for await (const expectedValue of expectedStream) {
       const toBeCheckedResult = await toBeCheckedIterator.next();
       if (expectedValue) {
@@ -64,20 +66,17 @@ async function runTestForRequestAndResponse({
   getRequestBody: () => BodyInit;
   getResponseBody: () => BodyInit;
 }) {
-  const { requestListener, addEventListener } = create();
+  const { requestListener } = createServerAdapter({
+    async handleRequest(request: Request) {
+      await compareRequest(request, expectedRequest);
+      if (methodsWithBody.includes(expectedRequest.method)) {
+        await compareReadableStream(request.body, getRequestBody());
+      }
+      return expectedResponse;
+    }
+  })
   httpServer = createServer(requestListener);
-  httpServer.listen(port);
-  addEventListener(fetchEvent => {
-    fetchEvent.respondWith(
-      Promise.resolve().then(async () => {
-        await compareRequest(fetchEvent.request, expectedRequest);
-        if (methodsWithBody.includes(expectedRequest.method)) {
-          await compareReadableStream(fetchEvent.request.body, getRequestBody());
-        }
-        return expectedResponse;
-      })
-    );
-  });
+  await new Promise<void>(resolve => httpServer.listen(port, '127.0.0.1', resolve));
   const returnedResponse = await fetch(expectedRequest);
   await compareResponse(returnedResponse, expectedResponse);
   await compareReadableStream(returnedResponse.body, getResponseBody());
@@ -115,10 +114,15 @@ function getIncrementalResponseBody() {
   });
 }
 
-const port = 9876;
 describe('Test', () => {
-  afterEach(async () => {
-    await new Promise(resolve => httpServer?.close(resolve));
+  let port = 9876;
+  afterEach(done => {
+    if (httpServer) {
+      httpServer.close(done);
+    } else {
+      done();
+    }
+    port = Math.floor(Math.random() * 1000) + 9800;
   });
   [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
     it(`should handle regular requests with ${method}`, async () => {
@@ -133,7 +137,7 @@ describe('Test', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getRegularRequestBody();
       }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
+      const expectedRequest = new Request(`http://127.0.0.1:${port}`, requestInit);
       const expectedResponse = new Response(getRegularResponseBody(), {
         status: 200,
         headers: {
@@ -160,7 +164,7 @@ describe('Test', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getRegularRequestBody();
       }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
+      const expectedRequest = new Request(`http://127.0.0.1:${port}`, requestInit);
       const expectedResponse = new Response(getIncrementalResponseBody(), {
         status: 200,
         headers: {
@@ -189,7 +193,7 @@ describe('Test', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getIncrementalRequestBody();
       }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
+      const expectedRequest = new Request(`http://127.0.0.1:${port}`, requestInit);
       const expectedResponse = new Response(getRegularResponseBody(), {
         status: 200,
         headers: {

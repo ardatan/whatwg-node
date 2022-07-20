@@ -233,7 +233,7 @@ module.exports = function createNodePonyfill(opts = {}) {
                 options.body = streams.Readable.from(encoder.encode());
               }
               if (options.body[Symbol.toStringTag] === 'ReadableStream') {
-                options.body = streamsWeb.Readable.fromWeb ? streams.Readable.fromWeb(options.body) : streams.Readable.from(options.body);
+                options.body = streams.Readable.fromWeb ? streams.Readable.fromWeb(options.body) : streams.Readable.from(options.body);
               }
             }
             super(requestOrUrl, options);

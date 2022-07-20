@@ -13,7 +13,7 @@ declare const _Blob: typeof Blob;
 declare const _File: typeof File;
 declare const _crypto: typeof crypto;
 
-declare module "cross-undici-fetch" {
+declare module "@whatwg-node/fetch" {
   export const fetch: typeof _fetch;
   export const Request: typeof _Request;
   export const Response: typeof _Response;

@@ -1,5 +1,5 @@
 {
-  "name": "w3-server-monorepo",
+  "name": "whatwg-node-monorepo",
   "private": true,
   "scripts": {
     "postinstall": "patch-package && husky install",
