@@ -31,7 +31,7 @@ async function compareReadableStream(toBeChecked: ReadableStream | null, expecte
     const toBeCheckedIterator = toBeCheckedStream[Symbol.asyncIterator]();
     for await (const expectedValue of expectedStream) {
       const toBeCheckedResult = await toBeCheckedIterator.next();
-      if (expectedValue) {
+      if (expectedValue && toBeCheckedResult.value) {
         expect(Buffer.from(toBeCheckedResult.value).toString()).toBe(Buffer.from(expectedValue).toString());
       }
     }
@@ -66,16 +66,16 @@ async function runTestForRequestAndResponse({
   getRequestBody: () => BodyInit;
   getResponseBody: () => BodyInit;
 }) {
-  const { requestListener } = createServerAdapter({
+  const app = createServerAdapter({
     async handleRequest(request: Request) {
       await compareRequest(request, expectedRequest);
       if (methodsWithBody.includes(expectedRequest.method)) {
         await compareReadableStream(request.body, getRequestBody());
       }
       return expectedResponse;
-    }
-  })
-  httpServer = createServer(requestListener);
+    },
+  });
+  httpServer = createServer(app);
   await new Promise<void>(resolve => httpServer.listen(port, '127.0.0.1', resolve));
   const returnedResponse = await fetch(expectedRequest);
   await compareResponse(returnedResponse, expectedResponse);
@@ -114,7 +114,7 @@ function getIncrementalResponseBody() {
   });
 }
 
-describe('Test', () => {
+describe('Request Listener', () => {
   let port = 9876;
   afterEach(done => {
     if (httpServer) {

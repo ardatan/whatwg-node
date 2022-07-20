@@ -1,3 +1,3 @@
 module.exports = {
-  ignore: ['cross-undici-fetch'],
+  ignore: ['@whatwg-node/fetch'],
 };
