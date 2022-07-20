@@ -35,6 +35,10 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
    * A request listener function that can be used with any Node server variation.
    */
   requestListener: RequestListener;
+  /**
+   * Proxy to requestListener to mimic Node middlewares
+   */
+  handle: RequestListener;
 }
 
 export type ServerAdapter<TServerContext, TBaseObject> = TBaseObject &
@@ -86,6 +90,7 @@ export function createServerAdapter<
     handleNodeRequest,
     requestListener,
     handleEvent,
+    handle: requestListener,
   };
 
   function genericRequestHandler(input: any, ctx: any) {
