@@ -1,9 +1,9 @@
-*WHATWG Node Generic Server Adapter*
+# WHATWG Node Generic Server Adapter
 `@whatwg-node/server` helps you to create a generic server implementation by using WHATWG Fetch API for Node.js, AWS Lambda, Cloudflare Workers, Deno, Express, Fastify, Koa, Next.js and Sveltekit.
 
 Once you create an adapter with `createServerAdapter`, you don't need to install any other platform specific package since the generic adapter will handle it automatically.
 
-**How to start**
+## How to start
 
 Let's create a basic Hello World server adapter.
 
@@ -18,11 +18,11 @@ export default createServerAdapter({
 });
 ```
 
-**Integrations**
+## Integrations
 
 You can use your server adapter with the following integrations:
 
-***Node.js***
+### Node.js
 
 [Node.js](https://nodejs.org/api/http.html) is the most popular server side JavaScript runtime.
 
@@ -36,7 +36,7 @@ const nodeServer = createServer(myServerAdapter);
 nodeServer.listen(4000);
 ```
 
-***AWS Lambda***
+### AWS Lambda
 
 AWS Lambda is a serverless computing platform that makes it easy to build applications that run on the AWS cloud. Our adaoter is platform agnostic so they can fit together easily. In order to reduce the boilerplate we prefer to use [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
@@ -50,7 +50,7 @@ export const handler: Handler = configure({
 })
 ```
 
-***Cloudflare Workers***
+### Cloudflare Workers
 
 Cloudflare Workers provides a serverless execution environment that allows you to create entirely new applications or augment existing ones without configuring or maintaining infrastructure. It uses Fetch API already so we can use our adapter as an event listener like below;
 
@@ -60,7 +60,7 @@ import myServerAdapter from './myServerAdapter';
 self.addEventListener('fetch', myServerAdapter);
 ```
 
-***Deno***
+### Deno
 
 [Deno is a simple, modern and secure runtime for JavaScript and TypeScript that uses V8 and is built in Rust](https://deno.land/).
 You can use our adapter as a Deno request handler like below;
@@ -75,7 +75,7 @@ serve(myServerAdapter, {
 })
 ```
 
-***Express***
+### Express
 
 [Express is the most popular web framework for Node.js.](https://expressjs.com/) It is a minimalist framework that provides a robust set of features to handle HTTP on Node.js applications.
 
@@ -95,7 +95,7 @@ app.listen(4000, () => {
 })
 ```
 
-***Fastify***
+### Fastify
 
 [Fastify is one of the popular HTTP server frameworks for Node.js.](https://www.fastify.io/). You can use your adapter easily with Fastify.
 
@@ -135,7 +135,7 @@ app.route({
 app.listen(4000)
 ```
 
-***Koa***
+### Koa
 [Koa is another Node.js server framework designed by the team behind Express, which aims to be a smaller, more expressive.](https://koajs.com/) You can add your adapter to your Koa application with a few lines of code then [benefit middlewares written for Koa.](https://github.com/koajs/koa/wiki)
 
 ```ts
@@ -163,7 +163,7 @@ app.listen(4000, () => {
 })
 ```
 
-***Next.js***
+### Next.js
 [Next.js](https://nextjs.org/) is a web framework that allows you to build websites very quickly and our new server adapter can be integrated with Next.js easily as an API Route.
 
 ```ts
@@ -182,7 +182,7 @@ export const config = {
 export default myServerAdapter
 ```
 
-**SvelteKit**
+### SvelteKit
 [SvelteKit](https://kit.svelte.dev/) is the fastest way to build svelte apps. It is very simple, and let you build frontend & backend in a single place
 
 ```ts
@@ -194,7 +194,7 @@ export {
 }
 ```
 
-**File Uploads / Multipart Requests**
+## File Uploads / Multipart Requests
 Multipart requests are a type of HTTP request that allows you to send blobs together with regular text data which has a mime-type `multipart/form-data`.
 
 For example, if you send a multipart request from a browser with `FormData`, you can get the same `FormData` object in your request handler.
@@ -226,11 +226,11 @@ const myServerAdapter = createServerAdapter({
 
 You can learn more about [File API](https://developer.mozilla.org/en-US/docs/Web/API/File) on MDN documentation.
 
-**Routing and Middlewares**
+## Routing and Middlewares
 
 We'd recommend to use [itty-router](https://github.com/kwhitley/itty-router) to handle routing and middleware approach. So it is really easy to integrate your router to `@whatwg-node/server`.
 
-**Basic Routing**
+### Basic Routing
 
 ```ts
 import { Router } from 'itty-router'
@@ -259,7 +259,7 @@ const httpServer = createServer(myServer)
 httpServer.listen(4000)
 ```
 
-**Middlewares to handle CORS, cookies and more**
+### Middlewares to handle CORS, cookies and more
 
 There is another package called [itty-router-extras](https://www.npmjs.com/package/itty-router-extras) that provides some utilities for your platform agnostic server implementation. The following example shows how to get the cookies as an object from the request.
 
