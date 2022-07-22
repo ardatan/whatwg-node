@@ -119,7 +119,7 @@ app.route({
   url: '/mypath',
   method: ['GET', 'POST', 'OPTIONS'],
   handler: async (req, reply) => {
-    const response = await myServerAdapter.handleIncomingMessage(req)
+    const response = await myServerAdapter.handleNodeRequest(req)
     response.headers.forEach((value, key) => {
       reply.header(key, value)
     })
@@ -145,7 +145,7 @@ import myServerAdapter from './myServerAdapter'
 const app = new Koa()
 
 app.use(async (ctx) => {
-  const response = await myServerAdapter.handleIncomingMessage(ctx.req)
+  const response = await myServerAdapter.handleNodeRequest(ctx.req)
 
   // Set status code
   ctx.status = response.status
