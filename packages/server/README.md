@@ -1,4 +1,5 @@
 # WHATWG Node Generic Server Adapter
+
 `@whatwg-node/server` helps you to create a generic server implementation by using WHATWG Fetch API for Node.js, AWS Lambda, Cloudflare Workers, Deno, Express, Fastify, Koa, Next.js and Sveltekit.
 
 Once you create an adapter with `createServerAdapter`, you don't need to install any other platform specific package since the generic adapter will handle it automatically.
@@ -9,13 +10,13 @@ Let's create a basic Hello World server adapter.
 
 ```ts
 // myServerAdapter.ts
-import { createServerAdapter } from '@whatwg-node/server';
+import { createServerAdapter } from '@whatwg-node/server'
 
 export default createServerAdapter({
-    handleRequest(request: Request) {
-        return new Response(`Hello World!`, { status: 200 });
-    }
-});
+  handleRequest(request: Request) {
+    return new Response(`Hello World!`, { status: 200 })
+  }
+})
 ```
 
 ## Integrations
@@ -27,13 +28,13 @@ You can use your server adapter with the following integrations:
 [Node.js](https://nodejs.org/api/http.html) is the most popular server side JavaScript runtime.
 
 ```ts
-import myServerAdapter from './myServerAdapter';
-import { createServer } from 'http';
+import myServerAdapter from './myServerAdapter'
+import { createServer } from 'http'
 
 // You can create your Node server instance by using our adapter
-const nodeServer = createServer(myServerAdapter);
+const nodeServer = createServer(myServerAdapter)
 // Then start listening on some port
-nodeServer.listen(4000);
+nodeServer.listen(4000)
 ```
 
 ### AWS Lambda
@@ -41,12 +42,12 @@ nodeServer.listen(4000);
 AWS Lambda is a serverless computing platform that makes it easy to build applications that run on the AWS cloud. Our adaoter is platform agnostic so they can fit together easily. In order to reduce the boilerplate we prefer to use [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
 ```ts
-import myServerAdapter from './myServerAdapter';
+import myServerAdapter from './myServerAdapter'
 import type { Handler } from '@aws-cdk/aws-lambda'
 import { configure } from '@vendia/serverless-express'
 
 export const handler: Handler = configure({
-  app: myServerAdapter,
+  app: myServerAdapter
 })
 ```
 
@@ -55,9 +56,9 @@ export const handler: Handler = configure({
 Cloudflare Workers provides a serverless execution environment that allows you to create entirely new applications or augment existing ones without configuring or maintaining infrastructure. It uses Fetch API already so we can use our adapter as an event listener like below;
 
 ```ts
-import myServerAdapter from './myServerAdapter';
+import myServerAdapter from './myServerAdapter'
 
-self.addEventListener('fetch', myServerAdapter);
+self.addEventListener('fetch', myServerAdapter)
 ```
 
 ### Deno
@@ -67,11 +68,11 @@ You can use our adapter as a Deno request handler like below;
 
 ```ts
 import { serve } from 'https://deno.land/std@0.117.0/http/server.ts'
-import myServerAdapter from './myServerAdapter';
+import myServerAdapter from './myServerAdapter'
 
 serve(myServerAdapter, {
   // Listen any port you want
-  addr: ':4000',
+  addr: ':4000'
 })
 ```
 
@@ -102,7 +103,6 @@ app.listen(4000, () => {
 So you can benefit from the powerful plugins of Fastify ecosystem.
 [See the ecosystem](https://www.fastify.io/docs/latest/Guides/Ecosystem/)
 
-
 ```ts
 import myServerAdapter from './myServerAdapter'
 import fastify, { FastifyRequest, FastifyReply } from 'fastify'
@@ -129,13 +129,14 @@ app.route({
     reply.send(response.body)
 
     return reply
-  },
+  }
 })
 
 app.listen(4000)
 ```
 
 ### Koa
+
 [Koa is another Node.js server framework designed by the team behind Express, which aims to be a smaller, more expressive.](https://koajs.com/) You can add your adapter to your Koa application with a few lines of code then [benefit middlewares written for Koa.](https://github.com/koajs/koa/wiki)
 
 ```ts
@@ -144,7 +145,7 @@ import myServerAdapter from './myServerAdapter'
 
 const app = new Koa()
 
-app.use(async (ctx) => {
+app.use(async ctx => {
   const response = await myServerAdapter.handleNodeRequest(ctx.req)
 
   // Set status code
@@ -164,6 +165,7 @@ app.listen(4000, () => {
 ```
 
 ### Next.js
+
 [Next.js](https://nextjs.org/) is a web framework that allows you to build websites very quickly and our new server adapter can be integrated with Next.js easily as an API Route.
 
 ```ts
@@ -175,26 +177,25 @@ import type { NextApiRequest, NextApiResponse } from 'next'
 export const config = {
   api: {
     // Disable body parsing if you expect a request other than JSON
-    bodyParser: false,
-  },
+    bodyParser: false
+  }
 }
 
 export default myServerAdapter
 ```
 
 ### SvelteKit
+
 [SvelteKit](https://kit.svelte.dev/) is the fastest way to build svelte apps. It is very simple, and let you build frontend & backend in a single place
 
 ```ts
 import myServerAdapter from './myServerAdapter'
 
-export {
-    myServerAdapter as get,
-    myServerAdapter as post,
-}
+export { myServerAdapter as get, myServerAdapter as post }
 ```
 
 ## File Uploads / Multipart Requests
+
 Multipart requests are a type of HTTP request that allows you to send blobs together with regular text data which has a mime-type `multipart/form-data`.
 
 For example, if you send a multipart request from a browser with `FormData`, you can get the same `FormData` object in your request handler.
@@ -215,10 +216,10 @@ const myServerAdapter = createServerAdapter({
     const regularTextData = formData.get('additionalStuff')
     // ...
     return new Response('{ "message": "ok" }', {
-        status: 200,
-        headers: {
-            'Content-Type': 'application/json',
-        },
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
     })
   }
 })
@@ -242,7 +243,7 @@ router.get('/todos', () => new Response('Todos Index!'))
 // GET item
 router.get('/todos/:id', ({ params }) => new Response(`Todo #${params.id}`))
 // POST to the collection (we'll use async here)
-router.post('/todos', async (request) => {
+router.post('/todos', async request => {
   const content = await request.json()
   return new Response('Creating Todo: ' + JSON.stringify(content))
 })
@@ -268,7 +269,7 @@ import { withCookies } from 'itty-router-extras'
 
 router.get('/foo', withCookies, ({ cookies }) => {
   // cookies are parsed from the header into request.cookies
-    return new Response(`Cookies: ${JSON.stringify(cookies)}`)
+  return new Response(`Cookies: ${JSON.stringify(cookies)}`)
 })
 ```
 
@@ -277,10 +278,13 @@ You can also setup a CORS middleware to handle preflight CORS requests.
 ```ts
 import { withCors } from 'itty-router-extras'
 
-router.all('*', withCors({
+router.all(
+  '*',
+  withCors({
     origin: 'http://localhost:4000',
     methods: 'GET, POST, PATCH, DELETE',
     headers: 'authorization, referer, origin, content-type',
-    credentials: false,
-}))
+    credentials: false
+  })
+)
 ```

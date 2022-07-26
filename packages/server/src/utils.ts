@@ -11,6 +11,7 @@ export interface NodeRequest {
   hostname?: string;
   body?: any;
   url?: string;
+  originalUrl?: string;
   method?: string;
   headers: any;
   req?: IncomingMessage;
@@ -28,7 +29,7 @@ function buildFullUrl(nodeRequest: NodeRequest) {
 
   const port = nodeRequest.socket?.localPort || 80;
   const protocol = nodeRequest.protocol || 'http';
-  const endpoint = nodeRequest.url || '/graphql';
+  const endpoint = nodeRequest.originalUrl || nodeRequest.url || '/graphql';
 
   return `${protocol}://${hostname}:${port}${endpoint}`;
 }
@@ -57,13 +58,14 @@ function isRequestBody(body: any): body is BodyInit {
 export function normalizeNodeRequest(nodeRequest: NodeRequest, RequestCtor: typeof Request): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   configureSocket(rawRequest);
-  const fullUrl = buildFullUrl(rawRequest);
+  let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
     const urlObj = new URL(fullUrl);
     for (const queryName in nodeRequest.query) {
       const queryValue = nodeRequest.query[queryName];
       urlObj.searchParams.set(queryName, queryValue);
     }
+    fullUrl = urlObj.toString();
   }
   const baseRequestInit: RequestInit = {
     method: nodeRequest.method,
