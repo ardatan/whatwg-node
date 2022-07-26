@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.0.3
+
+### Patch Changes
+
+- 6aaa591: Use '.originalUrl' if possible to get `Request.url` properly because some frameworks like Express are sending `/` to `url`
+
 ## 0.0.2
 
 ### Patch Changes
