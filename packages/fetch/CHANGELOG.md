@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.1.1
+
+### Patch Changes
+
+- 16aff71: Fix missing TextEncoder and TextDecoder in the default ponyfill
+
 ## 0.1.0
 
 ### Minor Changes
