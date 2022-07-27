@@ -18,6 +18,8 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.TransformStream = globalThis.TransformStream;
   ponyfills.Blob = globalThis.Blob;
   ponyfills.crypto = globalThis.crypto;
+
+  require('event-target-polyfill');
   ponyfills.Event = globalThis.Event;
   ponyfills.EventTarget = globalThis.EventTarget;
 

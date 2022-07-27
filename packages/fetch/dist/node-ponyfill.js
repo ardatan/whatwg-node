@@ -16,8 +16,6 @@ module.exports.File = ponyfills.File;
 module.exports.crypto = ponyfills.crypto;
 module.exports.TextEncoder = ponyfills.TextEncoder;
 module.exports.TextDecoder = ponyfills.TextDecoder;
-
-require('event-target-polyfill');
 module.exports.Event = ponyfills.Event;
 module.exports.EventTarget = ponyfills.EventTarget;
 
