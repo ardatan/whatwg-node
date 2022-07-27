@@ -22,7 +22,7 @@
     "abort-controller": "^3.0.0",
     "busboy": "^1.6.0",
     "event-target-polyfill": "^0.0.3",
-    "form-data-encoder": "^1.7.1",
+    "form-data-encoder": "^2.0.0",
     "formdata-node": "^4.3.1",
     "node-fetch": "^2.6.7",
     "undici": "^5.8.0",
