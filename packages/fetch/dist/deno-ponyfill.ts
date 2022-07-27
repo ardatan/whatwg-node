@@ -12,6 +12,8 @@ const File = globalThis.File;
 const crypto = globalThis.crypto;
 const TextDecoder = globalThis.TextDecoder;
 const TextEncoder = globalThis.TextEncoder;
+const Event = globalThis.Event;
+const EventTarget = globalThis.EventTarget;
 
 export const create = () => globalThis;
 export {
@@ -29,4 +31,6 @@ export {
   crypto,
   TextDecoder,
   TextEncoder,
+  Event,
+  EventTarget,
 };

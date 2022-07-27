@@ -14,6 +14,8 @@ declare const _File: typeof File;
 declare const _crypto: typeof crypto;
 declare const _TextEncoder: typeof TextEncoder;
 declare const _TextDecoder: typeof TextDecoder;
+declare const _Event: typeof Event;
+declare const _EventTarget: typeof EventTarget;
 
 declare module "@whatwg-node/fetch" {
   export const fetch: typeof _fetch;
@@ -30,6 +32,8 @@ declare module "@whatwg-node/fetch" {
   export const crypto: typeof _crypto;
   export const TextDecoder: typeof _TextDecoder;
   export const TextEncoder: typeof _TextEncoder;
+  export const Event: typeof _Event;
+  export const EventTarget: typeof EventTarget;
   export interface FormDataLimits {
     /* Max field name size (in bytes). Default: 100. */
     fieldNameSize?: number;
@@ -60,7 +64,9 @@ declare module "@whatwg-node/fetch" {
     File: typeof _File,
     crypto: typeof _crypto
     TextEncoder: typeof _TextEncoder,
-    TextDecoder: typeof _TextDecoder
+    TextDecoder: typeof _TextDecoder,
+    Event: typeof _Event,
+    EventTarget: typeof EventTarget
   });
 }
 

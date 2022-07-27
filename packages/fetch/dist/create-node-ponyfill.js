@@ -18,6 +18,8 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.TransformStream = globalThis.TransformStream;
   ponyfills.Blob = globalThis.Blob;
   ponyfills.crypto = globalThis.crypto;
+  ponyfills.Event = globalThis.Event;
+  ponyfills.EventTarget = globalThis.EventTarget;
 
   if (!ponyfills.AbortController) {
     const abortControllerModule = require("abort-controller");
