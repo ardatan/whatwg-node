@@ -14,6 +14,8 @@ module.exports.TransformStream = ponyfills.TransformStream;
 module.exports.Blob = ponyfills.Blob;
 module.exports.File = ponyfills.File;
 module.exports.crypto = ponyfills.crypto;
+module.exports.TextEncoder = ponyfills.TextEncoder;
+module.exports.TextDecoder = ponyfills.TextDecoder;
 exports.createFetch = createNodePonyfill;
 
 require('event-target-polyfill');
