@@ -10,6 +10,8 @@ const TransformStream = globalThis.TransformStream;
 const Blob = globalThis.Blob;
 const File = globalThis.File;
 const crypto = globalThis.crypto;
+const TextDecoder = globalThis.TextDecoder;
+const TextEncoder = globalThis.TextEncoder;
 
 export const create = () => globalThis;
 export {
@@ -25,4 +27,6 @@ export {
   Blob,
   File,
   crypto,
+  TextDecoder,
+  TextEncoder,
 };

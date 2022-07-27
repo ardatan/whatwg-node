@@ -10,4 +10,6 @@ module.exports.TransformStream = globalThis.TransformStream;
 module.exports.Blob = globalThis.Blob;
 module.exports.File = globalThis.File;
 module.exports.crypto = globalThis.crypto;
+module.exports.TextEncoder = globalThis.TextEncoder;
+module.exports.TextDecoder = globalThis.TextDecoder;
 module.exports.createFetch = () => globalThis;

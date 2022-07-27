@@ -50,6 +50,22 @@ module.exports = function createNodePonyfill(opts = {}) {
     }
   }
 
+  ponyfills.TextEncoder = function TextEncoder() {
+    return {
+      encode(str) {
+        return Buffer.from(str, "utf8");
+      }
+    }
+  }
+
+  ponyfills.TextDecoder = function TextDecoder() {
+    return {
+      decode(buf) {
+        return buf.toString("utf8");
+      }
+    }
+  }
+
   // ReadableStream doesn't handle aborting properly, so we need to patch it
   ponyfills.ReadableStream = class PonyfillReadableStream extends ponyfills.ReadableStream {
     constructor(underlyingSource, ...opts) {
@@ -96,6 +112,11 @@ module.exports = function createNodePonyfill(opts = {}) {
   if (!ponyfills.crypto) {
     const cryptoModule = require("crypto");
     ponyfills.crypto = cryptoModule.webcrypto;
+  }
+
+  if (!ponyfills.crypto) {
+    const cryptoPonyfill = require('@peculiar/webcrypto');
+    ponyfills.crypto = new cryptoPonyfill.Crypto();
   }
 
   // If any of classes of Fetch API is missing, we need to ponyfill them.

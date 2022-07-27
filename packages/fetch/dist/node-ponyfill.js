@@ -15,3 +15,5 @@ module.exports.Blob = ponyfills.Blob;
 module.exports.File = ponyfills.File;
 module.exports.crypto = ponyfills.crypto;
 exports.createFetch = createNodePonyfill;
+
+require('event-target-polyfill');
