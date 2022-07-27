@@ -19,7 +19,10 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.Blob = globalThis.Blob;
   ponyfills.crypto = globalThis.crypto;
 
-  require('event-target-polyfill');
+  if (!globalThis.Event || !globalThis.EventTarget) {
+    require('event-target-polyfill');
+  }
+  
   ponyfills.Event = globalThis.Event;
   ponyfills.EventTarget = globalThis.EventTarget;
 

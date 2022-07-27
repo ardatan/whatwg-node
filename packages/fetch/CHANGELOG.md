@@ -1,6 +1,6 @@
 # @whatwg-node/fetch
 
-## 0.2.2
+## 0.2.3
 
 ### Minor Changes
 
