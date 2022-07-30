@@ -1,6 +1,7 @@
 const handleFileRequest = require("./handle-file-request");
 
 module.exports = function createNodePonyfill(opts = {}) {
+
   const ponyfills = {};
 
   if (!opts.useNodeFetch) {
@@ -65,10 +66,14 @@ module.exports = function createNodePonyfill(opts = {}) {
     }
   }
 
-  ponyfills.TextDecoder = function TextDecoder() {
+  ponyfills.TextDecoder = function TextDecoder(label, opts) {
+    let encoding = 'utf-8'
+    if (opts && opts.encoding) {
+      encoding = opts.encoding
+    }
     return {
       decode(buf) {
-        return buf.toString("utf8");
+        return Buffer.from(buf).toString(encoding);
       }
     }
   }
@@ -223,7 +228,7 @@ module.exports = function createNodePonyfill(opts = {}) {
         if (globalThis.Headers) {
           Object.defineProperty(globalThis.Headers, Symbol.hasInstance, {
             value(obj) {
-              return obj.get && obj.set && obj.delete && obj.has && obj.append;
+              return obj && obj.get && obj.set && obj.delete && obj.has && obj.append;
             },
             configurable: true,
           })
