@@ -7,7 +7,7 @@
     "target": "es2018",
     "module": "esnext",
     "moduleResolution": "node",
-    "lib": ["esnext", "dom", "webworker"],
+    "lib": ["esnext", "webworker"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "importHelpers": true,
