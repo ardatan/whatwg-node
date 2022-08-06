@@ -1,3 +1,5 @@
+/// <reference lib="webworker" />
+
 import type { RequestListener, ServerResponse } from 'node:http';
 import { isReadable, isServerResponse, NodeRequest, normalizeNodeRequest, sendNodeResponse } from './utils';
 import { fetch, Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
