@@ -33,7 +33,7 @@ declare module "@whatwg-node/fetch" {
   export const TextDecoder: typeof _TextDecoder;
   export const TextEncoder: typeof _TextEncoder;
   export const Event: typeof _Event;
-  export const EventTarget: typeof EventTarget;
+  export const EventTarget: typeof _EventTarget;
   export interface FormDataLimits {
     /* Max field name size (in bytes). Default: 100. */
     fieldNameSize?: number;
@@ -66,7 +66,7 @@ declare module "@whatwg-node/fetch" {
     TextEncoder: typeof _TextEncoder,
     TextDecoder: typeof _TextDecoder,
     Event: typeof _Event,
-    EventTarget: typeof EventTarget
+    EventTarget: typeof _EventTarget
   });
 }
 
