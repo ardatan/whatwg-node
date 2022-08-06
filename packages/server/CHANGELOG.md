@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.0.6
+
+### Patch Changes
+
+- 310c21a: Use "webworker" reference for "FetchEvent" type
+
 ## 0.0.5
 
 ### Patch Changes
