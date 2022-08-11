@@ -1,0 +1,34 @@
+name: PR
+
+on:
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+    inputs:
+      onDemand:
+        description: 'Are you sure?'
+        required: true
+        default: 'yes'
+      npmTag:
+        description: 'NPM Tag'
+        required: true
+        default: 'alpha'
+
+jobs:
+  dependencies:
+    uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yaml@main
+    secrets:
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event.inputs.onDemand == 'yes'
+    uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@main
+    with:
+      npmTag: alpha
+      buildScript: build
+      nodeVersion: 18
+    secrets:
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
+      npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
