@@ -20,18 +20,38 @@ export interface NodeRequest {
   query?: any;
 }
 
-function buildFullUrl(nodeRequest: NodeRequest) {
-  const hostname =
-    nodeRequest.hostname ||
-    nodeRequest.socket?.localAddress?.split('ffff')?.join('')?.split(':')?.join('') ||
-    nodeRequest.headers?.host?.split(':')[0] ||
-    'localhost';
+function getPort(nodeRequest: NodeRequest) {
+  if (nodeRequest.socket?.localPort) {
+    return nodeRequest.socket?.localPort;
+  }
+  const portInHeader = nodeRequest.headers?.host?.split(':')?.[1];
+  if (portInHeader) {
+    return portInHeader;
+  }
+  return 80;
+}
 
-  const port = nodeRequest.socket?.localPort || 80;
+function getHostnameWithPort(nodeRequest: NodeRequest) {
+  if (nodeRequest.headers?.host) {
+    return nodeRequest.headers?.host;
+  }
+  const port = getPort(nodeRequest);
+  if (nodeRequest.hostname) {
+    return nodeRequest.hostname + ':' + port;
+  }
+  const localIp = nodeRequest.socket?.localAddress;
+  if (localIp && !localIp?.includes('::') && !localIp?.includes('ffff')) {
+    return `${localIp}:${port}`;
+  }
+  return 'localhost';
+}
+
+function buildFullUrl(nodeRequest: NodeRequest) {
+  const hostnameWithPort = getHostnameWithPort(nodeRequest);
   const protocol = nodeRequest.protocol || 'http';
   const endpoint = nodeRequest.originalUrl || nodeRequest.url || '/graphql';
 
-  return `${protocol}://${hostname}:${port}${endpoint}`;
+  return `${protocol}://${hostnameWithPort}${endpoint}`;
 }
 
 function configureSocket(rawRequest: NodeRequest) {
