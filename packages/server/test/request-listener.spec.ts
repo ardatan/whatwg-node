@@ -76,7 +76,7 @@ async function runTestForRequestAndResponse({
     },
   });
   httpServer = createServer(app);
-  await new Promise<void>(resolve => httpServer.listen(port, '127.0.0.1', resolve));
+  await new Promise<void>(resolve => httpServer.listen(port, 'localhost', resolve));
   const returnedResponse = await fetch(expectedRequest);
   await compareResponse(returnedResponse, expectedResponse);
   await compareReadableStream(returnedResponse.body, getResponseBody());
@@ -137,7 +137,7 @@ describe('Request Listener', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getRegularRequestBody();
       }
-      const expectedRequest = new Request(`http://127.0.0.1:${port}`, requestInit);
+      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
       const expectedResponse = new Response(getRegularResponseBody(), {
         status: 200,
         headers: {
@@ -164,7 +164,7 @@ describe('Request Listener', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getRegularRequestBody();
       }
-      const expectedRequest = new Request(`http://127.0.0.1:${port}`, requestInit);
+      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
       const expectedResponse = new Response(getIncrementalResponseBody(), {
         status: 200,
         headers: {
@@ -193,7 +193,7 @@ describe('Request Listener', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getIncrementalRequestBody();
       }
-      const expectedRequest = new Request(`http://127.0.0.1:${port}`, requestInit);
+      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
       const expectedResponse = new Response(getRegularResponseBody(), {
         status: 200,
         headers: {

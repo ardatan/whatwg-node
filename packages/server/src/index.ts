@@ -26,7 +26,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
-  fetch: typeof fetch;
+  fetch: typeof fetch | ((request: Request, ...ctx: any[]) => Promise<Response>);
   /**
    * This function takes Node's request object and returns a WHATWG Fetch spec compliant `Response` object.
    **/
@@ -56,14 +56,11 @@ export function createServerAdapter<
   handleRequest,
   baseObject,
 }: CreateServerAdapterOptions<TServerContext, TBaseObject>): ServerAdapter<TServerContext, TBaseObject> {
-  function fetchFn(...[input, init]: Parameters<typeof fetch>) {
-    let request: Request;
+  function fetchFn(input: RequestInfo, init?: RequestInit, ...ctx: any[]): Promise<Response> {
     if (typeof input === 'string' || input instanceof URL) {
-      request = new RequestCtor(input, init);
-    } else {
-      request = input;
+      return handleRequest(new RequestCtor(input, init), Object.assign({}, ...ctx));
     }
-    return handleRequest(request, init as any);
+    return handleRequest(input, Object.assign({}, init, ...ctx));
   }
 
   function handleNodeRequest(nodeRequest: NodeRequest, serverContext: TServerContext): Promise<Response> {
@@ -72,7 +69,13 @@ export function createServerAdapter<
   }
 
   async function requestListener(nodeRequest: NodeRequest, serverResponse: ServerResponse) {
-    const response = await handleNodeRequest(nodeRequest, { req: nodeRequest, res: serverResponse } as any);
+    const response = await handleNodeRequest(nodeRequest, {
+      req: nodeRequest,
+      res: serverResponse,
+      waitUntil(p: Promise<any>) {
+        p.catch(err => console.error(err));
+      },
+    } as any);
     return sendNodeResponse(response, serverResponse);
   }
 
