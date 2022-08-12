@@ -10,7 +10,7 @@
     "lint": "eslint --ext .ts .",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
-    "test": "jest",
+    "test": "jest --detectOpenHandles --detectLeaks",
     "prerelease": "yarn build",
     "prerelease-canary": "yarn build",
     "release": "changeset publish"
