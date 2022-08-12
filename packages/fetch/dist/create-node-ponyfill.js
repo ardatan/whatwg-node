@@ -23,7 +23,7 @@ module.exports = function createNodePonyfill(opts = {}) {
   if (!globalThis.Event || !globalThis.EventTarget) {
     require('event-target-polyfill');
   }
-  
+
   ponyfills.Event = globalThis.Event;
   ponyfills.EventTarget = globalThis.EventTarget;
 
@@ -198,7 +198,8 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       const fetch = function (requestOrUrl, options) {
         if (typeof requestOrUrl === "string") {
-          return fetch(new Request(requestOrUrl, options));
+          // We cannot use our ctor because it leaks on Node 18's global fetch
+          return originalFetch(requestOrUrl, options);
         }
         if (requestOrUrl.url.startsWith('file:')) {
           return handleFileRequest(requestOrUrl.url, ponyfills.Response);
