@@ -27,12 +27,24 @@ async function compareReadableStream(toBeChecked: ReadableStream | null, expecte
     expect(toBeChecked).toBeTruthy();
     const expectedBody = new Response(expected).body;
     const expectedStream = Readable.from(expectedBody as any);
+    const expectedIterator = expectedStream[Symbol.asyncIterator]();
     const toBeCheckedStream = Readable.from(toBeChecked as any);
-    const toBeCheckedIterator = toBeCheckedStream[Symbol.asyncIterator]();
-    for await (const expectedValue of expectedStream) {
-      const toBeCheckedResult = await toBeCheckedIterator.next();
-      if (expectedValue && toBeCheckedResult.value) {
-        expect(Buffer.from(toBeCheckedResult.value).toString()).toBe(Buffer.from(expectedValue).toString());
+    for await (const toBeCheckedChunk of toBeCheckedStream) {
+      if (toBeCheckedChunk) {
+        const toBeCheckedValues = Buffer.from(toBeCheckedChunk).toString().trim().split('\n');
+        for (const toBeCheckedValue of toBeCheckedValues) {
+          const trimmedToBeCheckedValue = toBeCheckedValue.trim();
+          if (trimmedToBeCheckedValue) {
+            const expectedResult = await expectedIterator.next();
+            const expectedChunk = expectedResult.value;
+            if (expectedChunk) {
+              const expectedValue = Buffer.from(expectedResult.value).toString().trim();
+              if (expectedValue) {
+                expect(trimmedToBeCheckedValue).toBe(expectedValue);
+              }
+            }
+          }
+        }
       }
     }
   }
