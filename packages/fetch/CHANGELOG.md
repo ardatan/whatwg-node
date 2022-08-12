@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.2.9
+
+### Patch Changes
+
+- [`9a8d873`](https://github.com/ardatan/whatwg-node/commit/9a8d8731ff07ea585b1e561718584fbe5edeb963) Thanks [@ardatan](https://github.com/ardatan)! - Workaround for a potential leak on Node 18
+
 ## 0.2.3
 
 ### Minor Changes
