@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/fetch",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Cross Platform Smart Fetch Ponyfill",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
