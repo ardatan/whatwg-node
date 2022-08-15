@@ -2,4 +2,4 @@
 '@whatwg-node/server': patch
 ---
 
-Add a changeset
+Fix the signature of the server adapter's `fetch`
