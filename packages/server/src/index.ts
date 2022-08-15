@@ -2,7 +2,7 @@
 
 import type { RequestListener, ServerResponse } from 'node:http';
 import { isReadable, isServerResponse, NodeRequest, normalizeNodeRequest, sendNodeResponse } from './utils';
-import { fetch, Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
+import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
 
 export interface CreateServerAdapterOptions<TServerContext, TBaseObject> {
   /**
@@ -28,7 +28,12 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
-  fetch: typeof fetch | ((request: Request, ...ctx: any[]) => Promise<Response>);
+  fetch(request: Request, ...ctx: any[]): Promise<Response>;
+  fetch(urlStr: string, ...ctx: any[]): Promise<Response>;
+  fetch(urlStr: string, init: RequestInit, ...ctx: any[]): Promise<Response>;
+  fetch(url: URL, ...ctx: any[]): Promise<Response>;
+  fetch(url: URL, init: RequestInit, ...ctx: any[]): Promise<Response>;
+
   /**
    * This function takes Node's request object and returns a WHATWG Fetch spec compliant `Response` object.
    **/
@@ -58,7 +63,7 @@ export function createServerAdapter<
   handleRequest,
   baseObject,
 }: CreateServerAdapterOptions<TServerContext, TBaseObject>): ServerAdapter<TServerContext, TBaseObject> {
-  function fetchFn(input: RequestInfo, init?: RequestInit, ...ctx: any[]): Promise<Response> {
+  function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]): Promise<Response> {
     if (typeof input === 'string' || input instanceof URL) {
       return handleRequest(new RequestCtor(input, init), Object.assign({}, ...ctx));
     }
