@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.1.1
+
+### Patch Changes
+
+- [`fd179aa`](https://github.com/ardatan/whatwg-node/commit/fd179aa80451e93ccab6584680e262509feca49b) Thanks [@ardatan](https://github.com/ardatan)! - Fix the signature of the server adapter's `fetch`
+
 ## 0.1.0
 
 ### Minor Changes
