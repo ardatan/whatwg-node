@@ -22,10 +22,10 @@
     "@babel/preset-typescript": "7.18.6",
     "@changesets/cli": "2.24.3",
     "@changesets/changelog-github": "0.4.6",
-    "@types/jest": "28.1.6",
+    "@types/jest": "28.1.7",
     "@types/node": "18.6.4",
-    "@typescript-eslint/eslint-plugin": "5.33.0",
-    "@typescript-eslint/parser": "5.33.0",
+    "@typescript-eslint/eslint-plugin": "5.33.1",
+    "@typescript-eslint/parser": "5.33.1",
     "babel-jest": "28.1.3",
     "bob-the-bundler": "1.7.3",
     "eslint": "8.22.0",
@@ -42,7 +42,7 @@
     "lint-staged": "13.0.3",
     "patch-package": "6.4.7",
     "prettier": "2.7.1",
-    "ts-jest": "28.0.7",
+    "ts-jest": "28.0.8",
     "typescript": "4.7.4"
   },
   "lint-staged": {
