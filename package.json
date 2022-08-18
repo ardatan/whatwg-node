@@ -8,6 +8,7 @@
     "clean-dist": "rimraf \"packages/**/dist\" && rimraf \".bob\"",
     "build": "yarn ts:transpile && bob build",
     "lint": "eslint --ext .ts .",
+    "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "test": "jest --detectOpenHandles --detectLeaks",
