@@ -1,5 +1,13 @@
 # @whatwg-node/fetch
 
+## 0.3.0
+
+### Minor Changes
+
+- [`8a431d3`](https://github.com/ardatan/whatwg-node/commit/8a431d309271c0d1ff7248ec26afe293ccc01bf6) Thanks [@ardatan](https://github.com/ardatan)! - Add "btoa" ponyfill for Node 14
+
+* [`8a431d3`](https://github.com/ardatan/whatwg-node/commit/8a431d309271c0d1ff7248ec26afe293ccc01bf6) Thanks [@ardatan](https://github.com/ardatan)! - Support different encodings in TextEncoder and TextDecoder
+
 ## 0.2.9
 
 ### Patch Changes
