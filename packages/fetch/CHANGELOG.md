@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.3.2
+
+### Patch Changes
+
+- [`982fa96`](https://github.com/ardatan/whatwg-node/commit/982fa96b09af404a21154098499202bfd29c2054) Thanks [@ardatan](https://github.com/ardatan)! - fix(ponyfill/btoa): handle incoming value as binary encoding
+
 ## 0.3.1
 
 ### Patch Changes
