@@ -61,7 +61,7 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.btoa = globalThis.btoa
   if (!ponyfills.btoa) {
     ponyfills.btoa = function btoa(data) {
-      return Buffer.from(data).toString('base64');
+      return Buffer.from(data, 'binary').toString('base64');
     };
   }
 
