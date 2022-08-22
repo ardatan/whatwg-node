@@ -121,6 +121,8 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, RequestCtor: type
         switch (prop) {
           case 'json':
             return async () => maybeParsedBody;
+          case 'text':
+            return async () => JSON.stringify(maybeParsedBody);
           default:
             return Reflect.get(target, prop, receiver);
         }
