@@ -58,9 +58,12 @@ module.exports = function createNodePonyfill(opts = {}) {
     }
   }
 
-  ponyfills.btoa = globalThis.btoa || function btoa(data) {
-    return Buffer.from(data).toString('base64');
-  };
+  ponyfills.btoa = globalThis.btoa
+  if (!ponyfills.btoa) {
+    ponyfills.btoa = function btoa(data) {
+      return Buffer.from(data).toString('base64');
+    };
+  }
 
   ponyfills.TextEncoder = function TextEncoder(encoding = 'utf-8') {
     return {
