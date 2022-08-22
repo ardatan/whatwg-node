@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.3.1
+
+### Patch Changes
+
+- [`a3bc171`](https://github.com/ardatan/whatwg-node/commit/a3bc17120fbdf641e4363d08ba79955005f5b3d6) Thanks [@ardatan](https://github.com/ardatan)! - fix btoa ponyfill
+
 ## 0.3.0
 
 ### Minor Changes
