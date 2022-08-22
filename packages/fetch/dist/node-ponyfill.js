@@ -14,6 +14,7 @@ module.exports.TransformStream = ponyfills.TransformStream;
 module.exports.Blob = ponyfills.Blob;
 module.exports.File = ponyfills.File;
 module.exports.crypto = ponyfills.crypto;
+module.exports.btoa = ponyfills.btoa;
 module.exports.TextEncoder = ponyfills.TextEncoder;
 module.exports.TextDecoder = ponyfills.TextDecoder;
 module.exports.Event = ponyfills.Event;

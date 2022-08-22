@@ -10,6 +10,7 @@ const TransformStream = globalThis.TransformStream;
 const Blob = globalThis.Blob;
 const File = globalThis.File;
 const crypto = globalThis.crypto;
+const btoa = globalThis.btoa;
 const TextDecoder = globalThis.TextDecoder;
 const TextEncoder = globalThis.TextEncoder;
 const Event = globalThis.Event;
@@ -29,6 +30,7 @@ export {
   Blob,
   File,
   crypto,
+  btoa,
   TextDecoder,
   TextEncoder,
   Event,

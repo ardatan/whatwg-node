@@ -58,19 +58,19 @@ module.exports = function createNodePonyfill(opts = {}) {
     }
   }
 
-  ponyfills.TextEncoder = function TextEncoder() {
+  ponyfills.btoa = globalThis.btoa || function btoa(data) {
+    return Buffer.from(data).toString('base64');
+  };
+
+  ponyfills.TextEncoder = function TextEncoder(encoding = 'utf-8') {
     return {
       encode(str) {
-        return Buffer.from(str, "utf8");
+        return Buffer.from(str, encoding);
       }
     }
   }
 
-  ponyfills.TextDecoder = function TextDecoder(label, opts) {
-    let encoding = 'utf-8'
-    if (opts && opts.encoding) {
-      encoding = opts.encoding
-    }
+  ponyfills.TextDecoder = function TextDecoder(encoding = 'utf-8') {
     return {
       decode(buf) {
         return Buffer.from(buf).toString(encoding);

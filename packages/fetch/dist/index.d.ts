@@ -12,6 +12,7 @@ declare const _TransformStream: typeof TransformStream;
 declare const _Blob: typeof Blob;
 declare const _File: typeof File;
 declare const _crypto: typeof crypto;
+declare const _btoa: typeof btoa;
 declare const _TextEncoder: typeof TextEncoder;
 declare const _TextDecoder: typeof TextDecoder;
 declare const _Event: typeof Event;
@@ -30,6 +31,7 @@ declare module "@whatwg-node/fetch" {
   export const Blob: typeof _Blob;
   export const File: typeof _File;
   export const crypto: typeof _crypto;
+  export const btoa: typeof _btoa;
   export const TextDecoder: typeof _TextDecoder;
   export const TextEncoder: typeof _TextEncoder;
   export const Event: typeof _Event;
@@ -62,7 +64,8 @@ declare module "@whatwg-node/fetch" {
     TransformStream: typeof _TransformStream,
     Blob: typeof _Blob,
     File: typeof _File,
-    crypto: typeof _crypto
+    crypto: typeof _crypto,
+    btoa: typeof _btoa,
     TextEncoder: typeof _TextEncoder,
     TextDecoder: typeof _TextDecoder,
     Event: typeof _Event,
