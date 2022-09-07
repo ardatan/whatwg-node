@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.4.2
+
+### Patch Changes
+
+- [`7f37b6d`](https://github.com/ardatan/whatwg-node/commit/7f37b6dbeb76cfa54e0ed8672812bf016c1df4fa) Thanks [@ardatan](https://github.com/ardatan)! - fix(fetch): respect filesLimit even with fieldsFirst
+
 ## 0.4.1
 
 ### Patch Changes
