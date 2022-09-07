@@ -49,7 +49,8 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
 }
 
 export type ServerAdapter<TServerContext, TBaseObject> = TBaseObject &
-  RequestListener & ServerAdapterObject<TServerContext>['fetch'] &
+  RequestListener &
+  ServerAdapterObject<TServerContext>['fetch'] &
   ServerAdapterObject<TServerContext>;
 
 export function createServerAdapter<
