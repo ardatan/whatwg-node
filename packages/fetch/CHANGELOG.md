@@ -1,5 +1,13 @@
 # @whatwg-node/fetch
 
+## 0.4.0
+
+### Minor Changes
+
+- [`005937c`](https://github.com/ardatan/whatwg-node/commit/005937c72749dfa3914c8b6193a88c772a522275) Thanks [@ardatan](https://github.com/ardatan)! - feat(fetch): new `fieldsFirst` option to allow async stream consumption for multipart forms
+
+- [`effc03d`](https://github.com/ardatan/whatwg-node/commit/effc03d58793328595183ac7cd5c9abab95dec17) Thanks [@ardatan](https://github.com/ardatan)! - Bun Support
+
 ## 0.3.2
 
 ### Patch Changes

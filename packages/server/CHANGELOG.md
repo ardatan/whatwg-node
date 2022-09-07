@@ -1,5 +1,16 @@
 # @whatwg-node/server
 
+## 0.2.0
+
+### Minor Changes
+
+- [`effc03d`](https://github.com/ardatan/whatwg-node/commit/effc03d58793328595183ac7cd5c9abab95dec17) Thanks [@ardatan](https://github.com/ardatan)! - Bun Support
+
+### Patch Changes
+
+- Updated dependencies [[`005937c`](https://github.com/ardatan/whatwg-node/commit/005937c72749dfa3914c8b6193a88c772a522275), [`effc03d`](https://github.com/ardatan/whatwg-node/commit/effc03d58793328595183ac7cd5c9abab95dec17)]:
+  - @whatwg-node/fetch@0.4.0
+
 ## 0.1.2
 
 ### Patch Changes
