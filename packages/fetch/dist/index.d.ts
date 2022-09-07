@@ -51,6 +51,8 @@ declare module "@whatwg-node/fetch" {
     parts?: number;
     /* For multipart forms, the max number of header key-value pairs to parse. Default: 2000. */
     headerSize?: number;
+    /* For multipart forms, enable this if your data has fields first, then files. Default: false. */
+    fieldsFirst?: boolean;
   }
   export const createFetch: (opts?: { useNodeFetch?: boolean; formDataLimits?: FormDataLimits }) => ({
     fetch: typeof _fetch,

@@ -1,7 +1,35 @@
 const busboy = require('busboy');
+const { resolve } = require('path');
 const streams = require("stream");
 
 module.exports = function getFormDataMethod(File, limits) {
+  function consumeStreamAsFile({
+    name,
+    filename,
+    mimeType,
+    fileStream,
+    formData,
+  }) {
+    if (fileStream._consumedAsFile) {
+      return Promise.resolve(formData.get(name));
+    }
+    return new Promise((resolve, reject) => {
+      const chunks = [];
+      fileStream.on('limit', () => {
+        reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
+      })
+      fileStream.on('data', (chunk) => {
+        chunks.push(chunk);
+      })
+      fileStream.on('close', () => {
+        const file = new File(chunks, filename, { type: mimeType });
+        formData.set(name, file);
+        fileStream._consumedAsFile = true;
+        resolve(file);
+      });
+    })
+  }
+
   return function formData() {
     if (this.body == null) {
       return null;
@@ -17,18 +45,6 @@ module.exports = function getFormDataMethod(File, limits) {
     });
     return new Promise((resolve, reject) => {
       const formData = new Map();
-      bb.on('file', (name, fileStream, { filename, mimeType }) => {
-        const chunks = [];
-        fileStream.on('limit', () => {
-          reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
-        })
-        fileStream.on('data', (chunk) => {
-          chunks.push(chunk);
-        })
-        fileStream.on('close', () => {
-          formData.set(name, new File(chunks, filename, { type: mimeType }));
-        });
-      })
       bb.on('field', (name, value, { nameTruncated, valueTruncated }) => {
         if (nameTruncated) {
           reject(new Error(`Field name size exceeded: ${limits.fieldNameSize} bytes`));
@@ -38,14 +54,57 @@ module.exports = function getFormDataMethod(File, limits) {
         }
         formData.set(name, value)
       })
-      bb.on('partsLimit', () => {
-        reject(new Error(`Parts limit exceeded: ${limits.parts}`));
+      bb.on('fieldsLimit', () => {
+        reject(new Error(`Fields limit exceeded: ${limits.fields}`));
+      })
+      bb.on('file', (name, fileStream, { filename, mimeType }) => {
+        if (limits.fieldsFirst) {
+          resolve(formData);
+          const fakeFileObj = {
+            name: filename,
+            type: mimeType,
+          }
+          Object.setPrototypeOf(fakeFileObj, File.prototype);
+          formData.set(name, new Proxy(fakeFileObj, {
+            get: (target, prop) => {
+              switch(prop) {
+                case 'name':
+                  return filename;
+                case 'type':
+                  return mimeType;
+                case 'stream':
+                  return () => fileStream;
+                case 'size':
+                  throw new Error(`Cannot access file size before consuming the stream.`);
+                case 'slice':
+                  throw new Error(`Cannot slice file before consuming the stream.`);
+                case 'text':
+                case 'arrayBuffer':
+                  return () => consumeStreamAsFile({
+                    name,
+                    filename,
+                    mimeType,
+                    fileStream,
+                    formData,
+                  }).then(file => file[prop]())
+              }
+            },
+          }))
+        } else {
+          consumeStreamAsFile({
+            name,
+            filename,
+            mimeType,
+            fileStream,
+            formData,
+          }).catch(err => reject(err));
+        }
       })
       bb.on('filesLimit', () => {
         reject(new Error(`Files limit exceeded: ${limits.files}`));
       })
-      bb.on('fieldsLimit', () => {
-        reject(new Error(`Fields limit exceeded: ${limits.fields}`));
+      bb.on('partsLimit', () => {
+        reject(new Error(`Parts limit exceeded: ${limits.parts}`));
       })
       bb.on('close', () => {
         resolve(formData);
