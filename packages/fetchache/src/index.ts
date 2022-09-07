@@ -14,20 +14,29 @@ export interface FetchacheOptions {
   cache: KeyValueCache<FetchacheCacheEntry>;
 }
 
-export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptions): FetchFn {
+export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): FetchFn {
   return async (input, init) => {
-    let request: Request;
-    if (input instanceof Request) {
-      request = input;
+    let url: string;
+    let method = 'GET';
+    let headers: HeadersInit = {};
+    if (typeof input === 'object' && 'json' in input) {
+      url = input.url;
+      method = input.method;
+      headers = input.headers;
     } else {
-      request = new Request(input, init);
+      url = input.toString();
+      if (init != null) {
+        method = init.method || method;
+        headers = init.headers || headers;
+      }
     }
-    const cacheKey = request.url;
+    const cacheKey = url;
     const entry = await cache.get(cacheKey);
+    const policyRequest = policyRequestFrom(url, method, headers);
     if (!entry) {
-      const response = await fetch(request);
+      const response = await fetch(input, init);
 
-      const policy = new CachePolicy(policyRequestFrom(request), policyResponseFrom(response));
+      const policy = new CachePolicy(policyRequest, policyResponseFrom(response));
 
       return storeResponseAndReturnClone(cache, response, policy, cacheKey);
     }
@@ -40,7 +49,7 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
 
     const bodyInit = new Uint8Array(bytes);
 
-    if (policy.satisfiesWithoutRevalidation(policyRequestFrom(request))) {
+    if (policy.satisfiesWithoutRevalidation(policyRequest)) {
       const headers = policy.responseHeaders() as HeadersInit;
       return new Response(bodyInit, {
         url: (policy as any)._url,
@@ -48,14 +57,20 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
         headers,
       } as ResponseInit);
     } else {
-      const revalidationHeaders = policy.revalidationHeaders(policyRequestFrom(request));
-      const revalidationRequest = new Request(request, {
-        headers: revalidationHeaders as HeadersInit,
+      const revalidationHeaders = policy.revalidationHeaders(policyRequest);
+      const revalidationResponse = await fetch(url, {
+        ...init,
+        method,
+        headers: {
+          ...headers,
+          ...revalidationHeaders as HeadersInit,
+        }
       });
-      const revalidationResponse = await fetch(revalidationRequest);
+
+      const revalidationPolicyRequest = policyRequestFrom(url, method, revalidationHeaders as HeadersInit);
 
       const { policy: revalidatedPolicy, modified } = policy.revalidatedPolicy(
-        policyRequestFrom(revalidationRequest),
+        revalidationPolicyRequest,
         policyResponseFrom(revalidationResponse)
       );
 
@@ -94,7 +109,7 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
     const uint8array = new Uint8Array(arrayBuffer);
     const entry = {
       policy: policy.toObject(),
-      bytes: [...uint8array],
+      bytes: Array.from(uint8array),
     };
 
     await cache.set(cacheKey, entry, {
@@ -105,12 +120,7 @@ export function fetchFactory({ fetch, Request, Response, cache }: FetchacheOptio
     // body can only be used once.
     // To avoid https://github.com/bitinn/node-fetch/issues/151, we don't use
     // response.clone() but create a new response from the consumed body
-    return new Response(uint8array, {
-      url: response.url,
-      status: response.status,
-      statusText: response.statusText,
-      headers: response.headers,
-    } as ResponseInit);
+    return new Response(uint8array, response);
   }
 }
 
@@ -118,11 +128,11 @@ function canBeRevalidated(response: Response): boolean {
   return response.headers.has('ETag');
 }
 
-function policyRequestFrom(request: Request) {
+function policyRequestFrom(url: string, method: string, headers: HeadersInit) {
   return {
-    url: request.url,
-    method: request.method,
-    headers: headersToObject(request.headers),
+    url,
+    method,
+    headers: headersToObject(headers),
   };
 }
 
@@ -133,11 +143,17 @@ function policyResponseFrom(response: Response) {
   };
 }
 
-function headersToObject(headers: Headers) {
+function headersToObject(headers: HeadersInit) {
   const object = Object.create(null);
-  headers?.forEach((val, key) => {
-    object[key] = val;
-  });
+  if (headers != null) {
+    if ('forEach' in headers && typeof headers.forEach === 'function') {
+      headers?.forEach((val, key) => {
+        object[key] = val;
+      });
+    } else {
+      return headers;
+    }
+  }
   return object;
 }
 
