@@ -58,7 +58,7 @@ module.exports = function getFormDataMethod(File, limits) {
         reject(new Error(`Fields limit exceeded: ${limits.fields}`));
       })
       bb.on('file', (name, fileStream, { filename, mimeType }) => {
-        if (limits.fieldsFirst) {
+        if (limits && limits.fieldsFirst) {
           resolve(formData);
           const fakeFileObj = {
             name: filename,
