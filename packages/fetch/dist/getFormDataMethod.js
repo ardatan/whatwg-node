@@ -10,9 +10,6 @@ module.exports = function getFormDataMethod(File, limits) {
     fileStream,
     formData,
   }) {
-    if (fileStream._consumedAsFile) {
-      return Promise.resolve(formData.get(name));
-    }
     return new Promise((resolve, reject) => {
       const chunks = [];
       fileStream.on('limit', () => {
@@ -22,9 +19,11 @@ module.exports = function getFormDataMethod(File, limits) {
         chunks.push(chunk);
       })
       fileStream.on('close', () => {
+        if (fileStream.truncated) {
+          reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
+        }
         const file = new File(chunks, filename, { type: mimeType });
         formData.set(name, file);
-        fileStream._consumedAsFile = true;
         resolve(file);
       });
     })
@@ -58,6 +57,7 @@ module.exports = function getFormDataMethod(File, limits) {
         reject(new Error(`Fields limit exceeded: ${limits.fields}`));
       })
       bb.on('file', (name, fileStream, { filename, mimeType }) => {
+        let file$;
         if (limits && limits.fieldsFirst) {
           resolve(formData);
           const fakeFileObj = {
@@ -80,24 +80,32 @@ module.exports = function getFormDataMethod(File, limits) {
                   throw new Error(`Cannot slice file before consuming the stream.`);
                 case 'text':
                 case 'arrayBuffer':
-                  return () => consumeStreamAsFile({
-                    name,
-                    filename,
-                    mimeType,
-                    fileStream,
-                    formData,
-                  }).then(file => file[prop]())
+                  return () => {
+                    if (!file$) {
+                      file$ = consumeStreamAsFile({
+                        name,
+                        filename,
+                        mimeType,
+                        fileStream,
+                        formData,
+                      })
+                    }
+                    return file$.then(file => file[prop]());
+                  }
               }
             },
           }))
         } else {
-          consumeStreamAsFile({
-            name,
-            filename,
-            mimeType,
-            fileStream,
-            formData,
-          }).catch(err => reject(err));
+          if (!file$) {
+            file$ = consumeStreamAsFile({
+              name,
+              filename,
+              mimeType,
+              fileStream,
+              formData,
+            })
+          }
+          file$.catch(reject);
         }
       })
       bb.on('filesLimit', () => {
