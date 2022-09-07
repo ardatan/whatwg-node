@@ -63,8 +63,8 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
         method,
         headers: {
           ...headers,
-          ...revalidationHeaders as HeadersInit,
-        }
+          ...(revalidationHeaders as HeadersInit),
+        },
       });
 
       const revalidationPolicyRequest = policyRequestFrom(url, method, revalidationHeaders as HeadersInit);
