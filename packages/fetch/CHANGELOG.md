@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.4.1
+
+### Patch Changes
+
+- [`53753bb`](https://github.com/ardatan/whatwg-node/commit/53753bb5dd83fbc1e7253784b02f2b1f2e02fdb9) Thanks [@ardatan](https://github.com/ardatan)! - fix(fetch): fix formData function
+
 ## 0.4.0
 
 ### Minor Changes
