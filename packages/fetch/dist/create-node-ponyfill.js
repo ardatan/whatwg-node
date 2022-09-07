@@ -2,6 +2,11 @@ const handleFileRequest = require("./handle-file-request");
 
 module.exports = function createNodePonyfill(opts = {}) {
 
+  // Bun already has a Fetch API
+  if (process.versions.bun) {
+    return globalThis;
+  }
+
   const ponyfills = {};
 
   if (!opts.useNodeFetch) {

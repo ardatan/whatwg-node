@@ -49,7 +49,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
 }
 
 export type ServerAdapter<TServerContext, TBaseObject> = TBaseObject &
-  RequestListener &
+  RequestListener & ServerAdapterObject<TServerContext>['fetch'] &
   ServerAdapterObject<TServerContext>;
 
 export function createServerAdapter<
@@ -104,6 +104,10 @@ export function createServerAdapter<
   };
 
   function genericRequestHandler(input: any, ctx: any) {
+    if ('process' in globalThis && process.versions?.['bun'] != null) {
+      // This is required for bun
+      input.text();
+    }
     // If it is a Node request
     if (isReadable(input) && ctx != null && isServerResponse(ctx)) {
       return requestListener(input as unknown as NodeRequest, ctx);
