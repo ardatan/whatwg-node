@@ -1,5 +1,11 @@
 # fetchache
 
+## 0.1.4
+
+### Patch Changes
+
+- [`f1db96f`](https://github.com/ardatan/whatwg-node/commit/f1db96fdd4988a1384ddefa2b7d148b128ee8f97) Thanks [@ardatan](https://github.com/ardatan)! - Respect additional parameters to fetch
+
 ## 0.1.3
 
 ### Patch Changes
