@@ -58,14 +58,18 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
       } as ResponseInit);
     } else {
       const revalidationHeaders = policy.revalidationHeaders(policyRequest);
-      const revalidationResponse = await fetch(url, {
-        ...init,
-        method,
-        headers: {
-          ...headers,
-          ...(revalidationHeaders as HeadersInit),
+      const revalidationResponse = await fetch(
+        url,
+        {
+          ...init,
+          method,
+          headers: {
+            ...headers,
+            ...(revalidationHeaders as HeadersInit),
+          },
         },
-      }, ...rest);
+        ...rest
+      );
 
       const revalidationPolicyRequest = policyRequestFrom(url, method, revalidationHeaders as HeadersInit);
 
