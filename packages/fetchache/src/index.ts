@@ -5,7 +5,7 @@ export interface FetchacheCacheEntry {
   body: string;
 }
 
-type FetchFn = WindowOrWorkerGlobalScope['fetch'];
+type FetchFn = (input: URL | RequestInfo, init: RequestInit, ...rest: any[]) => Promise<Response>;
 
 export interface FetchacheOptions {
   fetch: FetchFn;
@@ -15,7 +15,7 @@ export interface FetchacheOptions {
 }
 
 export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): FetchFn {
-  return async (input, init) => {
+  return async (input: URL | RequestInfo, init: RequestInit, ...rest: any[]) => {
     let url: string;
     let method = 'GET';
     let headers: HeadersInit = {};
@@ -34,7 +34,7 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
     const entry = await cache.get(cacheKey);
     const policyRequest = policyRequestFrom(url, method, headers);
     if (!entry) {
-      const response = await fetch(input, init);
+      const response = await fetch(input, init, ...rest);
 
       const policy = new CachePolicy(policyRequest, policyResponseFrom(response));
 
@@ -65,7 +65,7 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
           ...headers,
           ...(revalidationHeaders as HeadersInit),
         },
-      });
+      }, ...rest);
 
       const revalidationPolicyRequest = policyRequestFrom(url, method, revalidationHeaders as HeadersInit);
 
