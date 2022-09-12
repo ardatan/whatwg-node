@@ -1,6 +1,6 @@
 import { createServerAdapter } from '@whatwg-node/server';
 import { createServer, Server } from 'http';
-import { fetch } from '@whatwg-node/fetch';
+import { fetch, Response } from '@whatwg-node/fetch';
 
 describe('Node Specific Cases', () => {
   let port = 9876;
@@ -54,6 +54,5 @@ describe('Node Specific Cases', () => {
     const response = await response$;
     await response.text();
     expect(flag).toBe(true);
-    expect.assertions(2);
   });
 });
