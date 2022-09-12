@@ -84,7 +84,11 @@ export function createServerAdapter<
         p.catch(err => console.error(err));
       },
     } as any);
-    return sendNodeResponse(response, serverResponse);
+    if (response) {
+      return sendNodeResponse(response, serverResponse);
+    } else {
+      return new Promise(resolve => serverResponse.end(resolve));
+    }
   }
 
   function handleEvent(event: FetchEvent) {
