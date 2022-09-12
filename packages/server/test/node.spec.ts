@@ -1,13 +1,9 @@
 import { createServerAdapter } from "@whatwg-node/server";
-import getPort from "get-port";
 import { createServer, Server } from "http";
 
 describe('Node Specific Cases', () => {
-    let port: number;
+    let port = 9876;
     let server: Server | undefined;
-    beforeEach(async () => {
-        port = await getPort();
-    })
     afterEach(done => {
         if (server) {
             server.close(err => {
@@ -20,6 +16,7 @@ describe('Node Specific Cases', () => {
         } else {
             done();
         }
+        port = Math.floor(Math.random() * 1000) + 9800;
     })
     it('should handle empty responses', async () => {
         const serverAdapter = createServerAdapter({

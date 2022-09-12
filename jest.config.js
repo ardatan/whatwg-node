@@ -5,7 +5,7 @@ const CI = !!process.env.CI;
 const ROOT_DIR = __dirname;
 const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
-const ESM_PACKAGES = ['get-port'];
+const ESM_PACKAGES = [];
 
 module.exports = {
   testEnvironment: 'node',
