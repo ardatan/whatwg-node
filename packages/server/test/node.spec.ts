@@ -1,5 +1,6 @@
 import { createServerAdapter } from "@whatwg-node/server";
 import { createServer, Server } from "http";
+import { fetch } from '@whatwg-node/fetch';
 
 describe('Node Specific Cases', () => {
     let port = 9876;
