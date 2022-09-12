@@ -319,5 +319,34 @@ module.exports = function createNodePonyfill(opts = {}) {
 
     }
   }
+
+  if (!ponyfills.Response.redirect) {
+    ponyfills.Response.redirect = function (url, status = 302) {
+      return new ponyfills.Response(null, {
+        status,
+        headers: {
+          Location: url,
+        },
+      });
+    };
+  }
+  if (!ponyfills.Response.json) {
+    ponyfills.Response.json = function (data, init = {}) {
+      return new ponyfills.Response(JSON.stringify(data), {
+        ...init,
+        headers: {
+          "Content-Type": "application/json",
+          ...init.headers,
+        },
+      });
+    };
+  }
+  if (!ponyfills.Response.error) {
+    ponyfills.Response.error = function () {
+      return new ponyfills.Response(null, {
+        status: 500,
+      });
+    };
+  }
   return ponyfills;
 }
