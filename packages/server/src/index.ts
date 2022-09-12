@@ -53,14 +53,13 @@ export type ServerAdapter<TServerContext, TBaseObject> = TBaseObject &
   ServerAdapterObject<TServerContext>['fetch'] &
   ServerAdapterObject<TServerContext>;
 
-function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
-  return Promise.allSettled(waitUntilPromises).then(waitUntils =>
-    waitUntils.forEach(waitUntil => {
-      if (waitUntil.status === 'rejected') {
-        console.error(waitUntil.reason);
-      }
-    })
-  );
+async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
+  const waitUntils = await Promise.allSettled(waitUntilPromises);
+  waitUntils.forEach(waitUntil => {
+    if (waitUntil.status === 'rejected') {
+      console.error(waitUntil.reason);
+    }
+  });
 }
 
 export function createServerAdapter<
@@ -104,7 +103,9 @@ export function createServerAdapter<
         serverResponse.end(resolve);
       });
     }
-    await handleWaitUntils(waitUntilPromises);
+    if (waitUntilPromises.length > 0) {
+      await handleWaitUntils(waitUntilPromises);
+    }
   }
 
   function handleEvent(event: FetchEvent) {
