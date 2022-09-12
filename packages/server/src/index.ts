@@ -57,6 +57,7 @@ export function createServerAdapter<
   TServerContext = {
     req: NodeRequest;
     res: ServerResponse;
+    waitUntil(promise: Promise<unknown>): void;
   },
   TBaseObject = unknown
 >({
@@ -77,18 +78,28 @@ export function createServerAdapter<
   }
 
   async function requestListener(nodeRequest: NodeRequest, serverResponse: ServerResponse) {
+    const waitUntilPromises: Promise<unknown>[] = [];
     const response = await handleNodeRequest(nodeRequest, {
       req: nodeRequest,
       res: serverResponse,
-      waitUntil(p: Promise<any>) {
-        p.catch(err => console.error(err));
+      waitUntil(p: Promise<unknown>) {
+        waitUntilPromises.push(p);
       },
     } as any);
     if (response) {
-      return sendNodeResponse(response, serverResponse);
+      await sendNodeResponse(response, serverResponse);
     } else {
-      return new Promise(resolve => serverResponse.end(resolve));
+      await new Promise(resolve => {
+        serverResponse.statusCode = 404;
+        serverResponse.end(resolve);
+      })
     }
+    const waitUntils = await Promise.allSettled(waitUntilPromises);
+    waitUntils.forEach(waitUntil => {
+      if (waitUntil.status === 'rejected') {
+        console.error(waitUntil.reason);
+      }
+    })
   }
 
   function handleEvent(event: FetchEvent) {

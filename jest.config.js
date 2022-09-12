@@ -5,6 +5,7 @@ const CI = !!process.env.CI;
 const ROOT_DIR = __dirname;
 const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
+const ESM_PACKAGES = ['get-port'];
 
 module.exports = {
   testEnvironment: 'node',
@@ -15,6 +16,12 @@ module.exports = {
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,
   }),
+  transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
+  transform: {
+    '^.+\\.mjs?$': 'babel-jest',
+    '^.+\\.ts?$': 'babel-jest',
+    '^.+\\.js$': 'babel-jest',
+  },
   collectCoverage: false,
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
 };

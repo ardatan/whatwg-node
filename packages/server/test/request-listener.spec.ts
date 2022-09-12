@@ -2,6 +2,7 @@ import { createServerAdapter } from '@whatwg-node/server';
 import { createServer, Server } from 'http';
 import { Request, Response, ReadableStream, fetch } from '@whatwg-node/fetch';
 import { Readable } from 'stream';
+import getPort from 'get-port';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -127,14 +128,15 @@ function getIncrementalResponseBody() {
 }
 
 describe('Request Listener', () => {
-  let port = 9876;
-  afterEach(done => {
+  let port: number;
+  beforeEach(async () => {
+    port = await getPort();
+  })
+  afterEach(async () => {
     if (httpServer) {
-      httpServer.close(done);
-    } else {
-      done();
+      await new Promise(resolve => httpServer.close(resolve));
     }
-    port = Math.floor(Math.random() * 1000) + 9800;
+    port = await getPort();
   });
   [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
     it(`should handle regular requests with ${method}`, async () => {
