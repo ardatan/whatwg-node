@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.4.3
+
+### Patch Changes
+
+- [`c9f05f2`](https://github.com/ardatan/whatwg-node/commit/c9f05f21fb96f63bc22359e3b7981cb9b3b727b5) Thanks [@ardatan](https://github.com/ardatan)! - Add ponyfills for Response.redirect, Response.json and Response.error
+
 ## 0.4.2
 
 ### Patch Changes
