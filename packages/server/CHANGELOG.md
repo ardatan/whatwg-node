@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.3.0
+
+### Minor Changes
+
+- [`722ffda`](https://github.com/ardatan/whatwg-node/commit/722ffda607106cb07378766a6ecc4a10a527eb2c) Thanks [@ardatan](https://github.com/ardatan)! - Implement `waitUntil`
+
 ## 0.2.0
 
 ### Minor Changes
