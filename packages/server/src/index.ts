@@ -53,6 +53,14 @@ export type ServerAdapter<TServerContext, TBaseObject> = TBaseObject &
   ServerAdapterObject<TServerContext>['fetch'] &
   ServerAdapterObject<TServerContext>;
 
+function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
+  return Promise.allSettled(waitUntilPromises).then(waitUntils => waitUntils.forEach(waitUntil => {
+    if (waitUntil.status === 'rejected') {
+      console.error(waitUntil.reason);
+    }
+  }))
+}
+
 export function createServerAdapter<
   TServerContext = {
     req: NodeRequest;
@@ -94,12 +102,7 @@ export function createServerAdapter<
         serverResponse.end(resolve);
       })
     }
-    const waitUntils = await Promise.allSettled(waitUntilPromises);
-    waitUntils.forEach(waitUntil => {
-      if (waitUntil.status === 'rejected') {
-        console.error(waitUntil.reason);
-      }
-    })
+    await handleWaitUntils(waitUntilPromises);
   }
 
   function handleEvent(event: FetchEvent) {
@@ -119,7 +122,7 @@ export function createServerAdapter<
     handle: requestListener,
   };
 
-  function genericRequestHandler(input: any, ctx: any) {
+  function genericRequestHandler(input: any, ctx: any, ...rest: any[]) {
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
       input.text();
@@ -139,6 +142,24 @@ export function createServerAdapter<
     }
     // Or is it Request itself?
     // Then ctx is present and it is the context
+    if (rest?.length > 0) {
+      ctx = Object.assign({}, ctx, ...rest);
+    }
+    if (!ctx.waitUntil) {
+      const waitUntilPromises: Promise<unknown>[] = [];
+      ctx.waitUntil = (p: Promise<unknown>) => {
+        waitUntilPromises.push(p);
+      }
+      const response$ = handleRequest(input, {
+        ...ctx,
+        waitUntil(p: Promise<unknown>) {
+          waitUntilPromises.push(p);
+        }
+      });
+      if (waitUntilPromises.length > 0) {
+        return handleWaitUntils(waitUntilPromises).then(() => response$);
+      } 
+    }
     return handleRequest(input, ctx);
   }
 

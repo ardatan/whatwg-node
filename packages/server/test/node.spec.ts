@@ -36,19 +36,24 @@ describe('Node Specific Cases', () => {
     it('should handle waitUntil properly', async () => {
         let flag = false;
         const serverAdapter = createServerAdapter({
-            async handleRequest(_request, { waitUntil }) {
+            handleRequest(_request, { waitUntil }) {
                 waitUntil(Promise.resolve().then(() => {
                     flag = true;
                 }))
-                return new Response(null, {
-                    status: 204,
-                })
+                return Promise.resolve(
+                    new Response(null, {
+                        status: 204,
+                    })
+                )
             }
         });
         server = createServer(serverAdapter);
         await new Promise<void>(resolve => server!.listen(port, resolve));
-        const response = await fetch(`http://localhost:${port}`);
-        expect(flag).toBe(true);
+        const response$ = fetch(`http://localhost:${port}`);
+        expect(flag).toBe(false);
+        const response = await response$;
         await response.text();
+        expect(flag).toBe(true);
+        expect.assertions(2);
     })
 })
