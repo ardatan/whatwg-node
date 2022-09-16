@@ -78,14 +78,12 @@ async function runTestForRequestAndResponse({
   getRequestBody: () => BodyInit;
   getResponseBody: () => BodyInit;
 }) {
-  const app = createServerAdapter({
-    async handleRequest(request: Request) {
-      await compareRequest(request, expectedRequest);
-      if (methodsWithBody.includes(expectedRequest.method)) {
-        await compareReadableStream(request.body, getRequestBody());
-      }
-      return expectedResponse;
-    },
+  const app = createServerAdapter(async (request: Request) => {
+    await compareRequest(request, expectedRequest);
+    if (methodsWithBody.includes(expectedRequest.method)) {
+      await compareReadableStream(request.body, getRequestBody());
+    }
+    return expectedResponse;
   });
   httpServer = createServer(app);
   await new Promise<void>(resolve => httpServer.listen(port, 'localhost', resolve));
@@ -223,3 +221,5 @@ describe('Request Listener', () => {
     });
   });
 });
+
+export { createServerAdapter };
