@@ -4,7 +4,10 @@ import type { RequestListener, ServerResponse } from 'node:http';
 import { isReadable, isServerResponse, NodeRequest, normalizeNodeRequest, sendNodeResponse } from './utils';
 import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
 
-export interface ServerAdapterBaseObject<TServerContext, THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>> {
+export interface ServerAdapterBaseObject<
+  TServerContext,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>
+> {
   /**
    * An async function that takes `Request` and the server context and returns a `Response`.
    * If you use `requestListener`, the server context is `{ req: IncomingMessage, res: ServerResponse }`.
@@ -43,10 +46,7 @@ export interface ServerAdapterObject<
   handle: RequestListener & ServerAdapterObject<TServerContext, TBaseObject>['fetch'];
 }
 
-export type ServerAdapter<
-  TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext>
-  > = TBaseObject &
+export type ServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>> = TBaseObject &
   RequestListener &
   ServerAdapterObject<TServerContext, TBaseObject>['fetch'] &
   ServerAdapterObject<TServerContext, TBaseObject>;
@@ -78,10 +78,7 @@ function createServerAdapter<
   serverAdapterRequestHandler: THandleRequest,
   RequestCtor?: typeof Request
 ): ServerAdapter<TServerContext, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
-function createServerAdapter<
-  TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext>
->(
+function createServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>>(
   serverAdapterBaseObject: TBaseObject,
   RequestCtor?: typeof Request
 ): ServerAdapter<TServerContext, TBaseObject>;
