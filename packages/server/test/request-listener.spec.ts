@@ -84,7 +84,7 @@ async function runTestForRequestAndResponse({
       await compareReadableStream(request.body, getRequestBody());
     }
     return expectedResponse;
-  },);
+  });
   httpServer = createServer(app);
   await new Promise<void>(resolve => httpServer.listen(port, 'localhost', resolve));
   const returnedResponse = await fetch(expectedRequest);
@@ -222,6 +222,4 @@ describe('Request Listener', () => {
   });
 });
 
-export {
-  createServerAdapter,
-}
+export { createServerAdapter };

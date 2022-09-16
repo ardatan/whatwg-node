@@ -2,6 +2,16 @@
 '@whatwg-node/server': minor
 ---
 
+Improvements;
+
+- `createServerAdapter` can now accept the request handler itself.
+
+```ts
+createServerAdapter(req => {
+  return new Response(`I got ${req.url}`)
+})
+```
+
 Breaking Changes;
 
 - `baseObject` in the configuration has been removed! Now you can pass `baseObject` itself but `baseObject` needs to implement a `handle` method that is exactly same with `handleRequest`.
@@ -29,6 +39,7 @@ createServerAdapter({
 ```
 
 - `Request` in the configuration needs to be passed as a second argument.
+
 ```diff
 createServerAdapter({
 -   handleRequest(request) {

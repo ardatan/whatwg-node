@@ -13,7 +13,7 @@ Let's create a basic Hello World server adapter.
 import { createServerAdapter } from '@whatwg-node/server'
 
 export default createServerAdapter((request: Request) => {
-    return new Response(`Hello World!`, { status: 200 })
+  return new Response(`Hello World!`, { status: 200 })
 })
 ```
 
@@ -202,22 +202,22 @@ For example, if you send a multipart request from a browser with `FormData`, you
 import { createServerAdapter } from '@whatwg-node/server'
 
 const myServerAdapter = createServerAdapter(async request => {
-    // Parse the request as `FormData`
-    const formData = await request.formData()
-    // Select the file
-    const file = formData.get('file')
-    // Process it as a string
-    const fileTextContent = await file.text()
-    // Select the other text parameter
-    const regularTextData = formData.get('additionalStuff')
-    // ...
-    return new Response('{ "message": "ok" }', {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
+  // Parse the request as `FormData`
+  const formData = await request.formData()
+  // Select the file
+  const file = formData.get('file')
+  // Process it as a string
+  const fileTextContent = await file.text()
+  // Select the other text parameter
+  const regularTextData = formData.get('additionalStuff')
+  // ...
+  return new Response('{ "message": "ok" }', {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json'
+    }
   })
+})
 ```
 
 You can learn more about [File API](https://developer.mozilla.org/en-US/docs/Web/API/File) on MDN documentation.
