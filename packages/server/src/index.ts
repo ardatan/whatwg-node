@@ -4,7 +4,10 @@ import type { RequestListener, ServerResponse } from 'node:http';
 import { isReadable, isServerResponse, NodeRequest, normalizeNodeRequest, sendNodeResponse } from './utils';
 import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
 
-export interface ServerAdapterBaseObject<TServerContext, THandleRequest extends HandleRequestFn<TServerContext>> {
+export interface ServerAdapterBaseObject<
+  TServerContext,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>
+> {
   /**
    * An async function that takes `Request` and the server context and returns a `Response`.
    * If you use `requestListener`, the server context is `{ req: IncomingMessage, res: ServerResponse }`.
@@ -14,7 +17,7 @@ export interface ServerAdapterBaseObject<TServerContext, THandleRequest extends 
 
 export interface ServerAdapterObject<
   TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext, HandleRequestFn<TServerContext>>
+  TBaseObject extends ServerAdapterBaseObject<TServerContext, ServerAdapterRequestHandler<TServerContext>>
 > extends EventListenerObject {
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
@@ -43,11 +46,7 @@ export interface ServerAdapterObject<
   handle: RequestListener & ServerAdapterObject<TServerContext, TBaseObject>['fetch'];
 }
 
-export type ServerAdapter<
-  TServerContext,
-  THandleRequest extends HandleRequestFn<TServerContext>,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext, THandleRequest>
-> = Omit<TBaseObject, 'handle'> &
+export type ServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>> = TBaseObject &
   RequestListener &
   ServerAdapterObject<TServerContext, TBaseObject>['fetch'] &
   ServerAdapterObject<TServerContext, TBaseObject>;
@@ -61,38 +60,31 @@ async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   });
 }
 
-type HandleRequestFn<TServerContext> = (
+export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
   serverContext: TServerContext
 ) => Promise<Response> | Response;
 
-type DefaultServerContext = {
+export type DefaultServerAdapterContext = {
   req: NodeRequest;
   res: ServerResponse;
   waitUntil(promise: Promise<unknown>): void;
 };
 
 function createServerAdapter<
-  TServerContext = DefaultServerContext,
-  THandleRequest extends HandleRequestFn<TServerContext> = HandleRequestFn<TServerContext>
+  TServerContext = DefaultServerAdapterContext,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>
 >(
-  serverAdapterBaseObject: THandleRequest,
+  serverAdapterRequestHandler: THandleRequest,
   RequestCtor?: typeof Request
-): ServerAdapter<TServerContext, THandleRequest, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
-function createServerAdapter<
-  TServerContext = DefaultServerContext,
-  THandleRequest extends HandleRequestFn<TServerContext> = HandleRequestFn<TServerContext>,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext, THandleRequest> = ServerAdapterBaseObject<
-    TServerContext,
-    THandleRequest
-  >
->(
+): ServerAdapter<TServerContext, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
+function createServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>>(
   serverAdapterBaseObject: TBaseObject,
   RequestCtor?: typeof Request
-): ServerAdapter<TServerContext, THandleRequest, TBaseObject>;
+): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
-  TServerContext = DefaultServerContext,
-  THandleRequest extends HandleRequestFn<TServerContext> = HandleRequestFn<TServerContext>,
+  TServerContext = DefaultServerAdapterContext,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
   TBaseObject extends ServerAdapterBaseObject<TServerContext, THandleRequest> = ServerAdapterBaseObject<
     TServerContext,
     THandleRequest
@@ -103,7 +95,7 @@ function createServerAdapter<
    * WHATWG Fetch spec compliant `Request` constructor.
    */
   RequestCtor = PonyfillRequestCtor
-): ServerAdapter<TServerContext, THandleRequest, TBaseObject> {
+): ServerAdapter<TServerContext, TBaseObject> {
   const handleRequest =
     typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
   function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]) {
