@@ -4,20 +4,12 @@ import type { RequestListener, ServerResponse } from 'node:http';
 import { isReadable, isServerResponse, NodeRequest, normalizeNodeRequest, sendNodeResponse } from './utils';
 import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
 
-export interface CreateServerAdapterOptions<TServerContext, TBaseObject> {
-  /**
-   * WHATWG Fetch spec compliant `Request` constructor.
-   */
-  Request?: typeof Request;
+export interface ServerAdapterOptions<TServerContext> {
   /**
    * An async function that takes `Request` and the server context and returns a `Response`.
    * If you use `requestListener`, the server context is `{ req: IncomingMessage, res: ServerResponse }`.
    */
-  handleRequest: (request: Request, serverContext: TServerContext) => Promise<Response>;
-  /**
-   * If you extend a server object with this, you can pass the original object and it will be extended with the required methods and functionalities.
-   */
-  baseObject?: TBaseObject;
+  handle: (request: Request, serverContext: TServerContext) => Promise<Response>;
 }
 
 export interface ServerAdapterObject<TServerContext> extends EventListenerObject {
@@ -45,7 +37,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   /**
    * Proxy to requestListener to mimic Node middlewares
    */
-  handle: RequestListener;
+  handle: RequestListener & ServerAdapterObject<TServerContext>['fetch'];
 }
 
 export type ServerAdapter<TServerContext, TBaseObject> = TBaseObject &
@@ -68,12 +60,15 @@ export function createServerAdapter<
     res: ServerResponse;
     waitUntil(promise: Promise<unknown>): void;
   },
-  TBaseObject = unknown
->({
-  Request: RequestCtor = PonyfillRequestCtor,
-  handleRequest,
-  baseObject,
-}: CreateServerAdapterOptions<TServerContext, TBaseObject>): ServerAdapter<TServerContext, TBaseObject> {
+  TBaseObject extends ServerAdapterOptions<TServerContext> = ServerAdapterOptions<TServerContext>
+>(
+  serverAdapterBaseObject: TBaseObject, 
+  /**
+   * WHATWG Fetch spec compliant `Request` constructor.
+   */
+  RequestCtor = PonyfillRequestCtor,
+): ServerAdapter<TServerContext, TBaseObject> {
+  const handleRequest = serverAdapterBaseObject.handle;
   function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]): Promise<Response> {
     if (typeof input === 'string' || input instanceof URL) {
       return handleRequest(new RequestCtor(input, init), Object.assign({}, ...ctx));
@@ -116,15 +111,6 @@ export function createServerAdapter<
     event.respondWith(response$);
   }
 
-  const adapterObj: ServerAdapterObject<TServerContext> = {
-    handleRequest,
-    fetch: fetchFn,
-    handleNodeRequest,
-    requestListener,
-    handleEvent,
-    handle: requestListener,
-  };
-
   function genericRequestHandler(input: any, ctx: any, ...rest: any[]) {
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
@@ -166,19 +152,26 @@ export function createServerAdapter<
     return handleRequest(input, ctx);
   }
 
+  const adapterObj: ServerAdapterObject<TServerContext> = {
+    handleRequest,
+    fetch: fetchFn,
+    handleNodeRequest,
+    requestListener,
+    handleEvent,
+    handle: genericRequestHandler,
+  };
+
   return new Proxy(genericRequestHandler as any, {
     // It should have all the attributes of the handler function and the server instance
     has: (_, prop) => {
-      return (baseObject && prop in baseObject) || prop in adapterObj || prop in genericRequestHandler;
+      return (serverAdapterBaseObject && prop in serverAdapterBaseObject) || prop in adapterObj || prop in genericRequestHandler;
     },
     get: (_, prop) => {
-      if (baseObject) {
-        if (prop in baseObject) {
-          if (baseObject[prop].bind) {
-            return baseObject[prop].bind(baseObject);
-          }
-          return baseObject[prop];
+      if (prop in serverAdapterBaseObject) {
+        if (serverAdapterBaseObject[prop].bind) {
+          return serverAdapterBaseObject[prop].bind(serverAdapterBaseObject);
         }
+        return serverAdapterBaseObject[prop];
       }
       if (adapterObj[prop]) {
         if (adapterObj[prop].bind) {

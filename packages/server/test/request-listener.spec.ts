@@ -79,7 +79,7 @@ async function runTestForRequestAndResponse({
   getResponseBody: () => BodyInit;
 }) {
   const app = createServerAdapter({
-    async handleRequest(request: Request) {
+    async handle(request: Request) {
       await compareRequest(request, expectedRequest);
       if (methodsWithBody.includes(expectedRequest.method)) {
         await compareReadableStream(request.body, getRequestBody());
