@@ -20,10 +20,8 @@ describe('Node Specific Cases', () => {
     port = Math.floor(Math.random() * 1000) + 9800;
   });
   it('should handle empty responses', async () => {
-    const serverAdapter = createServerAdapter({
-      async handleRequest() {
-        return undefined as any;
-      },
+    const serverAdapter = createServerAdapter(() => {
+      return undefined as any;
     });
     server = createServer(serverAdapter);
     await new Promise<void>(resolve => server!.listen(port, resolve));
@@ -33,19 +31,17 @@ describe('Node Specific Cases', () => {
   });
   it('should handle waitUntil properly', async () => {
     let flag = false;
-    const serverAdapter = createServerAdapter({
-      handleRequest(_request, { waitUntil }) {
-        waitUntil(
-          Promise.resolve().then(() => {
-            flag = true;
-          })
-        );
-        return Promise.resolve(
-          new Response(null, {
-            status: 204,
-          })
-        );
-      },
+    const serverAdapter = createServerAdapter((_request, { waitUntil }) => {
+      waitUntil(
+        Promise.resolve().then(() => {
+          flag = true;
+        })
+      );
+      return Promise.resolve(
+        new Response(null, {
+          status: 204,
+        })
+      );
     });
     server = createServer(serverAdapter);
     await new Promise<void>(resolve => server!.listen(port, resolve));

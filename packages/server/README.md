@@ -12,10 +12,8 @@ Let's create a basic Hello World server adapter.
 // myServerAdapter.ts
 import { createServerAdapter } from '@whatwg-node/server'
 
-export default createServerAdapter({
-  handleRequest(request: Request) {
+export default createServerAdapter((request: Request) => {
     return new Response(`Hello World!`, { status: 200 })
-  }
 })
 ```
 
@@ -203,9 +201,7 @@ For example, if you send a multipart request from a browser with `FormData`, you
 ```ts
 import { createServerAdapter } from '@whatwg-node/server'
 
-const myServerAdapter = createServerAdapter({
-  // ...
-  async handleRequest(request) {
+const myServerAdapter = createServerAdapter(async request => {
     // Parse the request as `FormData`
     const formData = await request.formData()
     // Select the file
@@ -221,8 +217,7 @@ const myServerAdapter = createServerAdapter({
         'Content-Type': 'application/json'
       }
     })
-  }
-})
+  })
 ```
 
 You can learn more about [File API](https://developer.mozilla.org/en-US/docs/Web/API/File) on MDN documentation.
@@ -236,6 +231,7 @@ We'd recommend to use [itty-router](https://github.com/kwhitley/itty-router) to 
 ```ts
 import { Router } from 'itty-router'
 import { createServerAdapter } from '@whatwg-node/server'
+
 // now let's create a router (note the lack of "new")
 const router = Router()
 // GET collection index
@@ -247,12 +243,15 @@ router.post('/todos', async request => {
   const content = await request.json()
   return new Response('Creating Todo: ' + JSON.stringify(content))
 })
+
+// Redirect to a URL
+router.get('/google', () => Response.redirect('http://www.google.com'))
+
 // 404 for everything else
 router.all('*', () => new Response('Not Found.', { status: 404 }))
-// attach the router "handle" to our server adapter
-const myServerAdapter = createServerAdapter({
-  handleRequest: router.handle
-})
+
+// attach the router to our server adapter
+const myServerAdapter = createServerAdapter(router)
 
 // Then use it in any environment
 import { createServer } from 'http'
