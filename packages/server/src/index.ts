@@ -76,7 +76,8 @@ function createServerAdapter<
   TServerContext = DefaultServerContext,
   THandleRequest extends HandleRequestFn<TServerContext> = HandleRequestFn<TServerContext>
 >(
-  serverAdapterBaseObject: THandleRequest
+  serverAdapterBaseObject: THandleRequest,
+  RequestCtor?: typeof Request
 ): ServerAdapter<TServerContext, THandleRequest, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
 function createServerAdapter<
   TServerContext = DefaultServerContext,
@@ -85,7 +86,10 @@ function createServerAdapter<
     TServerContext,
     THandleRequest
   >
->(serverAdapterBaseObject: TBaseObject): ServerAdapter<TServerContext, THandleRequest, TBaseObject>;
+>(
+  serverAdapterBaseObject: TBaseObject,
+  RequestCtor?: typeof Request
+): ServerAdapter<TServerContext, THandleRequest, TBaseObject>;
 function createServerAdapter<
   TServerContext = DefaultServerContext,
   THandleRequest extends HandleRequestFn<TServerContext> = HandleRequestFn<TServerContext>,
