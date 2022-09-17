@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.1
+
+### Patch Changes
+
+- [`5851d94`](https://github.com/ardatan/whatwg-node/commit/5851d945d37eec9ef7875501080325451e76d8f0) Thanks [@ardatan](https://github.com/ardatan)! - Fix accessing base object properties
+
 ## 0.4.0
 
 ### Minor Changes
