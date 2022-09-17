@@ -207,10 +207,10 @@ function createServerAdapter<
         }
         return adapterProp;
       }
-      const genericRequestHandlerProp = genericRequestHandler[prop];
+      const genericRequestHandlerProp: any = genericRequestHandler[prop];
       if (genericRequestHandlerProp) {
         if (genericRequestHandlerProp.bind) {
-          return genericRequestHandlerPropbind(genericRequestHandler);
+          return genericRequestHandlerProp.bind(genericRequestHandler);
         }
         return genericRequestHandlerProp;
       }
