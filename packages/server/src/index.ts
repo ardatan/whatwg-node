@@ -200,23 +200,28 @@ function createServerAdapter<
       );
     },
     get: (_, prop) => {
-      if (adapterObj[prop]) {
-        if (adapterObj[prop].bind) {
-          return adapterObj[prop].bind(adapterObj);
+      const adapterProp = adapterObj[prop];
+      if (adapterProp) {
+        if (adapterProp.bind) {
+          return adapterProp.bind(adapterObj);
         }
-        return adapterObj[prop];
+        return adapterProp;
       }
-      if (genericRequestHandler[prop]) {
-        if (genericRequestHandler[prop].bind) {
-          return genericRequestHandler[prop].bind(genericRequestHandler);
+      const genericRequestHandlerProp = genericRequestHandler[prop];
+      if (genericRequestHandlerProp) {
+        if (genericRequestHandlerProp.bind) {
+          return genericRequestHandlerPropbind(genericRequestHandler);
         }
-        return genericRequestHandler[prop];
+        return genericRequestHandlerProp;
       }
-      if (prop in serverAdapterBaseObject) {
-        if (serverAdapterBaseObject[prop].bind) {
-          return serverAdapterBaseObject[prop].bind(serverAdapterBaseObject);
+      if (serverAdapterBaseObject) {
+        const serverAdapterBaseObjectProp = serverAdapterBaseObject[prop];
+        if (serverAdapterBaseObjectProp) {
+          if (serverAdapterBaseObjectProp.bind) {
+            return serverAdapterBaseObjectProp.bind(serverAdapterBaseObject);
+          }
+          return serverAdapterBaseObjectProp;
         }
-        return serverAdapterBaseObject[prop];
       }
     },
     apply(_, __, [input, ctx]: Parameters<typeof genericRequestHandler>) {
