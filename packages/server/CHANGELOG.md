@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.2
+
+### Patch Changes
+
+- [`48bdf61`](https://github.com/ardatan/whatwg-node/commit/48bdf61e28d59af9c74a599658f2231d76215cc6) Thanks [@ardatan](https://github.com/ardatan)! - Set an empty object if there is no server context sent by the environment
+
 ## 0.4.1
 
 ### Patch Changes
@@ -16,8 +22,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
