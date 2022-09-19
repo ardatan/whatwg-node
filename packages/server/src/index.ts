@@ -140,7 +140,7 @@ function createServerAdapter<
     event.respondWith(response$);
   }
 
-  function genericRequestHandler(input: any, ctx: any, ...rest: any[]) {
+  function genericRequestHandler(input: any, ctx: any = {}, ...rest: any[]) {
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
       input.text();
