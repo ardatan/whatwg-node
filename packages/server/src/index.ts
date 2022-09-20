@@ -98,12 +98,6 @@ function createServerAdapter<
 ): ServerAdapter<TServerContext, TBaseObject> {
   const handleRequest =
     typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
-  function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]) {
-    if (typeof input === 'string' || input instanceof URL) {
-      return handleRequest(new RequestCtor(input, init), Object.assign({}, ...ctx));
-    }
-    return handleRequest(input, Object.assign({}, init, ...ctx));
-  }
 
   function handleNodeRequest(nodeRequest: NodeRequest, serverContext: TServerContext) {
     const request = normalizeNodeRequest(nodeRequest, RequestCtor);
@@ -140,11 +134,33 @@ function createServerAdapter<
     event.respondWith(response$);
   }
 
-  function genericRequestHandler(input: any, ctx: any = {}, ...rest: any[]) {
+  function handleRequestWithWaitUntil(request: Request, ctx: any, ...rest: any[]) {
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
-      input.text();
+      request.text();
     }
+    if (rest?.length > 0) {
+      ctx = Object.assign({}, ctx, ...rest);
+    }
+    if (!ctx.waitUntil) {
+      const waitUntilPromises: Promise<unknown>[] = [];
+      ctx.waitUntil = (p: Promise<unknown>) => {
+        waitUntilPromises.push(p);
+      };
+      const response$ = handleRequest(request, {
+        ...ctx,
+        waitUntil(p: Promise<unknown>) {
+          waitUntilPromises.push(p);
+        },
+      });
+      if (waitUntilPromises.length > 0) {
+        return handleWaitUntils(waitUntilPromises).then(() => response$);
+      }
+    }
+    return handleRequest(request, ctx);
+  }
+
+  function genericRequestHandler(input: any, ctx: any = {}, ...rest: any[]) {
     // If it is a Node request
     if (isReadable(input) && ctx != null && isServerResponse(ctx)) {
       return requestListener(input as unknown as NodeRequest, ctx);
@@ -156,29 +172,18 @@ function createServerAdapter<
         return handleEvent(input);
       }
       // In this input is also the context
-      return handleRequest(input.request, input);
+      return handleRequestWithWaitUntil(input.request, input, ...rest);
     }
     // Or is it Request itself?
     // Then ctx is present and it is the context
-    if (rest?.length > 0) {
-      ctx = Object.assign({}, ctx, ...rest);
+    return handleRequestWithWaitUntil(input, ctx, ...rest);
+  }
+
+  function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]) {
+    if (typeof input === 'string' || input instanceof URL) {
+      return handleRequestWithWaitUntil(new RequestCtor(input, init), Object.assign({}, ...ctx));
     }
-    if (!ctx.waitUntil) {
-      const waitUntilPromises: Promise<unknown>[] = [];
-      ctx.waitUntil = (p: Promise<unknown>) => {
-        waitUntilPromises.push(p);
-      };
-      const response$ = handleRequest(input, {
-        ...ctx,
-        waitUntil(p: Promise<unknown>) {
-          waitUntilPromises.push(p);
-        },
-      });
-      if (waitUntilPromises.length > 0) {
-        return handleWaitUntils(waitUntilPromises).then(() => response$);
-      }
-    }
-    return handleRequest(input, ctx);
+    return handleRequestWithWaitUntil(input, Object.assign({}, init, ...ctx));
   }
 
   const adapterObj: ServerAdapterObject<TServerContext, TBaseObject> = {

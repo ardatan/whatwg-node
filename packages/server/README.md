@@ -192,6 +192,22 @@ import myServerAdapter from './myServerAdapter'
 export { myServerAdapter as get, myServerAdapter as post }
 ```
 
+### Bun
+
+[Bun](https://bun.sh/) is a modern JavaScript runtime like Node or Deno, and it supports Fetch API as a first class citizen.
+So the configuration is really simple like any other JS runtime;
+
+```ts
+import myServerAdapter from './myServerAdapter'
+
+Bun.serve(myServerAdapter)
+
+const server = Bun.serve(yoga)
+console.info(
+  `Server is running on ${server.hostname}`,
+)
+```
+
 ## File Uploads / Multipart Requests
 
 Multipart requests are a type of HTTP request that allows you to send blobs together with regular text data which has a mime-type `multipart/form-data`.
