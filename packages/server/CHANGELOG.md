@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.4.4
+
+### Patch Changes
+
+- [`a91ef16`](https://github.com/ardatan/whatwg-node/commit/a91ef167d60465ca27e411f494b72e9c465a989f) Thanks [@ardatan](https://github.com/ardatan)! - - Set ServerContext to an empty object by default for .fetch method
+  - Do not call request handler twice which causes an error `disturbed`
+
 ## 0.4.3
 
 ### Patch Changes
@@ -28,8 +35,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
