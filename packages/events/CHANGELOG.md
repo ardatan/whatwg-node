@@ -1,5 +1,11 @@
 # @whatwg-node/events
 
+## 0.0.2
+
+### Patch Changes
+
+- [`c0d5c43`](https://github.com/ardatan/whatwg-node/commit/c0d5c43a1c4d3d9fcdf542472fabdebd5118fe23) Thanks [@ardatan](https://github.com/ardatan)! - Fix dispatchEvent on Node 14
+
 ## 0.0.1
 
 ### Patch Changes
