@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/events",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Cross Platform Smart Event API Ponyfill",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {

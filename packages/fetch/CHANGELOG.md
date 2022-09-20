@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.4.4
+
+### Patch Changes
+
+- [`9502102`](https://github.com/ardatan/whatwg-node/commit/9502102b265945b37ee38b276ec1533fae0f308f) Thanks [@ardatan](https://github.com/ardatan)! - Breaking Change: Event API is no longer available in this ponyfill; use @whatwg-node/events instead.
+
 ## 0.4.3
 
 ### Patch Changes
