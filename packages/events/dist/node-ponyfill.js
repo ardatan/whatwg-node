@@ -48,7 +48,7 @@ if (!module.exports.EventTarget) {
       }
         }
         dispatchEvent(event) {
-      if (!(event instanceof Event)) {
+      if (!(event instanceof module.exports.Event)) {
         throw new TypeError(
           `Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'.`
         );
