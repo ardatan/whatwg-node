@@ -203,9 +203,8 @@ import myServerAdapter from './myServerAdapter'
 Bun.serve(myServerAdapter)
 
 const server = Bun.serve(yoga)
-console.info(
-  `Server is running on ${server.hostname}`,
-)
+
+console.info(`Server is running on ${server.hostname}`)
 ```
 
 ## File Uploads / Multipart Requests
