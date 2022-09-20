@@ -156,6 +156,7 @@ function createServerAdapter<
       if (waitUntilPromises.length > 0) {
         return handleWaitUntils(waitUntilPromises).then(() => response$);
       }
+      return response$;
     }
     return handleRequest(request, ctx);
   }
@@ -181,9 +182,9 @@ function createServerAdapter<
 
   function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]) {
     if (typeof input === 'string' || input instanceof URL) {
-      return handleRequestWithWaitUntil(new RequestCtor(input, init), Object.assign({}, ...ctx));
+      return handleRequestWithWaitUntil(new RequestCtor(input, init), ...ctx);
     }
-    return handleRequestWithWaitUntil(input, Object.assign({}, init, ...ctx));
+    return handleRequestWithWaitUntil(input, init, ...ctx);
   }
 
   const adapterObj: ServerAdapterObject<TServerContext, TBaseObject> = {
