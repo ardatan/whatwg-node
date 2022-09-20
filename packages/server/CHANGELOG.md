@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.5
+
+### Patch Changes
+
+- [`16fdfb9`](https://github.com/ardatan/whatwg-node/commit/16fdfb970bde9649eafc97296d527ca22d09b96d) Thanks [@ardatan](https://github.com/ardatan)! - Use fixed version of fetch package instead of ranged version
+
 ## 0.4.4
 
 ### Patch Changes
@@ -35,8 +41,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
