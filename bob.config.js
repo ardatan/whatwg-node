@@ -1,3 +1,3 @@
 module.exports = {
-  ignore: ['@whatwg-node/fetch'],
+  ignore: ['@whatwg-node/fetch', '@whatwg-node/events'],
 };
