@@ -134,7 +134,7 @@ function createServerAdapter<
     event.respondWith(response$);
   }
 
-  function handleRequestWithWaitUntil(request: Request, ctx: any, ...rest: any[]) {
+  function handleRequestWithWaitUntil(request: Request, ctx: any = {}, ...rest: any[]) {
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
       request.text();
@@ -160,7 +160,7 @@ function createServerAdapter<
     return handleRequest(request, ctx);
   }
 
-  function genericRequestHandler(input: any, ctx: any = {}, ...rest: any[]) {
+  function genericRequestHandler(input: any, ctx: any, ...rest: any[]) {
     // If it is a Node request
     if (isReadable(input) && ctx != null && isServerResponse(ctx)) {
       return requestListener(input as unknown as NodeRequest, ctx);
