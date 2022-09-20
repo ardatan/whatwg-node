@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.3
+
+### Patch Changes
+
+- [`60a73cc`](https://github.com/ardatan/whatwg-node/commit/60a73cccdeb0c7bdd60e3ddab25d374ac572401a) Thanks [@ardatan](https://github.com/ardatan)! - Improve Bun support
+
 ## 0.4.2
 
 ### Patch Changes
@@ -22,8 +28,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
