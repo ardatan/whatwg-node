@@ -13,6 +13,4 @@ module.exports.crypto = globalThis.crypto;
 module.exports.btoa = globalThis.btoa;
 module.exports.TextEncoder = globalThis.TextEncoder;
 module.exports.TextDecoder = globalThis.TextDecoder;
-module.exports.Event = globalThis.Event;
-module.exports.EventTarget = globalThis.EventTarget;
 module.exports.createFetch = () => globalThis;

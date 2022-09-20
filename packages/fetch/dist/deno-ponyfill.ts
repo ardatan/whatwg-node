@@ -13,10 +13,8 @@ const crypto = globalThis.crypto;
 const btoa = globalThis.btoa;
 const TextDecoder = globalThis.TextDecoder;
 const TextEncoder = globalThis.TextEncoder;
-const Event = globalThis.Event;
-const EventTarget = globalThis.EventTarget;
 
-export const create = () => globalThis;
+export const createFetch = () => globalThis;
 export {
   fetch,
   Headers,
@@ -33,6 +31,4 @@ export {
   btoa,
   TextDecoder,
   TextEncoder,
-  Event,
-  EventTarget,
 };
