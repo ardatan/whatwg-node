@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import type { RequestListener, ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import {
   isReadable,
   isRequestInit,
@@ -50,7 +50,8 @@ export interface ServerAdapterObject<
   /**
    * A request listener function that can be used with any Node server variation.
    */
-  requestListener: RequestListener;
+  requestListener(req: IncomingMessage, res: ServerResponse, ctx: TServerContext): void;
+  requestListener(req: IncomingMessage, res: ServerResponse, ...ctx: Partial<TServerContext>[]): void;
   /**
    * Proxy to requestListener to mimic Node middlewares
    */
@@ -116,9 +117,18 @@ function createServerAdapter<
     return handleRequest(request, ctx);
   }
 
-  async function requestListener(nodeRequest: NodeRequest, serverResponse: ServerResponse) {
+  async function requestListener(
+    nodeRequest: NodeRequest,
+    serverResponse: ServerResponse,
+    ...ctx: Partial<TServerContext>[]
+  ) {
     const waitUntilPromises: Promise<unknown>[] = [];
+    let serverContext = {} as TServerContext;
+    if (ctx?.length > 0) {
+      serverContext = Object.assign({}, serverContext, ...ctx);
+    }
     const response = await handleNodeRequest(nodeRequest, {
+      ...serverContext,
       req: nodeRequest,
       res: serverResponse,
       waitUntil(p) {
@@ -206,7 +216,7 @@ function createServerAdapter<
   ) => {
     // If it is a Node request
     if (isReadable(input) && isServerResponse(initOrCtxOrRes)) {
-      return requestListener(input, initOrCtxOrRes);
+      return requestListener(input, initOrCtxOrRes, ...ctx);
     }
     if (isServerResponse(initOrCtxOrRes)) {
       throw new Error('Got Node response without Node request');
