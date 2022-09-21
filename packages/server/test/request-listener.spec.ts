@@ -1,7 +1,7 @@
 import { createServerAdapter } from '@whatwg-node/server';
-import { createServer, Server } from 'http';
 import { Request, Response, ReadableStream, fetch } from '@whatwg-node/fetch';
 import { Readable } from 'stream';
+import { startTServer } from './tserver';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -64,20 +64,19 @@ async function compareResponse(toBeChecked: Response, expected: Response) {
   });
 }
 
-let httpServer: Server;
 async function runTestForRequestAndResponse({
-  expectedRequest,
+  requestInit,
   expectedResponse,
-  port,
   getRequestBody,
   getResponseBody,
 }: {
-  expectedRequest: Request;
+  requestInit: RequestInit;
   expectedResponse: Response;
-  port: number;
   getRequestBody: () => BodyInit;
   getResponseBody: () => BodyInit;
 }) {
+  const { server, url, dispose } = startTServer();
+  const expectedRequest = new Request(url, requestInit);
   const app = createServerAdapter(async (request: Request) => {
     await compareRequest(request, expectedRequest);
     if (methodsWithBody.includes(expectedRequest.method)) {
@@ -85,11 +84,11 @@ async function runTestForRequestAndResponse({
     }
     return expectedResponse;
   });
-  httpServer = createServer(app);
-  await new Promise<void>(resolve => httpServer.listen(port, 'localhost', resolve));
+  server.addListener('request', app);
   const returnedResponse = await fetch(expectedRequest);
   await compareResponse(returnedResponse, expectedResponse);
   await compareReadableStream(returnedResponse.body, getResponseBody());
+  await dispose();
 }
 
 function getRegularRequestBody() {
@@ -125,15 +124,6 @@ function getIncrementalResponseBody() {
 }
 
 describe('Request Listener', () => {
-  let port = 9876;
-  afterEach(done => {
-    if (httpServer) {
-      httpServer.close(done);
-    } else {
-      done();
-    }
-    port = Math.floor(Math.random() * 1000) + 9800;
-  });
   [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
     it(`should handle regular requests with ${method}`, async () => {
       const requestInit: RequestInit = {
@@ -147,7 +137,6 @@ describe('Request Listener', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getRegularRequestBody();
       }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
       const expectedResponse = new Response(getRegularResponseBody(), {
         status: 200,
         headers: {
@@ -156,13 +145,13 @@ describe('Request Listener', () => {
         },
       });
       await runTestForRequestAndResponse({
-        expectedRequest,
+        requestInit,
         getRequestBody: getRegularRequestBody,
         expectedResponse,
         getResponseBody: getRegularResponseBody,
-        port,
       });
     });
+
     it(`should handle incremental responses with ${method}`, async () => {
       const requestInit: RequestInit = {
         method,
@@ -174,7 +163,6 @@ describe('Request Listener', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getRegularRequestBody();
       }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
       const expectedResponse = new Response(getIncrementalResponseBody(), {
         status: 200,
         headers: {
@@ -183,14 +171,14 @@ describe('Request Listener', () => {
         },
       });
       await runTestForRequestAndResponse({
-        expectedRequest,
+        requestInit,
         getRequestBody: getRegularRequestBody,
         expectedResponse,
         getResponseBody: getIncrementalResponseBody,
-        port,
       });
     });
   });
+
   methodsWithBody.forEach(method => {
     it(`should handle incremental requests with ${method}`, async () => {
       const requestInit: RequestInit = {
@@ -203,7 +191,6 @@ describe('Request Listener', () => {
       if (methodsWithBody.includes(method)) {
         requestInit.body = getIncrementalRequestBody();
       }
-      const expectedRequest = new Request(`http://localhost:${port}`, requestInit);
       const expectedResponse = new Response(getRegularResponseBody(), {
         status: 200,
         headers: {
@@ -212,11 +199,10 @@ describe('Request Listener', () => {
         },
       });
       await runTestForRequestAndResponse({
-        expectedRequest,
+        requestInit,
         getRequestBody: getIncrementalRequestBody,
         expectedResponse,
         getResponseBody: getRegularResponseBody,
-        port,
       });
     });
   });
