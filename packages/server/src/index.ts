@@ -1,7 +1,14 @@
 /// <reference lib="webworker" />
 
 import type { RequestListener, ServerResponse } from 'node:http';
-import { isReadable, isServerResponse, NodeRequest, normalizeNodeRequest, sendNodeResponse } from './utils';
+import {
+  isReadable,
+  isRequestInit,
+  isServerResponse,
+  NodeRequest,
+  normalizeNodeRequest,
+  sendNodeResponse,
+} from './utils';
 import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
 
 export interface ServerAdapterBaseObject<
@@ -26,16 +33,20 @@ export interface ServerAdapterObject<
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
-  fetch(request: Request, ...ctx: any[]): Promise<Response> | Response;
-  fetch(urlStr: string, ...ctx: any[]): Promise<Response> | Response;
-  fetch(urlStr: string, init: RequestInit, ...ctx: any[]): Promise<Response> | Response;
-  fetch(url: URL, ...ctx: any[]): Promise<Response> | Response;
-  fetch(url: URL, init: RequestInit, ...ctx: any[]): Promise<Response> | Response;
-
+  fetch(request: Request, ctx: TServerContext): Promise<Response> | Response;
+  fetch(request: Request, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  fetch(urlStr: string, ctx: TServerContext): Promise<Response> | Response;
+  fetch(urlStr: string, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  fetch(urlStr: string, init: RequestInit, ctx: TServerContext): Promise<Response> | Response;
+  fetch(urlStr: string, init: RequestInit, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  fetch(url: URL, ctx: TServerContext): Promise<Response> | Response;
+  fetch(url: URL, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  fetch(url: URL, init: RequestInit, ctx: TServerContext): Promise<Response> | Response;
+  fetch(url: URL, init: RequestInit, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   /**
    * This function takes Node's request object and returns a WHATWG Fetch spec compliant `Response` object.
    **/
-  handleNodeRequest(nodeRequest: NodeRequest, serverContext: TServerContext): Promise<Response> | Response;
+  handleNodeRequest(nodeRequest: NodeRequest, ctx: TServerContext): Promise<Response> | Response;
   /**
    * A request listener function that can be used with any Node server variation.
    */
@@ -43,11 +54,12 @@ export interface ServerAdapterObject<
   /**
    * Proxy to requestListener to mimic Node middlewares
    */
-  handle: RequestListener & ServerAdapterObject<TServerContext, TBaseObject>['fetch'];
+  handle: ServerAdapterObject<TServerContext, TBaseObject>['requestListener'] &
+    ServerAdapterObject<TServerContext, TBaseObject>['fetch'];
 }
 
 export type ServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>> = TBaseObject &
-  RequestListener &
+  ServerAdapterObject<TServerContext, TBaseObject>['requestListener'] &
   ServerAdapterObject<TServerContext, TBaseObject>['fetch'] &
   ServerAdapterObject<TServerContext, TBaseObject>;
 
@@ -62,7 +74,7 @@ async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
-  serverContext: TServerContext
+  ctx: TServerContext
 ) => Promise<Response> | Response;
 
 export type DefaultServerAdapterContext = {
@@ -99,9 +111,9 @@ function createServerAdapter<
   const handleRequest =
     typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
 
-  function handleNodeRequest(nodeRequest: NodeRequest, serverContext: TServerContext) {
+  function handleNodeRequest(nodeRequest: NodeRequest, ctx: TServerContext) {
     const request = normalizeNodeRequest(nodeRequest, RequestCtor);
-    return handleRequest(request, serverContext);
+    return handleRequest(request, ctx);
   }
 
   async function requestListener(nodeRequest: NodeRequest, serverResponse: ServerResponse) {
@@ -109,10 +121,10 @@ function createServerAdapter<
     const response = await handleNodeRequest(nodeRequest, {
       req: nodeRequest,
       res: serverResponse,
-      waitUntil(p: Promise<unknown>) {
+      waitUntil(p) {
         waitUntilPromises.push(p);
       },
-    } as any);
+    } as TServerContext & DefaultServerAdapterContext);
     if (response) {
       await sendNodeResponse(response, serverResponse);
     } else {
@@ -124,31 +136,35 @@ function createServerAdapter<
     if (waitUntilPromises.length > 0) {
       await handleWaitUntils(waitUntilPromises);
     }
+    return response;
   }
 
-  function handleEvent(event: FetchEvent) {
+  function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]) {
     if (!event.respondWith || !event.request) {
       throw new TypeError(`Expected FetchEvent, got ${event}`);
     }
-    const response$ = handleRequest(event.request, event as any);
+    let serverContext = {} as TServerContext;
+    if (ctx?.length > 0) {
+      serverContext = Object.assign({}, serverContext, ...ctx);
+    }
+    const response$ = handleRequest(event.request, serverContext);
     event.respondWith(response$);
+    return response$;
   }
 
-  function handleRequestWithWaitUntil(request: Request, ctx: any = {}, ...rest: any[]) {
+  function handleRequestWithWaitUntil(request: Request, ctx: TServerContext) {
+    const extendedCtx = ctx as TServerContext & { waitUntil?: (p: Promise<unknown>) => void };
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
       request.text();
     }
-    if (rest?.length > 0) {
-      ctx = Object.assign({}, ctx, ...rest);
-    }
-    if (!ctx.waitUntil) {
+    if (!extendedCtx.waitUntil) {
       const waitUntilPromises: Promise<unknown>[] = [];
-      ctx.waitUntil = (p: Promise<unknown>) => {
+      extendedCtx.waitUntil = (p: Promise<unknown>) => {
         waitUntilPromises.push(p);
       };
       const response$ = handleRequest(request, {
-        ...ctx,
+        ...extendedCtx,
         waitUntil(p: Promise<unknown>) {
           waitUntilPromises.push(p);
         },
@@ -158,34 +174,68 @@ function createServerAdapter<
       }
       return response$;
     }
-    return handleRequest(request, ctx);
+    return handleRequest(request, extendedCtx);
   }
 
-  function genericRequestHandler(input: any, ctx: any, ...rest: any[]) {
-    // If it is a Node request
-    if (isReadable(input) && ctx != null && isServerResponse(ctx)) {
-      return requestListener(input as unknown as NodeRequest, ctx);
+  const fetchFn: ServerAdapterObject<TServerContext, TBaseObject>['fetch'] = (
+    input,
+    initOrCtx,
+    ...ctx: Partial<TServerContext>[]
+  ) => {
+    let init;
+    let serverContext = {} as TServerContext;
+    if (isRequestInit(initOrCtx)) {
+      init = initOrCtx;
+    } else {
+      init = {};
+      serverContext = Object.assign({}, serverContext, initOrCtx);
     }
+    if (ctx?.length > 0) {
+      serverContext = Object.assign({}, serverContext, ...ctx);
+    }
+    if (typeof input === 'string' || input instanceof URL) {
+      return handleRequestWithWaitUntil(new RequestCtor(input, init), serverContext);
+    }
+    return handleRequestWithWaitUntil(input, serverContext);
+  };
+
+  const genericRequestHandler: ServerAdapterObject<TServerContext, TBaseObject>['handle'] = (
+    input,
+    initOrCtxOrRes,
+    ...ctx: Partial<TServerContext>[]
+  ) => {
+    // If it is a Node request
+    if (isReadable(input) && isServerResponse(initOrCtxOrRes)) {
+      return requestListener(input, initOrCtxOrRes);
+    }
+    if (isServerResponse(initOrCtxOrRes)) {
+      throw new Error('Got Node response without Node request');
+    }
+
     // Is input a container object over Request?
-    if (input.request) {
+    if (typeof input === 'object' && 'request' in input) {
       // Is it FetchEvent?
-      if (input.respondWith) {
-        return handleEvent(input);
+      if ('respondWith' in input) {
+        return handleEvent(input, isRequestInit(initOrCtxOrRes) ? {} : initOrCtxOrRes, ...ctx);
       }
       // In this input is also the context
-      return handleRequestWithWaitUntil(input.request, input, ...rest);
+      return fetchFn(
+        // @ts-expect-error input can indeed be a Request
+        (input as any as { request: Request }).request,
+        initOrCtxOrRes,
+        ...ctx
+      );
     }
+
     // Or is it Request itself?
     // Then ctx is present and it is the context
-    return handleRequestWithWaitUntil(input, ctx, ...rest);
-  }
-
-  function fetchFn(input: RequestInfo | URL, init?: RequestInit, ...ctx: any[]) {
-    if (typeof input === 'string' || input instanceof URL) {
-      return handleRequestWithWaitUntil(new RequestCtor(input, init), ...ctx);
-    }
-    return handleRequestWithWaitUntil(input, init, ...ctx);
-  }
+    return fetchFn(
+      // @ts-expect-error input can indeed string | Request | URL
+      input,
+      initOrCtxOrRes,
+      ...ctx
+    );
+  };
 
   const adapterObj: ServerAdapterObject<TServerContext, TBaseObject> = {
     handleRequest,
@@ -193,10 +243,10 @@ function createServerAdapter<
     handleNodeRequest,
     requestListener,
     handleEvent,
-    handle: genericRequestHandler as any,
+    handle: genericRequestHandler,
   };
 
-  return new Proxy(genericRequestHandler as any, {
+  return new Proxy(genericRequestHandler, {
     // It should have all the attributes of the handler function and the server instance
     has: (_, prop) => {
       return (
@@ -213,12 +263,12 @@ function createServerAdapter<
         }
         return adapterProp;
       }
-      const genericRequestHandlerProp: any = genericRequestHandler[prop];
-      if (genericRequestHandlerProp) {
-        if (genericRequestHandlerProp.bind) {
-          return genericRequestHandlerProp.bind(genericRequestHandler);
+      const handleProp = genericRequestHandler[prop];
+      if (handleProp) {
+        if (handleProp.bind) {
+          return handleProp.bind(genericRequestHandler);
         }
-        return genericRequestHandlerProp;
+        return handleProp;
       }
       if (serverAdapterBaseObject) {
         const serverAdapterBaseObjectProp = serverAdapterBaseObject[prop];
@@ -233,7 +283,7 @@ function createServerAdapter<
     apply(_, __, [input, ctx]: Parameters<typeof genericRequestHandler>) {
       return genericRequestHandler(input, ctx);
     },
-  });
+  }) as any; // 😡
 }
 
 export { createServerAdapter };

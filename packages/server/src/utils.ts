@@ -177,3 +177,23 @@ export async function sendNodeResponse(
     }
   });
 }
+
+export function isRequestInit(val: unknown): val is RequestInit {
+  return (
+    val != null &&
+    typeof val === 'object' &&
+    ('body' in val ||
+      'cache' in val ||
+      'credentials' in val ||
+      'headers' in val ||
+      'integrity' in val ||
+      'keepalive' in val ||
+      'method' in val ||
+      'mode' in val ||
+      'redirect' in val ||
+      'referrer' in val ||
+      'referrerPolicy' in val ||
+      'signal' in val ||
+      'window' in val)
+  );
+}
