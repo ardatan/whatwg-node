@@ -136,7 +136,6 @@ function createServerAdapter<
     if (waitUntilPromises.length > 0) {
       await handleWaitUntils(waitUntilPromises);
     }
-    return response;
   }
 
   function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]) {
@@ -149,7 +148,6 @@ function createServerAdapter<
     }
     const response$ = handleRequest(event.request, serverContext);
     event.respondWith(response$);
-    return response$;
   }
 
   function handleRequestWithWaitUntil(request: Request, ctx: TServerContext) {
