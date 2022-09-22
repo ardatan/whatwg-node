@@ -117,7 +117,10 @@ app.route({
   url: '/mypath',
   method: ['GET', 'POST', 'OPTIONS'],
   handler: async (req, reply) => {
-    const response = await myServerAdapter.handleNodeRequest(req)
+    const response = await myServerAdapter.handleNodeRequest(req, {
+      req,
+      reply,
+    })
     response.headers.forEach((value, key) => {
       reply.header(key, value)
     })
