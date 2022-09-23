@@ -6,14 +6,14 @@ function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return body != null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function';
 }
 
-export interface NodeRequest {
+export interface NodeRequest extends Readable {
   protocol?: string;
   hostname?: string;
   body?: any;
   url?: string;
   originalUrl?: string;
   method?: string;
-  headers: any;
+  headers?: any;
   req?: IncomingMessage;
   raw?: IncomingMessage;
   socket?: Socket;
@@ -141,9 +141,17 @@ export function isReadable(stream: any): stream is Readable {
   return stream.read != null;
 }
 
+export function isNodeRequest(request: any): request is NodeRequest {
+  return isReadable(request);
+}
+
 export function isServerResponse(stream: any): stream is ServerResponse {
   // Check all used functions are defined
   return stream.setHeader != null && stream.end != null && stream.once != null && stream.write != null;
+}
+
+export function isFetchEvent(event: any): event is FetchEvent {
+  return event != null && event.request != null && event.respondWith != null;
 }
 
 export async function sendNodeResponse(
