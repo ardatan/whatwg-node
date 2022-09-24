@@ -119,7 +119,7 @@ app.route({
   handler: async (req, reply) => {
     const response = await myServerAdapter.handleNodeRequest(req, {
       req,
-      reply,
+      reply
     })
     response.headers.forEach((value, key) => {
       reply.header(key, value)

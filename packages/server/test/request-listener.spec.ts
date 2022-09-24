@@ -1,7 +1,8 @@
 import { createServerAdapter } from '@whatwg-node/server';
-import { Request, Response, ReadableStream, fetch } from '@whatwg-node/fetch';
+import { createFetch } from '@whatwg-node/fetch';
 import { Readable } from 'stream';
-import { startTServer } from './tserver';
+import { createServer, Server } from 'http';
+import { AddressInfo } from 'net';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -64,148 +65,166 @@ async function compareResponse(toBeChecked: Response, expected: Response) {
   });
 }
 
-async function runTestForRequestAndResponse({
-  requestInit,
-  expectedResponse,
-  getRequestBody,
-  getResponseBody,
-}: {
-  requestInit: RequestInit;
-  expectedResponse: Response;
-  getRequestBody: () => BodyInit;
-  getResponseBody: () => BodyInit;
-}) {
-  const { server, url, dispose } = startTServer();
-  const expectedRequest = new Request(url, requestInit);
-  const app = createServerAdapter(async (request: Request) => {
-    await compareRequest(request, expectedRequest);
-    if (methodsWithBody.includes(expectedRequest.method)) {
-      await compareReadableStream(request.body, getRequestBody());
-    }
-    return expectedResponse;
-  });
-  server.addListener('request', app);
-  const returnedResponse = await fetch(expectedRequest);
-  await compareResponse(returnedResponse, expectedResponse);
-  await compareReadableStream(returnedResponse.body, getResponseBody());
-  await dispose();
-}
-
-function getRegularRequestBody() {
-  return JSON.stringify({ requestFoo: 'requestFoo' });
-}
-
-function getRegularResponseBody() {
-  return JSON.stringify({ responseFoo: 'responseFoo' });
-}
-
-function getIncrementalRequestBody() {
-  return new ReadableStream({
-    async start(controller) {
-      for (let i = 0; i < 2; i++) {
-        await new Promise(resolve => setTimeout(resolve, 30));
-        controller.enqueue(`data: request_${i.toString()}\n`);
-      }
-      controller.close();
-    },
-  });
-}
-
-function getIncrementalResponseBody() {
-  return new ReadableStream({
-    async start(controller) {
-      for (let i = 0; i < 10; i++) {
-        await new Promise(resolve => setTimeout(resolve, 30));
-        controller.enqueue(`data: response_${i.toString()}\n`);
-      }
-      controller.close();
-    },
-  });
-}
+let server: Server;
+let url: string;
 
 describe('Request Listener', () => {
-  [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
-    it(`should handle regular requests with ${method}`, async () => {
-      const requestInit: RequestInit = {
-        method,
-        headers: {
-          accept: 'application/json',
-          'content-type': 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      };
-      if (methodsWithBody.includes(method)) {
-        requestInit.body = getRegularRequestBody();
-      }
-      const expectedResponse = new Response(getRegularResponseBody(), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      });
-      await runTestForRequestAndResponse({
-        requestInit,
-        getRequestBody: getRegularRequestBody,
-        expectedResponse,
-        getResponseBody: getRegularResponseBody,
-      });
-    });
+  beforeEach(done => {
+    server = createServer();
+    server.listen(0, () => {
+      url = `http://localhost:${(server.address() as AddressInfo).port}`;
+      done();
+    })
+  });
 
-    it(`should handle incremental responses with ${method}`, async () => {
-      const requestInit: RequestInit = {
-        method,
-        headers: {
-          accept: 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      };
-      if (methodsWithBody.includes(method)) {
-        requestInit.body = getRegularRequestBody();
-      }
-      const expectedResponse = new Response(getIncrementalResponseBody(), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-          'random-header': Date.now().toString(),
-        },
+  afterEach(done => {
+    server.close(done);
+  });
+
+  ['node-fetch', 'default-fetch'].forEach(fetchImplementation => {
+    describe(fetchImplementation, () => {
+      const fetchAPI = createFetch({
+        useNodeFetch: fetchImplementation === 'node-fetch',
       });
-      await runTestForRequestAndResponse({
+
+      async function runTestForRequestAndResponse({
         requestInit,
-        getRequestBody: getRegularRequestBody,
         expectedResponse,
-        getResponseBody: getIncrementalResponseBody,
+        getRequestBody,
+        getResponseBody,
+      }: {
+        requestInit: RequestInit;
+        expectedResponse: Response;
+        getRequestBody: () => BodyInit;
+        getResponseBody: () => BodyInit;
+      }) {
+        const adapter = createServerAdapter(async (request: Request) => {
+          await compareRequest(request, expectedRequest);
+          if (methodsWithBody.includes(expectedRequest.method)) {
+            await compareReadableStream(request.body, getRequestBody());
+          }
+          return expectedResponse;
+        });
+        server.addListener('request', adapter);
+        const expectedRequest = new fetchAPI.Request(url, requestInit);
+        const returnedResponse = await fetchAPI.fetch(expectedRequest);
+        await compareResponse(returnedResponse, expectedResponse);
+        await compareReadableStream(returnedResponse.body, getResponseBody());
+      }
+
+      function getRegularRequestBody() {
+        return JSON.stringify({ requestFoo: 'requestFoo' });
+      }
+
+      function getRegularResponseBody() {
+        return JSON.stringify({ responseFoo: 'responseFoo' });
+      }
+
+      function getIncrementalRequestBody() {
+        return new fetchAPI.ReadableStream({
+          async start(controller) {
+            for (let i = 0; i < 2; i++) {
+              await new Promise(resolve => setTimeout(resolve, 30));
+              controller.enqueue(`data: request_${i.toString()}\n`);
+            }
+            controller.close();
+          },
+        });
+      }
+
+      function getIncrementalResponseBody() {
+        return new fetchAPI.ReadableStream({
+          async start(controller) {
+            for (let i = 0; i < 10; i++) {
+              await new Promise(resolve => setTimeout(resolve, 30));
+              controller.enqueue(`data: response_${i.toString()}\n`);
+            }
+            controller.close();
+          },
+        });
+      }
+      
+      [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
+        it(`should handle regular requests with ${method}`, async () => {
+          const requestInit: RequestInit = {
+            method,
+            headers: {
+              accept: 'application/json',
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          };
+          if (methodsWithBody.includes(method)) {
+            requestInit.body = getRegularRequestBody();
+          }
+          const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          });
+          await runTestForRequestAndResponse({
+            requestInit,
+            getRequestBody: getRegularRequestBody,
+            expectedResponse,
+            getResponseBody: getRegularResponseBody,
+          });
+        });
+
+        it(`should handle incremental responses with ${method}`, async () => {
+          const requestInit: RequestInit = {
+            method,
+            headers: {
+              accept: 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          };
+          if (methodsWithBody.includes(method)) {
+            requestInit.body = getRegularRequestBody();
+          }
+          const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          });
+          await runTestForRequestAndResponse({
+            requestInit,
+            getRequestBody: getRegularRequestBody,
+            expectedResponse,
+            getResponseBody: getIncrementalResponseBody,
+          });
+        });
+
+        it(`should handle incremental requests with ${method}`, async () => {
+          const requestInit: RequestInit = {
+            method,
+            headers: {
+              accept: 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          };
+          if (methodsWithBody.includes(method)) {
+            requestInit.body = getIncrementalRequestBody();
+          }
+          const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          });
+          await runTestForRequestAndResponse({
+            requestInit,
+            getRequestBody: getIncrementalRequestBody,
+            expectedResponse,
+            getResponseBody: getRegularResponseBody,
+          });
+        });
       });
     });
   });
 
-  methodsWithBody.forEach(method => {
-    it(`should handle incremental requests with ${method}`, async () => {
-      const requestInit: RequestInit = {
-        method,
-        headers: {
-          accept: 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      };
-      if (methodsWithBody.includes(method)) {
-        requestInit.body = getIncrementalRequestBody();
-      }
-      const expectedResponse = new Response(getRegularResponseBody(), {
-        status: 200,
-        headers: {
-          'content-type': 'application/json',
-          'random-header': Date.now().toString(),
-        },
-      });
-      await runTestForRequestAndResponse({
-        requestInit,
-        getRequestBody: getIncrementalRequestBody,
-        expectedResponse,
-        getResponseBody: getRegularResponseBody,
-      });
-    });
-  });
 });
-
-export { createServerAdapter };

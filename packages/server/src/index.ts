@@ -56,7 +56,10 @@ export interface ServerAdapterObject<
   handle(req: NodeRequest, res: ServerResponse, ...ctx: Partial<TServerContext>[]): Promise<void>;
   handle(request: Request, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   handle(fetchEvent: FetchEvent & Partial<TServerContext>, ...ctx: Partial<TServerContext>[]): void;
-  handle(container: { request: Request } & Partial<TServerContext>, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  handle(
+    container: { request: Request } & Partial<TServerContext>,
+    ...ctx: Partial<TServerContext>[]
+  ): Promise<Response> | Response;
 }
 
 export type ServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>> = TBaseObject &
@@ -112,12 +115,16 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = Object.assign({}, ...ctx);
+    const serverContext = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0];
     const request = normalizeNodeRequest(nodeRequest, RequestCtor);
     return handleRequest(request, serverContext);
   }
 
-  async function requestListener(nodeRequest: NodeRequest, serverResponse: ServerResponse, ...ctx: Partial<TServerContext>[]) {
+  async function requestListener(
+    nodeRequest: NodeRequest,
+    serverResponse: ServerResponse,
+    ...ctx: Partial<TServerContext>[]
+  ) {
     const waitUntilPromises: Promise<unknown>[] = [];
     const defaultServerContext = {
       req: nodeRequest,
@@ -144,13 +151,13 @@ function createServerAdapter<
     if (!event.respondWith || !event.request) {
       throw new TypeError(`Expected FetchEvent, got ${event}`);
     }
-    const serverContext = Object.assign({}, event, ...ctx);
+    const serverContext = ctx.length > 0 ? Object.assign({}, event, ...ctx) : event;
     const response$ = handleRequest(event.request, serverContext);
     event.respondWith(response$);
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext: TServerContext = Object.assign({}, ...ctx);
+    const serverContext: TServerContext = ctx.length > 1 ? Object.assign({}, ...ctx) : (ctx[0] || {});
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
       request.text();
@@ -173,31 +180,31 @@ function createServerAdapter<
 
   const fetchFn: ServerAdapterObject<TServerContext, TBaseObject>['fetch'] = (
     input,
-    initOrCtx,
-    ...ctx: Partial<TServerContext>[]
+    ...maybeCtx: Partial<TServerContext>[]
   ) => {
     if (typeof input === 'string' || input instanceof URL) {
+      const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
-        return handleRequestWithWaitUntil(new RequestCtor(input, initOrCtx), ...ctx);
+        return handleRequestWithWaitUntil(new RequestCtor(input.toString(), initOrCtx), ...restOfCtx);
       }
-      return handleRequestWithWaitUntil(new RequestCtor(input), initOrCtx, ...ctx);
+      return handleRequestWithWaitUntil(new RequestCtor(input.toString()), ...maybeCtx);
     }
-    return handleRequestWithWaitUntil(input, initOrCtx as Partial<TServerContext>, ...ctx);
+    return handleRequestWithWaitUntil(input, ...maybeCtx);
   };
 
   const genericRequestHandler = (
-    input: Request | FetchEvent | NodeRequest | { request: Request } & Partial<TServerContext>,
-    initOrCtxOrRes: Partial<TServerContext> | ServerResponse,
-    ...ctx: Partial<TServerContext>[]
+    input: Request | FetchEvent | NodeRequest | ({ request: Request } & Partial<TServerContext>),
+    ...maybeCtx: Partial<TServerContext>[]
   ): Promise<Response> | Response | Promise<void> | void => {
     // If it is a Node request
+    const [initOrCtxOrRes, ...restOfCtx] = maybeCtx;
     if (isNodeRequest(input)) {
       if (!isServerResponse(initOrCtxOrRes)) {
         throw new TypeError(`Expected ServerResponse, got ${initOrCtxOrRes}`);
       }
-      return requestListener(input, initOrCtxOrRes, ...ctx);
+      return requestListener(input, initOrCtxOrRes, ...restOfCtx);
     }
-    
+
     if (isServerResponse(initOrCtxOrRes)) {
       throw new Error('Got Node response without Node request');
     }
@@ -206,24 +213,15 @@ function createServerAdapter<
     if (typeof input === 'object' && 'request' in input) {
       // Is it FetchEvent?
       if (isFetchEvent(input)) {
-        return handleEvent(input, initOrCtxOrRes, ...ctx);
+        return handleEvent(input, ...maybeCtx);
       }
       // In this input is also the context
-      return handleRequestWithWaitUntil(
-        input.request,
-        input,
-        initOrCtxOrRes,
-        ...ctx
-      );
+      return handleRequestWithWaitUntil(input.request, input, ...maybeCtx);
     }
 
     // Or is it Request itself?
     // Then ctx is present and it is the context
-    return fetchFn(
-      input,
-      initOrCtxOrRes,
-      ...ctx
-    );
+    return fetchFn(input, ...maybeCtx);
   };
 
   const adapterObj: ServerAdapterObject<TServerContext, TBaseObject> = {
@@ -269,8 +267,8 @@ function createServerAdapter<
         }
       }
     },
-    apply(_, __, [input, ctx]: Parameters<typeof genericRequestHandler>) {
-      return genericRequestHandler(input, ctx);
+    apply(_, __, args: Parameters<ServerAdapterObject<TServerContext, TBaseObject>['handle']>) {
+      return genericRequestHandler(...args);
     },
   }) as any; // 😡
 }
