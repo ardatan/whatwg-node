@@ -1,5 +1,5 @@
 import { createServerAdapter } from '../src';
-import{ Request } from '@whatwg-node/fetch';
+import { Request } from '@whatwg-node/fetch';
 
 describe('fetch', () => {
   // Request as first parameter
