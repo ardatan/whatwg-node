@@ -1,3 +1,4 @@
+import { Request } from "@whatwg-node/fetch";
 import { createServerAdapter } from "../src";
 
 describe('Request Container', () => {
