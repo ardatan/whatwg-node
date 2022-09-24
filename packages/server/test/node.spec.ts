@@ -63,7 +63,7 @@ describe('Node Specific Cases', () => {
     server.on('request', (...args) => serverAdapter(...args, additionalCtx));
     const response = await fetch(url);
     await response.text();
-    expect(handleRequest).toHaveBeenCalledWith(expect.any(Request), expect.objectContaining(additionalCtx));
+    expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
   });
 });
 
