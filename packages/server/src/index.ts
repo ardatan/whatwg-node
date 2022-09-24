@@ -157,7 +157,7 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext: TServerContext = ctx.length > 1 ? Object.assign({}, ...ctx) : (ctx[0] || {});
+    const serverContext: TServerContext = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0] || {};
     if ('process' in globalThis && process.versions?.['bun'] != null) {
       // This is required for bun
       request.text();

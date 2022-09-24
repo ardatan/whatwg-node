@@ -147,7 +147,9 @@ export function isNodeRequest(request: any): request is NodeRequest {
 
 export function isServerResponse(stream: any): stream is ServerResponse {
   // Check all used functions are defined
-  return stream != null && stream.setHeader != null && stream.end != null && stream.once != null && stream.write != null;
+  return (
+    stream != null && stream.setHeader != null && stream.end != null && stream.once != null && stream.write != null
+  );
 }
 
 export function isFetchEvent(event: any): event is FetchEvent {

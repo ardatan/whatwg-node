@@ -11,7 +11,7 @@ describe('Node Specific Cases', () => {
     server.listen(0, () => {
       url = `http://localhost:${(server.address() as AddressInfo).port}`;
       done();
-    })
+    });
   });
 
   afterEach(done => {
@@ -53,7 +53,7 @@ describe('Node Specific Cases', () => {
       return new Response(null, {
         status: 204,
       });
-    })
+    });
     const serverAdapter = createServerAdapter<{
       req: IncomingMessage;
       res: ServerResponse;
@@ -64,7 +64,7 @@ describe('Node Specific Cases', () => {
     const response = await fetch(url);
     await response.text();
     expect(handleRequest).toHaveBeenCalledWith(expect.any(Request), expect.objectContaining(additionalCtx));
-  })
+  });
 });
 
 function sleep(ms: number) {

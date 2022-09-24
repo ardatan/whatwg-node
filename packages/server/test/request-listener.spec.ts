@@ -90,7 +90,7 @@ describe('Request Listener', () => {
         expectedResponse: Response;
         getRequestBody: () => BodyInit;
         getResponseBody: () => BodyInit;
-        }) {
+      }) {
         const adapter = createServerAdapter(async (request: Request) => {
           await compareRequest(request, expectedRequest);
           if (methodsWithBody.includes(expectedRequest.method)) {
@@ -142,7 +142,7 @@ describe('Request Listener', () => {
           },
         });
       }
-      
+
       [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
         it(`should handle regular requests with ${method}`, async () => {
           const requestInit: RequestInit = {
@@ -225,5 +225,4 @@ describe('Request Listener', () => {
       });
     });
   });
-
 });
