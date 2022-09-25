@@ -17,10 +17,18 @@ describe('FormData', () => {
 
         describe(fieldsFirstFlag, () => {
             it('should forward formdata correctly', async () => {
-                const requestHandler = jest.fn().mockImplementation(() => new fetchAPI.Response(null, {
-                    status: 204
-                }));
-                const adapter = createServerAdapter(requestHandler, fetchAPI.Request);
+                expect.assertions(4);
+                const adapter = createServerAdapter(async request => {
+                    const body = await request.formData();
+                    expect(body.get('foo')).toBe('bar');
+                    const file = body.get('baz') as File;
+                    expect(file.name).toBe('baz.txt');
+                    expect(file.type).toBe('text/plain');
+                    expect(await file.text()).toBe('baz');
+                    return new fetchAPI.Response(null, {
+                        status: 204
+                    })
+                }, fetchAPI.Request);
                 server = createServer(adapter);
                 await new Promise<void>(resolve => {
                     server.listen(0, () => {
@@ -36,13 +44,6 @@ describe('FormData', () => {
                     body: formData
                 });
                 await response.text();
-                const request = requestHandler.mock.calls[0][0];
-                const body = await request.formData();
-                expect(body.get('foo')).toBe('bar');
-                const file = body.get('baz') as File;
-                expect(file.name).toBe('baz.txt');
-                expect(file.type).toBe('text/plain');
-                expect(await file.text()).toBe('baz');
             })
         })
     })
