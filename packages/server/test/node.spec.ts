@@ -68,15 +68,18 @@ describe('Node Specific Cases', () => {
 
   it('should handle cancellation of incremental responses', async () => {
     const cancelFn = jest.fn();
-    const serverAdapter = createServerAdapter(() => new Response(
-      new ReadableStream({
-        async pull(controller) {
-          await sleep(100);
-          controller.enqueue(Date.now().toString());
-        },
-        cancel: cancelFn,
-      })
-    ));
+    const serverAdapter = createServerAdapter(
+      () =>
+        new Response(
+          new ReadableStream({
+            async pull(controller) {
+              await sleep(100);
+              controller.enqueue(Date.now().toString());
+            },
+            cancel: cancelFn,
+          })
+        )
+    );
     server.on('request', serverAdapter);
     const abortCtrl = new AbortController();
     const response = await fetch(url, {
@@ -99,8 +102,7 @@ describe('Node Specific Cases', () => {
     expect(collectedValues).toHaveLength(3);
     await sleep(100);
     expect(cancelFn).toHaveBeenCalled();
-
-  })
+  });
 });
 
 function sleep(ms: number) {
