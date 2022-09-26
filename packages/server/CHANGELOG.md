@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.7
+
+### Patch Changes
+
+- [`60672fb`](https://github.com/ardatan/whatwg-node/commit/60672fb0126a1eac058c836c835a554d77e201cd) Thanks [@ardatan](https://github.com/ardatan)! - Fix NodeRequest
+
 ## 0.4.6
 
 ### Patch Changes
