@@ -21,7 +21,7 @@ describe('Node Specific Cases', () => {
     const serverAdapter = createServerAdapter(() => {
       return undefined as any;
     });
-    server.on('request', serverAdapter);
+    server.once('request', serverAdapter);
     const response = await fetch(url);
     await response.text();
     expect(response.status).toBe(404);
@@ -39,7 +39,7 @@ describe('Node Specific Cases', () => {
         status: 204,
       });
     });
-    server.on('request', serverAdapter);
+    server.once('request', serverAdapter);
     const response$ = fetch(url);
     const response = await response$;
     await response.text();
@@ -60,7 +60,7 @@ describe('Node Specific Cases', () => {
       foo: string;
     }>(handleRequest);
     const additionalCtx = { foo: 'bar' };
-    server.on('request', (...args) => serverAdapter(...args, additionalCtx));
+    server.once('request', (...args) => serverAdapter(...args, additionalCtx));
     const response = await fetch(url);
     await response.text();
     expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
@@ -80,7 +80,7 @@ describe('Node Specific Cases', () => {
           })
         )
     );
-    server.on('request', serverAdapter);
+    server.once('request', serverAdapter);
     const abortCtrl = new AbortController();
     const response = await fetch(url, {
       signal: abortCtrl.signal,

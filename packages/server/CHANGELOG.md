@@ -70,8 +70,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`);
-  });
+    return new Response(`I got ${req.url}`)
+  })
   ```
 
   Breaking Changes;
