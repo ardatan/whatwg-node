@@ -1,5 +1,5 @@
 import { createServerAdapter } from '@whatwg-node/server';
-import { fetch, Response, ReadableStream } from '@whatwg-node/fetch';
+import { fetch, Response, ReadableStream, AbortController } from '@whatwg-node/fetch';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { AddressInfo } from 'net';
 
@@ -82,21 +82,15 @@ describe('Node Specific Cases', () => {
     const response = await fetch(url, {
       signal: abortCtrl.signal,
     });
-    const reader = response.body!.getReader();
 
     const collectedValues: string[] = [];
+
     let i = 0;
-    while (true) {
+    for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
       if (i > 2) {
-        reader.releaseLock();
         break;
       }
-      const { value, done } = await reader.read();
-      if (done) {
-        break;
-      }
-      const str = Buffer.from(value!).toString('utf-8');
-      collectedValues.push(str);
+      collectedValues.push(Buffer.from(chunk).toString('utf-8'));
       i++;
     }
 
