@@ -6,7 +6,7 @@ function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return body != null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function';
 }
 
-export interface NodeRequest extends Readable {
+export interface NodeRequest {
   protocol?: string;
   hostname?: string;
   body?: any;
