@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.9
+
+### Patch Changes
+
+- [`5a884ee`](https://github.com/ardatan/whatwg-node/commit/5a884ee23a84c0338919cb5aec0a78f86718feb8) Thanks [@ardatan](https://github.com/ardatan)! - Ensure ReadableStream is also cancelled after Reader cancelled if Response.body is ReadableStream
+
 ## 0.4.8
 
 ### Patch Changes
@@ -64,8 +70,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
