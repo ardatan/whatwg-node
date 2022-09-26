@@ -184,7 +184,9 @@ export async function sendNodeResponse(
     } else if (isReadableStream(body)) {
       const reader = body.getReader();
       serverResponse.once('close', () => {
-        reader.cancel();
+        reader.cancel().finally(() => {
+          body.cancel();
+        });
       });
       // eslint-disable-next-line no-inner-declarations
       function pump() {
