@@ -16,13 +16,13 @@ module.exports = function getFormDataMethod(File, limits) {
         reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
       })
       fileStream.on('data', (chunk) => {
-        chunks.push(chunk);
+        chunks.push(...chunk);
       })
       fileStream.on('close', () => {
         if (fileStream.truncated) {
           reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
         }
-        const file = new File(chunks, filename, { type: mimeType });
+        const file = new File([new Uint8Array(chunks)], filename, { type: mimeType });
         formData.set(name, file);
         resolve(file);
       });
