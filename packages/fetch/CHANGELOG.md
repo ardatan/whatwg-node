@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.4.5
+
+### Patch Changes
+
+- [#140](https://github.com/ardatan/whatwg-node/pull/140) [`5d151df`](https://github.com/ardatan/whatwg-node/commit/5d151df8c59329a470b8ffa6e3547aae72a7e55b) Thanks [@ardatan](https://github.com/ardatan)! - Fix Request.formData method
+
 ## 0.4.4
 
 ### Patch Changes

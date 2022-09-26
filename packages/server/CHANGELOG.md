@@ -1,5 +1,16 @@
 # @whatwg-node/server
 
+## 0.4.6
+
+### Patch Changes
+
+- [#134](https://github.com/ardatan/whatwg-node/pull/134) [`ed098ba`](https://github.com/ardatan/whatwg-node/commit/ed098ba0769f1ef6fbfa1fc9711955e8b8b04dfd) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Improved types
+
+- [#140](https://github.com/ardatan/whatwg-node/pull/140) [`5d151df`](https://github.com/ardatan/whatwg-node/commit/5d151df8c59329a470b8ffa6e3547aae72a7e55b) Thanks [@ardatan](https://github.com/ardatan)! - Fix Request.formData method
+
+- Updated dependencies [[`5d151df`](https://github.com/ardatan/whatwg-node/commit/5d151df8c59329a470b8ffa6e3547aae72a7e55b)]:
+  - @whatwg-node/fetch@0.4.5
+
 ## 0.4.5
 
 ### Patch Changes
@@ -41,8 +52,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
