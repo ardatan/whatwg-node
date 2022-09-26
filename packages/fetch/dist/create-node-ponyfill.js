@@ -165,25 +165,6 @@ module.exports = function createNodePonyfill(opts = {}) {
         constructor(requestOrUrl, options) {
           if (typeof requestOrUrl === "string") {
             options = options || {};
-            if (options.body != null && options.body.read && options.body.on) {
-              const readable = options.body;
-              options.body = new ponyfills.ReadableStream({
-                pull(controller) {
-                  const chunk = readable.read();
-                  if (chunk != null) {
-                    controller.enqueue(chunk);
-                  } else {
-                    controller.close();
-                  }
-                },
-                close(e) {
-                  readable.destroy(e);
-                }
-              });
-              Object.defineProperty(options.body, Symbol.asyncIterator, {
-                value: () => readable[Symbol.asyncIterator]()
-              });
-            }
             super(requestOrUrl, options);
             const contentType = this.headers.get("content-type");
             if (contentType && contentType.startsWith("multipart/form-data")) {
