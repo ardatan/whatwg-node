@@ -30,7 +30,7 @@ describe('FormData', () => {
                         receivedFileType = file.type;
                         receivedFileContent = await file.text();
                     } catch (e: any) {
-                        return new Response(e.stack, {
+                        return new fetchAPI.Response(e.stack, {
                             status: 500,
                         });
                     }
@@ -52,7 +52,7 @@ describe('FormData', () => {
                     method: 'POST',
                     body: formData,
                 });
-                console.log(await response.text());
+                expect(await response.text()).toBe('');
                 expect(response.status).toBe(204);
                 expect(receivedFieldContent).toBe('bar');
                 expect(receivedFileName).toBe('baz.txt');

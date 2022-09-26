@@ -179,7 +179,10 @@ module.exports = function createNodePonyfill(opts = {}) {
                 close(e) {
                   readable.destroy(e);
                 }
-              })
+              });
+              Object.defineProperty(options.body, Symbol.asyncIterator, {
+                value: () => readable[Symbol.asyncIterator]()
+              });
             }
             super(requestOrUrl, options);
             const contentType = this.headers.get("content-type");
