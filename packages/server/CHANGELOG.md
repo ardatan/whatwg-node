@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.8
+
+### Patch Changes
+
+- [#142](https://github.com/ardatan/whatwg-node/pull/142) [`a8071f7`](https://github.com/ardatan/whatwg-node/commit/a8071f74fcaa4d429b45b7290c9f3376907c6e83) Thanks [@ardatan](https://github.com/ardatan)! - Handle Node requests correctly if Response.body is a native ReadableStream
+
 ## 0.4.7
 
 ### Patch Changes
