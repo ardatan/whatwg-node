@@ -1,5 +1,5 @@
 import { createServerAdapter } from '@whatwg-node/server';
-import { fetch, Response } from '@whatwg-node/fetch';
+import { fetch, Response, ReadableStream } from '@whatwg-node/fetch';
 import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { AddressInfo } from 'net';
 
@@ -65,6 +65,48 @@ describe('Node Specific Cases', () => {
     await response.text();
     expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
   });
+
+  it('should handle cancellation of incremental responses', async () => {
+    const cancelFn = jest.fn();
+    const serverAdapter = createServerAdapter(() => new Response(
+      new ReadableStream({
+        async pull(controller) {
+          await sleep(100);
+          controller.enqueue(Date.now().toString());
+        },
+        cancel: cancelFn,
+      })
+    ));
+    server.on('request', serverAdapter);
+    const abortCtrl = new AbortController();
+    const response = await fetch(url, {
+      signal: abortCtrl.signal,
+    });
+    const reader = response.body!.getReader();
+
+    const collectedValues: string[] = [];
+    let i = 0;
+    while (true) {
+      if (i > 2) {
+        reader.releaseLock();
+        break;
+      }
+      const { value, done } = await reader.read();
+      if (done) {
+        break;
+      }
+      const str = Buffer.from(value!).toString('utf-8');
+      collectedValues.push(str);
+      i++;
+    }
+
+    abortCtrl.abort();
+
+    expect(collectedValues).toHaveLength(3);
+    await sleep(100);
+    expect(cancelFn).toHaveBeenCalled();
+
+  })
 });
 
 function sleep(ms: number) {

@@ -152,6 +152,10 @@ export function isServerResponse(stream: any): stream is ServerResponse {
   );
 }
 
+export function isReadableStream(stream: any): stream is ReadableStream {
+  return stream != null && stream.getReader != null;
+}
+
 export function isFetchEvent(event: any): event is FetchEvent {
   return event != null && event.request != null && event.respondWith != null;
 }
@@ -177,8 +181,27 @@ export async function sendNodeResponse(
         body.destroy();
       });
       body.pipe(serverResponse);
+    } else if (isReadableStream(body)) {
+      const reader = body.getReader();
+      serverResponse.once('close', () => {
+        reader.cancel();
+      });
+      // eslint-disable-next-line no-inner-declarations
+      function pump() {
+        reader.read().then(({ done, value }) => {
+          if (done) {
+            serverResponse.end(resolve);
+            return;
+          }
+          serverResponse.write(value, pump);
+        }).catch(error => {
+          console.error(error);
+          serverResponse.end(resolve);
+        });
+      }
+      pump();
     } else if (isAsyncIterable(body)) {
-      for await (const chunk of body) {
+      for await (const chunk of body as AsyncIterable<Uint8Array>) {
         if (!serverResponse.write(chunk)) {
           resolve();
           return;
