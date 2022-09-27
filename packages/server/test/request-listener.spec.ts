@@ -48,20 +48,18 @@ describe('Request Listener', () => {
   });
 
   // TODO: add node-fetch here
-  ['default-fetch'].forEach(fetchImplementation => {
+  ['default-fetch', 'node-fetch'].forEach(fetchImplementation => {
     describe(fetchImplementation, () => {
       const fetchAPI = createFetch({
         useNodeFetch: fetchImplementation === 'node-fetch',
       });
 
-      async function compareReadableStream(toBeChecked: ReadableStream | null, expected: BodyInit | null) {
+      async function compareReadableStream(toBeCheckedStream: ReadableStream | null, expected: BodyInit | null) {
         if (expected != null) {
-          expect(toBeChecked).toBeTruthy();
-          const expectedBody = new fetchAPI.Response(expected).body;
-          const expectedStream = Readable.from(expectedBody as any);
+          expect(toBeCheckedStream).toBeTruthy();
+          const expectedStream = (typeof expected === 'object' && Symbol.asyncIterator in expected) ? expected : Readable.from(expected as any);
           const expectedIterator = expectedStream[Symbol.asyncIterator]();
-          const toBeCheckedStream = Readable.from(toBeChecked as any);
-          for await (const toBeCheckedChunk of toBeCheckedStream) {
+          for await (const toBeCheckedChunk of toBeCheckedStream as any as AsyncIterable<Uint8Array>) {
             if (toBeCheckedChunk) {
               const toBeCheckedValues = Buffer.from(toBeCheckedChunk).toString().trim().split('\n');
               for (const toBeCheckedValue of toBeCheckedValues) {
