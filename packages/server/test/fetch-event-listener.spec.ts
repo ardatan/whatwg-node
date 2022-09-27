@@ -48,5 +48,5 @@ describe('FetchEvent listener', () => {
       adapter(fetchEvent, additionalCtx);
       expect(handleRequest).toHaveBeenCalledWith(fetchEvent.request, expect.objectContaining(additionalCtx));
     });
-  })
+  });
 });

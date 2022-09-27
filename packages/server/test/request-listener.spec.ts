@@ -36,12 +36,11 @@ async function compareResponse(toBeChecked: Response, expected: Response) {
   });
 }
 
-
 describe('Request Listener', () => {
   let testServer: TestServer;
   beforeAll(async () => {
     testServer = await createTestServer();
-  })
+  });
 
   afterAll(done => {
     testServer.server.close(done);
@@ -49,11 +48,11 @@ describe('Request Listener', () => {
 
   // TODO: add node-fetch here
   createTestContainer(fetchAPI => {
-
     async function compareReadableStream(toBeCheckedStream: ReadableStream | null, expected: BodyInit | null) {
       if (expected != null) {
         expect(toBeCheckedStream).toBeTruthy();
-        const expectedStream = (typeof expected === 'object' && Symbol.asyncIterator in expected) ? expected : Readable.from(expected as any);
+        const expectedStream =
+          typeof expected === 'object' && Symbol.asyncIterator in expected ? expected : Readable.from(expected as any);
         const expectedIterator = expectedStream[Symbol.asyncIterator]();
         for await (const toBeCheckedChunk of toBeCheckedStream as any as AsyncIterable<Uint8Array>) {
           if (toBeCheckedChunk) {

@@ -3,7 +3,6 @@ import { createTestContainer } from './create-test-container';
 
 describe('adapter.fetch', () => {
   createTestContainer(({ Request }) => {
-
     // Request as first parameter
     it('should accept Request as a first argument', async () => {
       const handleRequest = jest.fn();
@@ -149,5 +148,5 @@ describe('adapter.fetch', () => {
         expect.objectContaining(additionalCtx)
       );
     });
-  })
+  });
 });

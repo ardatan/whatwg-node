@@ -24,5 +24,5 @@ describe('Request Container', () => {
       await adapter(requestContainer);
       expect(handleRequest).toHaveBeenCalledWith(requestContainer.request, expect.objectContaining(requestContainer));
     });
-  })
+  });
 });
