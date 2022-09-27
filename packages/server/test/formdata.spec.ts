@@ -1,12 +1,14 @@
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
-import { createServer, Server } from 'http';
+import { createTestServer, TestServer } from './test-server';
 
 describe('FormData', () => {
-  let server: Server;
-  let url: string;
-  afterEach(done => {
-    server.close(done);
+  let testServer: TestServer;
+  beforeAll(async () => {
+    testServer = await createTestServer();
+  })
+  afterAll(done => {
+    testServer.server.close(done);
   });
   ['fieldsFirst:true', 'fieldsFirst:false'].forEach(fieldsFirstFlag => {
     const fetchAPI = createFetch({
@@ -38,17 +40,11 @@ describe('FormData', () => {
             status: 204,
           });
         }, fetchAPI.Request);
-        server = createServer(adapter);
-        await new Promise<void>(resolve => {
-          server.listen(0, () => {
-            url = `http://localhost:${(server.address() as any).port}`;
-            resolve();
-          });
-        });
+        testServer.server.once('request', adapter);
         const formData = new fetchAPI.FormData();
         formData.append('foo', 'bar');
         formData.append('baz', new fetchAPI.File(['baz'], 'baz.txt', { type: 'text/plain' }));
-        const response = await fetchAPI.fetch(url, {
+        const response = await fetchAPI.fetch(testServer.url, {
           method: 'POST',
           body: formData,
         });

@@ -181,31 +181,6 @@ export async function sendNodeResponse(
         body.destroy();
       });
       body.pipe(serverResponse);
-    } else if (isReadableStream(body)) {
-      const reader = body.getReader();
-      serverResponse.once('close', () => {
-        reader.cancel().finally(() => {
-          reader.releaseLock();
-          body.cancel();
-        });
-      });
-      // eslint-disable-next-line no-inner-declarations
-      function pump() {
-        reader
-          .read()
-          .then(({ done, value }) => {
-            if (done) {
-              serverResponse.end(resolve);
-              return;
-            }
-            serverResponse.write(value, pump);
-          })
-          .catch(error => {
-            console.error(error);
-            serverResponse.end(resolve);
-          });
-      }
-      pump();
     } else if (isAsyncIterable(body)) {
       for await (const chunk of body as AsyncIterable<Uint8Array>) {
         if (!serverResponse.write(chunk)) {

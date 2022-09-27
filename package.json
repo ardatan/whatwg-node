@@ -11,7 +11,7 @@
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
-    "test": "jest --detectOpenHandles --detectLeaks --logHeapUsage --runInBand",
+    "test": "jest --detectOpenHandles --detectLeaks",
     "prerelease": "yarn build",
     "prerelease-canary": "yarn build",
     "release": "changeset publish"

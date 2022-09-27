@@ -1,8 +1,7 @@
 import { createServerAdapter } from '@whatwg-node/server';
 import { createFetch } from '@whatwg-node/fetch';
 import { Readable } from 'stream';
-import { createServer, Server } from 'http';
-import { AddressInfo } from 'net';
+import { createTestServer, TestServer } from './test-server';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -37,12 +36,15 @@ async function compareResponse(toBeChecked: Response, expected: Response) {
   });
 }
 
-let server: Server;
-let url: string;
 
 describe('Request Listener', () => {
-  afterEach(done => {
-    server?.close(done);
+  let testServer: TestServer;
+  beforeAll(async () => {
+    testServer = await createTestServer();
+  })
+
+  afterAll(done => {
+    testServer.server.close(done);
   });
 
   // TODO: add node-fetch here
@@ -98,14 +100,8 @@ describe('Request Listener', () => {
           }
           return expectedResponse;
         }, fetchAPI.Request);
-        server = createServer(adapter);
-        await new Promise<void>(resolve => {
-          server.listen(0, () => {
-            url = `http://localhost:${(server.address() as AddressInfo).port}`;
-            resolve();
-          });
-        });
-        const expectedRequest = new fetchAPI.Request(url, requestInit);
+        testServer.server.once('request', adapter);
+        const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
         const returnedResponse = await fetchAPI.fetch(expectedRequest);
         await compareResponse(returnedResponse, expectedResponse);
         await compareReadableStream(returnedResponse.body, getResponseBody());
