@@ -1,4 +1,5 @@
 const handleFileRequest = require("./handle-file-request");
+const readableStreamToReadable = require("./readableStreamToReadable");
 
 module.exports = function createNodePonyfill(opts = {}) {
 
@@ -76,49 +77,6 @@ module.exports = function createNodePonyfill(opts = {}) {
       decode(buf) {
         return Buffer.from(buf).toString(encoding);
       }
-    }
-  }
-
-  // ReadableStream doesn't handle aborting properly, so we need to patch it
-  ponyfills.ReadableStream = class PonyfillReadableStream extends ponyfills.ReadableStream {
-    constructor(underlyingSource, ...opts) {
-      super({
-        ...underlyingSource,
-        cancel: (e) => {
-          this.cancelled = true;
-          if (underlyingSource.cancel) {
-            return underlyingSource.cancel(e);
-          }
-        }
-      }, ...opts);
-      this.underlyingSource = underlyingSource;
-    }
-    [Symbol.asyncIterator]() {
-      const asyncIterator = super[Symbol.asyncIterator]();
-      return {
-        next: (...args) => asyncIterator.next(...args),
-        throw: (...args) => asyncIterator.throw(...args),
-        return: async (e) => {
-          const originalResult = await asyncIterator.return(e);
-          if (!this.cancelled) {
-            this.cancelled = true;
-            if (this.underlyingSource.cancel) {
-              await this.underlyingSource.cancel(e);
-            }
-          }
-          return originalResult;
-        }
-      }
-    }
-    async cancel(e) {
-      const originalResult = !super.locked && await super.cancel(e);
-      if (!this.cancelled) {
-        this.cancelled = true;
-        if (this.underlyingSource.cancel) {
-          await this.underlyingSource.cancel(e);
-        }
-      }
-      return originalResult;
     }
   }
 
@@ -252,7 +210,7 @@ module.exports = function createNodePonyfill(opts = {}) {
                 options.body = streams.Readable.from(encoder.encode());
               }
               if (options.body[Symbol.toStringTag] === 'ReadableStream') {
-                options.body = streams.Readable.fromWeb ? streams.Readable.fromWeb(options.body) : streams.Readable.from(options.body);
+                options.body = readableStreamToReadable(options.body);
               }
             }
             super(requestOrUrl, options);
@@ -270,7 +228,43 @@ module.exports = function createNodePonyfill(opts = {}) {
         if (requestOrUrl.url.startsWith('file:')) {
           return handleFileRequest(requestOrUrl.url, ponyfills.Response);
         }
-        return realFetch(requestOrUrl);
+        const abortCtrl = new ponyfills.AbortController();
+
+        return realFetch(requestOrUrl, {
+          ...options,
+          signal: abortCtrl.signal
+        }).then(res => {
+          return new Proxy(res, {
+            get(target, prop, receiver) {
+              if (prop === 'body') {
+                return new Proxy(res.body, {
+                  get(target, prop, receiver) {
+                    if (prop === Symbol.asyncIterator) {
+                      return () => {
+                        const originalAsyncIterator = target[Symbol.asyncIterator]();
+                        return {
+                          next() {
+                            return originalAsyncIterator.next();
+                          },
+                          return() {
+                            abortCtrl.abort();
+                            return originalAsyncIterator.return();
+                          },
+                          throw(error) {
+                            abortCtrl.abort(error);
+                            return originalAsyncIterator.throw(error);
+                          }
+                        }
+                      }
+                    }
+                    return Reflect.get(target, prop, receiver);
+                  }
+                })
+              }
+              return Reflect.get(target, prop, receiver);
+            }
+          })
+        });
       };
 
       ponyfills.fetch = fetch;
@@ -278,16 +272,7 @@ module.exports = function createNodePonyfill(opts = {}) {
       const OriginalResponse = ponyfills.Response || nodeFetch.Response;
       ponyfills.Response = function Response(body, init) {
         if (body != null && body[Symbol.toStringTag] === 'ReadableStream') {
-          const actualBody = streams.Readable.fromWeb ? streams.Readable.fromWeb(body) : streams.Readable.from(body, {
-            emitClose: true,
-            autoDestroy: true,
-          });
-          actualBody.on('pause', () => {
-            body.cancel();
-          })
-          actualBody.on('close', () => {
-            body.cancel();
-          })
+          const actualBody = readableStreamToReadable(body);
           // Polyfill ReadableStream is not working well with node-fetch's Response
           return new OriginalResponse(actualBody, init);
         }

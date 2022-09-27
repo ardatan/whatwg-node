@@ -1,28 +1,24 @@
 import { createServerAdapter } from '@whatwg-node/server';
-import { fetch, Response, ReadableStream, AbortController } from '@whatwg-node/fetch';
-import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
-import { AddressInfo } from 'net';
+import { fetch, Response, ReadableStream } from '@whatwg-node/fetch';
+import { IncomingMessage, ServerResponse } from 'http';
+import { createTestServer, TestServer } from './test-server';
 
 describe('Node Specific Cases', () => {
-  let server: Server;
-  let url: string;
-  beforeEach(done => {
-    server = createServer();
-    server.listen(0, () => {
-      url = `http://localhost:${(server.address() as AddressInfo).port}`;
-      done();
-    });
+  let testServer: TestServer;
+  beforeAll(async () => {
+    testServer = await createTestServer();
   });
 
-  afterEach(done => {
-    server.close(done);
+  afterAll(done => {
+    testServer.server.close(done);
   });
+
   it('should handle empty responses', async () => {
     const serverAdapter = createServerAdapter(() => {
       return undefined as any;
     });
-    server.once('request', serverAdapter);
-    const response = await fetch(url);
+    testServer.server.once('request', serverAdapter);
+    const response = await fetch(testServer.url);
     await response.text();
     expect(response.status).toBe(404);
   });
@@ -39,8 +35,8 @@ describe('Node Specific Cases', () => {
         status: 204,
       });
     });
-    server.once('request', serverAdapter);
-    const response$ = fetch(url);
+    testServer.server.once('request', serverAdapter);
+    const response$ = fetch(testServer.url);
     const response = await response$;
     await response.text();
     expect(flag).toBe(false);
@@ -60,8 +56,8 @@ describe('Node Specific Cases', () => {
       foo: string;
     }>(handleRequest);
     const additionalCtx = { foo: 'bar' };
-    server.once('request', (...args) => serverAdapter(...args, additionalCtx));
-    const response = await fetch(url);
+    testServer.server.once('request', (...args) => serverAdapter(...args, additionalCtx));
+    const response = await fetch(testServer.url);
     await response.text();
     expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
   });
@@ -80,11 +76,9 @@ describe('Node Specific Cases', () => {
           })
         )
     );
-    server.once('request', serverAdapter);
-    const abortCtrl = new AbortController();
-    const response = await fetch(url, {
-      signal: abortCtrl.signal,
-    });
+
+    testServer.server.once('request', serverAdapter);
+    const response = await fetch(testServer.url);
 
     const collectedValues: string[] = [];
 
@@ -97,11 +91,9 @@ describe('Node Specific Cases', () => {
       i++;
     }
 
-    abortCtrl.abort();
-
     expect(collectedValues).toHaveLength(3);
     await sleep(100);
-    expect(cancelFn).toHaveBeenCalled();
+    expect(cancelFn).toHaveBeenCalledTimes(1);
   });
 });
 
