@@ -1,5 +1,16 @@
 # @whatwg-node/fetch
 
+## 0.4.6
+
+### Patch Changes
+
+- [`c918527`](https://github.com/ardatan/whatwg-node/commit/c918527f15eb6096656376648dccdbc8d6898395) Thanks [@ardatan](https://github.com/ardatan)! - Bump Undici
+
+- [#148](https://github.com/ardatan/whatwg-node/pull/148) [`eb10500`](https://github.com/ardatan/whatwg-node/commit/eb105005fd01bd227eff8d52c22b39ea1a8c6700) Thanks [@ardatan](https://github.com/ardatan)! - - On Node 14, fix the return method of Response.body's AsyncIterator to close HTTP connection correctly
+  - On Node 14, handle ReadableStream's cancel correctly if Response.body is a ReadableStream
+  - Do not modify ReadableStream.cancel's behavior but handle it internally
+  - On Node 18, do not combine Response.body's return and AbortController which causes a memory leak
+
 ## 0.4.5
 
 ### Patch Changes
