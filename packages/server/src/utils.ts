@@ -184,8 +184,7 @@ export async function sendNodeResponse(
     } else if (isAsyncIterable(body)) {
       for await (const chunk of body as AsyncIterable<Uint8Array>) {
         if (!serverResponse.write(chunk)) {
-          resolve();
-          return;
+          break;
         }
       }
       serverResponse.end(resolve);
