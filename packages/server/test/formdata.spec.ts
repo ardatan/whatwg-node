@@ -54,7 +54,9 @@ describe('FormData', () => {
         });
       },
       {
-        fieldsFirst: fieldsFirstFlag === 'fieldsFirst:true',
+        formDataLimits: {
+          fieldsFirst: fieldsFirstFlag === 'fieldsFirst:true',
+        }
       }
     );
   });
