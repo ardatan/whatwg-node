@@ -56,7 +56,7 @@ describe('FormData', () => {
       {
         formDataLimits: {
           fieldsFirst: fieldsFirstFlag === 'fieldsFirst:true',
-        }
+        },
       }
     );
   });
