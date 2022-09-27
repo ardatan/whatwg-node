@@ -59,7 +59,6 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
 }
 
 export type ServerAdapter<TServerContext> = ServerAdapterObject<TServerContext>['handle'] &
-  ServerAdapterObject<TServerContext>['requestListener'] &
   ServerAdapterObject<TServerContext>;
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
