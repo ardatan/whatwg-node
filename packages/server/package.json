@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/server",
-  "version": "0.4.10",
+  "version": "0.4.11",
   "description": "Fetch API compliant HTTP Server adapter",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
@@ -34,7 +34,7 @@
     "directory": "dist"
   },
   "dependencies": {
-    "@whatwg-node/fetch": "0.4.6",
+    "@whatwg-node/fetch": "0.4.7",
     "tslib": "^2.3.1"
   },
   "peerDependencies": {

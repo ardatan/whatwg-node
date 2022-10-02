@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.4.11
+
+### Patch Changes
+
+- [`e59cbb6`](https://github.com/ardatan/whatwg-node/commit/e59cbb667dfcbdd9c0cf609fd56dbd904ac85cbd) Thanks [@ardatan](https://github.com/ardatan)! - Do not patch global Headers if it is native, and support URL as a first parameter of `fetch`
+
+- Updated dependencies [[`e59cbb6`](https://github.com/ardatan/whatwg-node/commit/e59cbb667dfcbdd9c0cf609fd56dbd904ac85cbd)]:
+  - @whatwg-node/fetch@0.4.7
+
 ## 0.4.10
 
 ### Patch Changes
@@ -85,8 +94,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
