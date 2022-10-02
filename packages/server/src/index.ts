@@ -185,9 +185,9 @@ function createServerAdapter<
     if (typeof input === 'string' || input instanceof URL) {
       const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
-        return handleRequestWithWaitUntil(new RequestCtor(input.toString(), initOrCtx), ...restOfCtx);
+        return handleRequestWithWaitUntil(new RequestCtor(input, initOrCtx), ...restOfCtx);
       }
-      return handleRequestWithWaitUntil(new RequestCtor(input.toString()), ...maybeCtx);
+      return handleRequestWithWaitUntil(new RequestCtor(input), ...maybeCtx);
     }
     return handleRequestWithWaitUntil(input, ...maybeCtx);
   };
@@ -206,7 +206,7 @@ function createServerAdapter<
     }
 
     if (isServerResponse(initOrCtxOrRes)) {
-      throw new Error('Got Node response without Node request');
+      throw new TypeError('Got Node response without Node request');
     }
 
     // Is input a container object over Request?

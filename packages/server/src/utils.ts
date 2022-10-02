@@ -177,8 +177,8 @@ export async function sendNodeResponse(
       serverResponse.end(body, resolve);
     } else if (isReadable(body)) {
       serverResponse.once('close', () => {
-        resolve();
         body.destroy();
+        resolve();
       });
       body.pipe(serverResponse);
     } else if (isAsyncIterable(body)) {

@@ -11,7 +11,7 @@ module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
 
   if (!opts.useNodeFetch) {
-    ponyfills.fetch = globalThis.fetch; // To enable: import {fetch} from 'cross-fetch'
+    ponyfills.fetch = globalThis.fetch;
     ponyfills.Headers = globalThis.Headers;
     ponyfills.Request = globalThis.Request;
     ponyfills.Response = globalThis.Response;
@@ -121,8 +121,7 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       class Request extends OriginalRequest {
         constructor(requestOrUrl, options) {
-          if (typeof requestOrUrl === "string") {
-            options = options || {};
+          if (typeof requestOrUrl === "string" || requestOrUrl instanceof URL) {
             super(requestOrUrl, options);
             const contentType = this.headers.get("content-type");
             if (contentType && contentType.startsWith("multipart/form-data")) {
@@ -140,7 +139,7 @@ module.exports = function createNodePonyfill(opts = {}) {
       const originalFetch = ponyfills.fetch || undici.fetch;
 
       const fetch = function (requestOrUrl, options) {
-        if (typeof requestOrUrl === "string") {
+        if (typeof requestOrUrl === "string" || requestOrUrl instanceof URL) {
           // We cannot use our ctor because it leaks on Node 18's global fetch
           return originalFetch(requestOrUrl, options);
         }
@@ -169,7 +168,7 @@ module.exports = function createNodePonyfill(opts = {}) {
       if (!ponyfills.Headers) {
         ponyfills.Headers = nodeFetch.Headers;
         // Sveltekit
-        if (globalThis.Headers) {
+        if (globalThis.Headers && nodeMajor < 18) {
           Object.defineProperty(globalThis.Headers, Symbol.hasInstance, {
             value(obj) {
               return obj && obj.get && obj.set && obj.delete && obj.has && obj.append;
@@ -192,28 +191,29 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       class Request extends OriginalRequest {
         constructor(requestOrUrl, options) {
-          if (typeof requestOrUrl === "string") {
+          if (typeof requestOrUrl === "string" || requestOrUrl instanceof URL) {
             // Support schemaless URIs on the server for parity with the browser.
             // Ex: //github.com/ -> https://github.com/
-            if (/^\/\//.test(requestOrUrl)) {
-              requestOrUrl = "https:" + requestOrUrl;
+            if (/^\/\//.test(requestOrUrl.toString())) {
+              requestOrUrl = "https:" + requestOrUrl.toString();
             }
-            options = options || {};
-            options.headers = new ponyfills.Headers(options.headers || {});
-            options.headers.set('Connection', 'keep-alive');
-            if (options.body != null) {
-              if (options.body[Symbol.toStringTag] === 'FormData') {
-                const encoder = new formDataEncoderModule.FormDataEncoder(options.body)
+            const fixedOptions = {
+              ...options
+            };
+            fixedOptions.headers = new ponyfills.Headers(fixedOptions.headers || {});
+            fixedOptions.headers.set('Connection', 'keep-alive');
+            if (fixedOptions.body != null) {
+              if (fixedOptions.body[Symbol.toStringTag] === 'FormData') {
+                const encoder = new formDataEncoderModule.FormDataEncoder(fixedOptions.body)
                 for (const headerKey in encoder.headers) {
-                  options.headers.set(headerKey, encoder.headers[headerKey])
+                  fixedOptions.headers.set(headerKey, encoder.headers[headerKey])
                 }
-                options.body = streams.Readable.from(encoder.encode());
-              }
-              if (options.body[Symbol.toStringTag] === 'ReadableStream') {
-                options.body = readableStreamToReadable(options.body);
+                fixedOptions.body = streams.Readable.from(encoder);
+              } else if (fixedOptions.body[Symbol.toStringTag] === 'ReadableStream') {
+                fixedOptions.body = readableStreamToReadable(fixedOptions.body);
               }
             }
-            super(requestOrUrl, options);
+            super(requestOrUrl, fixedOptions);
           } else {
             super(requestOrUrl);
           }
@@ -222,7 +222,7 @@ module.exports = function createNodePonyfill(opts = {}) {
       }
       ponyfills.Request = Request;
       const fetch = function (requestOrUrl, options) {
-        if (typeof requestOrUrl === "string") {
+        if (typeof requestOrUrl === "string" || requestOrUrl instanceof URL) {
           return fetch(new Request(requestOrUrl, options));
         }
         if (requestOrUrl.url.startsWith('file:')) {
