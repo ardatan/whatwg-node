@@ -27,6 +27,7 @@
     "paths": {
       "@whatwg-node/server": ["packages/server/src/index.ts"],
       "@whatwg-node/router": ["packages/router/src/index.ts"],
+      "@whatwg-node/node-fetch": ["packages/node-fetch/src/index.ts"],
       "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
     }

@@ -6,6 +6,7 @@ declare const _Request: typeof Request;
 declare const _Response: typeof Response;
 declare const _Headers: typeof Headers;
 declare const _FormData: typeof FormData;
+declare const _AbortSignal: typeof AbortSignal;
 declare const _AbortController: typeof AbortController;
 declare const _ReadableStream: typeof ReadableStream;
 declare const _WritableStream: typeof WritableStream;
@@ -24,6 +25,7 @@ declare module "@whatwg-node/fetch" {
   export const Response: typeof _Response;
   export const Headers: typeof _Headers;
   export const FormData: typeof _FormData;
+  export const AbortSignal: typeof _AbortSignal;
   export const AbortController: typeof _AbortController;
   export const ReadableStream: typeof _ReadableStream;
   export const WritableStream: typeof _WritableStream;
@@ -57,6 +59,7 @@ declare module "@whatwg-node/fetch" {
     Response: typeof _Response,
     Headers: typeof _Headers,
     FormData: typeof _FormData,
+    AbortSignal: typeof _AbortSignal,
     AbortController: typeof _AbortController,
     ReadableStream: typeof _ReadableStream,
     WritableStream: typeof _WritableStream,

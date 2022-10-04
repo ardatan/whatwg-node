@@ -11,7 +11,7 @@ export function createTestServer(): Promise<TestServer> {
   return new Promise(resolve => {
     server.listen(0, () => {
       const addressInfo = server.address() as AddressInfo;
-      const url = `http://localhost:${addressInfo.port}`;
+      const url = `http://localhost:${addressInfo.port}/`;
       resolve({ server, url });
     });
   });
