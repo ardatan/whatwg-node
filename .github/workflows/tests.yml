@@ -6,6 +6,9 @@ on:
       - master
   pull_request: {}
 
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
+
 jobs:
   prettier-check:
     name: 🧹 Prettier Check
@@ -16,7 +19,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 17
+          nodeVersion: 18
       - name: Prettier Check
         run: yarn prettier:check
   lint:
@@ -36,7 +39,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 17
+          nodeVersion: 18
       - name: Type Check
         run: yarn ts:check
   test:
@@ -73,7 +76,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 17
+          nodeVersion: 18
       - name: Build Packages
         run: yarn build
       - name: Test ESM

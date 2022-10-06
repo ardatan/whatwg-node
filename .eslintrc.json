@@ -48,15 +48,7 @@
       }
     }
   ],
-  "ignorePatterns": [
-    "dist",
-    "node_modules",
-    "packages/load/tests/loaders/schema",
-    "website",
-    "scripts",
-    "packages/loaders/code-file/tests/test-files",
-    "packages/loaders/git/tests/test-files"
-  ],
+  "ignorePatterns": ["dist", "node_modules", "packages/load/tests/loaders/schema", "website", "scripts"],
   "globals": {
     "BigInt": true
   }

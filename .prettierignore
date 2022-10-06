@@ -1,2 +1,4 @@
 dist
 CHANGELOG.md
+.next
+[...slug].js

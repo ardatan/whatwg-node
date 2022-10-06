@@ -1,0 +1,23 @@
+{
+  "name": "@e2e/aws-lambda",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/bundle.js",
+    "e2e": "ts-node -r tsconfig-paths/register scripts/e2e.ts"
+  },
+  "dependencies": {
+    "@e2e/shared-scripts": "0.0.0",
+    "aws-lambda": "1.0.7"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.106",
+    "@pulumi/pulumi": "3.40.2",
+    "@pulumi/aws": "5.16.2",
+    "@pulumi/awsx": "0.40.1",
+    "esbuild": "0.15.10",
+    "typescript": "4.8.4",
+    "ts-node": "10.9.1",
+    "tsconfig-paths": "4.1.0"
+  }
+}

@@ -1,5 +1,5 @@
 <!--
-  Thanks for filing a pull request on GraphQL Tools!
+  Thanks for filing a pull request on WhatWG Node!
 
   Please look at the following checklist to ensure that your PR
   can be accepted quickly:
