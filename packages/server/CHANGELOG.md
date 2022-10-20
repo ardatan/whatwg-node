@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.12
+
+### Patch Changes
+
+- [`608943b`](https://github.com/ardatan/whatwg-node/commit/608943baf289269f9ee40a27e3e0b20810819d10) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Calling req.text() before req.json() is not necessary for Bun anymore
+
 ## 0.4.11
 
 ### Patch Changes
@@ -94,8 +100,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
