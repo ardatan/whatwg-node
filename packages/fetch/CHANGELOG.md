@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.5.0
+
+### Minor Changes
+
+- [`ab5fb52`](https://github.com/ardatan/whatwg-node/commit/ab5fb524753bc7a210b1aaf2e1580566907d4713) Thanks [@ardatan](https://github.com/ardatan)! - Drop broken `fieldsFirst` flag
+
 ## 0.4.7
 
 ### Patch Changes
