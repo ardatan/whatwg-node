@@ -3,31 +3,6 @@ const { resolve } = require('path');
 const streams = require("stream");
 
 module.exports = function getFormDataMethod(File, limits) {
-  function consumeStreamAsFile({
-    name,
-    filename,
-    mimeType,
-    fileStream,
-    formData,
-  }) {
-    return new Promise((resolve, reject) => {
-      const chunks = [];
-      fileStream.on('limit', () => {
-        reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
-      })
-      fileStream.on('data', (chunk) => {
-        chunks.push(...chunk);
-      })
-      fileStream.on('close', () => {
-        if (fileStream.truncated) {
-          reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
-        }
-        const file = new File([new Uint8Array(chunks)], filename, { type: mimeType });
-        formData.set(name, file);
-        resolve(file);
-      });
-    })
-  }
 
   return function formData() {
     if (this.body == null) {
@@ -57,56 +32,20 @@ module.exports = function getFormDataMethod(File, limits) {
         reject(new Error(`Fields limit exceeded: ${limits.fields}`));
       })
       bb.on('file', (name, fileStream, { filename, mimeType }) => {
-        let file$;
-        if (limits && limits.fieldsFirst) {
-          resolve(formData);
-          const fakeFileObj = {
-            name: filename,
-            type: mimeType,
+        const chunks = [];
+        fileStream.on('limit', () => {
+          reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
+        })
+        fileStream.on('data', (chunk) => {
+          chunks.push(Buffer.from(chunk));
+        })
+        fileStream.on('close', () => {
+          if (fileStream.truncated) {
+            reject(new Error(`File size limit exceeded: ${limits.fileSize} bytes`));
           }
-          Object.setPrototypeOf(fakeFileObj, File.prototype);
-          formData.set(name, new Proxy(fakeFileObj, {
-            get: (target, prop) => {
-              switch(prop) {
-                case 'name':
-                  return filename;
-                case 'type':
-                  return mimeType;
-                case 'stream':
-                  return () => fileStream;
-                case 'size':
-                  throw new Error(`Cannot access file size before consuming the stream.`);
-                case 'slice':
-                  throw new Error(`Cannot slice file before consuming the stream.`);
-                case 'text':
-                case 'arrayBuffer':
-                  return () => {
-                    if (!file$) {
-                      file$ = consumeStreamAsFile({
-                        name,
-                        filename,
-                        mimeType,
-                        fileStream,
-                        formData,
-                      })
-                    }
-                    return file$.then(file => file[prop]());
-                  }
-              }
-            },
-          }))
-        } else {
-          if (!file$) {
-            file$ = consumeStreamAsFile({
-              name,
-              filename,
-              mimeType,
-              fileStream,
-              formData,
-            })
-          }
-          file$.catch(reject);
-        }
+          const file = new File(chunks, filename, { type: mimeType });
+          formData.set(name, file);
+        });
       })
       bb.on('filesLimit', () => {
         reject(new Error(`Files limit exceeded: ${limits.files}`));
