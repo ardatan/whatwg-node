@@ -122,6 +122,9 @@ module.exports = function createNodePonyfill(opts = {}) {
       class Request extends OriginalRequest {
         constructor(requestOrUrl, options) {
           if (typeof requestOrUrl === "string" || requestOrUrl instanceof URL) {
+            if (options != null && typeof options === "object" && !options.duplex) {
+              options.duplex = 'half';
+            }
             super(requestOrUrl, options);
             const contentType = this.headers.get("content-type");
             if (contentType && contentType.startsWith("multipart/form-data")) {
@@ -140,6 +143,9 @@ module.exports = function createNodePonyfill(opts = {}) {
 
       const fetch = function (requestOrUrl, options) {
         if (typeof requestOrUrl === "string" || requestOrUrl instanceof URL) {
+          if (options != null && typeof options === "object" && !options.duplex) {
+              options.duplex = 'half';
+          }
           // We cannot use our ctor because it leaks on Node 18's global fetch
           return originalFetch(requestOrUrl, options);
         }
