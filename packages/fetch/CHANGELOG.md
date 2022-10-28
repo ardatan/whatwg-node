@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.5.1
+
+### Patch Changes
+
+- [`a8a7cfc`](https://github.com/ardatan/whatwg-node/commit/a8a7cfcbb98c5ca8fff3b4a6d8638e9208690b61) Thanks [@ardatan](https://github.com/ardatan)! - Fix for new undici
+
 ## 0.5.0
 
 ### Minor Changes
