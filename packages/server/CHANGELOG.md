@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.4.14
+
+### Patch Changes
+
+- Updated dependencies [[`a8a7cfc`](https://github.com/ardatan/whatwg-node/commit/a8a7cfcbb98c5ca8fff3b4a6d8638e9208690b61)]:
+  - @whatwg-node/fetch@0.5.1
+
 ## 0.4.13
 
 ### Patch Changes
@@ -107,8 +114,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;
