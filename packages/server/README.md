@@ -127,7 +127,7 @@ app.route({
 
     reply.status(response.status)
 
-    reply.send(response.body)
+    reply.send(Readable.from(response.body))
 
     return reply
   }
@@ -157,7 +157,7 @@ app.use(async ctx => {
     ctx.append(key, value)
   })
 
-  ctx.body = response.body
+  ctx.body = Readable.from(response.body)
 })
 
 app.listen(4000, () => {
