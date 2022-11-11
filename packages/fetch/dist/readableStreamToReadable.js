@@ -12,13 +12,14 @@ module.exports = function readableStreamToReadable(readableStream) {
         }
       })
     },
-    async destroy() {
+    async destroy(err, callback) {
       try {
           reader.cancel();
           reader.releaseLock();
           await readableStream.cancel();
+          callback();
       } catch (error) {
-          console.log(error);
+          callback(error);
       }
     }
   })
