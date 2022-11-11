@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.5.3
+
+### Patch Changes
+
+- [`188ac01`](https://github.com/ardatan/whatwg-node/commit/188ac01dab264ed483dbc3b897e6958b49085922) Thanks [@ardatan](https://github.com/ardatan)! - Fix destroy for Node 18
+
 ## 0.5.2
 
 ### Patch Changes
