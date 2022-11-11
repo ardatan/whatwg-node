@@ -1,20 +1,25 @@
 const streams = require('stream');
 
 module.exports = function readableStreamToReadable(readableStream) {
-  return streams.Readable.from({
-    [Symbol.asyncIterator]() {
-      const reader = readableStream.getReader();
-      return {
-        next() {
-          return reader.read();
-        },
-        async return() {
+  const reader = readableStream.getReader();
+  return new streams.Readable({
+    read() {
+      reader.read().then(({ done, value }) => {
+        if (done) {
+          this.push(null);
+        } else {
+          this.push(value);
+        }
+      })
+    },
+    async destroy() {
+      try {
           reader.cancel();
           reader.releaseLock();
           await readableStream.cancel();
-          return { done: true };
-        }
+      } catch (error) {
+          console.log(error);
       }
     }
-  });
+  })
 }
