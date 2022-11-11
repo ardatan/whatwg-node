@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.5.2
+
+### Patch Changes
+
+- [#179](https://github.com/ardatan/whatwg-node/pull/179) [`3297c87`](https://github.com/ardatan/whatwg-node/commit/3297c87409c3bcf8700dd447d603da657acbd821) Thanks [@ardatan](https://github.com/ardatan)! - Fix destroy method for ReadableStream to Readable conversion
+
 ## 0.5.1
 
 ### Patch Changes
