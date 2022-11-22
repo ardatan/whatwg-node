@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.4.17
+
+### Patch Changes
+
+- [#183](https://github.com/ardatan/whatwg-node/pull/183) [`faf2696`](https://github.com/ardatan/whatwg-node/commit/faf269692980b02c3adb39cacaedb3e2ff939a73) Thanks [@ardatan](https://github.com/ardatan)! - Fix type conflicts with webworker typing library
+
 ## 0.4.16
 
 ### Patch Changes
