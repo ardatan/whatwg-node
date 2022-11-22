@@ -18,7 +18,7 @@
 
     "suppressImplicitAnyIndexErrors": true,
 
-    "skipLibCheck": true,
+    "skipLibCheck": false,
 
     "strict": true,
     "noUnusedLocals": true,

@@ -1,6 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
+import { FetchEvent } from './types';
 
 function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return body != null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function';
