@@ -1,5 +1,3 @@
-/// <reference lib="webworker" />
-
 import type { RequestListener, ServerResponse } from 'node:http';
 import {
   isFetchEvent,
@@ -11,6 +9,7 @@ import {
   sendNodeResponse,
 } from './utils';
 import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
+import { FetchEvent } from './types';
 
 export interface ServerAdapterBaseObject<
   TServerContext,
