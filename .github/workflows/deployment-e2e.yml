@@ -24,6 +24,10 @@ jobs:
         with:
           node-version: 18
           cache: 'yarn'
+          
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: vx.x.x
 
       - name: Cache Node Modules
         uses: actions/cache@v3
