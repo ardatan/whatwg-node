@@ -1,3 +1,3 @@
-export * from './runTests.ts';
-export * from './types.ts';
-export * from './utils.ts';
+export * from './runTests';
+export * from './types';
+export * from './utils';
