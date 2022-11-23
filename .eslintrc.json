@@ -54,8 +54,8 @@
     "packages/load/tests/loaders/schema",
     "website",
     "scripts",
-    "packages/loaders/code-file/tests/test-files",
-    "packages/loaders/git/tests/test-files"
+    "e2e/bun",
+    "e2e/deno"
   ],
   "globals": {
     "BigInt": true

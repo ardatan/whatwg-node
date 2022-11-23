@@ -75,3 +75,5 @@ junit.xml
 *.tgz
 
 package-lock.json
+
+eslint_report.json

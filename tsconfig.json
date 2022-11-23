@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "packages",
     "baseUrl": ".",
 
     "target": "es2018",
@@ -24,12 +23,13 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noPropertyAccessFromIndexSignature": true,
+    "noPropertyAccessFromIndexSignature": false,
     "paths": {
       "@whatwg-node/server": ["packages/server/src/index.ts"],
+      "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
     }
   },
-  "include": ["packages"],
-  "exclude": ["**/node_modules", "**/test-files"]
+  "include": ["packages", "e2e"],
+  "exclude": ["**/node_modules", "**/test-files", "e2e/bun", "e2e/deno"]
 }
