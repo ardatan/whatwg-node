@@ -2457,28 +2457,6 @@
   resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.31.1.tgz#9346c7e59326f5eeac75c0286e47df94c2d6d8f7"
   integrity sha512-g0FAxwdViI6UzsiVz5HssIHqjcPa1EHL6h+2dcJD893SoCJaGdqqgUF09xnMW6goWnnhbLvgiKlgJWrJa+7qYA==
 
-"@whatwg-node/fetch@0.4.7":
-  version "0.4.7"
-  resolved "https://registry.yarnpkg.com/@whatwg-node/fetch/-/fetch-0.4.7.tgz#4cbcda3ba93d5ae15ab823aae5869eae4a0cb14b"
-  integrity sha512-+oKDMGtmUJ7H37VDL5U2Vdk+ZxsIypZxO2q6y42ytu6W3PL6OIIUYZGliNqQgWtCdtxOZ9WPQvbIAuiLpnLlUw==
-  dependencies:
-    "@peculiar/webcrypto" "^1.4.0"
-    abort-controller "^3.0.0"
-    busboy "^1.6.0"
-    form-data-encoder "^1.7.1"
-    formdata-node "^4.3.1"
-    node-fetch "^2.6.7"
-    undici "^5.10.0"
-    web-streams-polyfill "^3.2.0"
-
-"@whatwg-node/server@0.4.11":
-  version "0.4.11"
-  resolved "https://registry.yarnpkg.com/@whatwg-node/server/-/server-0.4.11.tgz#a36d78e8c75ae383b21821aaad37ece8d6e2afad"
-  integrity sha512-hEPbl0o91uXv8JGcHgYBwPoyYoKIsclpF56RwKq54GibT22i1ld4W+yUVjObriuY5h/0o07WAzNJ8T8aUhQGYQ==
-  dependencies:
-    "@whatwg-node/fetch" "0.4.7"
-    tslib "^2.3.1"
-
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
@@ -2962,6 +2940,11 @@ builtins@^5.0.0, builtins@^5.0.1:
   integrity sha512-qwVpFEHNfhYJIzNRBvd2C1kyo6jz3ZSMPyyuR47OPdiKWlbYnZNyDWuyR175qDnAJLiCo5fBBqPb3RiXgWlkOQ==
   dependencies:
     semver "^7.0.0"
+
+bun-types@^0.2.0:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-0.2.2.tgz#ee15e6bf66422db3e9c3baee8b8b895400ac1033"
+  integrity sha512-/1IPC/PPWvV39I7uulBcWHL0Xpi1BqvwF34R/2gRwt0/l5MJB1gt15GLwLP33d59EnkOdRYibImuCg0l/9BRng==
 
 bundle-require@^3.0.2:
   version "3.0.4"
@@ -7702,11 +7685,6 @@ undici@5.9.1:
   version "5.9.1"
   resolved "https://registry.yarnpkg.com/undici/-/undici-5.9.1.tgz#fc9fd85dd488f965f153314a63d9426a11f3360b"
   integrity sha512-6fB3a+SNnWEm4CJbgo0/CWR8RGcOCQP68SF4X0mxtYTq2VNN8T88NYrWVBAeSX+zb7bny2dx2iYhP3XHi00omg==
-
-undici@^5.10.0:
-  version "5.10.0"
-  resolved "https://registry.yarnpkg.com/undici/-/undici-5.10.0.tgz#dd9391087a90ccfbd007568db458674232ebf014"
-  integrity sha512-c8HsD3IbwmjjbLvoZuRI26TZic+TSEe8FPMLLOkN1AfYRhdjnKBU6yL+IwcSCbdZiX4e5t0lfMDLDCqj4Sq70g==
 
 undici@^5.12.0:
   version "5.12.0"

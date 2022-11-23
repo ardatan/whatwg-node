@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "dependencies": {
-    "@whatwg-node/fetch": "0.4.7",
-    "@whatwg-node/server": "0.4.11",
+    "@whatwg-node/fetch": "0.5.3",
+    "@whatwg-node/server": "0.4.17",
     "itty-router": "2.6.6",
     "itty-router-extras": "0.4.2"
   },

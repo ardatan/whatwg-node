@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plan: ['aws-lambda', 'azure-function', 'cloudflare-workers', 'cloudflare-modules']
+        plan: ['aws-lambda', 'azure-function', 'cloudflare-workers', 'cloudflare-modules', 'deno']
         # TODO: Add vercel
     name: e2e / ${{ matrix.plan }}
 

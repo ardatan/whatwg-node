@@ -1,6 +1,6 @@
 import { LocalWorkspace } from '@pulumi/pulumi/automation';
-import { DeploymentConfiguration } from './types';
-import { getCommitId } from './utils';
+import { DeploymentConfiguration } from './types.ts';
+import { getCommitId } from './utils.ts';
 
 export async function runTests(testPlan: DeploymentConfiguration) {
   const commitId = await getCommitId();
