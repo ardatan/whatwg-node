@@ -48,7 +48,15 @@
       }
     }
   ],
-  "ignorePatterns": ["dist", "node_modules", "packages/load/tests/loaders/schema", "website", "scripts", "e2e/bun", "e2e/deno"],
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "packages/load/tests/loaders/schema",
+    "website",
+    "scripts",
+    "e2e/bun",
+    "e2e/deno"
+  ],
   "globals": {
     "BigInt": true
   }
