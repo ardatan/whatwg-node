@@ -156,7 +156,7 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext: TServerContext = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0] || {};
+    const serverContext: TServerContext & object = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0] || {};
     if (!('waitUntil' in serverContext)) {
       const waitUntilPromises: Promise<unknown>[] = [];
       const response$ = handleRequest(request, {
