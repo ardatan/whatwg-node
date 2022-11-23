@@ -24,11 +24,16 @@ jobs:
         run: yarn prettier:check
   lint:
     name: Lint
-    uses: the-guild-org/shared-config/.github/workflows/lint.yml@main
-    with:
-      script: yarn ci:lint
-    secrets:
-      githubToken: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v3
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 18
+      - name: ESLint
+        run: yarn ci:lint
 
   build:
     name: Type Check

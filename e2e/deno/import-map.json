@@ -1,15 +1,15 @@
 {
-    "imports": {
-      "@whatwg-node/fetch": "../../packages/fetch/dist/deno-ponyfill.ts",
-      "@whatwg-node/events": "../../packages/events/dist/deno-ponyfill.ts",
-      "@whatwg-node/server": "../../packages/server/dist/index.mjs",
-      "@e2e/shared-server": "../../e2e/shared-server/src/index.ts",
-      "@e2e/shared-scripts": "../../e2e/shared-scripts/src/utils.ts",
-      "@pulumi/pulumi": "npm:@pulumi/pulumi",
-      "itty-router": "npm:itty-router",
-      "itty-router-extras": "npm:itty-router-extras",
-      "child_process": "https://deno.land/std@0.165.0/node/child_process.ts",
-      "fs": "https://deno.land/std@0.165.0/node/fs.ts",
-      "util": "https://deno.land/std@0.165.0/node/util.ts"
-    }
+  "imports": {
+    "@whatwg-node/fetch": "../../packages/fetch/dist/deno-ponyfill.ts",
+    "@whatwg-node/events": "../../packages/events/dist/deno-ponyfill.ts",
+    "@whatwg-node/server": "../../packages/server/dist/index.mjs",
+    "@e2e/shared-server": "../../e2e/shared-server/src/index.ts",
+    "@e2e/shared-scripts": "../../e2e/shared-scripts/src/utils.ts",
+    "@pulumi/pulumi": "npm:@pulumi/pulumi",
+    "itty-router": "npm:itty-router",
+    "itty-router-extras": "npm:itty-router-extras",
+    "child_process": "https://deno.land/std@0.165.0/node/child_process.ts",
+    "fs": "https://deno.land/std@0.165.0/node/fs.ts",
+    "util": "https://deno.land/std@0.165.0/node/util.ts"
+  }
 }
