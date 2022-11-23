@@ -52,7 +52,7 @@ describe('Request Listener', () => {
       if (expected != null) {
         expect(toBeCheckedStream).toBeTruthy();
         const expectedStream =
-          typeof expected === 'object' && Symbol.asyncIterator in expected ? expected : Readable.from(expected as any);
+          (typeof expected === 'object' && Symbol.asyncIterator in expected ? expected : Readable.from(expected as any)) as AsyncIterable<Uint8Array>;
         const expectedIterator = expectedStream[Symbol.asyncIterator]();
         for await (const toBeCheckedChunk of toBeCheckedStream as any as AsyncIterable<Uint8Array>) {
           if (toBeCheckedChunk) {
