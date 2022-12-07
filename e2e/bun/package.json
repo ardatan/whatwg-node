@@ -7,7 +7,7 @@
     "e2e": "bun wiptest"
   },
   "dependencies": {
-    "bun-types": "^0.2.0",
+    "bun-types": "^0.3.0",
     "@e2e/shared-server": "0.0.0"
   },
   "devDependencies": {
