@@ -24,7 +24,7 @@
     "@changesets/cli": "2.25.2",
     "@changesets/changelog-github": "0.4.7",
     "@types/jest": "29.2.4",
-    "@types/node": "18.11.13",
+    "@types/node": "18.11.15",
     "@types/react-dom": "18.0.9",
     "@typescript-eslint/eslint-plugin": "5.46.0",
     "@typescript-eslint/parser": "5.46.0",
