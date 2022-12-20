@@ -1,5 +1,5 @@
 import { Response } from '@whatwg-node/fetch';
-import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '@whatwg-node/server';
+import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
 
 export type CORSOptions =
   | {
@@ -110,7 +110,7 @@ async function getCORSResponseHeaders<TServerContext>(
   return getCORSHeadersByRequestAndOptions(request, corsOptions);
 }
 
-export function withCors<
+export function withCORS<
   TServerContext = DefaultServerAdapterContext,
   TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>
 >(obj: TBaseObject, options: WithCORSOptions<TServerContext>): TBaseObject {

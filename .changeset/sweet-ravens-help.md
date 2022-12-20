@@ -1,5 +1,8 @@
 ---
-'@whatwg-node/server': patch
+'@whatwg-node/server': minor
 ---
 
-Handle errors safely
+Introduce new middlewares;
+- withCORS
+- withErrorHandling
+

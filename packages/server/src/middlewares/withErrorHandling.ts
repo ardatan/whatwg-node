@@ -1,5 +1,4 @@
-import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '@whatwg-node/server';
-import { RouterRequest } from './types';
+import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
 import { Response } from '@whatwg-node/fetch';
 
 export const defaultErrorHandler: ErrorHandler<any> = function defaultErrorHandler(
@@ -23,9 +22,10 @@ export function withErrorHandling<
 >(obj: TBaseObject, onError: ErrorHandler<TServerContext> = defaultErrorHandler): TBaseObject {
   async function handleWithErrorHandling(request: Request, ctx: TServerContext): Promise<Response> {
     try {
-      return await obj.handle(request, ctx);
+      const res = await obj.handle(request, ctx);
+      return res;
     } catch (e) {
-      return onError(e, request as RouterRequest, ctx);
+      return onError(e, request, ctx);
     }
   }
   return new Proxy(obj, {
