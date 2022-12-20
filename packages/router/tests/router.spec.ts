@@ -1,4 +1,4 @@
-import { createRouter } from "../src"
+import { createRouter } from "../src/createRouter";
 
 describe('Router', () => {
     it('should have parsedUrl in Request object', async () => {
@@ -10,4 +10,15 @@ describe('Router', () => {
         const json = await response.json();
         expect(json.message).toBe('Hello /greetings/John!');
     });
+    it('should handle unexpected errors correctly', async () => {
+        const router = createRouter();
+        router.get('/greetings/:name', () => {
+            throw new Error('Unexpected error');
+        });
+        const response = await router.fetch('http://localhost/greetings/John');
+        expect(response.status).toBe(500);
+        expect(response.statusText).toBe('Internal Server Error');
+        const text = await response.text();
+        expect(text).toContain('Error: Unexpected error');
+    })
 })

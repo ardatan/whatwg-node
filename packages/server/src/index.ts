@@ -24,12 +24,11 @@ export interface ServerAdapterBaseObject<
 
 export interface ServerAdapterObject<
   TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext, ServerAdapterRequestHandler<TServerContext>>
 > extends EventListenerObject {
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
    */
-  handleRequest: TBaseObject['handle'];
+  handleRequest: (request: Request, ctx: TServerContext) => Promise<Response> | Response;
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
@@ -62,8 +61,8 @@ export interface ServerAdapterObject<
 }
 
 export type ServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>> = TBaseObject &
-  ServerAdapterObject<TServerContext, TBaseObject>['handle'] &
-  ServerAdapterObject<TServerContext, TBaseObject>;
+  ServerAdapterObject<TServerContext>['handle'] &
+  ServerAdapterObject<TServerContext>;
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
@@ -110,8 +109,21 @@ function createServerAdapter<
    */
   RequestCtor = PonyfillRequestCtor
 ): ServerAdapter<TServerContext, TBaseObject> {
-  const handleRequest =
-    typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
+  const providedRequestHandler = typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
+
+  async function handleRequest(request: Request, ctx: TServerContext) {
+    try {
+      return await providedRequestHandler(request, ctx);
+    } catch(e: any) {
+      return new Response(
+        e.stack || e.message || e.toString(),
+        {
+          status: e.statusCode || e.status || 500,
+          statusText: e.statusText || 'Internal Server Error',
+        }
+      )
+    }
+  }
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0];
@@ -173,7 +185,7 @@ function createServerAdapter<
     return handleRequest(request, serverContext);
   }
 
-  const fetchFn: ServerAdapterObject<TServerContext, TBaseObject>['fetch'] = (
+  const fetchFn: ServerAdapterObject<TServerContext>['fetch'] = (
     input,
     ...maybeCtx: Partial<TServerContext>[]
   ) => {
@@ -219,13 +231,13 @@ function createServerAdapter<
     return fetchFn(input, ...maybeCtx);
   };
 
-  const adapterObj: ServerAdapterObject<TServerContext, TBaseObject> = {
+  const adapterObj: ServerAdapterObject<TServerContext> = {
     handleRequest,
     fetch: fetchFn,
     handleNodeRequest,
     requestListener,
     handleEvent,
-    handle: genericRequestHandler as ServerAdapterObject<TServerContext, TBaseObject>['handle'],
+    handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
   };
 
   return new Proxy(genericRequestHandler, {
@@ -262,7 +274,7 @@ function createServerAdapter<
         }
       }
     },
-    apply(_, __, args: Parameters<ServerAdapterObject<TServerContext, TBaseObject>['handle']>) {
+    apply(_, __, args: Parameters<ServerAdapterObject<TServerContext>['handle']>) {
       return genericRequestHandler(...args);
     },
   }) as any; // 😡
