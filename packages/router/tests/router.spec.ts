@@ -1,4 +1,5 @@
 import { createRouter } from "../src/createRouter";
+import { withErrorHandling } from "../src/withErrorHandling";
 
 describe('Router', () => {
     it('should have parsedUrl in Request object', async () => {
@@ -10,8 +11,10 @@ describe('Router', () => {
         const json = await response.json();
         expect(json.message).toBe('Hello /greetings/John!');
     });
-    it('should handle unexpected errors correctly', async () => {
-        const router = createRouter();
+})
+describe('withErrorHandling', async () => {
+    it('should return 500 when error is thrown', async () => {
+        const router = withErrorHandling(createRouter());
         router.get('/greetings/:name', () => {
             throw new Error('Unexpected error');
         });
@@ -20,5 +23,5 @@ describe('Router', () => {
         expect(response.statusText).toBe('Internal Server Error');
         const text = await response.text();
         expect(text).toContain('Error: Unexpected error');
-    })
-})
+    });
+});
