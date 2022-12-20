@@ -1,6 +1,6 @@
 import { createRouter } from '@whatwg-node/router';
 
-export function createTestServerAdapter({ base }: { base?: string } = {}) {
+export function createTestServerAdapter(base?: string) {
   const app = createRouter(base);
 
   app.get(
