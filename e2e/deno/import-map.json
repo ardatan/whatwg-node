@@ -2,6 +2,7 @@
   "imports": {
     "@whatwg-node/fetch": "../../packages/fetch/dist/deno-ponyfill.ts",
     "@whatwg-node/events": "../../packages/events/dist/deno-ponyfill.ts",
+    "@whatwg-node/router": "../../packages/router/dist/index.mjs",
     "@whatwg-node/server": "../../packages/server/dist/index.mjs",
     "@e2e/shared-server": "../../e2e/shared-server/src/index.ts",
     "@e2e/shared-scripts": "../../e2e/shared-scripts/src/utils.ts",
