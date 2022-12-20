@@ -1,4 +1,4 @@
-import { Response } from '@whatwg-node/fetch';
+import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
 import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
 
 export type CORSOptions =
@@ -113,7 +113,7 @@ async function getCORSResponseHeaders<TServerContext>(
 export function withCORS<
   TServerContext = DefaultServerAdapterContext,
   TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>
->(obj: TBaseObject, options: WithCORSOptions<TServerContext>): TBaseObject {
+>(obj: TBaseObject, options: WithCORSOptions<TServerContext>, ResponseCtor: typeof Response = DefaultResponseCtor): TBaseObject {
   let corsOptionsFactory: CORSOptionsFactory<TServerContext> = () => ({});
   if (options != null) {
     if (typeof options === 'function') {
@@ -130,7 +130,7 @@ export function withCORS<
   async function handleWithCORS(request: Request, serverContext: TServerContext) {
     let response: Response | undefined;
     if (request.method.toUpperCase() === 'OPTIONS') {
-      response = new Response(null, {
+      response = new ResponseCtor(null, {
         status: 204,
       });
     } else {
