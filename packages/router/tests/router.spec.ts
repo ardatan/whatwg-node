@@ -22,7 +22,7 @@ describe('withErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {
     const router = createRouter({
       plugins: [withErrorHandling],
-    })
+    });
     router.get('/greetings/:name', () => {
       throw new Error('Unexpected error');
     });

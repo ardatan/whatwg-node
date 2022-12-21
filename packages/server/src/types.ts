@@ -1,14 +1,11 @@
 import type { RequestListener, ServerResponse } from 'node:http';
-import type {
-    NodeRequest,
-} from './utils';
+import type { NodeRequest } from './utils';
 
 export interface FetchEvent extends Event {
   waitUntil(f: Promise<any>): void;
   request: Request;
   respondWith(r: Response | PromiseLike<Response>): void;
 }
-
 
 export interface ServerAdapterBaseObject<
   TServerContext,

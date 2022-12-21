@@ -4,9 +4,9 @@ import { Request as DefaultRequestCtor } from '@whatwg-node/fetch';
 import type { Router, RouterBaseObject } from './types';
 
 interface RouterOptions<TServerContext = DefaultServerAdapterContext> {
-  base?: string,
-  RequestCtor?: typeof Request,
-  plugins?: Array<(router: RouterBaseObject<TServerContext>) => RouterBaseObject<TServerContext>>,
+  base?: string;
+  RequestCtor?: typeof Request;
+  plugins?: Array<(router: RouterBaseObject<TServerContext>) => RouterBaseObject<TServerContext>>;
 }
 
 export function createRouter<TServerContext = DefaultServerAdapterContext>(
@@ -28,6 +28,6 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
   });
   options?.plugins?.forEach(plugin => {
     ittyRouter = plugin(ittyRouter);
-  })
+  });
   return createServerAdapter(ittyRouter, options?.RequestCtor || DefaultRequestCtor);
 }

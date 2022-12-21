@@ -113,7 +113,11 @@ async function getCORSResponseHeaders<TServerContext>(
 export function withCORS<
   TServerContext = DefaultServerAdapterContext,
   TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>
->(obj: TBaseObject, options: WithCORSOptions<TServerContext>, ResponseCtor: typeof Response = DefaultResponseCtor): TBaseObject {
+>(
+  obj: TBaseObject,
+  options: WithCORSOptions<TServerContext>,
+  ResponseCtor: typeof Response = DefaultResponseCtor
+): TBaseObject {
   let corsOptionsFactory: CORSOptionsFactory<TServerContext> = () => ({});
   if (options != null) {
     if (typeof options === 'function') {
