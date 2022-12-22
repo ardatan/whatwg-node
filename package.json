@@ -61,6 +61,6 @@
     ]
   },
   "resolutions": {
-    "@pulumi/pulumi": "3.50.1"
+    "@pulumi/pulumi": "3.50.2"
   }
 }
