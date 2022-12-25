@@ -1,7 +1,12 @@
 import { createTestServerAdapter } from '@e2e/shared-server';
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 
-const app = createTestServerAdapter();
+const app = createTestServerAdapter<ServerContext>();
+
+interface ServerContext {
+  event: APIGatewayEvent;
+  lambdaContext: Context;
+}
 
 export async function handler(event: APIGatewayEvent, lambdaContext: Context): Promise<APIGatewayProxyResult> {
   const url = new URL(event.path, 'http://localhost');
@@ -14,6 +19,11 @@ export async function handler(event: APIGatewayEvent, lambdaContext: Context): P
     }
   }
 
+  const serverContext: ServerContext = {
+    event,
+    lambdaContext,
+  };
+
   const response = await app.fetch(
     url,
     {
@@ -21,10 +31,7 @@ export async function handler(event: APIGatewayEvent, lambdaContext: Context): P
       headers: event.headers as HeadersInit,
       body: event.body ? Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8') : undefined,
     },
-    {
-      event,
-      lambdaContext,
-    }
+    serverContext
   );
 
   const responseHeaders: Record<string, string> = {};

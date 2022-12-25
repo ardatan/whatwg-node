@@ -1,18 +1,10 @@
-import { createServerAdapter } from '@whatwg-node/server';
-import { Router } from 'itty-router';
-import { withParams } from 'itty-router-extras';
-import { createFetch } from '@whatwg-node/fetch';
+import { createRouter, Response, DefaultServerAdapterContext } from '@whatwg-node/router';
 
-const { Request, Response } = createFetch({
-  useNodeFetch: true,
-});
-
-export function createTestServerAdapter({ base }: { base?: string } = {}) {
-  const app = createServerAdapter(Router({ base }), Request);
+export function createTestServerAdapter<TServerContext = DefaultServerAdapterContext>(base?: string) {
+  const app = createRouter<TServerContext>({ base });
 
   app.get(
     '/greetings/:name',
-    withParams,
     req =>
       new Response(
         JSON.stringify({
@@ -26,7 +18,7 @@ export function createTestServerAdapter({ base }: { base?: string } = {}) {
       )
   );
 
-  app.post('/bye', async (req: Request) => {
+  app.post('/bye', async req => {
     const { name } = await req.json();
     return new Response(
       JSON.stringify({

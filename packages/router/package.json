@@ -1,0 +1,42 @@
+{
+  "name": "@whatwg-node/router",
+  "version": "0.0.0",
+  "description": "Fetch API compliant HTTP Router",
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "ardatan/whatwg-node",
+    "directory": "packages/router"
+  },
+  "license": "MIT",
+  "sideEffects": false,
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./*": {
+      "require": "./dist/*.js",
+      "import": "./dist/*.mjs"
+    }
+  },
+  "typings": "dist/index.d.ts",
+  "typescript": {
+    "definition": "dist/index.d.ts"
+  },
+  "buildOptions": {
+    "input": "./src/index.ts"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  },
+  "dependencies": {
+    "@whatwg-node/fetch": "0.5.3",
+    "@whatwg-node/server": "0.4.17",
+    "itty-router": "3.0.8",
+    "tslib": "^2.3.1"
+  }
+}

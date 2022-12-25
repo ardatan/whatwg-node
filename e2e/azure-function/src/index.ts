@@ -1,9 +1,7 @@
 import { Context, HttpRequest } from '@azure/functions';
 import { createTestServerAdapter } from '@e2e/shared-server';
 
-const app = createTestServerAdapter({
-  base: '/api/whatwgnode',
-});
+const app = createTestServerAdapter('/api/whatwgnode');
 
 export default async function (context: Context, req: HttpRequest): Promise<void> {
   context.log('HTTP trigger function processed a request.');

@@ -26,10 +26,11 @@
     "noPropertyAccessFromIndexSignature": false,
     "paths": {
       "@whatwg-node/server": ["packages/server/src/index.ts"],
+      "@whatwg-node/router": ["packages/router/src/index.ts"],
       "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
     }
   },
   "include": ["packages", "e2e"],
-  "exclude": ["**/node_modules", "**/test-files", "e2e/bun", "e2e/deno"]
+  "exclude": ["**/node_modules", "**/test-files", "**/dist", "e2e/bun", "e2e/deno"]
 }
