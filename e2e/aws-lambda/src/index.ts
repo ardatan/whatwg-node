@@ -22,7 +22,7 @@ export async function handler(event: APIGatewayEvent, lambdaContext: Context): P
   const serverContext: ServerContext = {
     event,
     lambdaContext,
-  }
+  };
 
   const response = await app.fetch(
     url,
