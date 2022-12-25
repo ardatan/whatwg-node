@@ -4,6 +4,6 @@
   "private": true,
   "dependencies": {
     "@whatwg-node/router": "0.0.0",
-    "itty-router": "3.0.8"
+    "itty-router": "3.0.10"
   }
 }
