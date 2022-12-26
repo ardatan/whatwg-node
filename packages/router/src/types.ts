@@ -16,7 +16,7 @@ export type RouterHandler<TServerContext> = (
 ) => Promise<Response | void> | Response | void;
 export type RouteMethod<TServerContext> = (
   path: string,
-  handler: RouterHandler<TServerContext>
+  ...handlers: RouterHandler<TServerContext>[]
 ) => Router<TServerContext>;
 
 export type RouterBaseObject<TServerContext> = Record<RouteMethodKey, RouteMethod<TServerContext>> &
