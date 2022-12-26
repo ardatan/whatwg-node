@@ -1,5 +1,11 @@
 # @whatwg-node/router
 
+## 0.0.2
+
+### Patch Changes
+
+- [#228](https://github.com/ardatan/whatwg-node/pull/228) [`7450243`](https://github.com/ardatan/whatwg-node/commit/7450243cb7a7a8aeda84e7ff9feee96e5446dfb9) Thanks [@ardatan](https://github.com/ardatan)! - Fix typings to support multiple handler for the same route
+
 ## 0.0.1
 
 ### Patch Changes
