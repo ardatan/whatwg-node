@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.5.0
+
+### Minor Changes
+
+- [#219](https://github.com/ardatan/whatwg-node/pull/219) [`94c6ff3`](https://github.com/ardatan/whatwg-node/commit/94c6ff3ae27fb45acec9b44da411c45e407df0d2) Thanks [@ardatan](https://github.com/ardatan)! - Introduce new middlewares;
+
+  - withCORS
+  - withErrorHandling
+
 ## 0.4.17
 
 ### Patch Changes
@@ -134,8 +143,8 @@
 
   ```ts
   createServerAdapter(req => {
-    return new Response(`I got ${req.url}`)
-  })
+    return new Response(`I got ${req.url}`);
+  });
   ```
 
   Breaking Changes;

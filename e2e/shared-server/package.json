@@ -1,9 +1,9 @@
 {
   "name": "@e2e/shared-server",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@whatwg-node/router": "0.0.0",
+    "@whatwg-node/router": "0.0.1",
     "itty-router": "3.0.10"
   }
 }
