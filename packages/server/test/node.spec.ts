@@ -2,6 +2,7 @@ import { createServerAdapter } from '@whatwg-node/server';
 import { IncomingMessage, ServerResponse } from 'http';
 import { createTestServer, TestServer } from './test-server';
 import { createTestContainer } from './create-test-container';
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
 
 describe('Node Specific Cases', () => {
   let testServer: TestServer;
@@ -97,6 +98,20 @@ describe('Node Specific Cases', () => {
       await sleep(100);
       expect(cancelFn).toHaveBeenCalledTimes(1);
     });
+  });
+
+  // ts-only-test
+  it.skip('should have compatible types for http2', () => {
+    const adapter = createServerAdapter(() => {
+      return null as any;
+    });
+
+    const req = null as unknown as Http2ServerRequest;
+    const res = null as unknown as Http2ServerResponse;
+
+    adapter.handleNodeRequest(req);
+    adapter.handle(req, res);
+    adapter(req, res);
   });
 });
 

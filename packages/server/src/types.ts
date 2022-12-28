@@ -1,5 +1,5 @@
-import type { RequestListener, ServerResponse } from 'node:http';
-import type { NodeRequest } from './utils';
+import type { RequestListener } from 'node:http';
+import type { NodeRequest, NodeResponse } from './utils';
 
 export interface FetchEvent extends Event {
   waitUntil(f: Promise<any>): void;
@@ -48,7 +48,7 @@ export interface ServerAdapterObject<
    */
   requestListener: RequestListener;
 
-  handle(req: NodeRequest, res: ServerResponse, ...ctx: Partial<TServerContext>[]): Promise<void>;
+  handle(req: NodeRequest, res: NodeResponse, ...ctx: Partial<TServerContext>[]): Promise<void>;
   handle(request: Request, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   handle(fetchEvent: FetchEvent & Partial<TServerContext>, ...ctx: Partial<TServerContext>[]): void;
   handle(
@@ -68,6 +68,6 @@ export type ServerAdapterRequestHandler<TServerContext> = (
 
 export type DefaultServerAdapterContext = {
   req: NodeRequest;
-  res: ServerResponse;
+  res: NodeResponse;
   waitUntil(promise: Promise<unknown>): void;
 };

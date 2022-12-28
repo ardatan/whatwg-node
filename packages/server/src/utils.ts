@@ -1,4 +1,5 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import { IncomingMessage, ServerResponse } from 'node:http';
+import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
 import { FetchEvent } from './types';
@@ -15,11 +16,13 @@ export interface NodeRequest {
   originalUrl?: string;
   method?: string;
   headers?: any;
-  req?: IncomingMessage;
-  raw?: IncomingMessage;
+  req?: IncomingMessage | Http2ServerRequest;
+  raw?: IncomingMessage | Http2ServerRequest;
   socket?: Socket;
   query?: any;
 }
+
+export type NodeResponse = ServerResponse | Http2ServerResponse;
 
 function getPort(nodeRequest: NodeRequest) {
   if (nodeRequest.socket?.localPort) {
@@ -146,7 +149,7 @@ export function isNodeRequest(request: any): request is NodeRequest {
   return isReadable(request);
 }
 
-export function isServerResponse(stream: any): stream is ServerResponse {
+export function isServerResponse(stream: any): stream is NodeResponse {
   // Check all used functions are defined
   return (
     stream != null && stream.setHeader != null && stream.end != null && stream.once != null && stream.write != null
@@ -161,10 +164,7 @@ export function isFetchEvent(event: any): event is FetchEvent {
   return event != null && event.request != null && event.respondWith != null;
 }
 
-export async function sendNodeResponse(
-  { headers, status, statusText, body }: Response,
-  serverResponse: ServerResponse
-) {
+export async function sendNodeResponse({ headers, status, statusText, body }: Response, serverResponse: NodeResponse) {
   headers.forEach((value, name) => {
     serverResponse.setHeader(name, value);
   });
@@ -175,7 +175,10 @@ export async function sendNodeResponse(
     if (body == null) {
       serverResponse.end(resolve);
     } else if (body[Symbol.toStringTag] === 'Uint8Array') {
-      serverResponse.end(body, resolve);
+      serverResponse
+        // @ts-expect-error http and http2 writes are actually compatible
+        .write(body);
+      serverResponse.end(resolve);
     } else if (isReadable(body)) {
       serverResponse.once('close', () => {
         body.destroy();
@@ -184,7 +187,11 @@ export async function sendNodeResponse(
       body.pipe(serverResponse);
     } else if (isAsyncIterable(body)) {
       for await (const chunk of body as AsyncIterable<Uint8Array>) {
-        if (!serverResponse.write(chunk)) {
+        if (
+          !serverResponse
+            // @ts-expect-error http and http2 writes are actually compatible
+            .write(chunk)
+        ) {
           break;
         }
       }

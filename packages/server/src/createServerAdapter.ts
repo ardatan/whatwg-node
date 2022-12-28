@@ -1,10 +1,10 @@
-import type { ServerResponse } from 'node:http';
 import {
   isFetchEvent,
   isNodeRequest,
   isRequestInit,
   isServerResponse,
   NodeRequest,
+  NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
 } from './utils';
@@ -63,7 +63,7 @@ function createServerAdapter<
 
   async function requestListener(
     nodeRequest: NodeRequest,
-    serverResponse: ServerResponse,
+    serverResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ) {
     const waitUntilPromises: Promise<unknown>[] = [];
@@ -78,7 +78,7 @@ function createServerAdapter<
     if (response) {
       await sendNodeResponse(response, serverResponse);
     } else {
-      await new Promise(resolve => {
+      await new Promise<void>(resolve => {
         serverResponse.statusCode = 404;
         serverResponse.end(resolve);
       });
