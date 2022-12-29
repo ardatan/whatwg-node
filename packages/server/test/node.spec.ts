@@ -122,11 +122,16 @@ describe('Node Specific Cases', () => {
     adapter(req, res);
   });
 
-  it('should support http2 and respond as expected', async () => {
-    const fetchAPI = createFetch({
-      useNodeFetch: false,
-    });
-
+  it.each([
+    {
+      fetchImpl: 'default',
+      fetchAPI: createFetch({ useNodeFetch: false }),
+    },
+    {
+      fetchImpl: 'node-fetch',
+      fetchAPI: createFetch({ useNodeFetch: true }),
+    },
+  ])('should support http2 and respond as expected when using $fetchImpl implementation', async ({ fetchAPI }) => {
     const adapter = createServerAdapter(
       () => new fetchAPI.Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
       fetchAPI.Request
