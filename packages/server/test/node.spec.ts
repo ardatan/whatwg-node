@@ -12,125 +12,122 @@ import {
 import { AddressInfo } from 'net';
 
 describe('Node Specific Cases', () => {
-  describe('http', () => {
-    let testServer: TestServer;
-    beforeAll(async () => {
-      testServer = await createTestServer();
-    });
-
-    afterAll(done => {
-      testServer.server.close(done);
-    });
-
-    createTestContainer(({ Request, Response, ReadableStream, fetch }) => {
-      it('should handle empty responses', async () => {
-        const serverAdapter = createServerAdapter(() => {
-          return undefined as any;
-        }, Request);
-        testServer.server.once('request', serverAdapter);
-        const response = await fetch(testServer.url);
-        await response.text();
-        expect(response.status).toBe(404);
-      });
-
-      it('should handle waitUntil properly', async () => {
-        let flag = false;
-        const serverAdapter = createServerAdapter((_request, { waitUntil }) => {
-          waitUntil(
-            sleep(100).then(() => {
-              flag = true;
-            })
-          );
-          return new Response(null, {
-            status: 204,
-          });
-        }, Request);
-        testServer.server.once('request', serverAdapter);
-        const response$ = fetch(testServer.url);
-        const response = await response$;
-        await response.text();
-        expect(flag).toBe(false);
-        await sleep(100);
-        expect(flag).toBe(true);
-      });
-
-      it('should forward additional context', async () => {
-        const handleRequest = jest.fn().mockImplementation(() => {
-          return new Response(null, {
-            status: 204,
-          });
-        });
-        const serverAdapter = createServerAdapter<{
-          req: IncomingMessage;
-          res: ServerResponse;
-          foo: string;
-        }>(handleRequest, Request);
-        const additionalCtx = { foo: 'bar' };
-        testServer.server.once('request', (...args) => serverAdapter(...args, additionalCtx));
-        const response = await fetch(testServer.url);
-        await response.text();
-        expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
-      });
-
-      it('should handle cancellation of incremental responses', async () => {
-        const cancelFn = jest.fn();
-        const serverAdapter = createServerAdapter(
-          () =>
-            new Response(
-              new ReadableStream({
-                async pull(controller) {
-                  await sleep(100);
-                  controller.enqueue(Date.now().toString());
-                },
-                cancel: cancelFn,
-              })
-            ),
-          Request
-        );
-
-        testServer.server.once('request', serverAdapter);
-        const response = await fetch(testServer.url);
-
-        const collectedValues: string[] = [];
-
-        let i = 0;
-        for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
-          if (i > 2) {
-            break;
-          }
-          collectedValues.push(Buffer.from(chunk).toString('utf-8'));
-          i++;
-        }
-
-        expect(collectedValues).toHaveLength(3);
-        await sleep(100);
-        expect(cancelFn).toHaveBeenCalledTimes(1);
-      });
-    });
+  let testServer: TestServer;
+  beforeAll(async () => {
+    testServer = await createTestServer();
   });
 
-  describe('http2', () => {
-    // ts-only-test
-    it.skip('should have compatible types for http2', () => {
-      const adapter = createServerAdapter(() => {
-        return null as any;
-      });
+  afterAll(done => {
+    testServer.server.close(done);
+  });
 
-      const req = null as unknown as Http2ServerRequest;
-      const res = null as unknown as Http2ServerResponse;
-
-      adapter.handleNodeRequest(req);
-      adapter.handle(req, res);
-      adapter(req, res);
+  createTestContainer(({ Request, Response, ReadableStream, fetch }) => {
+    it('should handle empty responses', async () => {
+      const serverAdapter = createServerAdapter(() => {
+        return undefined as any;
+      }, Request);
+      testServer.server.once('request', serverAdapter);
+      const response = await fetch(testServer.url);
+      await response.text();
+      expect(response.status).toBe(404);
     });
 
-    it('should have support and respond as expected', async () => {
-      const adapter = createServerAdapter(
-        () => new Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
+    it('should handle waitUntil properly', async () => {
+      let flag = false;
+      const serverAdapter = createServerAdapter((_request, { waitUntil }) => {
+        waitUntil(
+          sleep(100).then(() => {
+            flag = true;
+          })
+        );
+        return new Response(null, {
+          status: 204,
+        });
+      }, Request);
+      testServer.server.once('request', serverAdapter);
+      const response$ = fetch(testServer.url);
+      const response = await response$;
+      await response.text();
+      expect(flag).toBe(false);
+      await sleep(100);
+      expect(flag).toBe(true);
+    });
+
+    it('should forward additional context', async () => {
+      const handleRequest = jest.fn().mockImplementation(() => {
+        return new Response(null, {
+          status: 204,
+        });
+      });
+      const serverAdapter = createServerAdapter<{
+        req: IncomingMessage;
+        res: ServerResponse;
+        foo: string;
+      }>(handleRequest, Request);
+      const additionalCtx = { foo: 'bar' };
+      testServer.server.once('request', (...args) => serverAdapter(...args, additionalCtx));
+      const response = await fetch(testServer.url);
+      await response.text();
+      expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
+    });
+
+    it('should handle cancellation of incremental responses', async () => {
+      const cancelFn = jest.fn();
+      const serverAdapter = createServerAdapter(
+        () =>
+          new Response(
+            new ReadableStream({
+              async pull(controller) {
+                await sleep(100);
+                controller.enqueue(Date.now().toString());
+              },
+              cancel: cancelFn,
+            })
+          ),
         Request
       );
 
-      const key = `-----BEGIN PRIVATE KEY-----
+      testServer.server.once('request', serverAdapter);
+      const response = await fetch(testServer.url);
+
+      const collectedValues: string[] = [];
+
+      let i = 0;
+      for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+        if (i > 2) {
+          break;
+        }
+        collectedValues.push(Buffer.from(chunk).toString('utf-8'));
+        i++;
+      }
+
+      expect(collectedValues).toHaveLength(3);
+      await sleep(100);
+      expect(cancelFn).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  // ts-only-test
+  it.skip('should have compatible types for http2', () => {
+    const adapter = createServerAdapter(() => {
+      return null as any;
+    });
+
+    const req = null as unknown as Http2ServerRequest;
+    const res = null as unknown as Http2ServerResponse;
+
+    adapter.handleNodeRequest(req);
+    adapter.handle(req, res);
+    adapter(req, res);
+  });
+
+  it('should support http2 and respond as expected', async () => {
+    const adapter = createServerAdapter(
+      () => new Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
+      Request
+    );
+
+    const key = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDL2k3sKtqBQ9lw
 ouLuCewSuTCazFjSdzJKLWmm9d9OLRi9SVPaIaes0ItExHFXwVNSXGUlabTSXxVP
 x9cJXDtloBnlN+YKK5f8vcpP7a9hquYDKMhM27kP6e8CIugDfXP4rz52o6Jn2ZEz
@@ -158,7 +155,7 @@ mDYzpcI51XzlyJPQQKjHjck5H4WDV80EIX22krvFMh44IOyqZu3Ou+iSPCR1hi1z
 Mp0YOF+YKJ9PCrJu4W/xt1pnxfXe9bTg5HKtN6DmYlSz78EMelSVemaqOgNoIBqC
 t6Ra3NuebwL/VQ1JpBhh4eJYZg==
 -----END PRIVATE KEY-----`;
-      const cert = `-----BEGIN CERTIFICATE-----
+    const cert = `-----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQClE698xX22XDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
 b2NhbGhvc3QwHhcNMjIxMjI4MTc0NDMxWhcNMjMwMTI3MTc0NDMxWjAUMRIwEAYD
 VQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDL
@@ -176,53 +173,52 @@ ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
 /huiHkWkMUs=
 -----END CERTIFICATE-----`;
 
-      const server = createHttp2SecureServer({ key, cert }, adapter);
-      server.listen(0);
-      const port = (server.address() as AddressInfo).port;
+    const server = createHttp2SecureServer({ key, cert }, adapter);
+    server.listen(0);
+    const port = (server.address() as AddressInfo).port;
 
-      const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
+    const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
 
-      const req = client.request({
-        [constantsHttp2.HTTP2_HEADER_PATH]: '/',
-      });
-
-      await expect(
-        new Promise((resolve, reject) => {
-          req.on(
-            'response',
-            ({
-              date, // omit date from snapshot
-              ...headers
-            }) => {
-              let data = '';
-              req.on('data', chunk => {
-                data += chunk;
-              });
-              req.on('end', () => {
-                resolve({
-                  headers,
-                  data,
-                });
-              });
-            }
-          );
-          req.on('error', reject);
-        })
-      ).resolves.toMatchInlineSnapshot(`
-        {
-          "data": "Hey there!",
-          "headers": {
-            ":status": 418,
-            "content-type": "text/plain;charset=UTF-8",
-            "x-is-this-http2": "yes",
-            Symbol(nodejs.http2.sensitiveHeaders): [],
-          },
-        }
-      `);
-
-      client.close();
-      server.close();
+    const req = client.request({
+      [constantsHttp2.HTTP2_HEADER_PATH]: '/',
     });
+
+    await expect(
+      new Promise((resolve, reject) => {
+        req.on(
+          'response',
+          ({
+            date, // omit date from snapshot
+            ...headers
+          }) => {
+            let data = '';
+            req.on('data', chunk => {
+              data += chunk;
+            });
+            req.on('end', () => {
+              resolve({
+                headers,
+                data,
+              });
+            });
+          }
+        );
+        req.on('error', reject);
+      })
+    ).resolves.toMatchInlineSnapshot(`
+      {
+        "data": "Hey there!",
+        "headers": {
+          ":status": 418,
+          "content-type": "text/plain;charset=UTF-8",
+          "x-is-this-http2": "yes",
+          Symbol(nodejs.http2.sensitiveHeaders): [],
+        },
+      }
+    `);
+
+    client.close();
+    server.close();
   });
 });
 
