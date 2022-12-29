@@ -10,6 +10,7 @@ import {
   constants as constantsHttp2,
 } from 'http2';
 import { AddressInfo } from 'net';
+import { createFetch } from '@whatwg-node/fetch';
 
 describe('Node Specific Cases', () => {
   let testServer: TestServer;
@@ -122,9 +123,13 @@ describe('Node Specific Cases', () => {
   });
 
   it('should support http2 and respond as expected', async () => {
+    const fetchAPI = createFetch({
+      useNodeFetch: false,
+    });
+
     const adapter = createServerAdapter(
-      () => new Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
-      Request
+      () => new fetchAPI.Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
+      fetchAPI.Request
     );
 
     const key = `-----BEGIN PRIVATE KEY-----
