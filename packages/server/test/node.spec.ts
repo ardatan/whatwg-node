@@ -2,7 +2,13 @@ import { createServerAdapter } from '@whatwg-node/server';
 import { IncomingMessage, ServerResponse } from 'http';
 import { createTestServer, TestServer } from './test-server';
 import { createTestContainer } from './create-test-container';
-import { createSecureServer as createHttp2SecureServer, Http2ServerRequest, Http2ServerResponse } from 'http2';
+import {
+  createSecureServer as createHttp2SecureServer,
+  Http2ServerRequest,
+  Http2ServerResponse,
+  connect as connectHttp2,
+  constants as constantsHttp2,
+} from 'http2';
 import { AddressInfo } from 'net';
 
 describe('Node Specific Cases', () => {
@@ -118,16 +124,13 @@ describe('Node Specific Cases', () => {
       adapter(req, res);
     });
 
-    createTestContainer(({ Request, Response, fetch }) => {
-      it.only('should respond as expected', async () => {
-        const adapter = createServerAdapter(
-          () => new Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
-          Request
-        );
+    it('should have support and respond as expected', async () => {
+      const adapter = createServerAdapter(
+        () => new Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
+        Request
+      );
 
-        const server = createHttp2SecureServer(
-          {
-            key: `-----BEGIN PRIVATE KEY-----
+      const key = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDL2k3sKtqBQ9lw
 ouLuCewSuTCazFjSdzJKLWmm9d9OLRi9SVPaIaes0ItExHFXwVNSXGUlabTSXxVP
 x9cJXDtloBnlN+YKK5f8vcpP7a9hquYDKMhM27kP6e8CIugDfXP4rz52o6Jn2ZEz
@@ -154,8 +157,8 @@ huj539jDsUUekXTInjAgynJLDRwXq+yfvqUBO7HTrGMCgYBmPS4dcLoBC04MiSIQ
 mDYzpcI51XzlyJPQQKjHjck5H4WDV80EIX22krvFMh44IOyqZu3Ou+iSPCR1hi1z
 Mp0YOF+YKJ9PCrJu4W/xt1pnxfXe9bTg5HKtN6DmYlSz78EMelSVemaqOgNoIBqC
 t6Ra3NuebwL/VQ1JpBhh4eJYZg==
------END PRIVATE KEY-----`,
-            cert: `-----BEGIN CERTIFICATE-----
+-----END PRIVATE KEY-----`;
+      const cert = `-----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQClE698xX22XDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
 b2NhbGhvc3QwHhcNMjIxMjI4MTc0NDMxWhcNMjMwMTI3MTc0NDMxWjAUMRIwEAYD
 VQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDL
@@ -171,20 +174,54 @@ bdEO2Po5v+S/RlE/QE7ONaKYecOPMTcW7FeEze77DOJXTvkuM5ab/Wj1mbSE40sH
 VhEJmi7pGnPZOobUh3QhhpvqJ4myRCyrHKS53l1RJJ+7/XXVq6WDHAcMxHseRKnb
 ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
 /huiHkWkMUs=
------END CERTIFICATE-----`,
-          },
-          adapter
-        );
-        server.listen(0);
-        const port = (server.address() as AddressInfo).port;
+-----END CERTIFICATE-----`;
 
-        const response = await fetch(`https://localhost:${port}`);
-        expect(response.status).toBe(418);
-        expect(response.headers.get('x-is-this-http2')).toBe('yes');
-        await expect(response.text()).resolves.toBe('Hey there!');
+      const server = createHttp2SecureServer({ key, cert }, adapter);
+      server.listen(0);
+      const port = (server.address() as AddressInfo).port;
 
-        await new Promise(resolve => server.close(resolve));
+      const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
+
+      const req = client.request({
+        [constantsHttp2.HTTP2_HEADER_PATH]: '/',
       });
+
+      await expect(
+        new Promise((resolve, reject) => {
+          req.on(
+            'response',
+            ({
+              date, // omit date from snapshot
+              ...headers
+            }) => {
+              let data = '';
+              req.on('data', chunk => {
+                data += chunk;
+              });
+              req.on('end', () => {
+                resolve({
+                  headers,
+                  data,
+                });
+              });
+            }
+          );
+          req.on('error', reject);
+        })
+      ).resolves.toMatchInlineSnapshot(`
+        {
+          "data": "Hey there!",
+          "headers": {
+            ":status": 418,
+            "content-type": "text/plain;charset=UTF-8",
+            "x-is-this-http2": "yes",
+            Symbol(nodejs.http2.sensitiveHeaders): [],
+          },
+        }
+      `);
+
+      client.close();
+      server.close();
     });
   });
 });
