@@ -190,7 +190,8 @@ ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
     const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
 
     const req = client.request({
-      [constantsHttp2.HTTP2_HEADER_PATH]: '/',
+      [constantsHttp2.HTTP2_HEADER_METHOD]: 'POST',
+      [constantsHttp2.HTTP2_HEADER_PATH]: '/hi',
     });
 
     await expect(
