@@ -132,10 +132,13 @@ describe('Node Specific Cases', () => {
       fetchAPI: createFetch({ useNodeFetch: true }),
     },
   ])('should support http2 and respond as expected when using $fetchImpl implementation', async ({ fetchAPI }) => {
-    const adapter = createServerAdapter(
-      () => new fetchAPI.Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } }),
-      fetchAPI.Request
-    );
+    const adapter = createServerAdapter(req => {
+      expect(req.method).toBe('POST');
+      // TODO: only passes if create-node-ponyfill.js is used
+      // expect(req.headers.get('host')).toMatch(/^localhost:\d+$/);
+      // expect(req.url).toMatch(/^https:\/\/localhost:\d+\/hi$/);
+      return new fetchAPI.Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } });
+    }, fetchAPI.Request);
 
     const key = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDL2k3sKtqBQ9lw
