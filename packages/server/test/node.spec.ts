@@ -190,6 +190,8 @@ ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
     server.listen(0);
     const port = (server.address() as AddressInfo).port;
 
+    // Node's fetch API does not support HTTP/2, we use the http2 module directly instead
+
     const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
 
     const req = client.request({
