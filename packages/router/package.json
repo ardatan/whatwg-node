@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/router",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Fetch API compliant HTTP Router",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
@@ -34,8 +34,8 @@
     "directory": "dist"
   },
   "dependencies": {
-    "@whatwg-node/fetch": "0.5.3",
-    "@whatwg-node/server": "0.5.0",
+    "@whatwg-node/fetch": "0.5.4",
+    "@whatwg-node/server": "0.5.1",
     "itty-router": "3.0.11",
     "tslib": "^2.3.1"
   }

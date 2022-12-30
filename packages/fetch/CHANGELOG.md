@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.5.4
+
+### Patch Changes
+
+- [#237](https://github.com/ardatan/whatwg-node/pull/237) [`166102f`](https://github.com/ardatan/whatwg-node/commit/166102f6ff52d2197ab7f78c63392b95ebca259c) Thanks [@enisdenjo](https://github.com/enisdenjo)! - http2 support when using Node ponyfill
+
 ## 0.5.3
 
 ### Patch Changes

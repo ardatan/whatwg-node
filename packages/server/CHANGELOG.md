@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.5.1
+
+### Patch Changes
+
+- [#234](https://github.com/ardatan/whatwg-node/pull/234) [`fba62c4`](https://github.com/ardatan/whatwg-node/commit/fba62c4eeffa4c80d4e1163aa4df8de6f7ae0459) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Adapt types for Node http2
+
+- Updated dependencies [[`166102f`](https://github.com/ardatan/whatwg-node/commit/166102f6ff52d2197ab7f78c63392b95ebca259c)]:
+  - @whatwg-node/fetch@0.5.4
+
 ## 0.5.0
 
 ### Minor Changes
