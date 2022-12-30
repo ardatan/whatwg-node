@@ -231,6 +231,7 @@ ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
       }
     `);
 
+    req.end();
     client.close();
     server.close();
   });
