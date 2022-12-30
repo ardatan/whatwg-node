@@ -1,3 +1,4 @@
+const http2 = require('http2')
 const handleFileRequest = require("./handle-file-request");
 const readableStreamToReadable = require("./readableStreamToReadable");
 
@@ -203,8 +204,32 @@ module.exports = function createNodePonyfill(opts = {}) {
             if (/^\/\//.test(requestOrUrl.toString())) {
               requestOrUrl = "https:" + requestOrUrl.toString();
             }
+            let method = (options || {}).method;
+            const headers = {};
+            if ('headers' in (options || {})) {
+              let isHttp2 = false;
+              for (const [key, value] of Object.entries(options.headers)) {
+                if (key.startsWith(':')) {
+                  // omit http2 headers
+                  isHttp2 = true;
+                } else {
+                  headers[key] = value
+                }
+              }
+              if (isHttp2) {
+                // translate http2 if applicable
+                method = options.headers[http2.constants.HTTP2_HEADER_METHOD];
+                const scheme = options.headers[http2.constants.HTTP2_HEADER_SCHEME];
+                const authority = options.headers[http2.constants.HTTP2_HEADER_AUTHORITY];
+                const path = options.headers[http2.constants.HTTP2_HEADER_PATH];
+                headers.host = authority;
+                requestOrUrl = `${scheme}://${authority}${path}`
+              }
+            }
             const fixedOptions = {
-              ...options
+              ...options,
+              method,
+              headers,
             };
             fixedOptions.headers = new ponyfills.Headers(fixedOptions.headers || {});
             fixedOptions.headers.set('Connection', 'keep-alive');
