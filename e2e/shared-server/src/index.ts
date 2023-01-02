@@ -2,9 +2,8 @@ import { createRouter, Response, DefaultServerAdapterContext, withErrorHandling 
 
 export function createTestServerAdapter<TServerContext = DefaultServerAdapterContext>(base?: string) {
   const app = createRouter<TServerContext>({
-    base, plugins: [
-      withErrorHandling<TServerContext>,
-    ]
+    base,
+    plugins: [withErrorHandling as any],
   });
 
   app.get(
