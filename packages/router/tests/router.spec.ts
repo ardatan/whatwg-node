@@ -152,7 +152,7 @@ describe('Router', () => {
     const response = await router.fetch('http://localhost/api');
     const json = await response.json();
     expect(json.message).toBe('Hello Root!');
-  })
+  });
 });
 describe('withErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {
