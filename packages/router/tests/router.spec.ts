@@ -75,13 +75,10 @@ describe('Router', () => {
         request.message += ` to you`;
       }
     );
-    router.get(
-      '/greetings',
-      (request: any) => {
-        request.message += ` ${request.query.name}!`;
-        return new Response(JSON.stringify({ message: request.message }));
-      }
-    );
+    router.get('/greetings', (request: any) => {
+      request.message += ` ${request.query.name}!`;
+      return new Response(JSON.stringify({ message: request.message }));
+    });
     const response = await router.fetch('http://localhost/greetings?name=John');
     const json = await response.json();
     expect(json.message).toBe('Hello to you John!');
@@ -120,7 +117,7 @@ describe('Router', () => {
     const response = await router.fetch('http://localhost/api/greetings/John');
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
-  })
+  });
 
   it('can get query params', async () => {
     const router = createRouter();

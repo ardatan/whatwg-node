@@ -42,15 +42,18 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
     const parsedUrl = new URL(request.url);
     const methodPatternMaps = routesByMethod.get(method);
     if (methodPatternMaps) {
-      const queryProxy = new Proxy({}, {
-        get(_, prop) {
-          const allQueries = parsedUrl.searchParams.getAll(prop.toString());
-          return allQueries.length === 1 ? allQueries[0] : allQueries;
-        },
-        has(_, prop) {
-          return parsedUrl.searchParams.has(prop.toString());
+      const queryProxy = new Proxy(
+        {},
+        {
+          get(_, prop) {
+            const allQueries = parsedUrl.searchParams.getAll(prop.toString());
+            return allQueries.length === 1 ? allQueries[0] : allQueries;
+          },
+          has(_, prop) {
+            return parsedUrl.searchParams.has(prop.toString());
+          },
         }
-      })
+      );
       for (const [pattern, handlers] of methodPatternMaps) {
         const match = pattern.exec(parsedUrl);
         if (match) {
@@ -69,7 +72,7 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
             },
             has(target, prop) {
               return prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query';
-            }
+            },
           }) as RouterRequest;
           for (const handler of handlers) {
             const result = await handler(routerRequest as RouterRequest, context);
@@ -87,8 +90,12 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
         return handleRequest;
       }
       const method = prop.toString().toLowerCase() as RouteMethodKey;
-      return function routeMethodKeyFn(this: RouterBaseObject<TServerContext>, path: string, ...handlers: RouterHandler<TServerContext>[]) {
-        if(method === 'all') {
+      return function routeMethodKeyFn(
+        this: RouterBaseObject<TServerContext>,
+        path: string,
+        ...handlers: RouterHandler<TServerContext>[]
+      ) {
+        if (method === 'all') {
           for (const httpMethod of HTTP_METHODS) {
             addHandlersToMethod(httpMethod, path, ...handlers);
           }
@@ -96,9 +103,9 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
           addHandlersToMethod(method.toUpperCase() as HTTPMethod, path, ...handlers);
         }
         return this;
-      }
-    }
-  }) 
+      };
+    },
+  });
   options?.plugins?.forEach(plugin => {
     routerBaseObject = plugin(routerBaseObject);
   });
