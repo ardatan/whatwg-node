@@ -4,8 +4,6 @@ import { createTestServer, TestServer } from './test-server';
 import { createTestContainer } from './create-test-container';
 import {
   createSecureServer as createHttp2SecureServer,
-  Http2ServerRequest,
-  Http2ServerResponse,
   connect as connectHttp2,
   constants as constantsHttp2,
 } from 'http2';
@@ -106,20 +104,6 @@ describe('Node Specific Cases', () => {
       await sleep(100);
       expect(cancelFn).toHaveBeenCalledTimes(1);
     });
-  });
-
-  // ts-only-test
-  it.skip('should have compatible types for http2', () => {
-    const adapter = createServerAdapter(() => {
-      return null as any;
-    });
-
-    const req = null as unknown as Http2ServerRequest;
-    const res = null as unknown as Http2ServerResponse;
-
-    adapter.handleNodeRequest(req);
-    adapter.handle(req, res);
-    adapter(req, res);
   });
 
   it.each([

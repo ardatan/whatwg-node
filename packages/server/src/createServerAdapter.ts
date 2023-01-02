@@ -80,7 +80,8 @@ function createServerAdapter<
     } else {
       await new Promise<void>(resolve => {
         serverResponse.statusCode = 404;
-        serverResponse.end(resolve);
+        serverResponse.once('end', resolve);
+        serverResponse.end();
       });
     }
     if (waitUntilPromises.length > 0) {
