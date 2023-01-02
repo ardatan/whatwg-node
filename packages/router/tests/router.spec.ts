@@ -202,6 +202,26 @@ describe('Router', () => {
     const json = await response.json();
     expect(json.message).toBe('Hello World!');
   });
+  it('handles POST bodies', async () => {
+    const router = createRouter();
+    router.post(
+      '/greetings',
+      async request => {
+        const json = await request.json();
+        return new Response(
+          JSON.stringify({
+            message: `Hello ${json.name}!`,
+          })
+        );
+      }
+    );
+    const response = await router.fetch('http://localhost/greetings', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'John' }),
+    });
+    const json = await response.json();
+    expect(json.message).toBe('Hello John!');
+  })
 });
 describe('withErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {

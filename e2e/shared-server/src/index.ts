@@ -1,7 +1,11 @@
-import { createRouter, Response, DefaultServerAdapterContext } from '@whatwg-node/router';
+import { createRouter, Response, DefaultServerAdapterContext, withErrorHandling } from '@whatwg-node/router';
 
 export function createTestServerAdapter<TServerContext = DefaultServerAdapterContext>(base?: string) {
-  const app = createRouter<TServerContext>({ base });
+  const app = createRouter<TServerContext>({
+    base, plugins: [
+      withErrorHandling<TServerContext>,
+    ]
+  });
 
   app.get(
     '/greetings/:name',
