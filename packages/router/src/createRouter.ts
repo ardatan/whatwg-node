@@ -20,9 +20,9 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
       methodPatternMaps = new Map();
       routesByMethod.set(method, methodPatternMaps);
     }
-    let fullPath = options?.base ? options.base + path : path;
-    if (fullPath.endsWith('/')) {
-      fullPath = fullPath.slice(0, -1);
+    let fullPath = options?.base && options.base !== '/' ? options.base : '';
+    if (path !== '/') {
+      fullPath += path;
     }
     const pattern = new URLPattern({ pathname: fullPath });
     methodPatternMaps.set(pattern, handlers);
