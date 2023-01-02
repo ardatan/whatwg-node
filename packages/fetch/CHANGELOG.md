@@ -1,5 +1,16 @@
 # @whatwg-node/fetch
 
+## 0.6.0
+
+### Minor Changes
+
+- [#241](https://github.com/ardatan/whatwg-node/pull/241) [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d) Thanks [@ardatan](https://github.com/ardatan)! - Drop itty-router in favor of new URLPattern in the fetch ponyfill
+
+### Patch Changes
+
+- [#241](https://github.com/ardatan/whatwg-node/pull/241) [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Added dependency [`urlpattern-polyfill@^6.0.2` ↗︎](https://www.npmjs.com/package/urlpattern-polyfill/v/6.0.2) (to `dependencies`)
+
 ## 0.5.4
 
 ### Patch Changes

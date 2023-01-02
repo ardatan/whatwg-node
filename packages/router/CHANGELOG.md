@@ -1,5 +1,19 @@
 # @whatwg-node/router
 
+## 0.1.0
+
+### Minor Changes
+
+- [#241](https://github.com/ardatan/whatwg-node/pull/241) [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d) Thanks [@ardatan](https://github.com/ardatan)! - Drop itty-router in favor of new URLPattern in the fetch ponyfill
+
+### Patch Changes
+
+- [#241](https://github.com/ardatan/whatwg-node/pull/241) [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d) Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Removed dependency [`itty-router@3.0.11` ↗︎](https://www.npmjs.com/package/itty-router/v/3.0.11) (from `dependencies`)
+- Updated dependencies [[`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d), [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d)]:
+  - @whatwg-node/fetch@0.6.0
+  - @whatwg-node/server@0.5.2
+
 ## 0.0.3
 
 ### Patch Changes
