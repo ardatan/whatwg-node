@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.6.1
+
+### Patch Changes
+
+- [`9752cca`](https://github.com/ardatan/whatwg-node/commit/9752cca54e7636114d87849ca9c7eb9be3d9dba8) Thanks [@ardatan](https://github.com/ardatan)! - Remove unnecessary ponyfill for the envs supporting Fetch by default
+
 ## 0.6.0
 
 ### Minor Changes
