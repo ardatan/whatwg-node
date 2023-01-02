@@ -1,5 +1,12 @@
 # @whatwg-node/router
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`273a30e`](https://github.com/ardatan/whatwg-node/commit/273a30e67bafef2d4acdaac70445c3ced4606ad7)]:
+  - @whatwg-node/server@0.5.4
+
 ## 0.1.1
 
 ### Patch Changes
