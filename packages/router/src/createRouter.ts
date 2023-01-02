@@ -42,17 +42,18 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
     const parsedUrl = new URL(request.url);
     const methodPatternMaps = routesByMethod.get(method);
     if (methodPatternMaps) {
+      const queryProxy = new Proxy({}, {
+        get(_, prop) {
+          const allQueries = parsedUrl.searchParams.getAll(prop.toString());
+          return allQueries.length === 1 ? allQueries[0] : allQueries;
+        },
+        has(_, prop) {
+          return parsedUrl.searchParams.has(prop.toString());
+        }
+      })
       for (const [pattern, handlers] of methodPatternMaps) {
         const match = pattern.exec(parsedUrl);
         if (match) {
-          const queryProxy = new Proxy({}, {
-            get(_, prop) {
-              return parsedUrl.searchParams.get(prop.toString());
-            },
-            has(_, prop) {
-              return parsedUrl.searchParams.has(prop.toString());
-            }
-          })
           const routerRequest = new Proxy(request, {
             get(target, prop, receiver) {
               if (prop === 'parsedUrl') {

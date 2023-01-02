@@ -121,6 +121,24 @@ describe('Router', () => {
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   })
+
+  it('can get query params', async () => {
+    const router = createRouter();
+    router.get(
+      '/foo',
+      request =>
+        new Response(
+          JSON.stringify({
+            cat: request.query.cat,
+            foo: request.query.foo,
+            missing: request.query.missing,
+          })
+        )
+    );
+    const response = await router.fetch('https://foo.com/foo?cat=dog&foo=bar&foo=baz&missing=');
+    const json = await response.json();
+    expect(json).toMatchObject({ cat: 'dog', foo: ['bar', 'baz'], missing: '' });
+  });
 });
 describe('withErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {

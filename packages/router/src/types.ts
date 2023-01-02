@@ -6,7 +6,7 @@ export interface RouterRequest extends Request {
   method: HTTPMethod;
   parsedUrl: URL;
   params: Record<string, string>;
-  query: Record<string, string>;
+  query: Record<string, string | string[]>;
 }
 
 export type RouteMethodKey = Lowercase<HTTPMethod> | 'all';
