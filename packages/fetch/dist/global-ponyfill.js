@@ -14,4 +14,8 @@ module.exports.btoa = globalThis.btoa;
 module.exports.TextEncoder = globalThis.TextEncoder;
 module.exports.TextDecoder = globalThis.TextDecoder;
 module.exports.URLPattern = globalThis.URLPattern;
+if (!module.exports.URLPattern) {
+    const urlPatternModule = require('urlpattern-polyfill');
+    module.exports.URLPattern = urlPatternModule.URLPattern;
+}
 module.exports.createFetch = () => globalThis;
