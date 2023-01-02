@@ -36,7 +36,6 @@
   "dependencies": {
     "@whatwg-node/fetch": "0.5.4",
     "@whatwg-node/server": "0.5.1",
-    "itty-router": "3.0.11",
     "tslib": "^2.3.1"
   }
 }

@@ -13,6 +13,7 @@ const crypto = globalThis.crypto;
 const btoa = globalThis.btoa;
 const TextDecoder = globalThis.TextDecoder;
 const TextEncoder = globalThis.TextEncoder;
+const URLPattern = (globalThis as any).URLPattern;
 
 export const createFetch = () => globalThis;
 export {
@@ -31,4 +32,5 @@ export {
   btoa,
   TextDecoder,
   TextEncoder,
+  URLPattern,
 };

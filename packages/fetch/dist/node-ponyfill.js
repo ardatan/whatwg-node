@@ -17,5 +17,6 @@ module.exports.crypto = ponyfills.crypto;
 module.exports.btoa = ponyfills.btoa;
 module.exports.TextEncoder = ponyfills.TextEncoder;
 module.exports.TextDecoder = ponyfills.TextDecoder;
+module.exports.URLPattern = ponyfills.URLPattern;
 
 exports.createFetch = createNodePonyfill;
