@@ -4,8 +4,7 @@ import {
   execPromise,
   fsPromises,
   DeploymentConfiguration,
-  assertIndex,
-  waitForEndpoint,
+  assertDeployedEndpoint,
 } from '@e2e/shared-scripts';
 import { join } from 'path';
 
@@ -124,13 +123,13 @@ export function createVercelDeployment(): DeploymentConfiguration<{
       const deployment = new VercelDeployment('vercel-function', {
         files: [
           {
-            file: '/api/whatwgnode.js',
-            data: await fsPromises.readFile(join(__dirname, '..', 'pages', 'api', 'whatwgnode.js'), 'utf-8'),
+            file: '/api/[...slug].js',
+            data: await fsPromises.readFile(join(__dirname, '..', 'pages', 'api', '[...slug].js'), 'utf-8'),
           },
         ],
         name: `whatwg-node-e2e-testing`,
         functions: {
-          'api/whatwgnode.js': {
+          'api/[...slug].js': {
             memory: 256,
             maxDuration: 5,
           },
@@ -146,9 +145,7 @@ export function createVercelDeployment(): DeploymentConfiguration<{
     },
     test: async ({ functionUrl }) => {
       console.log(`ℹ️ Vercel Function deployed to URL: ${functionUrl.value}`);
-      // await assertDeployedEndpoint(functionUrl.value);
-      await waitForEndpoint(functionUrl.value, 5, 10000);
-      assertIndex(functionUrl.value);
+      await assertDeployedEndpoint(functionUrl.value);
     },
   };
 }

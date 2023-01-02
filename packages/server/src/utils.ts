@@ -173,12 +173,12 @@ export async function sendNodeResponse({ headers, status, statusText, body }: Re
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     if (body == null) {
-      serverResponse.end(resolve);
+      serverResponse.end('', resolve);
     } else if (body[Symbol.toStringTag] === 'Uint8Array') {
       serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(body);
-      serverResponse.end(resolve);
+      serverResponse.end('', resolve);
     } else if (isReadable(body)) {
       serverResponse.once('close', () => {
         body.destroy();
@@ -195,7 +195,7 @@ export async function sendNodeResponse({ headers, status, statusText, body }: Re
           break;
         }
       }
-      serverResponse.end(resolve);
+      serverResponse.end('', resolve);
     }
   });
 }
