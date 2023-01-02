@@ -153,6 +153,55 @@ describe('Router', () => {
     const json = await response.json();
     expect(json.message).toBe('Hello Root!');
   });
+  it('supports "/" without base', async () => {
+    const router = createRouter();
+    router.get(
+      '/',
+      () =>
+        new Response(
+          JSON.stringify({
+            message: `Hello Root!`,
+          })
+        )
+    );
+    const response = await router.fetch('http://localhost');
+    const json = await response.json();
+    expect(json.message).toBe('Hello Root!');
+  });
+  it('supports "/" in the base', async () => {
+    const router = createRouter({
+      base: '/',
+    });
+    router.get(
+      '/greetings',
+      () =>
+        new Response(
+          JSON.stringify({
+            message: `Hello World!`,
+          })
+        )
+    );
+    const response = await router.fetch('http://localhost/greetings');
+    const json = await response.json();
+    expect(json.message).toBe('Hello World!');
+  });
+  it('supports "/" both in the base and in the route', async () => {
+    const router = createRouter({
+      base: '/',
+    });
+    router.get(
+      '/',
+      () =>
+        new Response(
+          JSON.stringify({
+            message: `Hello World!`,
+          })
+        )
+    );
+    const response = await router.fetch('http://localhost');
+    const json = await response.json();
+    expect(json.message).toBe('Hello World!');
+  });
 });
 describe('withErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {
