@@ -34,28 +34,36 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
   }
   async function handleRequest(request: Request, context: TServerContext) {
     const method = request.method as HTTPMethod;
-    const parsedUrl = new URL(request.url);
+    let _parsedUrl: URL;
+    function getParsedUrl() {
+      if (!_parsedUrl) {
+        _parsedUrl = new URL(request.url);
+      }
+      return _parsedUrl;
+    }
     const methodPatternMaps = routesByMethod.get(method);
     if (methodPatternMaps) {
       const queryProxy = new Proxy(
         {},
         {
           get(_, prop) {
+            const parsedUrl = getParsedUrl();
             const allQueries = parsedUrl.searchParams.getAll(prop.toString());
             return allQueries.length === 1 ? allQueries[0] : allQueries;
           },
           has(_, prop) {
+            const parsedUrl = getParsedUrl();
             return parsedUrl.searchParams.has(prop.toString());
           },
         }
       );
       for (const [pattern, handlers] of methodPatternMaps) {
-        const match = pattern.exec(parsedUrl);
+        const match = pattern.exec(request.url);
         if (match) {
           const routerRequest = new Proxy(request, {
             get(target, prop) {
               if (prop === 'parsedUrl') {
-                return parsedUrl;
+                return getParsedUrl();
               }
               if (prop === 'params') {
                 return match.pathname.groups;
