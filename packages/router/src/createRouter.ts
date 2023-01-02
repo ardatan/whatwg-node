@@ -53,7 +53,7 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
         const match = pattern.exec(parsedUrl);
         if (match) {
           const routerRequest = new Proxy(request, {
-            get(target, prop, receiver) {
+            get(target, prop) {
               if (prop === 'parsedUrl') {
                 return parsedUrl;
               }
@@ -63,7 +63,11 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
               if (prop === 'query') {
                 return queryProxy;
               }
-              return Reflect.get(target, prop, receiver);
+              const targetProp = target[prop];
+              if (typeof targetProp === 'function') {
+                return targetProp.bind(target);
+              }
+              return targetProp;
             },
             has(target, prop) {
               return prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query';
