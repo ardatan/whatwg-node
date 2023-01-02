@@ -1,8 +1,8 @@
-import { Http2ServerRequest, Http2ServerResponse } from "http2";
-import { createServerAdapter } from "../src/createServerAdapter";
+import { Http2ServerRequest, Http2ServerResponse } from 'http2';
+import { createServerAdapter } from '../src/createServerAdapter';
 
 const adapter = createServerAdapter(() => {
-    return null as any;
+  return null as any;
 });
 
 const req = null as unknown as Http2ServerRequest;
