@@ -13,15 +13,6 @@ const HTTP_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTION
 export function createRouter<TServerContext = DefaultServerAdapterContext>(
   options?: RouterOptions<TServerContext>
 ): Router<TServerContext> {
-  const pathPatternMap = new Map<string, URLPattern>();
-  function getPatternForPath(path: string) {
-    let pattern = pathPatternMap.get(path);
-    if (!pattern) {
-      pattern = new URLPattern({ pathname: path });
-      pathPatternMap.set(path, pattern);
-    }
-    return pattern;
-  }
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
   function addHandlersToMethod(method: HTTPMethod, path: string, ...handlers: RouterHandler<TServerContext>[]) {
     let methodPatternMaps = routesByMethod.get(method);
@@ -29,13 +20,12 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
       methodPatternMaps = new Map();
       routesByMethod.set(method, methodPatternMaps);
     }
-    const pattern = getPatternForPath(options?.base ? `${options.base}${path}` : path);
-    let methodPatternHandlers = methodPatternMaps.get(pattern);
-    if (!methodPatternHandlers) {
-      methodPatternHandlers = [];
-      methodPatternMaps.set(pattern, methodPatternHandlers);
+    let fullPath = options?.base ? options.base + path : path;
+    if (fullPath.endsWith('/')) {
+      fullPath = fullPath.slice(0, -1);
     }
-    methodPatternHandlers.push(...handlers);
+    const pattern = new URLPattern({ pathname: fullPath });
+    methodPatternMaps.set(pattern, handlers);
   }
   async function handleRequest(request: Request, context: TServerContext) {
     const method = request.method as HTTPMethod;

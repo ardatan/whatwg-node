@@ -136,6 +136,23 @@ describe('Router', () => {
     const json = await response.json();
     expect(json).toMatchObject({ cat: 'dog', foo: ['bar', 'baz'], missing: '' });
   });
+  it('supports "/" with base', async () => {
+    const router = createRouter({
+      base: '/api',
+    });
+    router.get(
+      '/',
+      () =>
+        new Response(
+          JSON.stringify({
+            message: `Hello Root!`,
+          })
+        )
+    );
+    const response = await router.fetch('http://localhost/api');
+    const json = await response.json();
+    expect(json.message).toBe('Hello Root!');
+  })
 });
 describe('withErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {
