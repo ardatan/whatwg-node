@@ -26,6 +26,7 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.TransformStream = globalThis.TransformStream;
   ponyfills.Blob = globalThis.Blob;
   ponyfills.crypto = globalThis.crypto;
+  ponyfills.URLPattern = globalThis.URLPattern;
 
   if (!ponyfills.AbortController) {
     const abortControllerModule = require("abort-controller");
@@ -89,6 +90,11 @@ module.exports = function createNodePonyfill(opts = {}) {
   if (!ponyfills.crypto) {
     const cryptoPonyfill = require('@peculiar/webcrypto');
     ponyfills.crypto = new cryptoPonyfill.Crypto();
+  }
+
+  if (!ponyfills.URLPattern) {
+    const urlPatternModule = require('urlpattern-polyfill');
+    ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
   // If any of classes of Fetch API is missing, we need to ponyfill them.
