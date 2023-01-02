@@ -1,6 +1,6 @@
 {
   "name": "@e2e/bun",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "scripts": {
     "start": "bun src/index.ts",
@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "bun-types": "^0.4.0",
-    "@e2e/shared-server": "0.0.5"
+    "@e2e/shared-server": "0.0.6"
   },
   "devDependencies": {
     "typescript": "4.9.4"

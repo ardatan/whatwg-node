@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.5.4
+
+### Patch Changes
+
+- [#245](https://github.com/ardatan/whatwg-node/pull/245) [`273a30e`](https://github.com/ardatan/whatwg-node/commit/273a30e67bafef2d4acdaac70445c3ced4606ad7) Thanks [@ardatan](https://github.com/ardatan)! - Listen for 'close' event to resolve instead of 'end' callback
+
 ## 0.5.3
 
 ### Patch Changes
