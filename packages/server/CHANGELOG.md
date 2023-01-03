@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.5.5
+
+### Patch Changes
+
+- [`b68dd96`](https://github.com/ardatan/whatwg-node/commit/b68dd964ee54340213371b236b687ab46c1987af) Thanks [@ardatan](https://github.com/ardatan)! - Align `waitUntil` signature with the original `FetchEvent.waitUntil`
+
 ## 0.5.4
 
 ### Patch Changes
