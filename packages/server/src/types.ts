@@ -2,7 +2,7 @@ import type { RequestListener } from 'node:http';
 import type { NodeRequest, NodeResponse } from './utils';
 
 export interface FetchEvent extends Event {
-  waitUntil(f: Promise<any>): void;
+  waitUntil(f: Promise<void> | void): void;
   request: Request;
   respondWith(r: Response | PromiseLike<Response>): void;
 }
@@ -69,5 +69,5 @@ export type ServerAdapterRequestHandler<TServerContext> = (
 export type DefaultServerAdapterContext = {
   req: NodeRequest;
   res: NodeResponse;
-  waitUntil(promise: Promise<unknown>): void;
+  waitUntil(promise: Promise<void> | void): void;
 };

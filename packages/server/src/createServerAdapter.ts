@@ -70,8 +70,10 @@ function createServerAdapter<
     const defaultServerContext = {
       req: nodeRequest,
       res: serverResponse,
-      waitUntil(p: Promise<unknown>) {
-        waitUntilPromises.push(p);
+      waitUntil(promise: Promise<void> | void) {
+        if (promise != null) {
+          waitUntilPromises.push(promise);
+        }
       },
     };
     const response = await handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
@@ -101,11 +103,13 @@ function createServerAdapter<
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
     const serverContext: TServerContext & object = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0] || {};
     if (!('waitUntil' in serverContext)) {
-      const waitUntilPromises: Promise<unknown>[] = [];
+      const waitUntilPromises: Promise<void>[] = [];
       const response$ = handleRequest(request, {
         ...serverContext,
-        waitUntil(p: Promise<unknown>) {
-          waitUntilPromises.push(p);
+        waitUntil(promise: Promise<void> | void) {
+          if (promise != null) {
+            waitUntilPromises.push(promise);
+          }
         },
       });
       if (waitUntilPromises.length > 0) {
