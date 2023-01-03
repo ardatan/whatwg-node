@@ -242,16 +242,14 @@ You can learn more about [File API](https://developer.mozilla.org/en-US/docs/Web
 
 ## Routing and Middlewares
 
-We'd recommend to use [itty-router](https://github.com/kwhitley/itty-router) to handle routing and middleware approach. So it is really easy to integrate your router to `@whatwg-node/server`.
+We'd recommend to use `@whatwg-node/router` to handle routing and middleware approach. It uses `@whatwg-node/server` under the hood.
 
 ### Basic Routing
 
 ```ts
-import { Router } from 'itty-router'
-import { createServerAdapter } from '@whatwg-node/server'
+import { createRouter, Router } from '@whatwg-node/router'
 
-// now let's create a router (note the lack of "new")
-const router = Router()
+const router = createRouter()
 // GET collection index
 router.get('/todos', () => new Response('Todos Index!'))
 // GET item
@@ -268,21 +266,18 @@ router.get('/google', () => Response.redirect('http://www.google.com'))
 // 404 for everything else
 router.all('*', () => new Response('Not Found.', { status: 404 }))
 
-// attach the router to our server adapter
-const myServerAdapter = createServerAdapter(router)
-
 // Then use it in any environment
 import { createServer } from 'http'
-const httpServer = createServer(myServer)
+const httpServer = createServer(router)
 httpServer.listen(4000)
 ```
 
 ### Middlewares to handle CORS, cookies and more
 
-There is another package called [itty-router-extras](https://www.npmjs.com/package/itty-router-extras) that provides some utilities for your platform agnostic server implementation. The following example shows how to get the cookies as an object from the request.
+This package also provides some utilities for your platform agnostic server implementation. The following example shows how to get the cookies as an object from the request.
 
 ```ts
-import { withCookies } from 'itty-router-extras'
+import { withCookies } from '@whatwg-node/server'
 
 router.get('/foo', withCookies, ({ cookies }) => {
   // cookies are parsed from the header into request.cookies
@@ -293,15 +288,12 @@ router.get('/foo', withCookies, ({ cookies }) => {
 You can also setup a CORS middleware to handle preflight CORS requests.
 
 ```ts
-import { withCors } from 'itty-router-extras'
+import { withCors } from '@whatwg-node/server'
 
-router.all(
-  '*',
-  withCors({
-    origin: 'http://localhost:4000',
-    methods: 'GET, POST, PATCH, DELETE',
-    headers: 'authorization, referer, origin, content-type',
-    credentials: false
-  })
-)
+const corsWithRouter = withCors(router, {
+  origin: 'http://localhost:4000',
+  methods: 'GET, POST, PATCH, DELETE',
+  headers: 'authorization, referer, origin, content-type',
+  credentials: false
+})
 ```
