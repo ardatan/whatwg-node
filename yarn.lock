@@ -2079,10 +2079,10 @@
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
-"@pulumi/cloudflare@4.14.0":
-  version "4.14.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-4.14.0.tgz#21edb523f29549dc45329f1358d628a531cd3cc2"
-  integrity sha512-NdU6tMzc8SNv/g3lyg9hjIT8cTIawUQnj7D135WK9+gYiJ6cKW34LSbzSPgU0+pC6qAvv3r4edRJDpBG7XbRbg==
+"@pulumi/cloudflare@4.15.0":
+  version "4.15.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-4.15.0.tgz#7c22e8a7563d638099a42e06207fdfa5b87f9d96"
+  integrity sha512-nbtZHG6VgmRsl22rkRNvu/cm8o3HL9oFMShYXCAOC8nDbdydP/rjJMmY4n8PStiEFuWkhZR6TxzepMqn/Oaa7g==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -7666,10 +7666,10 @@ word-wrap@^1.2.3:
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-wrangler@2.7.0:
-  version "2.7.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.7.0.tgz#95055a63f9d539a63b819d6377d46490814a10f8"
-  integrity sha512-/i1ctpQFhEI0gh5/VRaF1DEyulrzIq9lndrRspv//f95UShuf6vbt0qatSHgttBJsZ18W4u40xlWKom9S6KYwg==
+wrangler@2.7.1:
+  version "2.7.1"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.7.1.tgz#adb9d06c0dde3fc434e4a85a286c1da3f485cade"
+  integrity sha512-SKoe+UTOCX0J+RfEDE6MEdnNy1lDSnB1BfpAEblgvDHjmEunPFu0w6GxcyOYAl/fTl3/VjXZO3p+Ybm9zenzWg==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.1.1"
