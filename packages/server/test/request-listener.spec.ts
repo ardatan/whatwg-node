@@ -213,5 +213,14 @@ describe('Request Listener', () => {
         });
       });
     });
+
+    it('should have the abort signal on the request', async () => {
+      const handler = jest.fn((_request: Request) => new fetchAPI.Response());
+      const adapter = createServerAdapter(handler, fetchAPI.Request);
+
+      await adapter.fetch('http://localhost');
+
+      expect(handler.mock.lastCall?.[0].signal).toBeTruthy();
+    });
   });
 });
