@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.5.6
+
+### Patch Changes
+
+- Updated dependencies [[`802cb96`](https://github.com/ardatan/whatwg-node/commit/802cb9636eddd8e819b80604fc26d40aac92c828)]:
+  - @whatwg-node/fetch@0.6.2
+
 ## 0.5.5
 
 ### Patch Changes

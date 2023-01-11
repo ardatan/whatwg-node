@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.6.2
+
+### Patch Changes
+
+- [#258](https://github.com/ardatan/whatwg-node/pull/258) [`802cb96`](https://github.com/ardatan/whatwg-node/commit/802cb9636eddd8e819b80604fc26d40aac92c828) Thanks [@enisdenjo](https://github.com/enisdenjo)! - Node ponyfill requests must have an abort signal
+
 ## 0.6.1
 
 ### Patch Changes
