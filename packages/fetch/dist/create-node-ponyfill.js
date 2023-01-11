@@ -255,6 +255,13 @@ module.exports = function createNodePonyfill(opts = {}) {
             super(requestOrUrl);
           }
           this.formData = getFormDataMethod(formDataModule.File, opts.formDataLimits);
+          this.requestSignal = this.signal;
+          this.optionsSignal = options?.signal || (new ponyfills.AbortController()).signal;
+        }
+        get signal() {
+          // node-fetch does not have a Request.signal
+          // https://github.com/node-fetch/node-fetch/issues/1439
+          return this.requestSignal || this.optionsSignal
         }
       }
       ponyfills.Request = Request;
