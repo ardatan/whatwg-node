@@ -4,7 +4,7 @@ import { createServerAdapter } from '../src';
 describe('Request Container', () => {
   it('should receive correct request and container as a context', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const requestContainer = {
       request: new Request('http://localhost:8080'),
     };
@@ -18,7 +18,7 @@ describe('Request Container', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const requestContainer = {
       request: new Request('http://localhost:8080'),
       foo: 'bar',

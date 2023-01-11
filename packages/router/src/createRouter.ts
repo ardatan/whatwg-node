@@ -1,6 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-types */
-import { URL, URLPattern } from '@whatwg-node/fetch';
-import { createServerAdapter, ServerAdapterContext } from '@whatwg-node/server';
+import * as DefaultFetchAPI from '@whatwg-node/fetch';
+import {
+  createServerAdapter,
+  ServerAdapterContext,
+  ServerAdapterOptions,
+} from '@whatwg-node/server';
 import type {
   HTTPMethod,
   RouteMethodKey,
@@ -10,9 +13,8 @@ import type {
   RouterRequest,
 } from './types';
 
-interface RouterOptions {
+interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
   base?: string;
-  RequestCtor?: typeof Request;
 }
 
 const HTTP_METHODS = [
@@ -27,9 +29,14 @@ const HTTP_METHODS = [
   'PATCH',
 ] as HTTPMethod[];
 
-export function createRouterBase<TServerContext = {}>(
-  options?: RouterOptions,
-): RouterBaseObject<TServerContext> {
+export function createRouterBase<TServerContext = {}>({
+  fetchAPI: givenFetchAPI,
+  base: basePath = '/',
+}: RouterOptions<TServerContext> = {}): RouterBaseObject<TServerContext> {
+  const fetchAPI = {
+    ...givenFetchAPI,
+    ...DefaultFetchAPI,
+  };
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
   function addHandlersToMethod(
     method: HTTPMethod,
@@ -41,7 +48,6 @@ export function createRouterBase<TServerContext = {}>(
       methodPatternMaps = new Map();
       routesByMethod.set(method, methodPatternMaps);
     }
-    const basePath = options?.base || '/';
     let fullPath = '';
     if (basePath === '/') {
       fullPath = path;
@@ -50,7 +56,7 @@ export function createRouterBase<TServerContext = {}>(
     } else {
       fullPath = `${basePath}${path}`;
     }
-    const pattern = new URLPattern({ pathname: fullPath });
+    const pattern = new fetchAPI.URLPattern({ pathname: fullPath });
     methodPatternMaps.set(pattern, handlers);
   }
   async function handleRequest(request: Request, context: ServerAdapterContext<TServerContext>) {
@@ -58,7 +64,7 @@ export function createRouterBase<TServerContext = {}>(
     let _parsedUrl: URL;
     function getParsedUrl() {
       if (!_parsedUrl) {
-        _parsedUrl = new URL(request.url);
+        _parsedUrl = new fetchAPI.URL(request.url);
       }
       return _parsedUrl;
     }
@@ -82,7 +88,7 @@ export function createRouterBase<TServerContext = {}>(
         const match = pattern.exec(request.url);
         if (match) {
           const routerRequest = new Proxy(request, {
-            get(target, prop) {
+            get(target, prop: keyof RouterRequest) {
               if (prop === 'parsedUrl') {
                 return getParsedUrl();
               }
@@ -146,7 +152,9 @@ export function createRouterBase<TServerContext = {}>(
   });
 }
 
-export function createRouter<TServerContext = {}>(options?: RouterOptions): Router<TServerContext> {
-  const routerBaseObject = createRouterBase<TServerContext>(options);
-  return createServerAdapter(routerBaseObject, options?.RequestCtor);
+export function createRouter<TServerContext = {}>(
+  options?: RouterOptions<TServerContext>,
+): Router<TServerContext> {
+  const routerBaseObject = createRouterBase(options);
+  return createServerAdapter(routerBaseObject, options);
 }

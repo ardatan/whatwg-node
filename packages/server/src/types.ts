@@ -18,17 +18,11 @@ export interface ServerAdapterBaseObject<
   handle: THandleRequest;
 }
 
-export interface ServerAdapterObject<
-  TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<
-    TServerContext,
-    ServerAdapterRequestHandler<TServerContext>
-  >,
-> extends EventListenerObject {
+export interface ServerAdapterObject<TServerContext> extends EventListenerObject {
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
    */
-  handleRequest: TBaseObject['handle'];
+  handleRequest: (request: Request, ctx: TServerContext) => Promise<Response>;
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
@@ -75,8 +69,8 @@ export type ServerAdapter<
   TServerContext,
   TBaseObject extends ServerAdapterBaseObject<TServerContext>,
 > = TBaseObject &
-  ServerAdapterObject<TServerContext, TBaseObject>['handle'] &
-  ServerAdapterObject<TServerContext, TBaseObject>;
+  ServerAdapterObject<TServerContext>['handle'] &
+  ServerAdapterObject<TServerContext>;
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
@@ -91,3 +85,4 @@ export type ServerAdapterNodeContext = {
 export type WaitUntilFn = (promise: Promise<void> | void) => void;
 
 export type ServerAdapterContext<TServerContext> = TServerContext & { waitUntil: WaitUntilFn };
+export type FetchAPI = ReturnType<typeof import('@whatwg-node/fetch').createFetch>;

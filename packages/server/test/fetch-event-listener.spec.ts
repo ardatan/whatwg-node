@@ -3,10 +3,10 @@ import { Request, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src';
 
 describe('FetchEvent listener', () => {
-  it('should not return a promise to event listener', () => {
+  it('should not return a promise to event listener', async () => {
     const response = new Response();
     const response$ = Promise.resolve(response);
-    const adapter = createServerAdapter(() => response$, Request);
+    const adapter = createServerAdapter(() => response$);
     const respondWith = jest.fn();
     const waitUntil = jest.fn();
     const fetchEvent = Object.assign(new CustomEvent('fetch'), {
@@ -16,11 +16,12 @@ describe('FetchEvent listener', () => {
     });
     const returnValue = adapter(fetchEvent);
     expect(returnValue).toBeUndefined();
-    expect(respondWith).toHaveBeenCalledWith(response$);
+    const returnedResponse = await respondWith.mock.calls[0][0];
+    expect(returnedResponse).toBe(response);
   });
   it('should expose FetchEvent as server context', () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const respondWith = jest.fn();
     const waitUntil = jest.fn();
     const fetchEvent = Object.assign(new CustomEvent('fetch'), {
@@ -35,7 +36,7 @@ describe('FetchEvent listener', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const respondWith = jest.fn();
     const waitUntil = jest.fn();
     const fetchEvent = Object.assign(new CustomEvent('fetch'), {

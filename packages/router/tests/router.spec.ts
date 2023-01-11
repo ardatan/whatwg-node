@@ -1,4 +1,4 @@
-import { Response, withErrorHandling } from '@whatwg-node/server';
+import { Response } from '@whatwg-node/server';
 import { createRouter } from '../src/createRouter';
 
 describe('Router', () => {
