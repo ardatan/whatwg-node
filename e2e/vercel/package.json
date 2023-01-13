@@ -11,7 +11,7 @@
     "e2e": "ts-node -r tsconfig-paths/register scripts/e2e.ts"
   },
   "dependencies": {
-    "next": "13.1.1",
+    "next": "13.1.2",
     "@e2e/shared-scripts": "0.0.0",
     "@e2e/shared-server": "0.0.8",
     "encoding": "0.1.13",
@@ -23,7 +23,7 @@
     "esbuild": "0.16.17",
     "@types/react": "18.0.26",
     "eslint": "8.31.0",
-    "eslint-config-next": "13.1.1",
+    "eslint-config-next": "13.1.2",
     "typescript": "4.9.4",
     "ts-node": "10.9.1",
     "tsconfig-paths": "4.1.2"
