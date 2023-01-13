@@ -46,7 +46,10 @@ module.exports = function createNodePonyfill(opts = {}) {
 
   if (!ponyfills.ReadableStream) {
     try {
+      const { emitWarning } = process;
+      process.emitWarning = () => {};
       const streamsWeb = require("stream/web");
+      process.emitWarning = emitWarning;
 
       ponyfills.ReadableStream = streamsWeb.ReadableStream;
       ponyfills.WritableStream = streamsWeb.WritableStream;
