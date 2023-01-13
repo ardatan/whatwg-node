@@ -2072,10 +2072,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@1.91.0":
-  version "1.91.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.91.0.tgz#069bd7c3134e6230c843cfe68a95e65755342c9f"
-  integrity sha512-ym8tIA503aacZFGMo/h5NfvEIuAl1Ye1NkpxeiZTX/LtDHXOIB+83RMTUfGSdT7ejQds4Me2Vx5wFd5kChqkPA==
+"@pulumi/azure-native@1.92.0":
+  version "1.92.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.92.0.tgz#4735b28a93ba74047e07f5ae66c0715e1be731fc"
+  integrity sha512-SVckZIKzVxhsendDtHtmwQGEmJDO6a46cmiOKlGidNhBFBKVpPpmNbjC6MiBVQIMPgn5WZtpviet70DyuTInEQ==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -7226,10 +7226,10 @@ ts-interface-checker@^0.1.9:
   resolved "https://registry.yarnpkg.com/ts-interface-checker/-/ts-interface-checker-0.1.13.tgz#784fd3d679722bc103b1b4b8030bcddb5db2a699"
   integrity sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==
 
-ts-jest@29.0.4:
-  version "29.0.4"
-  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-29.0.4.tgz#9bc1fd0ec4d863f001af6c5c630e3a807df90f6d"
-  integrity sha512-YdNofkoyzeinwjIqLSYQeAM+GTmFQ7xFNtWcR5OyitY5VLzzNINrNmfhP5H3daA/V+RGQR7O3g1K6ysRgu5xIQ==
+ts-jest@29.0.5:
+  version "29.0.5"
+  resolved "https://registry.yarnpkg.com/ts-jest/-/ts-jest-29.0.5.tgz#c5557dcec8fe434fcb8b70c3e21c6b143bfce066"
+  integrity sha512-PL3UciSgIpQ7f6XjVOmbi96vmDHUqAyqDr8YxzopDqX3kfgYtX1cuNeBjP+L9sFXi6nzsGGA6R3fP3DDDJyrxA==
   dependencies:
     bs-logger "0.x"
     fast-json-stable-stringify "2.x"
