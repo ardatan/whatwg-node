@@ -148,5 +148,24 @@ describe('adapter.fetch', () => {
         expect.objectContaining(additionalCtx)
       );
     });
+    it('should copy non-enumerable parameters as server context and keep their descriptors', async () => {
+      const handleRequest = jest.fn();
+      const adapter = createServerAdapter<any>(handleRequest, Request);
+      const request = new Request('http://localhost:8080/');
+      const env = { VAR: 'abc' };
+      const additionalCtx = {};
+      const waitUntil = () => {};
+      // in Cloudflare Workers, waitUntil is a non-enumerable property
+      Object.defineProperty(additionalCtx, 'waitUntil', { enumerable: false, value: waitUntil });
+      adapter.fetch(request, env, additionalCtx);
+      expect(handleRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ url: request.url }),
+        expect.objectContaining(additionalCtx)
+      );
+      const passedServerCtx = handleRequest.mock.calls[0][1];
+      expect(passedServerCtx.waitUntil).toBe(waitUntil);
+      // test that enumerable stays false
+      expect(Object.getOwnPropertyDescriptor(passedServerCtx, 'waitUntil')?.enumerable).toBe(false);
+    });
   });
 });

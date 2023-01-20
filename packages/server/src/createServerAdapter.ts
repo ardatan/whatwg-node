@@ -56,7 +56,7 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0];
+    const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0];
     const request = normalizeNodeRequest(nodeRequest, RequestCtor);
     return handleRequest(request, serverContext);
   }
@@ -101,7 +101,7 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext: TServerContext & object = ctx.length > 1 ? Object.assign({}, ...ctx) : ctx[0] || {};
+    const serverContext: TServerContext & object = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
     if (!('waitUntil' in serverContext)) {
       const waitUntilPromises: Promise<void>[] = [];
       const response$ = handleRequest(request, {
@@ -216,3 +216,26 @@ function createServerAdapter<
 }
 
 export { createServerAdapter };
+
+// from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
+function completeAssign(target: any, ...sources: any[]) {
+  sources.forEach(source => {
+    // modified Object.keys to Object.getOwnPropertyNames
+    // because Object.keys only returns enumerable properties
+    const descriptors = Object.getOwnPropertyNames(source).reduce((descriptors, key) => {
+      descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      return descriptors;
+    }, {});
+
+    // By default, Object.assign copies enumerable Symbols, too
+    Object.getOwnPropertySymbols(source).forEach(sym => {
+      const descriptor = Object.getOwnPropertyDescriptor(source, sym);
+      if (descriptor!.enumerable) {
+        descriptors[sym] = descriptor;
+      }
+    });
+
+    Object.defineProperties(target, descriptors);
+  });
+  return target;
+}
