@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.5.7
+
+### Patch Changes
+
+- [#280](https://github.com/ardatan/whatwg-node/pull/280) [`5ee9169`](https://github.com/ardatan/whatwg-node/commit/5ee91691b100397af75c4471e61ca41e47551af9) Thanks [@hansottowirtz](https://github.com/hansottowirtz)! - Copy non-enumerable properties to server context e.g. CF Workers' env and context
+
 ## 0.5.6
 
 ### Patch Changes
