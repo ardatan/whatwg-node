@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.5.8
+
+### Patch Changes
+
+- [`a8e7184`](https://github.com/ardatan/whatwg-node/commit/a8e7184f7e3f1837a94eee3f01ca2c5a06facc80) Thanks [@ardatan](https://github.com/ardatan)! - Handle falsy and non-object additional parameters while building the server context correctly
+
 ## 0.5.7
 
 ### Patch Changes
