@@ -1,5 +1,11 @@
 # @whatwg-node/router
 
+## 0.1.7
+
+### Patch Changes
+
+- [`53ca0b9`](https://github.com/ardatan/whatwg-node/commit/53ca0b98ad05b3d047ecb328c6ca1fe1f32d62db) Thanks [@ardatan](https://github.com/ardatan)! - Decode URL parameters
+
 ## 0.1.6
 
 ### Patch Changes
