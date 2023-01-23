@@ -167,5 +167,15 @@ describe('adapter.fetch', () => {
       // test that enumerable stays false
       expect(Object.getOwnPropertyDescriptor(passedServerCtx, 'waitUntil')?.enumerable).toBe(false);
     });
+    it('should ignore falsy and non object values', () => {
+      const handleRequest = jest.fn();
+      const adapter = createServerAdapter(handleRequest, Request) as any;
+      const request = new Request('http://localhost:8080/');
+      adapter.fetch(request, null, undefined, 0, false, 'abc', { foo: 'bar' });
+      expect(handleRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ url: request.url }),
+        expect.objectContaining({ foo: 'bar' })
+      );
+    });
   });
 });

@@ -220,22 +220,24 @@ export { createServerAdapter };
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
 function completeAssign(target: any, ...sources: any[]) {
   sources.forEach(source => {
-    // modified Object.keys to Object.getOwnPropertyNames
-    // because Object.keys only returns enumerable properties
-    const descriptors = Object.getOwnPropertyNames(source).reduce((descriptors, key) => {
-      descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
-      return descriptors;
-    }, {});
+    if (source != null && typeof source === 'object') {
+      // modified Object.keys to Object.getOwnPropertyNames
+      // because Object.keys only returns enumerable properties
+      const descriptors = Object.getOwnPropertyNames(source).reduce((descriptors, key) => {
+        descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+        return descriptors;
+      }, {});
 
-    // By default, Object.assign copies enumerable Symbols, too
-    Object.getOwnPropertySymbols(source).forEach(sym => {
-      const descriptor = Object.getOwnPropertyDescriptor(source, sym);
-      if (descriptor!.enumerable) {
-        descriptors[sym] = descriptor;
-      }
-    });
+      // By default, Object.assign copies enumerable Symbols, too
+      Object.getOwnPropertySymbols(source).forEach(sym => {
+        const descriptor = Object.getOwnPropertyDescriptor(source, sym);
+        if (descriptor!.enumerable) {
+          descriptors[sym] = descriptor;
+        }
+      });
 
-    Object.defineProperties(target, descriptors);
+      Object.defineProperties(target, descriptors);
+    }
   });
   return target;
 }
