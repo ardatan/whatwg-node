@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/router",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Fetch API compliant HTTP Router",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
