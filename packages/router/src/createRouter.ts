@@ -66,7 +66,15 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
                 return getParsedUrl();
               }
               if (prop === 'params') {
-                return match.pathname.groups;
+                return new Proxy(match.pathname.groups, {
+                  get(_, prop) {
+                    const value = match.pathname.groups[prop.toString()];
+                    if (value != null) {
+                      return decodeURIComponent(value);
+                    }
+                    return value;
+                  },
+                });
               }
               if (prop === 'query') {
                 return queryProxy;

@@ -32,6 +32,21 @@ describe('Router', () => {
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
+  it('should decode parameters in the path', async () => {
+    const router = createRouter();
+    router.get(
+      '/greetings/:name',
+      request =>
+        new Response(
+          JSON.stringify({
+            message: `Hello ${request.params.name}!`,
+          })
+        )
+    );
+    const response = await router.fetch('http://localhost/greetings/John%20Doe');
+    const json = await response.json();
+    expect(json.message).toBe('Hello John Doe!');
+  });
   it('should process query parameters', async () => {
     const router = createRouter();
     router.get(
