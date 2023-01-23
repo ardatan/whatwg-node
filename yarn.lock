@@ -2051,10 +2051,10 @@
     tiny-glob "^0.2.9"
     tslib "^2.4.0"
 
-"@pulumi/aws@5.27.0":
-  version "5.27.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.27.0.tgz#7156f8ab4dfd281bd289ee1675723a52691a85ca"
-  integrity sha512-KKvt1myF5Za3+c89vNxCrnRaqMxulaoniT0NHVqWwIeHsJf/wVZuT5u9/ARfaSFb5/6s/0fRZs8hdk0DRsBw3A==
+"@pulumi/aws@5.28.0":
+  version "5.28.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.28.0.tgz#40dae1799502f718208c27b1fa3a61e0ebe0761f"
+  integrity sha512-FdOAmuXJA4kfmM17SwoT9LmIduIEtrtdP1oGhOA5Z5/4JeWHaJtaNBObWYnh3OvkUxDkIY8AsyVLpoTrhPKiKw==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     aws-sdk "^2.0.0"
@@ -7672,10 +7672,10 @@ word-wrap@^1.2.3:
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-wrangler@2.8.0:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.8.0.tgz#1488fbb5337ca6cd86f02eaa78011a83ae1742f9"
-  integrity sha512-CAhjoeTnVFB65HPmOSquXbQ37lc2X77iOirX4tRMuRNKQng2NztHOfo++6BZdlV29E4IPD9boTRXck3R+O8mrg==
+wrangler@2.8.1:
+  version "2.8.1"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.8.1.tgz#0178011c1c950536beb5901bfde0828760a2e5ef"
+  integrity sha512-O4wUr6/FUpk9KVstOUVYbiiZcWc1jKo7q0FfdwEjnMB3oN7Ofs6cIiX++Lzj1ldFSCOw2/aW3UYgixch6B2WCA==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.1.1"
