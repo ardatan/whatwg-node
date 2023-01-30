@@ -1,5 +1,12 @@
 # @whatwg-node/fetch
 
+## 0.6.4
+
+### Patch Changes
+
+- [`2ce7122`](https://github.com/ardatan/whatwg-node/commit/2ce71227f0cc86644998cad70405048d79c1b104)
+  Thanks [@ardatan](https://github.com/ardatan)! - Bun doesn't have URLPattern
+
 ## 0.6.3
 
 ### Patch Changes
