@@ -1,10 +1,15 @@
-import { Stack } from '@pulumi/pulumi/automation';
-import { DeploymentConfiguration, env, execPromise, assertDeployedEndpoint } from '@e2e/shared-scripts';
-import * as pulumi from '@pulumi/pulumi';
-import * as aws from '@pulumi/aws';
-import * as awsx from '@pulumi/awsx';
-import { version } from '@pulumi/aws/package.json';
 import { join } from 'path';
+import {
+  assertDeployedEndpoint,
+  DeploymentConfiguration,
+  env,
+  execPromise,
+} from '@e2e/shared-scripts';
+import * as aws from '@pulumi/aws';
+import { version } from '@pulumi/aws/package.json';
+import * as awsx from '@pulumi/awsx';
+import * as pulumi from '@pulumi/pulumi';
+import { Stack } from '@pulumi/pulumi/automation';
 
 export function createAwsLambdaDeployment(): DeploymentConfiguration<{
   functionUrl: string;
@@ -70,7 +75,7 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
             'index.js': new pulumi.asset.FileAsset(join(__dirname, '../dist/index.js')),
           }),
         },
-        { dependsOn: lambdaRolePolicy }
+        { dependsOn: lambdaRolePolicy },
       );
 
       const lambdaGw = new awsx.apigateway.API('api', {

@@ -10,7 +10,11 @@ export async function getCommitId() {
   return (process.env.COMMIT_ID || stdout).toString().trim();
 }
 
-export async function waitForEndpoint(endpoint: string, retries: number, timeout = 10000): Promise<boolean> {
+export async function waitForEndpoint(
+  endpoint: string,
+  retries: number,
+  timeout = 10000,
+): Promise<boolean> {
   let lastResponseText: string | undefined;
   for (let attempt = 1; attempt <= retries; attempt++) {
     console.info(`\tℹ️ Trying to connect to ${endpoint} (attempt ${attempt}/${retries})...`);
@@ -39,14 +43,17 @@ export async function waitForEndpoint(endpoint: string, retries: number, timeout
       console.log(`\t✅ Endpoint is ready!`);
       return true;
     } catch (e: any) {
-      console.warn(`ℹ️ Failed to connect to endpoint: ${endpoint}, waiting ${timeout}ms...`, e.message);
+      console.warn(
+        `ℹ️ Failed to connect to endpoint: ${endpoint}, waiting ${timeout}ms...`,
+        e.message,
+      );
 
       await new Promise(resolve => setTimeout(resolve, timeout));
     }
   }
 
   throw new Error(
-    `⚠️ Failed to connect to endpoint: ${endpoint} (attempts: ${retries}) and last response was: ${lastResponseText}`
+    `⚠️ Failed to connect to endpoint: ${endpoint} (attempts: ${retries}) and last response was: ${lastResponseText}`,
   );
 }
 
@@ -97,7 +104,9 @@ export async function assertGreetings(endpoint: string) {
 
   const contentType = response.headers.get('Content-Type');
   if (contentType == null || !contentType.startsWith('application/json')) {
-    throw new Error(`⚠️ Expected 'application/json', but received ${contentType} for ${response.url}`);
+    throw new Error(
+      `⚠️ Expected 'application/json', but received ${contentType} for ${response.url}`,
+    );
   }
 
   let json: any;
@@ -131,7 +140,9 @@ export async function assertBye(endpoint: string) {
 
   const contentType = response.headers.get('Content-Type');
   if (contentType == null || !contentType.startsWith('application/json')) {
-    throw new Error(`⚠️ Expected 'application/json', but received ${contentType} for ${response.url}`);
+    throw new Error(
+      `⚠️ Expected 'application/json', but received ${contentType} for ${response.url}`,
+    );
   }
 
   let json: any;
@@ -150,7 +161,11 @@ export async function assertBye(endpoint: string) {
 
 export async function assertDeployedEndpoint(url: string) {
   await waitForEndpoint(url, 5, 10000);
-  const results = await Promise.allSettled([assertIndex(url), assertGreetings(url), assertBye(url)]);
+  const results = await Promise.allSettled([
+    assertIndex(url),
+    assertGreetings(url),
+    assertBye(url),
+  ]);
   let failed = false;
   results.forEach(result => {
     if (result.status === 'rejected') {

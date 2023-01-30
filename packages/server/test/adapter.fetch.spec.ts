@@ -31,7 +31,7 @@ describe('adapter.fetch', () => {
         expect.objectContaining({
           url: url.toString(),
         }),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should accept URL without a RequestInit but with an additional context', async () => {
@@ -46,7 +46,7 @@ describe('adapter.fetch', () => {
         expect.objectContaining({
           url: url.toString(),
         }),
-        expect.objectContaining(additionalCtx)
+        expect.objectContaining(additionalCtx),
       );
     });
     it('should accept URL with a RequestInit', async () => {
@@ -62,7 +62,7 @@ describe('adapter.fetch', () => {
           url: url.toString(),
           method: init.method,
         }),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should accept URL with a RequestInit and additional parameters as server context', async () => {
@@ -81,7 +81,7 @@ describe('adapter.fetch', () => {
           url: url.toString(),
           method: init.method,
         }),
-        expect.objectContaining(additionalCtx)
+        expect.objectContaining(additionalCtx),
       );
     });
 
@@ -95,7 +95,7 @@ describe('adapter.fetch', () => {
         expect.objectContaining({
           url,
         }),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should accept string without a RequestInit but with an additional context', async () => {
@@ -110,7 +110,7 @@ describe('adapter.fetch', () => {
         expect.objectContaining({
           url,
         }),
-        expect.objectContaining(additionalCtx)
+        expect.objectContaining(additionalCtx),
       );
     });
     it('should accept string with a RequestInit', async () => {
@@ -126,7 +126,7 @@ describe('adapter.fetch', () => {
           url,
           method: init.method,
         }),
-        expect.anything()
+        expect.anything(),
       );
     });
     it('should accept string with a RequestInit and additional parameters as server context', async () => {
@@ -145,7 +145,7 @@ describe('adapter.fetch', () => {
           url,
           method: init.method,
         }),
-        expect.objectContaining(additionalCtx)
+        expect.objectContaining(additionalCtx),
       );
     });
     it('should copy non-enumerable parameters as server context and keep their descriptors', async () => {
@@ -160,7 +160,7 @@ describe('adapter.fetch', () => {
       adapter.fetch(request, env, additionalCtx);
       expect(handleRequest).toHaveBeenCalledWith(
         expect.objectContaining({ url: request.url }),
-        expect.objectContaining(additionalCtx)
+        expect.objectContaining(additionalCtx),
       );
       const passedServerCtx = handleRequest.mock.calls[0][1];
       expect(passedServerCtx.waitUntil).toBe(waitUntil);
@@ -174,7 +174,7 @@ describe('adapter.fetch', () => {
       adapter.fetch(request, null, undefined, 0, false, 'abc', { foo: 'bar' });
       expect(handleRequest).toHaveBeenCalledWith(
         expect.objectContaining({ url: request.url }),
-        expect.objectContaining({ foo: 'bar' })
+        expect.objectContaining({ foo: 'bar' }),
       );
     });
   });

@@ -2,14 +2,13 @@
   "name": "fetchache",
   "version": "0.1.4",
   "description": "Cross Platform Fetch Wrapper with Key Value Cache support",
-  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
     "directory": "packages/fetchache"
   },
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
-  "sideEffects": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "exports": {
@@ -23,12 +22,6 @@
     }
   },
   "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
-  },
-  "buildOptions": {
-    "input": "./src/index.ts"
-  },
   "dependencies": {
     "http-cache-semantics": "^4.1.0",
     "tslib": "^2.3.1"
@@ -39,5 +32,12 @@
   "publishConfig": {
     "access": "public",
     "directory": "dist"
+  },
+  "sideEffects": false,
+  "buildOptions": {
+    "input": "./src/index.ts"
+  },
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }

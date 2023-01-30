@@ -16,7 +16,9 @@ describe('getFormDataMethod', () => {
     });
     it('should parse and receive text files correctly', async () => {
       const formData = new fetchAPI.FormData();
-      const greetingsFile = new fetchAPI.File(['Hello world!'], 'greetings.txt', { type: 'text/plain' });
+      const greetingsFile = new fetchAPI.File(['Hello world!'], 'greetings.txt', {
+        type: 'text/plain',
+      });
       const byeFile = new fetchAPI.File(['Goodbye world!'], 'bye.txt', { type: 'text/plain' });
       formData.append('greetings', greetingsFile);
       formData.append('bye', byeFile);

@@ -1,13 +1,13 @@
-import * as pulumi from '@pulumi/pulumi';
+import { join } from 'path';
 import {
+  assertIndex,
+  DeploymentConfiguration,
   env,
   execPromise,
   fsPromises,
-  DeploymentConfiguration,
-  assertIndex,
   waitForEndpoint,
 } from '@e2e/shared-scripts';
-import { join } from 'path';
+import * as pulumi from '@pulumi/pulumi';
 
 type VercelProviderInputs = {
   name: string;
@@ -45,39 +45,49 @@ class VercelProvider implements pulumi.dynamic.ResourceProvider {
 
   async delete(id: string) {
     const teamId = this.getTeamId();
-    const response = await fetch(`${this.baseUrl}/v13/deployments/${id}${teamId ? `?teamId=${teamId}` : ''}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${this.authToken}`,
+    const response = await fetch(
+      `${this.baseUrl}/v13/deployments/${id}${teamId ? `?teamId=${teamId}` : ''}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${this.authToken}`,
+        },
       },
-    });
+    );
 
     if (response.status !== 200) {
       throw new Error(
-        `Failed to delete Vercel deployment: invalid status code (${response.status}), body: ${await response.text()}`
+        `Failed to delete Vercel deployment: invalid status code (${
+          response.status
+        }), body: ${await response.text()}`,
       );
     }
   }
 
   async create(inputs: VercelProviderInputs): Promise<pulumi.dynamic.CreateResult> {
     const teamId = this.getTeamId();
-    const response = await fetch(`${this.baseUrl}/v13/deployments${teamId ? `?teamId=${teamId}` : ''}`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        Authorization: `Bearer ${this.authToken}`,
+    const response = await fetch(
+      `${this.baseUrl}/v13/deployments${teamId ? `?teamId=${teamId}` : ''}`,
+      {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          Authorization: `Bearer ${this.authToken}`,
+        },
+        body: JSON.stringify({
+          name: inputs.name,
+          files: inputs.files,
+          functions: inputs.functions,
+          projectSettings: inputs.projectSettings,
+        }),
       },
-      body: JSON.stringify({
-        name: inputs.name,
-        files: inputs.files,
-        functions: inputs.functions,
-        projectSettings: inputs.projectSettings,
-      }),
-    });
+    );
 
     if (response.status !== 200) {
       throw new Error(
-        `Failed to create Vercel deployment: invalid status code (${response.status}), body: ${await response.text()}`
+        `Failed to create Vercel deployment: invalid status code (${
+          response.status
+        }), body: ${await response.text()}`,
       );
     }
 
@@ -103,7 +113,7 @@ export class VercelDeployment extends pulumi.dynamic.Resource {
         url: undefined,
         ...props,
       },
-      opts
+      opts,
     );
   }
 }
@@ -125,7 +135,10 @@ export function createVercelDeployment(): DeploymentConfiguration<{
         files: [
           {
             file: '/api/whatwgnode.js',
-            data: await fsPromises.readFile(join(__dirname, '..', 'pages', 'api', 'whatwgnode.js'), 'utf-8'),
+            data: await fsPromises.readFile(
+              join(__dirname, '..', 'pages', 'api', 'whatwgnode.js'),
+              'utf-8',
+            ),
           },
         ],
         name: `whatwg-node-e2e-testing`,

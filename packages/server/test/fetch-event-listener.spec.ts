@@ -46,7 +46,10 @@ describe('FetchEvent listener', () => {
       });
       const additionalCtx = { foo: 'bar' };
       adapter(fetchEvent, additionalCtx);
-      expect(handleRequest).toHaveBeenCalledWith(fetchEvent.request, expect.objectContaining(additionalCtx));
+      expect(handleRequest).toHaveBeenCalledWith(
+        fetchEvent.request,
+        expect.objectContaining(additionalCtx),
+      );
     });
   });
 });

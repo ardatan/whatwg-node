@@ -1,15 +1,20 @@
-import { Stack } from '@pulumi/pulumi/automation';
-import { DeploymentConfiguration, assertDeployedEndpoint, env, execPromise } from '@e2e/shared-scripts';
-import * as pulumi from '@pulumi/pulumi';
+import { join } from 'path';
+import {
+  assertDeployedEndpoint,
+  DeploymentConfiguration,
+  env,
+  execPromise,
+} from '@e2e/shared-scripts';
+import { version } from '@pulumi/azure-native/package.json';
 import * as resources from '@pulumi/azure-native/resources';
 import * as storage from '@pulumi/azure-native/storage';
 import * as web from '@pulumi/azure-native/web';
-import { version } from '@pulumi/azure-native/package.json';
-import { join } from 'path';
+import * as pulumi from '@pulumi/pulumi';
+import { Stack } from '@pulumi/pulumi/automation';
 
 export function getConnectionString(
   resourceGroupName: pulumi.Input<string>,
-  accountName: pulumi.Input<string>
+  accountName: pulumi.Input<string>,
 ): pulumi.Output<string> {
   // Retrieve the primary storage account key.
   const storageAccountKeys = storage.listStorageAccountKeysOutput({
@@ -26,7 +31,7 @@ export function signedBlobReadUrl(
   blob: storage.Blob,
   container: storage.BlobContainer,
   account: storage.StorageAccount,
-  resourceGroup: resources.ResourceGroup
+  resourceGroup: resources.ResourceGroup,
 ): pulumi.Output<string> {
   const blobSAS = storage.listStorageAccountServiceSASOutput({
     accountName: account.name,
@@ -101,7 +106,7 @@ export function createAzureFunctionDeployment(): DeploymentConfiguration<{
         },
         {
           deleteBeforeReplace: true,
-        }
+        },
       );
 
       const codeBlob = new storage.Blob(
@@ -114,7 +119,7 @@ export function createAzureFunctionDeployment(): DeploymentConfiguration<{
         },
         {
           deleteBeforeReplace: true,
-        }
+        },
       );
 
       const plan = new web.AppServicePlan(
@@ -130,7 +135,7 @@ export function createAzureFunctionDeployment(): DeploymentConfiguration<{
         },
         {
           deleteBeforeReplace: true,
-        }
+        },
       );
 
       const storageConnectionString = getConnectionString(resourceGroup.name, storageAccount.name);
@@ -156,7 +161,7 @@ export function createAzureFunctionDeployment(): DeploymentConfiguration<{
         },
         {
           deleteBeforeReplace: true,
-        }
+        },
       );
 
       return {

@@ -52,7 +52,10 @@ export async function runTests(testPlan: DeploymentConfiguration) {
     }
 
     const upRes = await stack.up({ onOutput: console.log });
-    console.log(`✅ Pulumi program execution done, infrastructure is now provisioned. Pulumi outputs:`, upRes.outputs);
+    console.log(
+      `✅ Pulumi program execution done, infrastructure is now provisioned. Pulumi outputs:`,
+      upRes.outputs,
+    );
     console.info(`🚀 Running "${testPlaneName}" tests...`);
     await testPlan.test(upRes.outputs);
     console.info('✅ Tests execution is done!');

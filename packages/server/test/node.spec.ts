@@ -1,14 +1,14 @@
-import { createServerAdapter } from '@whatwg-node/server';
 import { IncomingMessage, ServerResponse } from 'http';
-import { createTestServer, TestServer } from './test-server';
-import { createTestContainer } from './create-test-container';
 import {
-  createSecureServer as createHttp2SecureServer,
   connect as connectHttp2,
   constants as constantsHttp2,
+  createSecureServer as createHttp2SecureServer,
 } from 'http2';
 import { AddressInfo } from 'net';
 import { createFetch } from '@whatwg-node/fetch';
+import { createServerAdapter } from '@whatwg-node/server';
+import { createTestContainer } from './create-test-container';
+import { createTestServer, TestServer } from './test-server';
 
 describe('Node Specific Cases', () => {
   let testServer: TestServer;
@@ -37,7 +37,7 @@ describe('Node Specific Cases', () => {
         waitUntil(
           sleep(100).then(() => {
             flag = true;
-          })
+          }),
         );
         return new Response(null, {
           status: 204,
@@ -67,7 +67,10 @@ describe('Node Specific Cases', () => {
       testServer.server.once('request', (...args) => serverAdapter(...args, additionalCtx));
       const response = await fetch(testServer.url);
       await response.text();
-      expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
+      expect(handleRequest).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining(additionalCtx),
+      );
     });
 
     it('should handle cancellation of incremental responses', async () => {
@@ -81,9 +84,9 @@ describe('Node Specific Cases', () => {
                 controller.enqueue(Date.now().toString());
               },
               cancel: cancelFn,
-            })
+            }),
           ),
-        Request
+        Request,
       );
 
       testServer.server.once('request', serverAdapter);
@@ -115,16 +118,21 @@ describe('Node Specific Cases', () => {
       fetchImpl: 'node-fetch',
       fetchAPI: createFetch({ useNodeFetch: true }),
     },
-  ])('should support http2 and respond as expected when using $fetchImpl implementation', async ({ fetchAPI }) => {
-    const adapter = createServerAdapter(req => {
-      expect(req.method).toBe('POST');
-      // TODO: only passes if create-node-ponyfill.js is used
-      // expect(req.headers.get('host')).toMatch(/^localhost:\d+$/);
-      // expect(req.url).toMatch(/^https:\/\/localhost:\d+\/hi$/);
-      return new fetchAPI.Response('Hey there!', { status: 418, headers: { 'x-is-this-http2': 'yes' } });
-    }, fetchAPI.Request);
+  ])(
+    'should support http2 and respond as expected when using $fetchImpl implementation',
+    async ({ fetchAPI }) => {
+      const adapter = createServerAdapter(req => {
+        expect(req.method).toBe('POST');
+        // TODO: only passes if create-node-ponyfill.js is used
+        // expect(req.headers.get('host')).toMatch(/^localhost:\d+$/);
+        // expect(req.url).toMatch(/^https:\/\/localhost:\d+\/hi$/);
+        return new fetchAPI.Response('Hey there!', {
+          status: 418,
+          headers: { 'x-is-this-http2': 'yes' },
+        });
+      }, fetchAPI.Request);
 
-    const key = `-----BEGIN PRIVATE KEY-----
+      const key = `-----BEGIN PRIVATE KEY-----
 MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDL2k3sKtqBQ9lw
 ouLuCewSuTCazFjSdzJKLWmm9d9OLRi9SVPaIaes0ItExHFXwVNSXGUlabTSXxVP
 x9cJXDtloBnlN+YKK5f8vcpP7a9hquYDKMhM27kP6e8CIugDfXP4rz52o6Jn2ZEz
@@ -152,7 +160,7 @@ mDYzpcI51XzlyJPQQKjHjck5H4WDV80EIX22krvFMh44IOyqZu3Ou+iSPCR1hi1z
 Mp0YOF+YKJ9PCrJu4W/xt1pnxfXe9bTg5HKtN6DmYlSz78EMelSVemaqOgNoIBqC
 t6Ra3NuebwL/VQ1JpBhh4eJYZg==
 -----END PRIVATE KEY-----`;
-    const cert = `-----BEGIN CERTIFICATE-----
+      const cert = `-----BEGIN CERTIFICATE-----
 MIICpDCCAYwCCQClE698xX22XDANBgkqhkiG9w0BAQsFADAUMRIwEAYDVQQDDAls
 b2NhbGhvc3QwHhcNMjIxMjI4MTc0NDMxWhcNMjMwMTI3MTc0NDMxWjAUMRIwEAYD
 VQQDDAlsb2NhbGhvc3QwggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDL
@@ -170,42 +178,42 @@ ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
 /huiHkWkMUs=
 -----END CERTIFICATE-----`;
 
-    const server = createHttp2SecureServer({ key, cert }, adapter);
-    server.listen(0);
-    const port = (server.address() as AddressInfo).port;
+      const server = createHttp2SecureServer({ key, cert }, adapter);
+      server.listen(0);
+      const port = (server.address() as AddressInfo).port;
 
-    // Node's fetch API does not support HTTP/2, we use the http2 module directly instead
+      // Node's fetch API does not support HTTP/2, we use the http2 module directly instead
 
-    const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
+      const client = connectHttp2(`https://localhost:${port}`, { ca: cert });
 
-    const req = client.request({
-      [constantsHttp2.HTTP2_HEADER_METHOD]: 'POST',
-      [constantsHttp2.HTTP2_HEADER_PATH]: '/hi',
-    });
+      const req = client.request({
+        [constantsHttp2.HTTP2_HEADER_METHOD]: 'POST',
+        [constantsHttp2.HTTP2_HEADER_PATH]: '/hi',
+      });
 
-    await expect(
-      new Promise((resolve, reject) => {
-        req.on(
-          'response',
-          ({
-            date, // omit date from snapshot
-            ...headers
-          }) => {
-            let data = '';
-            req.on('data', chunk => {
-              data += chunk;
-            });
-            req.on('end', () => {
-              resolve({
-                headers,
-                data,
+      await expect(
+        new Promise((resolve, reject) => {
+          req.on(
+            'response',
+            ({
+              date, // omit date from snapshot
+              ...headers
+            }) => {
+              let data = '';
+              req.on('data', chunk => {
+                data += chunk;
               });
-            });
-          }
-        );
-        req.on('error', reject);
-      })
-    ).resolves.toMatchInlineSnapshot(`
+              req.on('end', () => {
+                resolve({
+                  headers,
+                  data,
+                });
+              });
+            },
+          );
+          req.on('error', reject);
+        }),
+      ).resolves.toMatchInlineSnapshot(`
       {
         "data": "Hey there!",
         "headers": {
@@ -217,10 +225,11 @@ ziIZM/48ENV+m5yXVvUZJaKOggThi+RhLSwIyVzn8ScawkXS70bZtI4CrSTXu3H9
       }
     `);
 
-    req.end();
-    client.close();
-    server.close();
-  });
+      req.end();
+      client.close();
+      server.close();
+    },
+  );
 });
 
 function sleep(ms: number) {

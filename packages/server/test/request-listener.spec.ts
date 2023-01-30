@@ -1,7 +1,7 @@
-import { createServerAdapter } from '@whatwg-node/server';
 import { Readable } from 'stream';
-import { createTestServer, TestServer } from './test-server';
+import { createServerAdapter } from '@whatwg-node/server';
 import { createTestContainer } from './create-test-container';
+import { createTestServer, TestServer } from './test-server';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -48,11 +48,16 @@ describe('Request Listener', () => {
 
   // TODO: add node-fetch here
   createTestContainer(fetchAPI => {
-    async function compareReadableStream(toBeCheckedStream: ReadableStream | null, expected: BodyInit | null) {
+    async function compareReadableStream(
+      toBeCheckedStream: ReadableStream | null,
+      expected: BodyInit | null,
+    ) {
       if (expected != null) {
         expect(toBeCheckedStream).toBeTruthy();
         const expectedStream = (
-          typeof expected === 'object' && Symbol.asyncIterator in expected ? expected : Readable.from(expected as any)
+          typeof expected === 'object' && Symbol.asyncIterator in expected
+            ? expected
+            : Readable.from(expected as any)
         ) as AsyncIterable<Uint8Array>;
         const expectedIterator = expectedStream[Symbol.asyncIterator]();
         for await (const toBeCheckedChunk of toBeCheckedStream as any as AsyncIterable<Uint8Array>) {

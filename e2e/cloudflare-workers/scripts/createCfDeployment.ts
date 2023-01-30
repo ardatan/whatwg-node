@@ -1,13 +1,19 @@
-import { Stack } from '@pulumi/pulumi/automation';
-import { env, execPromise, fsPromises, DeploymentConfiguration, assertDeployedEndpoint } from '@e2e/shared-scripts';
-import * as cf from '@pulumi/cloudflare';
-import * as pulumi from '@pulumi/pulumi';
-import { version } from '@pulumi/cloudflare/package.json';
 import { join } from 'path';
+import {
+  assertDeployedEndpoint,
+  DeploymentConfiguration,
+  env,
+  execPromise,
+  fsPromises,
+} from '@e2e/shared-scripts';
+import * as cf from '@pulumi/cloudflare';
+import { version } from '@pulumi/cloudflare/package.json';
+import * as pulumi from '@pulumi/pulumi';
+import { Stack } from '@pulumi/pulumi/automation';
 
 export function createCfDeployment(
   projectName: string,
-  isModule = false
+  isModule = false,
 ): DeploymentConfiguration<{
   workerUrl: string;
 }> {
@@ -41,7 +47,10 @@ export function createCfDeployment(
 
       // Deploy CF script as Worker
       const workerScript = new cf.WorkerScript('worker', {
-        content: await fsPromises.readFile(join(__dirname, '..', '..', projectName, 'dist', 'index.js'), 'utf-8'),
+        content: await fsPromises.readFile(
+          join(__dirname, '..', '..', projectName, 'dist', 'index.js'),
+          'utf-8',
+        ),
         module: isModule,
         name: stackName,
         plainTextBindings: [

@@ -12,15 +12,23 @@ export type CORSOptions =
     }
   | false;
 
-export type WithCORSOptions<TServerContext> = CORSOptionsFactory<TServerContext> | CORSOptions | boolean;
+export type WithCORSOptions<TServerContext> =
+  | CORSOptionsFactory<TServerContext>
+  | CORSOptions
+  | boolean;
 
 export type CORSOptionsFactory<TServerContext> = (
   request: Request,
   // eslint-disable-next-line @typescript-eslint/ban-types
-  ...args: {} extends TServerContext ? [serverContext?: TServerContext | undefined] : [serverContext: TServerContext]
+  ...args: {} extends TServerContext
+    ? [serverContext?: TServerContext | undefined]
+    : [serverContext: TServerContext]
 ) => Promise<CORSOptions> | CORSOptions;
 
-export function getCORSHeadersByRequestAndOptions(request: Request, corsOptions: CORSOptions): Record<string, string> {
+export function getCORSHeadersByRequestAndOptions(
+  request: Request,
+  corsOptions: CORSOptions,
+): Record<string, string> {
   const headers: Record<string, string> = {};
 
   if (corsOptions === false) {
@@ -28,7 +36,11 @@ export function getCORSHeadersByRequestAndOptions(request: Request, corsOptions:
   }
 
   // If defined origins have '*' or undefined by any means, we should allow all origins
-  if (corsOptions.origin == null || corsOptions.origin.length === 0 || corsOptions.origin.includes('*')) {
+  if (
+    corsOptions.origin == null ||
+    corsOptions.origin.length === 0 ||
+    corsOptions.origin.includes('*')
+  ) {
     const currentOrigin = request.headers.get('origin');
     // If origin is available in the headers, use it
     if (currentOrigin != null) {
@@ -103,7 +115,7 @@ export function getCORSHeadersByRequestAndOptions(request: Request, corsOptions:
 async function getCORSResponseHeaders<TServerContext>(
   request: Request,
   corsOptionsFactory: CORSOptionsFactory<TServerContext>,
-  serverContext: TServerContext
+  serverContext: TServerContext,
 ) {
   const corsOptions = await corsOptionsFactory(request, serverContext);
 
@@ -112,11 +124,11 @@ async function getCORSResponseHeaders<TServerContext>(
 
 export function withCORS<
   TServerContext = DefaultServerAdapterContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>
+  TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>,
 >(
   obj: TBaseObject,
   options: WithCORSOptions<TServerContext>,
-  ResponseCtor: typeof Response = DefaultResponseCtor
+  ResponseCtor: typeof Response = DefaultResponseCtor,
 ): TBaseObject {
   let corsOptionsFactory: CORSOptionsFactory<TServerContext> = () => ({});
   if (options != null) {

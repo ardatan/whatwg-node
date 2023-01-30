@@ -10,7 +10,10 @@ describe('Request Container', () => {
         request: new Request('http://localhost:8080'),
       };
       await adapter(requestContainer);
-      expect(handleRequest).toHaveBeenCalledWith(requestContainer.request, expect.objectContaining(requestContainer));
+      expect(handleRequest).toHaveBeenCalledWith(
+        requestContainer.request,
+        expect.objectContaining(requestContainer),
+      );
     });
     it('should accept additional parameters as server context', async () => {
       const handleRequest = jest.fn();
@@ -22,7 +25,10 @@ describe('Request Container', () => {
         foo: 'bar',
       };
       await adapter(requestContainer);
-      expect(handleRequest).toHaveBeenCalledWith(requestContainer.request, expect.objectContaining(requestContainer));
+      expect(handleRequest).toHaveBeenCalledWith(
+        requestContainer.request,
+        expect.objectContaining(requestContainer),
+      );
     });
   });
 });

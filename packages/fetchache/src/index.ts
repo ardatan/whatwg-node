@@ -68,14 +68,18 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
             ...(revalidationHeaders as HeadersInit),
           },
         },
-        ...rest
+        ...rest,
       );
 
-      const revalidationPolicyRequest = policyRequestFrom(url, method, revalidationHeaders as HeadersInit);
+      const revalidationPolicyRequest = policyRequestFrom(
+        url,
+        method,
+        revalidationHeaders as HeadersInit,
+      );
 
       const { policy: revalidatedPolicy, modified } = policy.revalidatedPolicy(
         revalidationPolicyRequest,
-        policyResponseFrom(revalidationResponse)
+        policyResponseFrom(revalidationResponse),
       );
 
       const newArrayBuffer = await revalidationResponse.arrayBuffer();
@@ -89,7 +93,7 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
           headers: revalidatedPolicy.responseHeaders(),
         } as ResponseInit),
         revalidatedPolicy,
-        cacheKey
+        cacheKey,
       );
     }
   };
@@ -98,7 +102,7 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
     cache: KeyValueCache,
     response: Response,
     policy: CachePolicy,
-    cacheKey: string
+    cacheKey: string,
   ): Promise<Response> {
     let ttl = Math.round(policy.timeToLive() / 1000);
     if (ttl <= 0) return response;

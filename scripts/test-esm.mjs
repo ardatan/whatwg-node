@@ -1,7 +1,7 @@
-import globby from 'globby';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
+import globby from 'globby';
 
 const ignore = [];
 
@@ -30,7 +30,7 @@ async function main() {
           console.error(color('\n-----\n\n'));
           fail.push(mjsPath);
         });
-    })
+    }),
   );
   ignore.length && console.warn(chalk.yellow(`${ignore.length} Ignoring: ${ignore.join(' | ')}`));
   ok.length && console.log(chalk.blue(`${ok.length} OK: ${ok.join(' | ')}`));

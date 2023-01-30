@@ -12,7 +12,7 @@ export interface RouterRequest extends Request {
 export type RouteMethodKey = Lowercase<HTTPMethod> | 'all';
 export type RouterHandler<TServerContext> = (
   request: RouterRequest,
-  ctx: TServerContext
+  ctx: TServerContext,
 ) => Promise<Response | void> | Response | void;
 export type RouteMethod<TServerContext> = (
   path: string,
@@ -21,4 +21,7 @@ export type RouteMethod<TServerContext> = (
 
 export type RouterBaseObject<TServerContext> = Record<RouteMethodKey, RouteMethod<TServerContext>> &
   ServerAdapterBaseObject<TServerContext>;
-export type Router<TServerContext> = ServerAdapter<TServerContext, RouterBaseObject<TServerContext>>;
+export type Router<TServerContext> = ServerAdapter<
+  TServerContext,
+  RouterBaseObject<TServerContext>
+>;

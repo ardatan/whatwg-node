@@ -1,5 +1,5 @@
+import { Response, withErrorHandling } from '@whatwg-node/server';
 import { createRouter } from '../src/createRouter';
-import { withErrorHandling, Response } from '@whatwg-node/server';
 
 describe('Router', () => {
   it('should have parsedUrl in Request object', async () => {
@@ -10,8 +10,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello ${request.parsedUrl.pathname}!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/greetings/John');
     const json = await response.json();
@@ -25,8 +25,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello ${request.params.name}!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/greetings/John');
     const json = await response.json();
@@ -40,8 +40,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello ${request.params.name}!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/greetings/John%20Doe');
     const json = await response.json();
@@ -55,8 +55,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello ${request.query.name}!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/greetings?name=John');
     const json = await response.json();
@@ -72,7 +72,7 @@ describe('Router', () => {
       (request: any) => {
         request.message += ` ${request.query.name}!`;
         return new Response(JSON.stringify({ message: request.message }));
-      }
+      },
     );
     const response = await router.fetch('http://localhost/greetings?name=John');
     const json = await response.json();
@@ -88,7 +88,7 @@ describe('Router', () => {
       },
       (request: any) => {
         request.message += ` to you`;
-      }
+      },
     );
     router.get('/greetings', (request: any) => {
       request.message += ` ${request.query.name}!`;
@@ -106,8 +106,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello ${request.params.name}!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/api/greetings/John');
     const json = await response.json();
@@ -125,8 +125,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello ${request.params.name}!`,
-          })
-        )
+          }),
+        ),
     );
     router.get('/api/*', nested);
     const response = await router.fetch('http://localhost/api/greetings/John');
@@ -144,8 +144,8 @@ describe('Router', () => {
             cat: request.query.cat,
             foo: request.query.foo,
             missing: request.query.missing,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('https://foo.com/foo?cat=dog&foo=bar&foo=baz&missing=');
     const json = await response.json();
@@ -161,8 +161,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello Root!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/api');
     const json = await response.json();
@@ -176,8 +176,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello Root!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost');
     const json = await response.json();
@@ -193,8 +193,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello World!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost/greetings');
     const json = await response.json();
@@ -210,8 +210,8 @@ describe('Router', () => {
         new Response(
           JSON.stringify({
             message: `Hello World!`,
-          })
-        )
+          }),
+        ),
     );
     const response = await router.fetch('http://localhost');
     const json = await response.json();
@@ -224,7 +224,7 @@ describe('Router', () => {
       return new Response(
         JSON.stringify({
           message: `Hello ${json.name}!`,
-        })
+        }),
       );
     });
     const response = await router.fetch('http://localhost/greetings', {
