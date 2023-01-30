@@ -7,6 +7,11 @@ module.exports = function createNodePonyfill(opts = {}) {
     ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
+  // Bun already has a Fetch API
+  if (process.versions.bun) {
+    return globalThis;
+  }
+
   const newNodeFetch = require('@whatwg-node/node-fetch');
 
   ponyfills.fetch = newNodeFetch.fetch;
