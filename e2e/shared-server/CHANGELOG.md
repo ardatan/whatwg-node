@@ -1,5 +1,12 @@
 # @e2e/shared-server
 
+## 0.0.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @whatwg-node/router@0.1.10
+
 ## 0.0.13
 
 ### Patch Changes
