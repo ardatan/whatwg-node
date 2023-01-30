@@ -48,12 +48,12 @@ the boilerplate we prefer to use
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 import type { Handler } from '@aws-cdk/aws-lambda'
 import myServerAdapter from './myServerAdapter'
- 
+
 interface ServerContext {
   event: APIGatewayEvent
   lambdaContext: Context
 }
- 
+
 export async function handler(
   event: APIGatewayEvent,
   lambdaContext: Context
@@ -67,7 +67,7 @@ export async function handler(
       }
     }
   }
- 
+
   const response = await myServerAdapter.fetch(
     url,
     {
@@ -83,13 +83,13 @@ export async function handler(
       lambdaContext
     }
   )
- 
+
   const responseHeaders: Record<string, string> = {}
- 
+
   response.headers.forEach((value, name) => {
     responseHeaders[name] = value
   })
- 
+
   return {
     statusCode: response.status,
     headers: responseHeaders,
