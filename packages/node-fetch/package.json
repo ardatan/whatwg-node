@@ -2,14 +2,13 @@
   "name": "@whatwg-node/node-fetch",
   "version": "0.0.0",
   "description": "Fetch API implementation for Node",
-  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
     "directory": "packages/node-fetch"
   },
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
-  "sideEffects": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "exports": {
@@ -23,25 +22,26 @@
     }
   },
   "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
-  },
-  "buildOptions": {
-    "input": "./src/index.ts"
-  },
-  "publishConfig": {
-    "access": "public",
-    "directory": "dist"
+  "peerDependencies": {
+    "@types/node": "^18.0.6"
   },
   "dependencies": {
     "@whatwg-node/events": "0.0.2",
     "busboy": "1.6.0",
     "tslib": "^2.3.1"
   },
-  "peerDependencies": {
-    "@types/node": "^18.0.6"
-  },
   "devDependencies": {
     "@types/busboy": "1.5.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  },
+  "sideEffects": false,
+  "buildOptions": {
+    "input": "./src/index.ts"
+  },
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }

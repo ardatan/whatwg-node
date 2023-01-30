@@ -1,17 +1,17 @@
-import { createServerAdapter } from '@whatwg-node/server';
 import { IncomingMessage, ServerResponse } from 'http';
-import { createTestServer, TestServer } from './test-server';
 import {
-  createServer,
-  Http2ServerRequest,
-  Http2ServerResponse,
+  ClientHttp2Session,
   connect as connectHttp2,
   constants as constantsHttp2,
+  createServer,
   Http2Server,
-  ClientHttp2Session,
+  Http2ServerRequest,
+  Http2ServerResponse,
 } from 'http2';
 import { AddressInfo } from 'net';
-import { Request, Response, ReadableStream, fetch } from '@whatwg-node/fetch';
+import { fetch, ReadableStream, Request, Response } from '@whatwg-node/fetch';
+import { createServerAdapter } from '@whatwg-node/server';
+import { createTestServer, TestServer } from './test-server';
 
 describe('Node Specific Cases', () => {
   let testServer: TestServer;
@@ -39,7 +39,7 @@ describe('Node Specific Cases', () => {
       waitUntil(
         sleep(100).then(() => {
           flag = true;
-        })
+        }),
       );
       return new Response(null, {
         status: 204,
@@ -69,7 +69,10 @@ describe('Node Specific Cases', () => {
     testServer.server.once('request', (...args) => serverAdapter(...args, additionalCtx));
     const response = await fetch(testServer.url);
     await response.text();
-    expect(handleRequest).toHaveBeenCalledWith(expect.anything(), expect.objectContaining(additionalCtx));
+    expect(handleRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining(additionalCtx),
+    );
   });
 
   it('should handle cancellation of incremental responses', async () => {
@@ -83,9 +86,9 @@ describe('Node Specific Cases', () => {
               controller.enqueue(Date.now().toString());
             },
             cancel: cancelFn,
-          })
+          }),
         ),
-      Request
+      Request,
     );
 
     testServer.server.once('request', serverAdapter);
@@ -136,12 +139,14 @@ describe('http2', () => {
   });
 
   it('should support http2 and respond as expected', async () => {
-    const handleRequest: jest.Mock<Response, [Request]> = jest.fn().mockImplementation((_request: Request) => {
-      return new Response('Hey there!', {
-        status: 418,
-        headers: { 'x-is-this-http2': 'yes', 'content-type': 'text/plain;charset=UTF-8' },
+    const handleRequest: jest.Mock<Response, [Request]> = jest
+      .fn()
+      .mockImplementation((_request: Request) => {
+        return new Response('Hey there!', {
+          status: 418,
+          headers: { 'x-is-this-http2': 'yes', 'content-type': 'text/plain;charset=UTF-8' },
+        });
       });
-    });
     const adapter = createServerAdapter(handleRequest);
 
     server = createServer(adapter);
@@ -175,7 +180,7 @@ describe('http2', () => {
               data,
             });
           });
-        }
+        },
       );
       req.once('error', reject);
     });

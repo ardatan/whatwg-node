@@ -20,7 +20,7 @@ async function main() {
     JSON.stringify({
       name: 'whatwg-node-test-function',
       version: '0.0.1',
-    })
+    }),
   );
 
   writeFileSync(
@@ -39,7 +39,7 @@ async function main() {
         id: 'Microsoft.Azure.Functions.ExtensionBundle',
         version: '[2.*, 3.0.0)',
       },
-    })
+    }),
   );
 
   writeFileSync(
@@ -60,7 +60,7 @@ async function main() {
           name: 'res',
         },
       ],
-    })
+    }),
   );
 
   console.info(`Azure Function build done!`);

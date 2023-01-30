@@ -1,9 +1,9 @@
-import { PonyfillBlob } from './Blob';
 import { Readable } from 'stream';
+import busboy from 'busboy';
+import { PonyfillBlob } from './Blob';
+import { PonyfillFile } from './File';
 import { PonyfillFormData } from './FormData';
 import { PonyfillReadableStream } from './ReadableStream';
-import { PonyfillFile } from './File';
-import busboy from 'busboy';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -14,7 +14,10 @@ enum BodyInitType {
   Readable = 'Readable',
 }
 
-export type BodyPonyfillInit = XMLHttpRequestBodyInit | Readable | PonyfillReadableStream<Uint8Array>;
+export type BodyPonyfillInit =
+  | XMLHttpRequestBodyInit
+  | Readable
+  | PonyfillReadableStream<Uint8Array>;
 
 export interface FormDataLimits {
   /* Max field name size (in bytes). Default: 100. */
@@ -43,7 +46,10 @@ export class PonyfillBody<TJSON = any> implements Body {
   contentType: string | null = null;
   contentLength: number | null = null;
 
-  constructor(private bodyInit: BodyPonyfillInit | null, private options: PonyfillBodyOptions = {}) {
+  constructor(
+    private bodyInit: BodyPonyfillInit | null,
+    private options: PonyfillBodyOptions = {},
+  ) {
     const { body, contentType, contentLength, bodyType } = processBodyInit(bodyInit);
     this._body = body;
     this.contentType = contentType;
@@ -132,22 +138,25 @@ export class PonyfillBody<TJSON = any> implements Body {
       bb.on('fieldsLimit', () => {
         reject(new Error(`Fields limit exceeded: ${formDataLimits?.fields}`));
       });
-      bb.on('file', (name, fileStream: Readable & { truncated: boolean }, { filename, mimeType }) => {
-        const chunks: BlobPart[] = [];
-        fileStream.on('limit', () => {
-          reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
-        });
-        fileStream.on('data', chunk => {
-          chunks.push(Buffer.from(chunk));
-        });
-        fileStream.on('close', () => {
-          if (fileStream.truncated) {
+      bb.on(
+        'file',
+        (name, fileStream: Readable & { truncated: boolean }, { filename, mimeType }) => {
+          const chunks: BlobPart[] = [];
+          fileStream.on('limit', () => {
             reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
-          }
-          const file = new PonyfillFile(chunks, filename, { type: mimeType });
-          formData.set(name, file);
-        });
-      });
+          });
+          fileStream.on('data', chunk => {
+            chunks.push(Buffer.from(chunk));
+          });
+          fileStream.on('close', () => {
+            if (fileStream.truncated) {
+              reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
+            }
+            const file = new PonyfillFile(chunks, filename, { type: mimeType });
+            formData.set(name, file);
+          });
+        },
+      );
       bb.on('filesLimit', () => {
         reject(new Error(`Files limit exceeded: ${formDataLimits?.files}`));
       });

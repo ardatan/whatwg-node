@@ -7,8 +7,7 @@ about: Create a bug report to help us improve
 
 <!-- A clear and concise description of what the bug is. -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
+**To Reproduce** Steps to reproduce the behavior:
 
 <!-- Adding a codesandbox can help us understand the bug better and speed up things -->
 

@@ -1,6 +1,13 @@
-import { createRouter, Response, DefaultServerAdapterContext, withErrorHandling } from '@whatwg-node/router';
+import {
+  createRouter,
+  DefaultServerAdapterContext,
+  Response,
+  withErrorHandling,
+} from '@whatwg-node/router';
 
-export function createTestServerAdapter<TServerContext = DefaultServerAdapterContext>(base?: string) {
+export function createTestServerAdapter<TServerContext = DefaultServerAdapterContext>(
+  base?: string,
+) {
   const app = createRouter<TServerContext>({
     base,
     plugins: [withErrorHandling as any],
@@ -17,8 +24,8 @@ export function createTestServerAdapter<TServerContext = DefaultServerAdapterCon
           headers: {
             'Content-Type': 'application/json',
           },
-        }
-      )
+        },
+      ),
   );
 
   app.post('/bye', async req => {
@@ -31,7 +38,7 @@ export function createTestServerAdapter<TServerContext = DefaultServerAdapterCon
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
   });
 
@@ -53,8 +60,8 @@ export function createTestServerAdapter<TServerContext = DefaultServerAdapterCon
           headers: {
             'Content-Type': 'text/html',
           },
-        }
-      )
+        },
+      ),
   );
 
   app.all('*', () => new Response('Not Found.', { status: 404 }));

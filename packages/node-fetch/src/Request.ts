@@ -1,5 +1,5 @@
 import { PonyfillAbortController } from './AbortController';
-import { PonyfillBody, BodyPonyfillInit, PonyfillBodyOptions } from './Body';
+import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body';
 import { PonyfillHeaders, PonyfillHeadersInit } from './Headers';
 
 function isRequest(input: any): input is PonyfillRequest {

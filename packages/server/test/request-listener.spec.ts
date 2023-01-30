@@ -1,7 +1,7 @@
-import { createServerAdapter } from '@whatwg-node/server';
 import { Readable } from 'stream';
-import { createTestServer, TestServer } from './test-server';
 import * as fetchAPI from '@whatwg-node/fetch';
+import { createServerAdapter } from '@whatwg-node/server';
+import { createTestServer, TestServer } from './test-server';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -46,7 +46,10 @@ describe('Request Listener', () => {
     testServer.server.close(done);
   });
 
-  async function compareReadableStream(toBeCheckedStream: ReadableStream | null, expected: BodyInit | null) {
+  async function compareReadableStream(
+    toBeCheckedStream: ReadableStream | null,
+    expected: BodyInit | null,
+  ) {
     const toBeCheckedValues = [];
     const expectedValues = [];
     if (toBeCheckedStream) {

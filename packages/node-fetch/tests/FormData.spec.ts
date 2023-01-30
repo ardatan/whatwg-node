@@ -88,7 +88,9 @@ describe('Form Data', () => {
   });
   it('should parse and receive text files correctly', async () => {
     const formData = new PonyfillFormData();
-    const greetingsFile = new PonyfillFile(['Hello world!'], 'greetings.txt', { type: 'text/plain' });
+    const greetingsFile = new PonyfillFile(['Hello world!'], 'greetings.txt', {
+      type: 'text/plain',
+    });
     const byeFile = new PonyfillFile(['Goodbye world!'], 'bye.txt', { type: 'text/plain' });
     formData.append('greetings', greetingsFile);
     formData.append('bye', byeFile);
@@ -106,7 +108,9 @@ describe('Form Data', () => {
   });
   it('should handle file limits', async () => {
     const formData = new PonyfillFormData();
-    const greetingsFile = new PonyfillFile(['Hello world!'], 'greetings.txt', { type: 'text/plain' });
+    const greetingsFile = new PonyfillFile(['Hello world!'], 'greetings.txt', {
+      type: 'text/plain',
+    });
     formData.append('greetings', greetingsFile);
     const proxyRequest = new PonyfillRequest('http://localhost:8080', {
       method: 'POST',
@@ -127,6 +131,8 @@ describe('Form Data', () => {
         fileSize: 1,
       },
     });
-    await expect(() => requestWillParse.formData()).rejects.toThrowError('File size limit exceeded: 1 bytes');
+    await expect(() => requestWillParse.formData()).rejects.toThrowError(
+      'File size limit exceeded: 1 bytes',
+    );
   });
 });

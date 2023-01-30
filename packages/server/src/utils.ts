@@ -5,7 +5,9 @@ import type { Readable } from 'node:stream';
 import { FetchEvent } from './types';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
-  return body != null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function';
+  return (
+    body != null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function'
+  );
 }
 
 export interface NodeRequest {
@@ -83,7 +85,10 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-export function normalizeNodeRequest(nodeRequest: NodeRequest, RequestCtor: typeof Request): Request {
+export function normalizeNodeRequest(
+  nodeRequest: NodeRequest,
+  RequestCtor: typeof Request,
+): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   configureSocket(rawRequest);
   let fullUrl = buildFullUrl(rawRequest);
@@ -156,7 +161,11 @@ export function isNodeRequest(request: any): request is NodeRequest {
 export function isServerResponse(stream: any): stream is NodeResponse {
   // Check all used functions are defined
   return (
-    stream != null && stream.setHeader != null && stream.end != null && stream.once != null && stream.write != null
+    stream != null &&
+    stream.setHeader != null &&
+    stream.end != null &&
+    stream.once != null &&
+    stream.write != null
   );
 }
 
@@ -168,7 +177,10 @@ export function isFetchEvent(event: any): event is FetchEvent {
   return event != null && event.request != null && event.respondWith != null;
 }
 
-export async function sendNodeResponse({ headers, status, statusText, body }: Response, serverResponse: NodeResponse) {
+export async function sendNodeResponse(
+  { headers, status, statusText, body }: Response,
+  serverResponse: NodeResponse,
+) {
   headers.forEach((value, name) => {
     serverResponse.setHeader(name, value);
   });

@@ -1,3 +1,12 @@
+import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
+import {
+  DefaultServerAdapterContext,
+  FetchEvent,
+  ServerAdapter,
+  ServerAdapterBaseObject,
+  ServerAdapterObject,
+  ServerAdapterRequestHandler,
+} from './types';
 import {
   isFetchEvent,
   isNodeRequest,
@@ -8,15 +17,6 @@ import {
   normalizeNodeRequest,
   sendNodeResponse,
 } from './utils';
-import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
-import {
-  DefaultServerAdapterContext,
-  FetchEvent,
-  ServerAdapter,
-  ServerAdapterBaseObject,
-  ServerAdapterObject,
-  ServerAdapterRequestHandler,
-} from './types';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
@@ -29,31 +29,36 @@ async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
 
 function createServerAdapter<
   TServerContext = DefaultServerAdapterContext,
-  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
 >(
   serverAdapterRequestHandler: THandleRequest,
-  RequestCtor?: typeof Request
+  RequestCtor?: typeof Request,
 ): ServerAdapter<TServerContext, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
-function createServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>>(
+function createServerAdapter<
+  TServerContext,
+  TBaseObject extends ServerAdapterBaseObject<TServerContext>,
+>(
   serverAdapterBaseObject: TBaseObject,
-  RequestCtor?: typeof Request
+  RequestCtor?: typeof Request,
 ): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
   TServerContext = DefaultServerAdapterContext,
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext, THandleRequest> = ServerAdapterBaseObject<
+  TBaseObject extends ServerAdapterBaseObject<
     TServerContext,
     THandleRequest
-  >
+  > = ServerAdapterBaseObject<TServerContext, THandleRequest>,
 >(
   serverAdapterBaseObject: TBaseObject | THandleRequest,
   /**
    * WHATWG Fetch spec compliant `Request` constructor.
    */
-  RequestCtor = PonyfillRequestCtor
+  RequestCtor = PonyfillRequestCtor,
 ): ServerAdapter<TServerContext, TBaseObject> {
   const handleRequest =
-    typeof serverAdapterBaseObject === 'function' ? serverAdapterBaseObject : serverAdapterBaseObject.handle;
+    typeof serverAdapterBaseObject === 'function'
+      ? serverAdapterBaseObject
+      : serverAdapterBaseObject.handle;
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0];
@@ -101,7 +106,8 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext: TServerContext & object = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
+    const serverContext: TServerContext & object =
+      ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
     if (!('waitUntil' in serverContext)) {
       const waitUntilPromises: Promise<void>[] = [];
       const response$ = handleRequest(request, {

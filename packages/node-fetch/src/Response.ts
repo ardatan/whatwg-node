@@ -1,4 +1,4 @@
-import { PonyfillBody, BodyPonyfillInit, PonyfillBodyOptions } from './Body';
+import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body';
 import { PonyfillHeaders, PonyfillHeadersInit } from './Headers';
 
 export type ResponsePonyfilInit = PonyfillBodyOptions &

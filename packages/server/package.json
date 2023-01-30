@@ -2,14 +2,13 @@
   "name": "@whatwg-node/server",
   "version": "0.5.8",
   "description": "Fetch API compliant HTTP Server adapter",
-  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
     "directory": "packages/server"
   },
+  "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
-  "sideEffects": false,
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "exports": {
@@ -23,16 +22,6 @@
     }
   },
   "typings": "dist/index.d.ts",
-  "typescript": {
-    "definition": "dist/index.d.ts"
-  },
-  "buildOptions": {
-    "input": "./src/index.ts"
-  },
-  "publishConfig": {
-    "access": "public",
-    "directory": "dist"
-  },
   "dependencies": {
     "@whatwg-node/fetch": "0.6.2",
     "tslib": "^2.3.1"
@@ -40,5 +29,16 @@
   "devDependencies": {
     "@types/node": "18.11.18",
     "fastify": "4.10.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "directory": "dist"
+  },
+  "sideEffects": false,
+  "buildOptions": {
+    "input": "./src/index.ts"
+  },
+  "typescript": {
+    "definition": "dist/index.d.ts"
   }
 }

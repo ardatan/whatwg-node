@@ -1,4 +1,7 @@
-export type PonyfillHeadersInit = [string, string][] | Record<string, string | string[] | undefined> | Headers;
+export type PonyfillHeadersInit =
+  | [string, string][]
+  | Record<string, string | string[] | undefined>
+  | Headers;
 
 export class PonyfillHeaders implements Headers {
   private map = new Map<string, string>();

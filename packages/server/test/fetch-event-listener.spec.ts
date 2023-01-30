@@ -1,6 +1,6 @@
 import { CustomEvent } from '@whatwg-node/events';
-import { createServerAdapter } from '../src';
 import { Request, Response } from '@whatwg-node/fetch';
+import { createServerAdapter } from '../src';
 
 describe('FetchEvent listener', () => {
   it('should not return a promise to event listener', () => {
@@ -45,6 +45,9 @@ describe('FetchEvent listener', () => {
     });
     const additionalCtx = { foo: 'bar' };
     adapter(fetchEvent, additionalCtx);
-    expect(handleRequest).toHaveBeenCalledWith(fetchEvent.request, expect.objectContaining(additionalCtx));
+    expect(handleRequest).toHaveBeenCalledWith(
+      fetchEvent.request,
+      expect.objectContaining(additionalCtx),
+    );
   });
 });

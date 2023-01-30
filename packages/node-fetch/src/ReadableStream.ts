@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 
 function createController<T>(
   desiredSize: number,
-  readable: Readable
+  readable: Readable,
 ): ReadableStreamDefaultController<T> & { _flush(): void } {
   let chunks: Buffer[] = [];
   return {
@@ -34,7 +34,13 @@ function createController<T>(
 
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readable: Readable;
-  constructor(underlyingSource?: UnderlyingSource<T> | Readable | ReadableStream<T> | PonyfillReadableStream<T>) {
+  constructor(
+    underlyingSource?:
+      | UnderlyingSource<T>
+      | Readable
+      | ReadableStream<T>
+      | PonyfillReadableStream<T>,
+  ) {
     if (underlyingSource instanceof PonyfillReadableStream) {
       this.readable = underlyingSource.readable;
     } else if (underlyingSource && 'read' in underlyingSource) {

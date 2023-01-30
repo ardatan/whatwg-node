@@ -1,4 +1,4 @@
-import { EventTarget, Event, CustomEvent } from '@whatwg-node/events';
+import { CustomEvent, Event, EventTarget } from '@whatwg-node/events';
 
 describe('EventTarget', () => {
   it('addEventListener + dispatchEvent', () => {

@@ -1,6 +1,8 @@
 # `@whatwg-node/events`
 
-A ponyfill package for JavaScript [DOM Events Standard](https://dom.spec.whatwg.org/#events). If your JavaScript environment doesn't implement this standard natively, this package automatically ponyfills the missing parts, and export them as a module.
+A ponyfill package for JavaScript [DOM Events Standard](https://dom.spec.whatwg.org/#events). If
+your JavaScript environment doesn't implement this standard natively, this package automatically
+ponyfills the missing parts, and export them as a module.
 
 ## Installation
 
@@ -11,30 +13,31 @@ yarn add @whatwg-node/events
 ## Usage
 
 ```ts
-import { EventTarget, Event } from '@whatwg-node/events';
+import { Event, EventTarget } from '@whatwg-node/events'
 
-const target = new EventTarget();
+const target = new EventTarget()
 target.addEventListener('foo', (event: Event) => {
-  console.log(event.type); // foo
-});
+  console.log(event.type) // foo
+})
 
-target.dispatchEvent(new Event('foo'));
+target.dispatchEvent(new Event('foo'))
 ```
 
-> If your environment already implements these natively, this package will export the native ones automatically.
+> If your environment already implements these natively, this package will export the native ones
+> automatically.
 
 ## Custom Events
 
 ```ts
-import { EventTarget, CustomEvent } from '@whatwg-node/events';
+import { CustomEvent, EventTarget } from '@whatwg-node/events'
 
-const target = new EventTarget();
+const target = new EventTarget()
 target.addEventListener('foo', (event: CustomEvent) => {
-  console.assert(event.detail.foo, 'bar');
-});
+  console.assert(event.detail.foo, 'bar')
+})
 
 // `detail` can take any value
-target.dispatchEvent(new CustomEvent('foo', { detail: { foo: 'bar' } }));
+target.dispatchEvent(new CustomEvent('foo', { detail: { foo: 'bar' } }))
 ```
 
 ## API

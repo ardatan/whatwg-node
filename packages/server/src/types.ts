@@ -9,7 +9,7 @@ export interface FetchEvent extends Event {
 
 export interface ServerAdapterBaseObject<
   TServerContext,
-  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
 > {
   /**
    * An async function that takes `Request` and the server context and returns a `Response`.
@@ -20,7 +20,10 @@ export interface ServerAdapterBaseObject<
 
 export interface ServerAdapterObject<
   TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext, ServerAdapterRequestHandler<TServerContext>>
+  TBaseObject extends ServerAdapterBaseObject<
+    TServerContext,
+    ServerAdapterRequestHandler<TServerContext>
+  >,
 > extends EventListenerObject {
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
@@ -34,15 +37,26 @@ export interface ServerAdapterObject<
   fetch(urlStr: string, ctx: TServerContext): Promise<Response> | Response;
   fetch(urlStr: string, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   fetch(urlStr: string, init: RequestInit, ctx: TServerContext): Promise<Response> | Response;
-  fetch(urlStr: string, init: RequestInit, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  fetch(
+    urlStr: string,
+    init: RequestInit,
+    ...ctx: Partial<TServerContext>[]
+  ): Promise<Response> | Response;
   fetch(url: URL, ctx: TServerContext): Promise<Response> | Response;
   fetch(url: URL, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   fetch(url: URL, init: RequestInit, ctx: TServerContext): Promise<Response> | Response;
-  fetch(url: URL, init: RequestInit, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  fetch(
+    url: URL,
+    init: RequestInit,
+    ...ctx: Partial<TServerContext>[]
+  ): Promise<Response> | Response;
   /**
    * This function takes Node's request object and returns a WHATWG Fetch spec compliant `Response` object.
    **/
-  handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
+  handleNodeRequest(
+    nodeRequest: NodeRequest,
+    ...ctx: Partial<TServerContext>[]
+  ): Promise<Response> | Response;
   /**
    * A request listener function that can be used with any Node server variation.
    */
@@ -57,13 +71,16 @@ export interface ServerAdapterObject<
   ): Promise<Response> | Response;
 }
 
-export type ServerAdapter<TServerContext, TBaseObject extends ServerAdapterBaseObject<TServerContext>> = TBaseObject &
+export type ServerAdapter<
+  TServerContext,
+  TBaseObject extends ServerAdapterBaseObject<TServerContext>,
+> = TBaseObject &
   ServerAdapterObject<TServerContext, TBaseObject>['handle'] &
   ServerAdapterObject<TServerContext, TBaseObject>;
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
-  ctx: TServerContext
+  ctx: TServerContext,
 ) => Promise<Response> | Response;
 
 export type DefaultServerAdapterContext = {

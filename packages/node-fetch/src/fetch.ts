@@ -1,12 +1,12 @@
+import { createReadStream } from 'fs';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
+import { Readable } from 'stream';
+import { fileURLToPath } from 'url';
 import { PonyfillAbortError } from './AbortError';
 import { PonyfillRequest, RequestPonyfillInit } from './Request';
 import { PonyfillResponse } from './Response';
 import { getHeadersObj } from './utils';
-import { fileURLToPath } from 'url';
-import { createReadStream } from 'fs';
-import { Readable } from 'stream';
 
 function getResponseForFile(url: URL) {
   const path = fileURLToPath(url);
@@ -28,7 +28,7 @@ const BASE64_SUFFIX = ';base64';
 
 export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
-  init?: RequestPonyfillInit
+  init?: RequestPonyfillInit,
 ): Promise<PonyfillResponse<TResponseJSON>> {
   if (typeof info === 'string' || info instanceof URL) {
     const ponyfillRequest = new PonyfillRequest(info, init);
@@ -113,7 +113,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
               redirectResponse$.then(redirectResponse => {
                 redirectResponse.redirected = true;
                 return redirectResponse;
-              })
+              }),
             );
             nodeResponse.resume();
             return;

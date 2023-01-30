@@ -1,7 +1,7 @@
-import { ReadableStream, Response, TextEncoder, fetch } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src/createServerAdapter';
-import fastify, { FastifyReply, FastifyRequest, FastifyInstance } from 'fastify';
 import { AddressInfo } from 'net';
+import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { fetch, ReadableStream, Response, TextEncoder } from '@whatwg-node/fetch';
+import { createServerAdapter } from '../src/createServerAdapter';
 
 describe('Fastify', () => {
   let fastifyServer: FastifyInstance;
@@ -23,8 +23,8 @@ describe('Fastify', () => {
                 encoder.encode(
                   JSON.stringify({
                     cnt,
-                  }) + '\n'
-                )
+                  }) + '\n',
+                ),
               );
               cnt++;
               await new Promise(resolve => setTimeout(resolve, 300));
@@ -32,8 +32,8 @@ describe('Fastify', () => {
                 controller.close();
               }
             },
-          })
-        )
+          }),
+        ),
     );
     fastifyServer = fastify();
     fastifyServer.route({
@@ -58,7 +58,9 @@ describe('Fastify', () => {
     await fastifyServer.listen({
       port: 0,
     });
-    const res = await fetch(`http://localhost:${(fastifyServer.server.address() as AddressInfo).port}/mypath`);
+    const res = await fetch(
+      `http://localhost:${(fastifyServer.server.address() as AddressInfo).port}/mypath`,
+    );
     const body = await res.text();
     expect(body).toMatchInlineSnapshot(`
       "{"cnt":0}

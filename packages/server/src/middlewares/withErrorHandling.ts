@@ -1,8 +1,8 @@
-import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
+import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
 
 export function createDefaultErrorHandler<TServerContext = DefaultServerAdapterContext>(
-  ResponseCtor: typeof Response = DefaultResponseCtor
+  ResponseCtor: typeof Response = DefaultResponseCtor,
 ): ErrorHandler<TServerContext> {
   return function defaultErrorHandler(e: any): Response | Promise<Response> {
     return new ResponseCtor(e.stack || e.message || e.toString(), {
@@ -15,13 +15,16 @@ export function createDefaultErrorHandler<TServerContext = DefaultServerAdapterC
 export type ErrorHandler<TServerContext> = (
   e: any,
   request: Request,
-  ctx: TServerContext
+  ctx: TServerContext,
 ) => Response | Promise<Response>;
 
 export function withErrorHandling<
   TServerContext = DefaultServerAdapterContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>
->(obj: TBaseObject, onError: ErrorHandler<TServerContext> = createDefaultErrorHandler()): TBaseObject {
+  TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>,
+>(
+  obj: TBaseObject,
+  onError: ErrorHandler<TServerContext> = createDefaultErrorHandler(),
+): TBaseObject {
   async function handleWithErrorHandling(request: Request, ctx: TServerContext): Promise<Response> {
     try {
       const res = await obj.handle(request, ctx);

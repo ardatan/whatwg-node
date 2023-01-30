@@ -1,12 +1,12 @@
-import { PonyfillBlob } from '../src/Blob';
+import { join } from 'path';
 import { Readable } from 'stream';
+import { pathToFileURL } from 'url';
 import { PonyfillAbortController } from '../src/AbortController';
+import { PonyfillAbortSignal } from '../src/AbortSignal';
+import { PonyfillBlob } from '../src/Blob';
 import { fetchPonyfill } from '../src/fetch';
 import { PonyfillFormData } from '../src/FormData';
 import { PonyfillReadableStream } from '../src/ReadableStream';
-import { pathToFileURL } from 'url';
-import { join } from 'path';
-import { PonyfillAbortSignal } from '../src/AbortSignal';
 
 describe('Node Fetch Ponyfill', () => {
   it('should fetch', async () => {
@@ -44,7 +44,7 @@ describe('Node Fetch Ponyfill', () => {
     await expect(
       fetchPonyfill('https://httpbin.org/redirect/1', {
         redirect: 'error',
-      })
+      }),
     ).rejects.toThrow();
   });
   it('should accept string bodies', async () => {
@@ -100,7 +100,11 @@ describe('Node Fetch Ponyfill', () => {
   it('should accept FormData bodies', async () => {
     const formdata = new PonyfillFormData();
     formdata.append('test', 'test');
-    formdata.append('test-file', new PonyfillBlob(['test-content'], { type: 'text/plain' }), 'test.txt');
+    formdata.append(
+      'test-file',
+      new PonyfillBlob(['test-content'], { type: 'text/plain' }),
+      'test.txt',
+    );
     const response = await fetchPonyfill('https://httpbin.org/post', {
       method: 'POST',
       body: formdata,
@@ -118,14 +122,14 @@ describe('Node Fetch Ponyfill', () => {
     await expect(
       fetchPonyfill('https://httpbin.org/delay/5', {
         signal: controller.signal,
-      })
+      }),
     ).rejects.toThrow('The operation was aborted.');
   });
   it('should respect AbortSignal.timeout', async () => {
     await expect(
       fetchPonyfill('https://httpbin.org/delay/5', {
         signal: PonyfillAbortSignal.timeout(300),
-      })
+      }),
     ).rejects.toThrow('The operation was aborted. reason: timeout');
   });
   it('should respect file protocol', async () => {

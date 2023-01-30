@@ -1,6 +1,6 @@
-import { PonyfillAbortError } from './AbortError';
 // Will be removed after v14 reaches EOL
-import { EventTarget, CustomEvent } from '@whatwg-node/events';
+import { CustomEvent, EventTarget } from '@whatwg-node/events';
+import { PonyfillAbortError } from './AbortError';
 
 export class PonyfillAbortSignal extends EventTarget implements AbortSignal {
   aborted = false;

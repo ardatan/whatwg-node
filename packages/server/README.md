@@ -1,8 +1,10 @@
 # WHATWG Node Generic Server Adapter
 
-`@whatwg-node/server` helps you to create a generic server implementation by using WHATWG Fetch API for Node.js, AWS Lambda, Cloudflare Workers, Deno, Express, Fastify, Koa, Next.js and Sveltekit.
+`@whatwg-node/server` helps you to create a generic server implementation by using WHATWG Fetch API
+for Node.js, AWS Lambda, Cloudflare Workers, Deno, Express, Fastify, Koa, Next.js and Sveltekit.
 
-Once you create an adapter with `createServerAdapter`, you don't need to install any other platform specific package since the generic adapter will handle it automatically.
+Once you create an adapter with `createServerAdapter`, you don't need to install any other platform
+specific package since the generic adapter will handle it automatically.
 
 ## How to start
 
@@ -26,8 +28,8 @@ You can use your server adapter with the following integrations:
 [Node.js](https://nodejs.org/api/http.html) is the most popular server side JavaScript runtime.
 
 ```ts
-import myServerAdapter from './myServerAdapter'
 import { createServer } from 'http'
+import myServerAdapter from './myServerAdapter'
 
 // You can create your Node server instance by using our adapter
 const nodeServer = createServer(myServerAdapter)
@@ -37,18 +39,21 @@ nodeServer.listen(4000)
 
 ### AWS Lambda
 
-AWS Lambda is a serverless computing platform that makes it easy to build applications that run on the AWS cloud. Our adaoter is platform agnostic so they can fit together easily. In order to reduce the boilerplate we prefer to use [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
+AWS Lambda is a serverless computing platform that makes it easy to build applications that run on
+the AWS cloud. Our adaoter is platform agnostic so they can fit together easily. In order to reduce
+the boilerplate we prefer to use
+[Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
 ```ts
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 import type { Handler } from '@aws-cdk/aws-lambda'
 import myServerAdapter from './myServerAdapter'
- 
+
 interface ServerContext {
   event: APIGatewayEvent
   lambdaContext: Context
 }
- 
+
 export async function handler(
   event: APIGatewayEvent,
   lambdaContext: Context
@@ -62,7 +67,7 @@ export async function handler(
       }
     }
   }
- 
+
   const response = await myServerAdapter.fetch(
     url,
     {
@@ -78,13 +83,13 @@ export async function handler(
       lambdaContext
     }
   )
- 
+
   const responseHeaders: Record<string, string> = {}
- 
+
   response.headers.forEach((value, name) => {
     responseHeaders[name] = value
   })
- 
+
   return {
     statusCode: response.status,
     headers: responseHeaders,
@@ -96,7 +101,9 @@ export async function handler(
 
 ### Cloudflare Workers
 
-Cloudflare Workers provides a serverless execution environment that allows you to create entirely new applications or augment existing ones without configuring or maintaining infrastructure. It uses Fetch API already so we can use our adapter as an event listener like below;
+Cloudflare Workers provides a serverless execution environment that allows you to create entirely
+new applications or augment existing ones without configuring or maintaining infrastructure. It uses
+Fetch API already so we can use our adapter as an event listener like below;
 
 ```ts
 import myServerAdapter from './myServerAdapter'
@@ -122,7 +129,8 @@ serve(myServerAdapter, {
 
 ### Express
 
-[Express is the most popular web framework for Node.js.](https://expressjs.com/) It is a minimalist framework that provides a robust set of features to handle HTTP on Node.js applications.
+[Express is the most popular web framework for Node.js.](https://expressjs.com/) It is a minimalist
+framework that provides a robust set of features to handle HTTP on Node.js applications.
 
 You can easily integrate your adapter into your Express application with a few lines of code.
 
@@ -142,14 +150,15 @@ app.listen(4000, () => {
 
 ### Fastify
 
-[Fastify is one of the popular HTTP server frameworks for Node.js.](https://www.fastify.io/). You can use your adapter easily with Fastify.
+[Fastify is one of the popular HTTP server frameworks for Node.js.](https://www.fastify.io/). You
+can use your adapter easily with Fastify.
 
 So you can benefit from the powerful plugins of Fastify ecosystem.
 [See the ecosystem](https://www.fastify.io/docs/latest/Guides/Ecosystem/)
 
 ```ts
+import fastify, { FastifyReply, FastifyRequest } from 'fastify'
 import myServerAdapter from './myServerAdapter'
-import fastify, { FastifyRequest, FastifyReply } from 'fastify'
 
 // This is the fastify instance you have created
 const app = fastify({ logger: true })
@@ -185,7 +194,9 @@ app.listen(4000)
 
 ### Koa
 
-[Koa is another Node.js server framework designed by the team behind Express, which aims to be a smaller, more expressive.](https://koajs.com/) You can add your adapter to your Koa application with a few lines of code then [benefit middlewares written for Koa.](https://github.com/koajs/koa/wiki)
+[Koa is another Node.js server framework designed by the team behind Express, which aims to be a smaller, more expressive.](https://koajs.com/)
+You can add your adapter to your Koa application with a few lines of code then
+[benefit middlewares written for Koa.](https://github.com/koajs/koa/wiki)
 
 ```ts
 import Koa from 'koa'
@@ -214,13 +225,14 @@ app.listen(4000, () => {
 
 ### Next.js
 
-[Next.js](https://nextjs.org/) is a web framework that allows you to build websites very quickly and our new server adapter can be integrated with Next.js easily as an API Route.
+[Next.js](https://nextjs.org/) is a web framework that allows you to build websites very quickly and
+our new server adapter can be integrated with Next.js easily as an API Route.
 
 ```ts
 // pages/api/myEndpoint.ts
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import myServerAdapter from './myServerAdapter'
 import type { NextApiRequest, NextApiResponse } from 'next'
+import myServerAdapter from './myServerAdapter'
 
 export const config = {
   api: {
@@ -234,7 +246,8 @@ export default myServerAdapter
 
 ### SvelteKit
 
-[SvelteKit](https://kit.svelte.dev/) is the fastest way to build svelte apps. It is very simple, and let you build frontend & backend in a single place
+[SvelteKit](https://kit.svelte.dev/) is the fastest way to build svelte apps. It is very simple, and
+let you build frontend & backend in a single place
 
 ```ts
 import myServerAdapter from './myServerAdapter'
@@ -244,8 +257,8 @@ export { myServerAdapter as get, myServerAdapter as post }
 
 ### Bun
 
-[Bun](https://bun.sh/) is a modern JavaScript runtime like Node or Deno, and it supports Fetch API as a first class citizen.
-So the configuration is really simple like any other JS runtime;
+[Bun](https://bun.sh/) is a modern JavaScript runtime like Node or Deno, and it supports Fetch API
+as a first class citizen. So the configuration is really simple like any other JS runtime;
 
 ```ts
 import myServerAdapter from './myServerAdapter'
@@ -259,9 +272,11 @@ console.info(`Server is running on ${server.hostname}`)
 
 ## File Uploads / Multipart Requests
 
-Multipart requests are a type of HTTP request that allows you to send blobs together with regular text data which has a mime-type `multipart/form-data`.
+Multipart requests are a type of HTTP request that allows you to send blobs together with regular
+text data which has a mime-type `multipart/form-data`.
 
-For example, if you send a multipart request from a browser with `FormData`, you can get the same `FormData` object in your request handler.
+For example, if you send a multipart request from a browser with `FormData`, you can get the same
+`FormData` object in your request handler.
 
 ```ts
 import { createServerAdapter } from '@whatwg-node/server'
@@ -285,17 +300,21 @@ const myServerAdapter = createServerAdapter(async request => {
 })
 ```
 
-You can learn more about [File API](https://developer.mozilla.org/en-US/docs/Web/API/File) on MDN documentation.
+You can learn more about [File API](https://developer.mozilla.org/en-US/docs/Web/API/File) on MDN
+documentation.
 
 ## Routing and Middlewares
 
-We'd recommend to use `@whatwg-node/router` to handle routing and middleware approach. It uses `@whatwg-node/server` under the hood.
+We'd recommend to use `@whatwg-node/router` to handle routing and middleware approach. It uses
+`@whatwg-node/server` under the hood.
 
 > Learn more about `@whatwg-node/router` [here](../router)
 
 ### Basic Routing
 
 ```ts
+// Then use it in any environment
+import { createServer } from 'http'
 import { createRouter, Router } from '@whatwg-node/router'
 
 const router = createRouter()
@@ -315,15 +334,14 @@ router.get('/google', () => Response.redirect('http://www.google.com'))
 // 404 for everything else
 router.all('*', () => new Response('Not Found.', { status: 404 }))
 
-// Then use it in any environment
-import { createServer } from 'http'
 const httpServer = createServer(router)
 httpServer.listen(4000)
 ```
 
 ### Middlewares to handle CORS, cookies and more
 
-This package also provides some utilities for your platform agnostic server implementation. The following example shows how to get the cookies as an object from the request.
+This package also provides some utilities for your platform agnostic server implementation. The
+following example shows how to get the cookies as an object from the request.
 
 ```ts
 import { withCookies } from '@whatwg-node/server'

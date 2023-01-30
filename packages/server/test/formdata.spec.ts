@@ -1,5 +1,5 @@
-import { createServerAdapter } from '@whatwg-node/server';
 import * as fetchAPI from '@whatwg-node/fetch';
+import { createServerAdapter } from '@whatwg-node/server';
 import { createTestServer, TestServer } from './test-server';
 
 describe('FormData', () => {

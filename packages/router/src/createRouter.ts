@@ -1,6 +1,13 @@
-import { createServerAdapter, type DefaultServerAdapterContext } from '@whatwg-node/server';
 import { Request as DefaultRequestCtor, URLPattern } from '@whatwg-node/fetch';
-import type { HTTPMethod, RouteMethodKey, Router, RouterBaseObject, RouterHandler, RouterRequest } from './types';
+import { createServerAdapter, type DefaultServerAdapterContext } from '@whatwg-node/server';
+import type {
+  HTTPMethod,
+  RouteMethodKey,
+  Router,
+  RouterBaseObject,
+  RouterHandler,
+  RouterRequest,
+} from './types';
 
 interface RouterOptions<TServerContext = DefaultServerAdapterContext> {
   base?: string;
@@ -8,13 +15,27 @@ interface RouterOptions<TServerContext = DefaultServerAdapterContext> {
   plugins?: Array<(router: RouterBaseObject<TServerContext>) => RouterBaseObject<TServerContext>>;
 }
 
-const HTTP_METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE', 'PATCH'] as HTTPMethod[];
+const HTTP_METHODS = [
+  'GET',
+  'HEAD',
+  'POST',
+  'PUT',
+  'DELETE',
+  'CONNECT',
+  'OPTIONS',
+  'TRACE',
+  'PATCH',
+] as HTTPMethod[];
 
 export function createRouter<TServerContext = DefaultServerAdapterContext>(
-  options?: RouterOptions<TServerContext>
+  options?: RouterOptions<TServerContext>,
 ): Router<TServerContext> {
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
-  function addHandlersToMethod(method: HTTPMethod, path: string, ...handlers: RouterHandler<TServerContext>[]) {
+  function addHandlersToMethod(
+    method: HTTPMethod,
+    path: string,
+    ...handlers: RouterHandler<TServerContext>[]
+  ) {
     let methodPatternMaps = routesByMethod.get(method);
     if (!methodPatternMaps) {
       methodPatternMaps = new Map();
@@ -55,7 +76,7 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
             const parsedUrl = getParsedUrl();
             return parsedUrl.searchParams.has(prop.toString());
           },
-        }
+        },
       );
       for (const [pattern, handlers] of methodPatternMaps) {
         const match = pattern.exec(request.url);
@@ -86,7 +107,9 @@ export function createRouter<TServerContext = DefaultServerAdapterContext>(
               return targetProp;
             },
             has(target, prop) {
-              return prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query';
+              return (
+                prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query'
+              );
             },
           }) as RouterRequest;
           for (const handler of handlers) {
