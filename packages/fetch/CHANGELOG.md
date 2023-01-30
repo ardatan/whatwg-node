@@ -1,5 +1,12 @@
 # @whatwg-node/fetch
 
+## 0.6.5
+
+### Patch Changes
+
+- [`63c96f5`](https://github.com/ardatan/whatwg-node/commit/63c96f5ad14bbc56ccccb95def3447b4107f6013)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not add ponyfills for Bun
+
 ## 0.6.4
 
 ### Patch Changes

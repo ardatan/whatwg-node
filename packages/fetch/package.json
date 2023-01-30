@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/fetch",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "Cross Platform Smart Fetch Ponyfill",
   "repository": {
     "type": "git",
