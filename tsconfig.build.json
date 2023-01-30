@@ -11,6 +11,7 @@
     "**/test-assets",
     "**/test-files",
     "packages/testing",
-    "e2e"
+    "e2e",
+    "**/dist"
   ]
 }
