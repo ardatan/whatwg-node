@@ -14,9 +14,8 @@ const url = await new Promise(resolve => {
 
 try {
   await assertDeployedEndpoint(url);
-  abortCtrl.abort();
+  Deno.exit(0);
 } catch (e) {
-  abortCtrl.abort();
   console.error(e);
   Deno.exit(1);
 }

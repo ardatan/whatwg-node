@@ -1,22 +1,23 @@
 module.exports.Event = globalThis.Event;
 if (!module.exports.Event) {
-    module.exports.Event = class Event {
-        constructor(type, options) {
-            this.bubbles = !!options && !!options.bubbles;
-            this.cancelable = !!options && !!options.cancelable;
-            this.composed = !!options && !!options.composed;
-            this.type = type;
-        }
+  module.exports.Event = class Event {
+    constructor(type, options) {
+      this.bubbles = !!options && !!options.bubbles;
+      this.cancelable = !!options && !!options.cancelable;
+      this.composed = !!options && !!options.composed;
+      this.type = type;
     }
+  }
 }
 
 module.exports.EventTarget = globalThis.EventTarget;
 if (!module.exports.EventTarget) {
-    module.exports.EventTarget = class EventTarget {
-        constructor() {
-            this.__listeners = new Map();
-        }
-        addEventListener(type, listener, options) {   if (arguments.length < 2) {
+  module.exports.EventTarget = class EventTarget {
+    constructor() {
+      this.__listeners = new Map();
+    }
+    addEventListener(type, listener, options) {
+      if (arguments.length < 2) {
         throw new TypeError(
           `TypeError: Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only ${arguments.length} present.`
         );
@@ -31,8 +32,8 @@ if (!module.exports.EventTarget) {
         // Any given listener is only registered once
         listenersForType.set(listener, options);
       }
-        }
-        removeEventListener(type, listener, _options) {
+    }
+    removeEventListener(type, listener, _options) {
       if (arguments.length < 2) {
         throw new TypeError(
           `TypeError: Failed to execute 'addEventListener' on 'EventTarget': 2 arguments required, but only ${arguments.length} present.`
@@ -46,8 +47,8 @@ if (!module.exports.EventTarget) {
           listenersForType.delete(listener);
         }
       }
-        }
-        dispatchEvent(event) {
+    }
+    dispatchEvent(event) {
       if (!(event instanceof module.exports.Event)) {
         throw new TypeError(
           `Failed to execute 'dispatchEvent' on 'EventTarget': parameter 1 is not of type 'Event'.`
@@ -86,16 +87,16 @@ if (!module.exports.EventTarget) {
       // Since there are no cancellable events on a base EventTarget,
       // this should always return true.
       return true;
-        }
     }
+  }
 }
 
 module.exports.CustomEvent = globalThis.CustomEvent;
 if (!module.exports.CustomEvent) {
-    module.exports.CustomEvent = class CustomEvent extends module.exports.Event {
-        constructor(type, options) {
-            super(type, options);
-            this.detail = options && options.detail;
-        }
+  module.exports.CustomEvent = class CustomEvent extends module.exports.Event {
+    constructor(type, options) {
+      super(type, options);
+      this.detail = options && options.detail;
     }
+  }
 }

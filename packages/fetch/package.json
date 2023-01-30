@@ -19,14 +19,10 @@
   },
   "dependencies": {
     "@peculiar/webcrypto": "^1.4.0",
-    "abort-controller": "^3.0.0",
+    "@whatwg-node/node-fetch": "0.0.0",
     "busboy": "^1.6.0",
-    "form-data-encoder": "^1.7.1",
-    "formdata-node": "^4.3.1",
-    "node-fetch": "^2.6.7",
-    "undici": "^5.12.0",
-    "web-streams-polyfill": "^3.2.0",
-    "urlpattern-polyfill": "^6.0.2"
+    "urlpattern-polyfill": "^6.0.2",
+    "web-streams-polyfill": "^3.2.1"
   },
   "publishConfig": {
     "access": "public"

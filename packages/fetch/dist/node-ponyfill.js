@@ -7,6 +7,7 @@ module.exports.Headers = ponyfills.Headers;
 module.exports.Request = ponyfills.Request;
 module.exports.Response = ponyfills.Response;
 module.exports.FormData = ponyfills.FormData;
+module.exports.AbortSignal = ponyfills.AbortSignal;
 module.exports.AbortController = ponyfills.AbortController;
 module.exports.ReadableStream = ponyfills.ReadableStream;
 module.exports.WritableStream = ponyfills.WritableStream;

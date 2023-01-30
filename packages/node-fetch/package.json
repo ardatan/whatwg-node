@@ -1,12 +1,12 @@
 {
-  "name": "@whatwg-node/server",
-  "version": "0.5.8",
-  "description": "Fetch API compliant HTTP Server adapter",
+  "name": "@whatwg-node/node-fetch",
+  "version": "0.0.0",
+  "description": "Fetch API implementation for Node",
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
-    "directory": "packages/server"
+    "directory": "packages/node-fetch"
   },
   "license": "MIT",
   "sideEffects": false,
@@ -34,11 +34,14 @@
     "directory": "dist"
   },
   "dependencies": {
-    "@whatwg-node/fetch": "0.6.2",
+    "@whatwg-node/events": "0.0.2",
+    "busboy": "1.6.0",
     "tslib": "^2.3.1"
   },
+  "peerDependencies": {
+    "@types/node": "^18.0.6"
+  },
   "devDependencies": {
-    "@types/node": "18.11.18",
-    "fastify": "4.10.2"
+    "@types/busboy": "1.5.0"
   }
 }

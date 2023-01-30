@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
@@ -28,7 +28,8 @@ function getPort(nodeRequest: NodeRequest) {
   if (nodeRequest.socket?.localPort) {
     return nodeRequest.socket?.localPort;
   }
-  const portInHeader = nodeRequest.headers?.host?.split(':')?.[1];
+  const hostInHeader = nodeRequest.headers?.[':authority'] || nodeRequest.headers?.host;
+  const portInHeader = hostInHeader?.split(':')?.[1];
   if (portInHeader) {
     return portInHeader;
   }
@@ -36,6 +37,9 @@ function getPort(nodeRequest: NodeRequest) {
 }
 
 function getHostnameWithPort(nodeRequest: NodeRequest) {
+  if (nodeRequest.headers?.[':authority']) {
+    return nodeRequest.headers?.[':authority'];
+  }
   if (nodeRequest.headers?.host) {
     return nodeRequest.headers?.host;
   }
