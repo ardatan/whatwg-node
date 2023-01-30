@@ -45,13 +45,58 @@ the boilerplate we prefer to use
 [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
 ```ts
+import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
 import type { Handler } from '@aws-cdk/aws-lambda'
-import { configure } from '@vendia/serverless-express'
 import myServerAdapter from './myServerAdapter'
-
-export const handler: Handler = configure({
-  app: myServerAdapter
-})
+ 
+interface ServerContext {
+  event: APIGatewayEvent
+  lambdaContext: Context
+}
+ 
+export async function handler(
+  event: APIGatewayEvent,
+  lambdaContext: Context
+): Promise<APIGatewayProxyResult> {
+  const url = new URL(event.path, 'http://localhost')
+  if (event.queryStringParameters != null) {
+    for (const name in event.queryStringParameters) {
+      const value = event.queryStringParameters[name]
+      if (value != null) {
+        url.searchParams.set(name, value)
+      }
+    }
+  }
+ 
+  const response = await myServerAdapter.fetch(
+    url,
+    {
+      // For v1.0 you should use event.httpMethod
+      method: event.requestContext.http.method,
+      headers: event.headers as HeadersInit,
+      body: event.body
+        ? Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8')
+        : undefined
+    },
+    {
+      event,
+      lambdaContext
+    }
+  )
+ 
+  const responseHeaders: Record<string, string> = {}
+ 
+  response.headers.forEach((value, name) => {
+    responseHeaders[name] = value
+  })
+ 
+  return {
+    statusCode: response.status,
+    headers: responseHeaders,
+    body: await response.text(),
+    isBase64Encoded: false
+  }
+}
 ```
 
 ### Cloudflare Workers
@@ -72,12 +117,13 @@ self.addEventListener('fetch', myServerAdapter)
 You can use our adapter as a Deno request handler like below;
 
 ```ts
-import { serve } from 'https://deno.land/std@0.117.0/http/server.ts'
+import { serve } from 'https://deno.land/std@0.157.0/http/server.ts'
 import myServerAdapter from './myServerAdapter'
 
 serve(myServerAdapter, {
-  // Listen any port you want
-  addr: ':4000'
+  onListen({ hostname, port }) {
+    console.log(`Listening on http://${hostname}:${port}/graphql`)
+  }
 })
 ```
 
@@ -136,7 +182,8 @@ app.route({
 
     reply.status(response.status)
 
-    reply.send(Readable.from(response.body))
+    // Fastify doesn't accept `null` as a response body
+    reply.send(response.body || undefined)
 
     return reply
   }
@@ -260,6 +307,8 @@ documentation.
 
 We'd recommend to use `@whatwg-node/router` to handle routing and middleware approach. It uses
 `@whatwg-node/server` under the hood.
+
+> Learn more about `@whatwg-node/router` [here](../router)
 
 ### Basic Routing
 
