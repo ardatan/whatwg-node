@@ -1,13 +1,13 @@
 module.exports = function createNodePonyfill(opts = {}) {
-
-  // Bun already has a Fetch API
-  if (process.versions.bun) {
-    return globalThis;
+  const ponyfills = {};
+  
+  // We call this previously to patch `Bun`
+  if (!ponyfills.URLPattern) {
+    const urlPatternModule = require('urlpattern-polyfill');
+    ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
   const newNodeFetch = require('@whatwg-node/node-fetch');
-
-  const ponyfills = {};
 
   ponyfills.fetch = newNodeFetch.fetch;
   ponyfills.Request = newNodeFetch.Request;
@@ -74,11 +74,6 @@ module.exports = function createNodePonyfill(opts = {}) {
   if (!ponyfills.crypto) {
     const cryptoPonyfill = require('@peculiar/webcrypto');
     ponyfills.crypto = new cryptoPonyfill.Crypto();
-  }
-  
-  if (!ponyfills.URLPattern) {
-    const urlPatternModule = require('urlpattern-polyfill');
-    ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
   return ponyfills;
