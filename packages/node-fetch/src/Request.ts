@@ -41,7 +41,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.integrity = requestInit?.integrity || '';
 
     let defaultKeepAlive = true;
-    
+
     const connectionInHeaders = this.headers.get('connection');
     if (connectionInHeaders) {
       defaultKeepAlive = connectionInHeaders.toLowerCase() === 'keep-alive';

@@ -1,12 +1,16 @@
-import { AddressInfo } from 'net';
+import { AddressInfo, Socket } from 'net';
 import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { fetch, ReadableStream, Response, TextEncoder } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
 
 describe('Fastify', () => {
   let fastifyServer: FastifyInstance;
-  afterEach(async () => {
-    await fastifyServer?.close();
+  const connections = new Set<Socket>();
+  afterEach(() => {
+    connections.forEach(socket => {
+      socket.destroy();
+    });
+    return fastifyServer?.close();
   });
   it('should handle streams', async () => {
     let cnt = 0;
@@ -36,6 +40,12 @@ describe('Fastify', () => {
         ),
     );
     fastifyServer = fastify();
+    fastifyServer.server.on('connection', socket => {
+      connections.add(socket);
+      socket.on('close', () => {
+        connections.delete(socket);
+      });
+    });
     fastifyServer.route({
       url: '/mypath',
       method: ['GET', 'POST', 'OPTIONS'],

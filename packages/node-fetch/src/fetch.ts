@@ -1,6 +1,6 @@
 import { createReadStream } from 'fs';
-import { request as httpRequest, Agent as HTTPAgent } from 'http';
-import { request as httpsRequest, Agent as HTTPSAgent, RequestOptions } from 'https';
+import { Agent as HTTPAgent, request as httpRequest } from 'http';
+import { Agent as HTTPSAgent, request as httpsRequest, RequestOptions } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { PonyfillAbortError } from './AbortError';
@@ -29,8 +29,7 @@ const AGENT_MAP = {
   'http:nonKeepAlive': new HTTPAgent({ keepAlive: false }),
   'https:keepAlive': new HTTPSAgent({ keepAlive: true }),
   'https:nonKeepAlive': new HTTPSAgent({ keepAlive: false }),
-}
-
+};
 
 function getAgent(protocol: string, keepAlive: boolean): HTTPAgent | HTTPSAgent {
   return AGENT_MAP[`${protocol}${keepAlive ? 'keepAlive' : 'nonKeepAlive'}`];
@@ -106,14 +105,14 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       fetchRequest.signal.addEventListener('abort', abortListener);
 
       const agent = getAgent(url.protocol, fetchRequest.keepalive);
-      
+
       const requestOptions: RequestOptions = {
         // signal: fetchRequest.signal will be added when v14 reaches EOL
         method: fetchRequest.method,
         headers: nodeHeaders,
         rejectUnauthorized: false,
         agent,
-      }
+      };
 
       const nodeRequest = requestFn(url, requestOptions);
 
