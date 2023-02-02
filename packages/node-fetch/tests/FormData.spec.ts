@@ -1,9 +1,9 @@
+import { Blob as NodeBlob } from 'buffer';
 import { PonyfillBlob } from '../src/Blob';
 import { PonyfillFile } from '../src/File';
 import { PonyfillFormData } from '../src/FormData';
 import { PonyfillRequest } from '../src/Request';
 import { PonyfillResponse } from '../src/Response';
-import { Blob } from 'buffer';
 
 describe('Form Data', () => {
   it('Consume empty URLSearchParams as PonyfillFormData', async () => {
@@ -138,8 +138,8 @@ describe('Form Data', () => {
   });
   it('support native Blob', async () => {
     const formData = new PonyfillFormData();
-    const blob = new Blob(['Hello world!'], { type: 'text/plain' });
-    formData.append('greetings', blob);
+    const blob = new NodeBlob(['Hello world!'], { type: 'text/plain' });
+    formData.append('greetings', blob as any);
     const request = new PonyfillRequest('http://localhost:8080', {
       method: 'POST',
       body: formData,
