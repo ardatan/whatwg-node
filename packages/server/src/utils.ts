@@ -144,8 +144,7 @@ export function normalizeNodeRequest(
   }
 
   return new RequestCtor(fullUrl, {
-    headers: nodeRequest.headers,
-    method: nodeRequest.method,
+    ...baseRequestInit,
     body: rawRequest as any,
   });
 }

@@ -176,4 +176,12 @@ describe('adapter.fetch', () => {
       expect.objectContaining({ foo: 'bar' }),
     );
   });
+  it('should have the abort signal on the request', async () => {
+    const handler = jest.fn((_request: Request) => new Response());
+    const adapter = createServerAdapter(handler, Request);
+
+    await adapter.fetch('http://localhost');
+
+    expect(handler.mock.lastCall?.[0].signal).toBeTruthy();
+  });
 });
