@@ -1,6 +1,6 @@
 import { createReadStream } from 'fs';
-import { request as httpRequest } from 'http';
-import { request as httpsRequest } from 'https';
+import { request as httpRequest, Agent as HTTPAgent } from 'http';
+import { request as httpsRequest, Agent as HTTPSAgent, RequestOptions } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { PonyfillAbortError } from './AbortError';
@@ -22,6 +22,18 @@ function getRequestFnForProtocol(protocol: string) {
       return httpsRequest;
   }
   throw new Error(`Unsupported protocol: ${protocol}`);
+}
+
+const AGENT_MAP = {
+  'http:keepAlive': new HTTPAgent({ keepAlive: true }),
+  'http:nonKeepAlive': new HTTPAgent({ keepAlive: false }),
+  'https:keepAlive': new HTTPSAgent({ keepAlive: true }),
+  'https:nonKeepAlive': new HTTPSAgent({ keepAlive: false }),
+}
+
+
+function getAgent(protocol: string, keepAlive: boolean): HTTPAgent | HTTPSAgent {
+  return AGENT_MAP[`${protocol}${keepAlive ? 'keepAlive' : 'nonKeepAlive'}`];
 }
 
 const BASE64_SUFFIX = ';base64';
@@ -73,6 +85,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         resolve(response);
         return;
       }
+
       const requestFn = getRequestFnForProtocol(url.protocol);
 
       const nodeReadable = (
@@ -92,11 +105,17 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
       fetchRequest.signal.addEventListener('abort', abortListener);
 
-      const nodeRequest = requestFn(url, {
+      const agent = getAgent(url.protocol, fetchRequest.keepalive);
+      
+      const requestOptions: RequestOptions = {
         // signal: fetchRequest.signal will be added when v14 reaches EOL
         method: fetchRequest.method,
         headers: nodeHeaders,
-      });
+        rejectUnauthorized: false,
+        agent,
+      }
+
+      const nodeRequest = requestFn(url, requestOptions);
 
       nodeRequest.once('response', nodeResponse => {
         if (nodeResponse.headers.location) {
