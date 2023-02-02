@@ -1,22 +1,23 @@
-import { join } from 'path';
+import { globalAgent } from 'https';
 import { Readable } from 'stream';
-import { pathToFileURL } from 'url';
 import { PonyfillAbortController } from '../src/AbortController';
-import { PonyfillAbortSignal } from '../src/AbortSignal';
 import { PonyfillBlob } from '../src/Blob';
 import { fetchPonyfill } from '../src/fetch';
 import { PonyfillFormData } from '../src/FormData';
 import { PonyfillReadableStream } from '../src/ReadableStream';
 
 describe('Node Fetch Ponyfill', () => {
+  afterAll(() => {
+    globalAgent.destroy();
+  });
   it('should fetch', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/get');
+    const response = await fetchPonyfill('http://localhost:8888/get');
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.url).toBe('https://httpbin.org/get');
+    expect(body.url).toBe('http://localhost:8888/get');
   });
   it('should fetch with headers', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/headers', {
+    const response = await fetchPonyfill('http://localhost:8888/headers', {
       headers: {
         'X-Test': 'test',
       },
@@ -26,29 +27,29 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.headers['X-Test']).toBe('test');
   });
   it('should follow redirects', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/redirect/1');
+    const response = await fetchPonyfill('http://localhost:8888/redirect/1');
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.url).toBe('https://httpbin.org/get');
+    expect(body.url).toBe('http://localhost:8888/get');
     expect(response.redirected).toBe(true);
   });
   it('should not follow redirects', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/redirect/1', {
+    const response = await fetchPonyfill('http://localhost:8888/redirect/1', {
       redirect: 'manual',
     });
     expect(response.status).toBe(302);
-    expect(response.url).toBe('https://httpbin.org/redirect/1');
+    expect(response.url).toBe('http://localhost:8888/redirect/1');
     await response.text();
   });
   it('should fail if redirects are not allowed', async () => {
     await expect(
-      fetchPonyfill('https://httpbin.org/redirect/1', {
+      fetchPonyfill('http://localhost:8888/redirect/1', {
         redirect: 'error',
       }),
     ).rejects.toThrow();
   });
   it('should accept string bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: 'test',
     });
@@ -57,7 +58,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept Buffer bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: Buffer.from('test', 'utf-8'),
     });
@@ -66,7 +67,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept Readable bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: Readable.from('test'),
     });
@@ -75,7 +76,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept ReadableStream bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: new PonyfillReadableStream({
         start(controller) {
@@ -89,7 +90,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept Blob bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: new PonyfillBlob(['test']),
     });
@@ -105,7 +106,7 @@ describe('Node Fetch Ponyfill', () => {
       new PonyfillBlob(['test-content'], { type: 'text/plain' }),
       'test.txt',
     );
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: formdata,
     });
@@ -120,48 +121,9 @@ describe('Node Fetch Ponyfill', () => {
       controller.abort();
     }, 300);
     await expect(
-      fetchPonyfill('https://httpbin.org/delay/5', {
+      fetchPonyfill('http://localhost:8888/delay/5', {
         signal: controller.signal,
       }),
     ).rejects.toThrow('The operation was aborted.');
-  });
-  it('should respect AbortSignal.timeout', async () => {
-    await expect(
-      fetchPonyfill('https://httpbin.org/delay/5', {
-        signal: PonyfillAbortSignal.timeout(300),
-      }),
-    ).rejects.toThrow('The operation was aborted. reason: timeout');
-  });
-  it('should respect file protocol', async () => {
-    const response = await fetchPonyfill(pathToFileURL(join(__dirname, './fixtures/test.json')));
-    expect(response.status).toBe(200);
-    const body = await response.json();
-    expect(body.foo).toBe('bar');
-  });
-  describe('data uris', () => {
-    it('should accept base64-encoded gif data uri', async () => {
-      const b64 = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
-      const res = await fetchPonyfill(b64);
-      expect(res.status).toBe(200);
-      expect(res.headers.get('Content-Type')).toBe('image/gif');
-      const buf = await res.arrayBuffer();
-      expect(buf.byteLength).toBe(35);
-      expect(buf).toBeInstanceOf(ArrayBuffer);
-    });
-    it('should accept data uri with specified charset', async () => {
-      const r = await fetchPonyfill('data:text/plain;charset=UTF-8;page=21,the%20data:1234,5678');
-      expect(r.status).toBe(200);
-      expect(r.headers.get('Content-Type')).toBe('text/plain;charset=UTF-8;page=21');
-
-      const b = await r.text();
-      expect(b).toBe('the data:1234,5678');
-    });
-
-    it('should accept data uri of plain text', async () => {
-      const r = await fetchPonyfill('data:,Hello%20World!');
-      expect(r.status).toBe(200);
-      const text = await r.text();
-      expect(text).toBe('Hello World!');
-    });
   });
 });

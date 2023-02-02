@@ -73,6 +73,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         resolve(response);
         return;
       }
+
       const requestFn = getRequestFnForProtocol(url.protocol);
 
       const nodeReadable = (

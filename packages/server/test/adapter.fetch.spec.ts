@@ -1,4 +1,4 @@
-import { Request } from '@whatwg-node/fetch';
+import { Request, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src';
 
 describe('adapter.fetch', () => {
@@ -175,5 +175,13 @@ describe('adapter.fetch', () => {
       expect.objectContaining({ url: request.url }),
       expect.objectContaining({ foo: 'bar' }),
     );
+  });
+  it('should have the abort signal on the request', async () => {
+    const handler = jest.fn((_request: Request) => new Response());
+    const adapter = createServerAdapter(handler, Request);
+
+    await adapter.fetch('http://localhost');
+
+    expect(handler.mock.lastCall?.[0].signal).toBeTruthy();
   });
 });

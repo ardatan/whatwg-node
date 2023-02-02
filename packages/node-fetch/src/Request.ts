@@ -39,7 +39,8 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.credentials = requestInit?.credentials || 'same-origin';
     this.headers = new PonyfillHeaders(requestInit?.headers);
     this.integrity = requestInit?.integrity || '';
-    this.keepalive = requestInit?.keepalive || true;
+    this.keepalive = requestInit?.keepalive != null ? requestInit?.keepalive : false;
+
     this.method = requestInit?.method?.toUpperCase() || 'GET';
     this.mode = requestInit?.mode || 'cors';
     this.redirect = requestInit?.redirect || 'follow';
@@ -48,12 +49,6 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.signal = requestInit?.signal || new PonyfillAbortController().signal;
 
     this.url = url || '';
-
-    if (this.keepalive) {
-      if (!this.headers.has('connection')) {
-        this.headers.set('connection', 'keep-alive');
-      }
-    }
 
     const contentTypeInHeaders = this.headers.get('content-type');
     if (!contentTypeInHeaders) {

@@ -1,4 +1,5 @@
-import { Readable } from 'stream';
+import { globalAgent } from 'http';
+import { Socket } from 'net';
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { createTestServer, TestServer } from './test-server';
@@ -38,11 +39,22 @@ async function compareResponse(toBeChecked: Response, expected: Response) {
 
 describe('Request Listener', () => {
   let testServer: TestServer;
+  const connections = new Set<Socket>();
   beforeAll(async () => {
     testServer = await createTestServer();
+    testServer.server.on('connection', socket => {
+      connections.add(socket);
+      socket.once('close', () => {
+        connections.delete(socket);
+      });
+    });
   });
 
   afterAll(done => {
+    globalAgent.destroy();
+    connections.forEach(socket => {
+      socket.destroy();
+    });
     testServer.server.close(done);
   });
 
@@ -53,9 +65,9 @@ describe('Request Listener', () => {
     const toBeCheckedValues = [];
     const expectedValues = [];
     if (toBeCheckedStream) {
-      for await (const chunk of Readable.from(toBeCheckedStream as any)) {
+      for await (const chunk of toBeCheckedStream as any) {
         if (chunk) {
-          const chunkString = Buffer.from(chunk).toString('utf-8');
+          const chunkString = chunk.toString('utf-8');
           if (chunkString) {
             const chunkParts = chunkString.trim().split('\n');
             for (const chunkPart of chunkParts) {
@@ -65,13 +77,17 @@ describe('Request Listener', () => {
         }
       }
       if (expected) {
-        for await (const chunk of Readable.from(expected as any)) {
-          if (chunk) {
-            const chunkString = Buffer.from(chunk).toString('utf-8');
-            if (chunkString) {
-              const chunkParts = chunkString.trim().split('\n');
-              for (const chunkPart of chunkParts) {
-                expectedValues.push(chunkPart);
+        if (typeof expected === 'string') {
+          expectedValues.push(expected);
+        } else {
+          for await (const chunk of expected as any) {
+            if (chunk) {
+              const chunkString = chunk.toString('utf-8');
+              if (chunkString) {
+                const chunkParts = chunkString.trim().split('\n');
+                for (const chunkPart of chunkParts) {
+                  expectedValues.push(chunkPart);
+                }
               }
             }
           }
@@ -117,31 +133,37 @@ describe('Request Listener', () => {
   }
 
   function getIncrementalRequestBody() {
+    let i = 5;
     return new fetchAPI.ReadableStream({
-      async start(controller) {
-        for (let i = 0; i < 2; i++) {
-          await new Promise(resolve => setTimeout(resolve, 30));
+      async pull(controller) {
+        await new Promise(resolve => setTimeout(resolve, 30));
+        if (i > 0) {
           controller.enqueue(`data: request_${i.toString()}\n`);
+          i--;
+        } else {
+          controller.close();
         }
-        controller.close();
       },
     });
   }
 
   function getIncrementalResponseBody() {
+    let i = 5;
     return new fetchAPI.ReadableStream({
-      async start(controller) {
-        for (let i = 0; i < 10; i++) {
-          await new Promise(resolve => setTimeout(resolve, 30));
+      async pull(controller) {
+        await new Promise(resolve => setTimeout(resolve, 30));
+        if (i > 0) {
           controller.enqueue(`data: response_${i.toString()}\n`);
+          i--;
+        } else {
+          controller.close();
         }
-        controller.close();
       },
     });
   }
 
   [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
-    it(`should handle regular requests with ${method}`, async () => {
+    it(`should handle regular requests with ${method}`, () => {
       const requestInit: RequestInit = {
         method,
         headers: {
@@ -160,7 +182,7 @@ describe('Request Listener', () => {
           'random-header': Date.now().toString(),
         },
       });
-      await runTestForRequestAndResponse({
+      return runTestForRequestAndResponse({
         requestInit,
         getRequestBody: getRegularRequestBody,
         expectedResponse,
@@ -168,7 +190,7 @@ describe('Request Listener', () => {
       });
     });
 
-    it(`should handle incremental responses with ${method}`, async () => {
+    it(`should handle incremental responses with ${method}`, () => {
       const requestInit: RequestInit = {
         method,
         headers: {
@@ -186,7 +208,7 @@ describe('Request Listener', () => {
           'random-header': Date.now().toString(),
         },
       });
-      await runTestForRequestAndResponse({
+      return runTestForRequestAndResponse({
         requestInit,
         getRequestBody: getRegularRequestBody,
         expectedResponse,
@@ -194,7 +216,7 @@ describe('Request Listener', () => {
       });
     });
 
-    it(`should handle incremental requests with ${method}`, async () => {
+    it(`should handle incremental requests with ${method}`, () => {
       const requestInit: RequestInit = {
         method,
         headers: {
@@ -212,21 +234,12 @@ describe('Request Listener', () => {
           'random-header': Date.now().toString(),
         },
       });
-      await runTestForRequestAndResponse({
+      return runTestForRequestAndResponse({
         requestInit,
         getRequestBody: getIncrementalRequestBody,
         expectedResponse,
         getResponseBody: getRegularResponseBody,
       });
-    });
-
-    it('should have the abort signal on the request', async () => {
-      const handler = jest.fn((_request: Request) => new fetchAPI.Response());
-      const adapter = createServerAdapter(handler, fetchAPI.Request);
-
-      await adapter.fetch('http://localhost');
-
-      expect(handler.mock.lastCall?.[0].signal).toBeTruthy();
     });
   });
 });
