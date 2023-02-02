@@ -3,6 +3,7 @@ import { PonyfillFile } from '../src/File';
 import { PonyfillFormData } from '../src/FormData';
 import { PonyfillRequest } from '../src/Request';
 import { PonyfillResponse } from '../src/Response';
+import { Blob } from 'buffer';
 
 describe('Form Data', () => {
   it('Consume empty URLSearchParams as PonyfillFormData', async () => {
