@@ -2136,10 +2136,10 @@
     tiny-glob "^0.2.9"
     tslib "^2.4.0"
 
-"@pulumi/aws@5.28.0":
-  version "5.28.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.28.0.tgz#40dae1799502f718208c27b1fa3a61e0ebe0761f"
-  integrity sha512-FdOAmuXJA4kfmM17SwoT9LmIduIEtrtdP1oGhOA5Z5/4JeWHaJtaNBObWYnh3OvkUxDkIY8AsyVLpoTrhPKiKw==
+"@pulumi/aws@5.29.0":
+  version "5.29.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.29.0.tgz#d707f2f6c97a0fb14d51c85b6406f2a752398e5d"
+  integrity sha512-iOv4Qkk3nNKZ1ncQc1MfqvOKTkg5eYd9B72SP8vSO6LTzOQNEtAM6MU7HzIn6tXE6NREHUm1f+Cxp+QNxR/V3w==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     aws-sdk "^2.0.0"
