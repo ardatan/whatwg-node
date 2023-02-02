@@ -66,7 +66,12 @@ export class PonyfillFormData implements FormData {
         const entry = entries.shift();
         if (entry) {
           const [key, value] = entry;
-          if (value instanceof PonyfillBlob) {
+          if (typeof value === 'string') {
+            controller.enqueue(
+              Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`),
+            );
+            controller.enqueue(Buffer.from(value));
+          } else {
             let filenamePart = '';
             if (value.name) {
               filenamePart = `; filename="${value.name}"`;
@@ -78,11 +83,6 @@ export class PonyfillFormData implements FormData {
               Buffer.from(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`),
             );
             controller.enqueue(Buffer.from(await value.arrayBuffer()));
-          } else {
-            controller.enqueue(
-              Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`),
-            );
-            controller.enqueue(Buffer.from(value));
           }
           if (entries.length === 0) {
             controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
