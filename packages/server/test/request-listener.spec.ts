@@ -1,8 +1,8 @@
+import { globalAgent } from 'http';
+import { Socket } from 'net';
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { createTestServer, TestServer } from './test-server';
-import { Socket } from 'net';
-import { globalAgent } from 'http';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -56,7 +56,7 @@ describe('Request Listener', () => {
       socket.destroy();
     });
     testServer.server.close(done);
-  })
+  });
 
   async function compareReadableStream(
     toBeCheckedStream: ReadableStream | null,
@@ -143,7 +143,7 @@ describe('Request Listener', () => {
         } else {
           controller.close();
         }
-      }
+      },
     });
   }
 
@@ -158,7 +158,7 @@ describe('Request Listener', () => {
         } else {
           controller.close();
         }
-      }
+      },
     });
   }
 

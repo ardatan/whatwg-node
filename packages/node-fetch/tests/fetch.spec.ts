@@ -9,7 +9,7 @@ import { PonyfillReadableStream } from '../src/ReadableStream';
 describe('Node Fetch Ponyfill', () => {
   afterAll(() => {
     globalAgent.destroy();
-  })
+  });
   it('should fetch', async () => {
     const response = await fetchPonyfill('https://httpbin.org/get');
     expect(response.status).toBe(200);
