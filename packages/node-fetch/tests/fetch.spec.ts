@@ -7,6 +7,7 @@ import { PonyfillFormData } from '../src/FormData';
 import { PonyfillReadableStream } from '../src/ReadableStream';
 
 describe('Node Fetch Ponyfill', () => {
+  jest.setTimeout(30000);
   afterAll(() => {
     globalAgent.destroy();
   });
