@@ -135,4 +135,17 @@ describe('Form Data', () => {
       'File size limit exceeded: 1 bytes',
     );
   });
+  it('support native Blob', async () => {
+    const formData = new PonyfillFormData();
+    const blob = new Blob(['Hello world!'], { type: 'text/plain' });
+    formData.append('greetings', blob);
+    const request = new PonyfillRequest('http://localhost:8080', {
+      method: 'POST',
+      body: formData,
+    });
+    const requestText = await request.text();
+    expect(requestText).toContain(`Content-Disposition: form-data; name="greetings"`);
+    expect(requestText).toContain(`Content-Type: text/plain`);
+    expect(requestText).toContain(`Hello world!`);
+  });
 });
