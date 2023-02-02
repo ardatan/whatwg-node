@@ -7,18 +7,17 @@ import { PonyfillFormData } from '../src/FormData';
 import { PonyfillReadableStream } from '../src/ReadableStream';
 
 describe('Node Fetch Ponyfill', () => {
-  jest.setTimeout(30000);
   afterAll(() => {
     globalAgent.destroy();
   });
   it('should fetch', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/get');
+    const response = await fetchPonyfill('http://localhost:8888/get');
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.url).toBe('https://httpbin.org/get');
+    expect(body.url).toBe('http://localhost:8888/get');
   });
   it('should fetch with headers', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/headers', {
+    const response = await fetchPonyfill('http://localhost:8888/headers', {
       headers: {
         'X-Test': 'test',
       },
@@ -28,29 +27,29 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.headers['X-Test']).toBe('test');
   });
   it('should follow redirects', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/redirect/1');
+    const response = await fetchPonyfill('http://localhost:8888/redirect/1');
     expect(response.status).toBe(200);
     const body = await response.json();
-    expect(body.url).toBe('https://httpbin.org/get');
+    expect(body.url).toBe('http://localhost:8888/get');
     expect(response.redirected).toBe(true);
   });
   it('should not follow redirects', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/redirect/1', {
+    const response = await fetchPonyfill('http://localhost:8888/redirect/1', {
       redirect: 'manual',
     });
     expect(response.status).toBe(302);
-    expect(response.url).toBe('https://httpbin.org/redirect/1');
+    expect(response.url).toBe('http://localhost:8888/redirect/1');
     await response.text();
   });
   it('should fail if redirects are not allowed', async () => {
     await expect(
-      fetchPonyfill('https://httpbin.org/redirect/1', {
+      fetchPonyfill('http://localhost:8888/redirect/1', {
         redirect: 'error',
       }),
     ).rejects.toThrow();
   });
   it('should accept string bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: 'test',
     });
@@ -59,7 +58,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept Buffer bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: Buffer.from('test', 'utf-8'),
     });
@@ -68,7 +67,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept Readable bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: Readable.from('test'),
     });
@@ -77,7 +76,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept ReadableStream bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: new PonyfillReadableStream({
         start(controller) {
@@ -91,7 +90,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.data).toBe('test');
   });
   it('should accept Blob bodies', async () => {
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: new PonyfillBlob(['test']),
     });
@@ -107,7 +106,7 @@ describe('Node Fetch Ponyfill', () => {
       new PonyfillBlob(['test-content'], { type: 'text/plain' }),
       'test.txt',
     );
-    const response = await fetchPonyfill('https://httpbin.org/post', {
+    const response = await fetchPonyfill('http://localhost:8888/post', {
       method: 'POST',
       body: formdata,
     });
@@ -122,7 +121,7 @@ describe('Node Fetch Ponyfill', () => {
       controller.abort();
     }, 300);
     await expect(
-      fetchPonyfill('https://httpbin.org/delay/5', {
+      fetchPonyfill('http://localhost:8888/delay/5', {
         signal: controller.signal,
       }),
     ).rejects.toThrow('The operation was aborted.');

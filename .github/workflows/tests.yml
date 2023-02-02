@@ -50,6 +50,11 @@ jobs:
   test:
     name: Unit Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest
+    services:
+      httpbin:
+        image: kennethreitz/httpbin
+        ports:
+          - 8888:80
     strategy:
       matrix:
         node-version: [14, 16, 18]
