@@ -11,8 +11,9 @@ export class PonyfillFormData implements FormData {
       values = [];
       this.map.set(name, values);
     }
-    const entry: FormDataEntryValue =
-      value instanceof PonyfillBlob ? getNormalizedFile(name, value, fileName) : value;
+    const entry: FormDataEntryValue = isBlob(value)
+      ? getNormalizedFile(name, value, fileName)
+      : value;
     values.push(entry);
   }
 
@@ -34,8 +35,9 @@ export class PonyfillFormData implements FormData {
   }
 
   set(name: string, value: PonyfillBlob | string, fileName?: string): void {
-    const entry: FormDataEntryValue =
-      value instanceof PonyfillBlob ? getNormalizedFile(name, value, fileName) : value;
+    const entry: FormDataEntryValue = isBlob(value)
+      ? getNormalizedFile(name, value, fileName)
+      : value;
     this.map.set(name, [entry]);
   }
 
@@ -66,12 +68,7 @@ export class PonyfillFormData implements FormData {
         const entry = entries.shift();
         if (entry) {
           const [key, value] = entry;
-          if (typeof value === 'string') {
-            controller.enqueue(
-              Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`),
-            );
-            controller.enqueue(Buffer.from(value));
-          } else {
+          if (value instanceof PonyfillFile) {
             let filenamePart = '';
             if (value.name) {
               filenamePart = `; filename="${value.name}"`;
@@ -83,6 +80,11 @@ export class PonyfillFormData implements FormData {
               Buffer.from(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`),
             );
             controller.enqueue(Buffer.from(await value.arrayBuffer()));
+          } else {
+            controller.enqueue(
+              Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`),
+            );
+            controller.enqueue(Buffer.from(value));
           }
           if (entries.length === 0) {
             controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
@@ -110,4 +112,8 @@ function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) 
     return blob;
   }
   return new PonyfillFile([blob], fileName || name, { type: blob.type });
+}
+
+function isBlob(value: any): value is PonyfillBlob {
+  return value != null && typeof value === 'object' && typeof value.arrayBuffer === 'function';
 }
