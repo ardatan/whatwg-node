@@ -1,5 +1,19 @@
 # @whatwg-node/router
 
+## 0.2.0
+
+### Minor Changes
+
+- [`972f781`](https://github.com/ardatan/whatwg-node/commit/972f781b040a28e23eb1b6f1f5140858abf011ff)
+  Thanks [@ardatan](https://github.com/ardatan)! - Relax typings for Node frameworks
+
+### Patch Changes
+
+- Updated dependencies
+  [[`972f781`](https://github.com/ardatan/whatwg-node/commit/972f781b040a28e23eb1b6f1f5140858abf011ff)]:
+  - @whatwg-node/server@0.6.0
+  - @whatwg-node/fetch@0.6.6
+
 ## 0.1.10
 
 ### Patch Changes

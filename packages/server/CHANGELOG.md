@@ -1,5 +1,17 @@
 # @whatwg-node/server
 
+## 0.6.0
+
+### Minor Changes
+
+- [`972f781`](https://github.com/ardatan/whatwg-node/commit/972f781b040a28e23eb1b6f1f5140858abf011ff)
+  Thanks [@ardatan](https://github.com/ardatan)! - Relax typings for Node frameworks
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @whatwg-node/fetch@0.6.6
+
 ## 0.5.11
 
 ### Patch Changes

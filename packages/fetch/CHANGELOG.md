@@ -1,5 +1,14 @@
 # @whatwg-node/fetch
 
+## 0.6.6
+
+### Patch Changes
+
+- Updated dependencies
+  [[`155c354`](https://github.com/ardatan/whatwg-node/commit/155c354aae4179bf233c68fec386e276728a16de),
+  [`260d86f`](https://github.com/ardatan/whatwg-node/commit/260d86f50cd1e215b1fe574042da92124636e56b)]:
+  - @whatwg-node/node-fetch@0.0.2
+
 ## 0.6.5
 
 ### Patch Changes
