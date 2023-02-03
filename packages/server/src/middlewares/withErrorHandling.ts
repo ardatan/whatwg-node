@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
-import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
+import { ServerAdapterBaseObject, WaitUntilFn } from '../types';
 
-export function createDefaultErrorHandler<TServerContext = DefaultServerAdapterContext>(
+export function createDefaultErrorHandler<TServerContext = {}>(
   ResponseCtor: typeof Response = DefaultResponseCtor,
 ): ErrorHandler<TServerContext> {
   return function defaultErrorHandler(e: any): Response | Promise<Response> {
@@ -19,13 +20,16 @@ export type ErrorHandler<TServerContext> = (
 ) => Response | Promise<Response>;
 
 export function withErrorHandling<
-  TServerContext = DefaultServerAdapterContext,
+  TServerContext = {},
   TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>,
 >(
   obj: TBaseObject,
   onError: ErrorHandler<TServerContext> = createDefaultErrorHandler(),
 ): TBaseObject {
-  async function handleWithErrorHandling(request: Request, ctx: TServerContext): Promise<Response> {
+  async function handleWithErrorHandling(
+    request: Request,
+    ctx: TServerContext & { waitUntil: WaitUntilFn },
+  ): Promise<Response> {
     try {
       const res = await obj.handle(request, ctx);
       return res;

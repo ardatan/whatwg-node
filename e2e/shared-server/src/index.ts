@@ -1,13 +1,7 @@
-import {
-  createRouter,
-  DefaultServerAdapterContext,
-  Response,
-  withErrorHandling,
-} from '@whatwg-node/router';
+/* eslint-disable @typescript-eslint/ban-types */
+import { createRouter, Response, withErrorHandling } from '@whatwg-node/router';
 
-export function createTestServerAdapter<TServerContext = DefaultServerAdapterContext>(
-  base?: string,
-) {
+export function createTestServerAdapter<TServerContext = {}>(base?: string) {
   const app = createRouter<TServerContext>({
     base,
     plugins: [withErrorHandling as any],

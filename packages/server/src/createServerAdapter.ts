@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Request as PonyfillRequestCtor } from '@whatwg-node/fetch';
 import {
-  DefaultServerAdapterContext,
   FetchEvent,
   ServerAdapter,
   ServerAdapterBaseObject,
@@ -28,7 +28,7 @@ async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
 }
 
 function createServerAdapter<
-  TServerContext = DefaultServerAdapterContext,
+  TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
 >(
   serverAdapterRequestHandler: THandleRequest,
@@ -42,7 +42,7 @@ function createServerAdapter<
   RequestCtor?: typeof Request,
 ): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
-  TServerContext = DefaultServerAdapterContext,
+  TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
   TBaseObject extends ServerAdapterBaseObject<
     TServerContext,
@@ -106,8 +106,7 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext: TServerContext & object =
-      ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
+    const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
     if (!('waitUntil' in serverContext)) {
       const waitUntilPromises: Promise<void>[] = [];
       const response$ = handleRequest(request, {

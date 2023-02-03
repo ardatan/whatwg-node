@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
-import { DefaultServerAdapterContext, ServerAdapterBaseObject } from '../types';
+import { ServerAdapterBaseObject, WaitUntilFn } from '../types';
 
 export type CORSOptions =
   | {
@@ -123,7 +124,7 @@ async function getCORSResponseHeaders<TServerContext>(
 }
 
 export function withCORS<
-  TServerContext = DefaultServerAdapterContext,
+  TServerContext = {},
   TBaseObject extends ServerAdapterBaseObject<TServerContext> = ServerAdapterBaseObject<TServerContext>,
 >(
   obj: TBaseObject,
@@ -143,7 +144,10 @@ export function withCORS<
       corsOptionsFactory = () => false;
     }
   }
-  async function handleWithCORS(request: Request, serverContext: TServerContext) {
+  async function handleWithCORS(
+    request: Request,
+    serverContext: TServerContext & { waitUntil: WaitUntilFn },
+  ) {
     let response: Response | undefined;
     if (request.method.toUpperCase() === 'OPTIONS') {
       response = new ResponseCtor(null, {

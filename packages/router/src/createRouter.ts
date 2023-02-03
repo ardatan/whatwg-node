@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/ban-types */
 import { Request as DefaultRequestCtor, URLPattern } from '@whatwg-node/fetch';
-import { createServerAdapter, type DefaultServerAdapterContext } from '@whatwg-node/server';
+import { createServerAdapter } from '@whatwg-node/server';
 import type {
   HTTPMethod,
   RouteMethodKey,
@@ -9,7 +10,7 @@ import type {
   RouterRequest,
 } from './types';
 
-interface RouterOptions<TServerContext = DefaultServerAdapterContext> {
+interface RouterOptions<TServerContext = {}> {
   base?: string;
   RequestCtor?: typeof Request;
   plugins?: Array<(router: RouterBaseObject<TServerContext>) => RouterBaseObject<TServerContext>>;
@@ -27,7 +28,7 @@ const HTTP_METHODS = [
   'PATCH',
 ] as HTTPMethod[];
 
-export function createRouter<TServerContext = DefaultServerAdapterContext>(
+export function createRouter<TServerContext = {}>(
   options?: RouterOptions<TServerContext>,
 ): Router<TServerContext> {
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();

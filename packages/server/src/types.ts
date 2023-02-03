@@ -80,11 +80,14 @@ export type ServerAdapter<
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
-  ctx: TServerContext,
+  ctx: ServerAdapterContext<TServerContext>,
 ) => Promise<Response> | Response;
 
-export type DefaultServerAdapterContext = {
+export type ServerAdapterNodeContext = {
   req: NodeRequest;
   res: NodeResponse;
-  waitUntil(promise: Promise<void> | void): void;
 };
+
+export type WaitUntilFn = (promise: Promise<void> | void) => void;
+
+export type ServerAdapterContext<TServerContext> = TServerContext & { waitUntil: WaitUntilFn };
