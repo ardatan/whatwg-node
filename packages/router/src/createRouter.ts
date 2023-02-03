@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { Request as DefaultRequestCtor, URLPattern } from '@whatwg-node/fetch';
-import { createServerAdapter } from '@whatwg-node/server';
+import { createServerAdapter, ServerAdapterContext } from '@whatwg-node/server';
 import type {
   HTTPMethod,
   RouteMethodKey,
@@ -54,7 +54,7 @@ export function createRouter<TServerContext = {}>(
     const pattern = new URLPattern({ pathname: fullPath });
     methodPatternMaps.set(pattern, handlers);
   }
-  async function handleRequest(request: Request, context: TServerContext) {
+  async function handleRequest(request: Request, context: ServerAdapterContext<TServerContext>) {
     const method = request.method as HTTPMethod;
     let _parsedUrl: URL;
     function getParsedUrl() {
