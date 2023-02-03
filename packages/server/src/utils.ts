@@ -64,12 +64,6 @@ function buildFullUrl(nodeRequest: NodeRequest) {
   return `${protocol}://${hostnameWithPort}${endpoint}`;
 }
 
-function configureSocket(rawRequest: NodeRequest) {
-  rawRequest?.socket?.setTimeout?.(0);
-  rawRequest?.socket?.setNoDelay?.(true);
-  rawRequest?.socket?.setKeepAlive?.(true);
-}
-
 function isRequestBody(body: any): body is BodyInit {
   const stringTag = body[Symbol.toStringTag];
   if (
@@ -90,7 +84,6 @@ export function normalizeNodeRequest(
   RequestCtor: typeof Request,
 ): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
-  configureSocket(rawRequest);
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
     const urlObj = new URL(fullUrl);
