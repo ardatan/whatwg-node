@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.6.1
+
+### Patch Changes
+
+- [#308](https://github.com/ardatan/whatwg-node/pull/308)
+  [`9c58f3e`](https://github.com/ardatan/whatwg-node/commit/9c58f3e6bf2248fdf8ee3482928a415339b040fa)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not configure the socket for long live
+  connection
+
 ## 0.6.0
 
 ### Minor Changes
