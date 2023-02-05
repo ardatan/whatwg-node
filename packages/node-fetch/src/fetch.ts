@@ -48,7 +48,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         if (mimeType.endsWith(BASE64_SUFFIX)) {
           const buffer = Buffer.from(data, 'base64');
           const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
-          const file = new PonyfillBlob([buffer], { type: realMimeType })
+          const file = new PonyfillBlob([buffer], { type: realMimeType });
           const response = new PonyfillResponse(file, {
             status: 200,
             statusText: 'OK',

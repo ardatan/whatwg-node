@@ -169,9 +169,16 @@ export function isFetchEvent(event: any): event is FetchEvent {
   return event != null && event.request != null && event.respondWith != null;
 }
 
+function configureSocket(rawRequest: NodeRequest) {
+  rawRequest?.socket?.setTimeout?.(0);
+  rawRequest?.socket?.setNoDelay?.(true);
+  rawRequest?.socket?.setKeepAlive?.(true);
+}
+
 export async function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
+  nodeRequest: NodeRequest,
 ) {
   fetchResponse.headers.forEach((value, name) => {
     serverResponse.setHeader(name, value);
@@ -183,7 +190,11 @@ export async function sendNodeResponse(
     serverResponse.once('close', resolve);
     // Our Node-fetch enhancements
 
-    if ('bodyType' in fetchResponse && fetchResponse.bodyType != null && (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')) {
+    if (
+      'bodyType' in fetchResponse &&
+      fetchResponse.bodyType != null &&
+      (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')
+    ) {
       // @ts-expect-error http and http2 writes are actually compatible
       serverResponse.write(fetchResponse.bodyInit);
       serverResponse.end();
@@ -194,17 +205,28 @@ export async function sendNodeResponse(
     const fetchBody = fetchResponse.body;
     if (fetchBody == null) {
       serverResponse.end();
-    } else if (fetchBody[Symbol.toStringTag] === 'Uint8Array') {
+      return;
+    }
+
+    if (fetchBody[Symbol.toStringTag] === 'Uint8Array') {
       serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(fetchBody);
       serverResponse.end();
-    } else if (isReadable(fetchBody)) {
+      return;
+    }
+
+    configureSocket(nodeRequest);
+
+    if (isReadable(fetchBody)) {
       serverResponse.once('close', () => {
         fetchBody.destroy();
       });
       fetchBody.pipe(serverResponse);
-    } else if (isAsyncIterable(fetchBody)) {
+      return;
+    }
+
+    if (isAsyncIterable(fetchBody)) {
       for await (const chunk of fetchBody as AsyncIterable<Uint8Array>) {
         if (
           !serverResponse
