@@ -1,9 +1,17 @@
 import { Blob as NodeBlob } from 'buffer';
 import { PonyfillReadableStream } from './ReadableStream';
 
+class DummyBlob {
+  constructor() {
+    throw new Error(
+      'Blob is not supported in this environment, if you are using an older version of Node v14, please upgrade to v14.17.0 or higher',
+    );
+  }
+}
+
 // Will be removed after v14 reaches EOL
 // Needed because v14 doesn't have .stream() implemented
-export class PonyfillBlob extends NodeBlob implements Blob {
+export class PonyfillBlob extends (NodeBlob || DummyBlob) implements Blob {
   stream(): any {
     return new PonyfillReadableStream({
       start: async controller => {
