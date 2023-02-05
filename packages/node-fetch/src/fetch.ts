@@ -4,6 +4,7 @@ import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { PonyfillAbortError } from './AbortError';
+import { PonyfillBlob } from './Blob';
 import { PonyfillRequest, RequestPonyfillInit } from './Request';
 import { PonyfillResponse } from './Response';
 import { getHeadersObj } from './utils';
@@ -47,12 +48,10 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         if (mimeType.endsWith(BASE64_SUFFIX)) {
           const buffer = Buffer.from(data, 'base64');
           const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
-          const response = new PonyfillResponse(buffer, {
+          const file = new PonyfillBlob([buffer], { type: realMimeType })
+          const response = new PonyfillResponse(file, {
             status: 200,
             statusText: 'OK',
-            headers: {
-              'content-type': realMimeType,
-            },
           });
           resolve(response);
           return;
