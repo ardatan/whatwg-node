@@ -83,7 +83,7 @@ function createServerAdapter<
     };
     const response = await handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
     if (response) {
-      await sendNodeResponse(response, serverResponse);
+      await sendNodeResponse(response, serverResponse, nodeRequest);
     } else {
       await new Promise<void>(resolve => {
         serverResponse.statusCode = 404;

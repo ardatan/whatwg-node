@@ -169,32 +169,65 @@ export function isFetchEvent(event: any): event is FetchEvent {
   return event != null && event.request != null && event.respondWith != null;
 }
 
+function configureSocket(rawRequest: NodeRequest) {
+  rawRequest?.socket?.setTimeout?.(0);
+  rawRequest?.socket?.setNoDelay?.(true);
+  rawRequest?.socket?.setKeepAlive?.(true);
+}
+
 export async function sendNodeResponse(
-  { headers, status, statusText, body }: Response,
+  fetchResponse: Response,
   serverResponse: NodeResponse,
+  nodeRequest: NodeRequest,
 ) {
-  headers.forEach((value, name) => {
+  fetchResponse.headers.forEach((value, name) => {
     serverResponse.setHeader(name, value);
   });
-  serverResponse.statusCode = status;
-  serverResponse.statusMessage = statusText;
+  serverResponse.statusCode = fetchResponse.status;
+  serverResponse.statusMessage = fetchResponse.statusText;
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);
-    if (body == null) {
+    // Our Node-fetch enhancements
+
+    if (
+      'bodyType' in fetchResponse &&
+      fetchResponse.bodyType != null &&
+      (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')
+    ) {
+      // @ts-expect-error http and http2 writes are actually compatible
+      serverResponse.write(fetchResponse.bodyInit);
       serverResponse.end();
-    } else if (body[Symbol.toStringTag] === 'Uint8Array') {
+      return;
+    }
+
+    // Other fetch implementations
+    const fetchBody = fetchResponse.body;
+    if (fetchBody == null) {
+      serverResponse.end();
+      return;
+    }
+
+    if (fetchBody[Symbol.toStringTag] === 'Uint8Array') {
       serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
-        .write(body);
+        .write(fetchBody);
       serverResponse.end();
-    } else if (isReadable(body)) {
+      return;
+    }
+
+    configureSocket(nodeRequest);
+
+    if (isReadable(fetchBody)) {
       serverResponse.once('close', () => {
-        body.destroy();
+        fetchBody.destroy();
       });
-      body.pipe(serverResponse);
-    } else if (isAsyncIterable(body)) {
-      for await (const chunk of body as AsyncIterable<Uint8Array>) {
+      fetchBody.pipe(serverResponse);
+      return;
+    }
+
+    if (isAsyncIterable(fetchBody)) {
+      for await (const chunk of fetchBody as AsyncIterable<Uint8Array>) {
         if (
           !serverResponse
             // @ts-expect-error http and http2 writes are actually compatible
