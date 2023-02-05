@@ -190,6 +190,7 @@ describe('http2', () => {
         "data": "Hey there!",
         "headers": {
           ":status": 418,
+          "content-length": "10",
           "content-type": "text/plain;charset=UTF-8",
           "x-is-this-http2": "yes",
           Symbol(nodejs.http2.sensitiveHeaders): [],
