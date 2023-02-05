@@ -1,5 +1,16 @@
 # @whatwg-node/node-fetch
 
+## 0.0.3
+
+### Patch Changes
+
+- [#311](https://github.com/ardatan/whatwg-node/pull/311)
+  [`8edd68d`](https://github.com/ardatan/whatwg-node/commit/8edd68d288889e7a1222c8790a708b0930f337e2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Performance improvements
+
+- [`b6c9ac0`](https://github.com/ardatan/whatwg-node/commit/b6c9ac0ae8095ded0970be810f63e23fcca65830)
+  Thanks [@ardatan](https://github.com/ardatan)! - Relax Node <14.17 for the users don't use Blob
+
 ## 0.0.2
 
 ### Patch Changes
