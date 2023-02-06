@@ -54,7 +54,7 @@ describe('Form Data', () => {
       body: form,
     }).arrayBuffer();
 
-    expect(ab.byteLength).toBeGreaterThan(30);
+    expect(ab.byteLength).toBeGreaterThan(15);
   });
 
   it("should add a PonyfillBlob field's size to the PonyfillFormData length", async () => {

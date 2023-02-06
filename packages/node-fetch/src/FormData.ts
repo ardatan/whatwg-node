@@ -54,51 +54,63 @@ export class PonyfillFormData implements FormData {
       callback(value, key, this);
     }
   }
+}
 
-  stream(boundary = '---'): PonyfillReadableStream<Uint8Array> {
-    const entries: [string, string | PonyfillFile][] = [];
-    return new PonyfillReadableStream<Buffer>({
-      start: async controller => {
-        controller.enqueue(Buffer.from(`--${boundary}\r\n`));
-        this.forEach((value, key) => {
-          entries.push([key, value]);
-        });
-      },
-      pull: async controller => {
-        const entry = entries.shift();
-        if (entry) {
-          const [key, value] = entry;
-          if (value instanceof PonyfillFile) {
-            let filenamePart = '';
-            if (value.name) {
-              filenamePart = `; filename="${value.name}"`;
-            }
-            controller.enqueue(
-              Buffer.from(`Content-Disposition: form-data; name="${key}"${filenamePart}\r\n`),
-            );
-            controller.enqueue(
-              Buffer.from(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`),
-            );
-            controller.enqueue(Buffer.from(await value.arrayBuffer()));
-          } else {
-            controller.enqueue(
-              Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`),
-            );
-            controller.enqueue(Buffer.from(value));
-          }
-          if (entries.length === 0) {
-            controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
-            controller.close();
-          } else {
-            controller.enqueue(Buffer.from(`\r\n--${boundary}\r\n`));
-          }
+export function getStreamFromFormData(
+  formData: FormData,
+  boundary = '---',
+): PonyfillReadableStream<Uint8Array> {
+  const entries: [string, string | PonyfillFile][] = [];
+  let sentInitialHeader = false;
+  return new PonyfillReadableStream<Buffer>({
+    start: controller => {
+      formData.forEach((value, key) => {
+        if (!sentInitialHeader) {
+          controller.enqueue(Buffer.from(`--${boundary}\r\n`));
+          sentInitialHeader = true;
+        }
+        entries.push([key, value]);
+      });
+      if (!sentInitialHeader) {
+        controller.enqueue(Buffer.from(`--${boundary}--\r\n`));
+        controller.close();
+      }
+    },
+    pull: async controller => {
+      const entry = entries.shift();
+      if (entry) {
+        const [key, value] = entry;
+        if (typeof value === 'string') {
+          controller.enqueue(Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`));
+          controller.enqueue(Buffer.from(value));
         } else {
+          let filenamePart = '';
+          if (value.name) {
+            filenamePart = `; filename="${value.name}"`;
+          }
+          controller.enqueue(
+            Buffer.from(`Content-Disposition: form-data; name="${key}"${filenamePart}\r\n`),
+          );
+          controller.enqueue(
+            Buffer.from(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`),
+          );
+          const entryStream = value.stream();
+          for await (const chunk of entryStream) {
+            controller.enqueue(chunk);
+          }
+        }
+        if (entries.length === 0) {
           controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
           controller.close();
+        } else {
+          controller.enqueue(Buffer.from(`\r\n--${boundary}\r\n`));
         }
-      },
-    });
-  }
+      } else {
+        controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
+        controller.close();
+      }
+    },
+  });
 }
 
 function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) {

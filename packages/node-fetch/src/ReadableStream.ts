@@ -3,8 +3,9 @@ import { Readable } from 'stream';
 function createController<T>(
   desiredSize: number,
   readable: Readable,
-): ReadableStreamDefaultController<T> & { _flush(): void } {
+): ReadableStreamDefaultController<T> & { _flush(): void; _closed: boolean } {
   let chunks: Buffer[] = [];
+  let _closed = false;
   return {
     desiredSize,
     enqueue(chunk: any) {
@@ -15,12 +16,16 @@ function createController<T>(
         this._flush();
       }
       readable.push(null);
+      _closed = true;
     },
     error(error: Error) {
       if (chunks.length > 0) {
         this._flush();
       }
       readable.destroy(error);
+    },
+    get _closed() {
+      return _closed;
     },
     _flush() {
       if (chunks.length > 0) {
@@ -80,7 +85,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
             started = true;
             await underlyingSource?.start?.(controller);
           }
-          await underlyingSource?.pull?.(controller);
+          if (!controller._closed) {
+            await underlyingSource?.pull?.(controller);
+          }
           controller._flush();
         },
         async destroy(err, callback) {
