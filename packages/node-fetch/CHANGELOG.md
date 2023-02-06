@@ -1,5 +1,24 @@
 # @whatwg-node/node-fetch
 
+## 0.0.5
+
+### Patch Changes
+
+- [#314](https://github.com/ardatan/whatwg-node/pull/314)
+  [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency
+    [`@whatwg-node/events@^0.0.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/events/v/0.0.2)
+    (from `0.0.2`, in `dependencies`)
+  - Updated dependency [`busboy@^1.6.0` ↗︎](https://www.npmjs.com/package/busboy/v/1.6.0) (from
+    `1.6.0`, in `dependencies`)
+
+- [#314](https://github.com/ardatan/whatwg-node/pull/314)
+  [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
+  Thanks [@ardatan](https://github.com/ardatan)! - Align versions with ranged dependencies and cross
+  version support internally
+
 ## 0.0.4
 
 ### Patch Changes

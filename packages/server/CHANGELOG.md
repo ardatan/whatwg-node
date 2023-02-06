@@ -1,5 +1,27 @@
 # @whatwg-node/server
 
+## 0.6.4
+
+### Patch Changes
+
+- [#314](https://github.com/ardatan/whatwg-node/pull/314)
+  [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency
+    [`@whatwg-node/fetch@^0.6.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.6.8) (from
+    `0.6.8`, in `dependencies`)
+
+- [#314](https://github.com/ardatan/whatwg-node/pull/314)
+  [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
+  Thanks [@ardatan](https://github.com/ardatan)! - Align versions with ranged dependencies and cross
+  version support internally
+
+- Updated dependencies
+  [[`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4),
+  [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)]:
+  - @whatwg-node/fetch@0.6.9
+
 ## 0.6.3
 
 ### Patch Changes
