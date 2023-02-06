@@ -272,10 +272,9 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     return {
       bodyType: BodyInitType.String,
       contentType: 'text/plain;charset=UTF-8',
-      contentLength: bodyInit.length,
+      contentLength: Buffer.byteLength(bodyInit),
       bodyFactory() {
-        const buffer = Buffer.from(bodyInit);
-        const readable = Readable.from(buffer);
+        const readable = Readable.from(bodyInit);
         return new PonyfillReadableStream<Uint8Array>(readable);
       },
     };
