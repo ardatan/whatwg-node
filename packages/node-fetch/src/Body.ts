@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import busboy from 'busboy';
 import { PonyfillBlob } from './Blob';
 import { PonyfillFile } from './File';
-import { PonyfillFormData } from './FormData';
+import { getStreamFromFormData, PonyfillFormData } from './FormData';
 import { PonyfillReadableStream } from './ReadableStream';
 
 enum BodyInitType {
@@ -19,7 +19,8 @@ enum BodyInitType {
 export type BodyPonyfillInit =
   | XMLHttpRequestBodyInit
   | Readable
-  | PonyfillReadableStream<Uint8Array>;
+  | PonyfillReadableStream<Uint8Array>
+  | AsyncIterable<Uint8Array>;
 
 export interface FormDataLimits {
   /* Max field name size (in bytes). Default: 100. */
@@ -297,16 +298,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (bodyInit instanceof PonyfillFormData) {
-    const boundary = Math.random().toString(36).substr(2);
-    const contentType = `multipart/form-data; boundary=${boundary}`;
-    return {
-      bodyType: BodyInitType.FormData,
-      contentType,
-      contentLength: null,
-      bodyFactory: () => bodyInit.stream(boundary),
-    };
-  }
   if (bodyInit instanceof Buffer) {
     const contentLength = bodyInit.length;
     return {
@@ -401,12 +392,18 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType,
       contentLength: null,
       bodyFactory() {
-        const formData = new PonyfillFormData();
-        bodyInit.forEach((value, key) => {
-          formData.append(key, value);
-        });
-        const body = formData.stream(boundary);
-        return body;
+        return getStreamFromFormData(bodyInit, boundary);
+      },
+    };
+  }
+
+  if (bodyInit[Symbol.iterator] || bodyInit[Symbol.asyncIterator]) {
+    return {
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        const readable = Readable.from(bodyInit);
+        return new PonyfillReadableStream(readable);
       },
     };
   }
