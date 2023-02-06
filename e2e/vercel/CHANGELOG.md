@@ -1,5 +1,12 @@
 # @e2e/vercel
 
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @e2e/shared-server@0.0.19
+
 ## 0.0.18
 
 ### Patch Changes

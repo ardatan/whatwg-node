@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.6.3
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @whatwg-node/fetch@0.6.8
+
 ## 0.6.2
 
 ### Patch Changes

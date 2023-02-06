@@ -1,5 +1,13 @@
 # @whatwg-node/router
 
+## 0.2.4
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @whatwg-node/fetch@0.6.8
+  - @whatwg-node/server@0.6.3
+
 ## 0.2.3
 
 ### Patch Changes

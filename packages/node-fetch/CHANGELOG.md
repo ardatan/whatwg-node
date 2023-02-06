@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.0.4
+
+### Patch Changes
+
+- [`01dc91e`](https://github.com/ardatan/whatwg-node/commit/01dc91e0db7f65599d9bc018c0a9396dd0e5ad27)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use `Buffer.byteLength` instead of
+  `String.length` for string inputs
+
 ## 0.0.3
 
 ### Patch Changes
