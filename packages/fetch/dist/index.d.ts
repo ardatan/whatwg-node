@@ -1,9 +1,26 @@
 /// <reference lib="dom" />
 /// <reference types="urlpattern-polyfill" />
 
+type TypedRequest<T> = Omit<Request, 'json'> & {
+  json(): Promise<T>;
+}
+
+type TypedRequestConstructor = typeof Request & {
+  new <T>(body: T, init?: RequestInit): TypedRequest<T>;
+}
+
+type TypedResponse<T> = Omit<Response, 'json'> & {
+  json(): Promise<T>;
+}
+
+type TypedResponseConstructor = typeof Response & {
+  new <T>(body: T, init?: ResponseInit): TypedResponse<T>;
+  json<T>(data: T): TypedResponse<T>;
+}
+
 declare const _fetch: typeof fetch;
-declare const _Request: typeof Request;
-declare const _Response: typeof Response;
+declare const _Request: TypedRequestConstructor;
+declare const _Response: TypedResponseConstructor;
 declare const _Headers: typeof Headers;
 declare const _FormData: typeof FormData;
 declare const _AbortSignal: typeof AbortSignal;
