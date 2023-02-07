@@ -14,3 +14,5 @@ anotherObj = await response.json();
 
 // @ts-expect-error - should not be assignable
 testObj = await response.json();
+
+console.log(testObj);

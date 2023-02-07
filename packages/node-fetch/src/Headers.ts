@@ -31,10 +31,9 @@ export class PonyfillHeaders implements Headers {
 
   append(name: string, value: string): void {
     const key = name.toLowerCase();
-    if (this.map.has(key)) {
-      value = this.map.get(key) + ', ' + value;
-    }
-    this.map.set(key, value);
+    const existingValue = this.map.get(key);
+    const finalValue = existingValue ? `${existingValue}, ${value}` : value;
+    this.map.set(key, finalValue);
   }
 
   get(name: string): string | null {
