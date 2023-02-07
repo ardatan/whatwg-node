@@ -18,11 +18,12 @@ export class PonyfillHeaders implements Headers {
           this.map.set(key, value);
         });
       } else {
-        for (const key in headersInit) {
-          const value = headersInit[key];
-          if (value != null) {
-            const normalizedValue = Array.isArray(value) ? value.join(', ') : value;
-            this.map.set(key, normalizedValue);
+        for (const initKey in headersInit) {
+          const initValue = headersInit[initKey];
+          if (initValue != null) {
+            const normalizedValue = Array.isArray(initValue) ? initValue.join(', ') : initValue;
+            const normalizedKey = initKey.toLowerCase();
+            this.map.set(normalizedKey, normalizedValue);
           }
         }
       }
