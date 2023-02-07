@@ -3,33 +3,26 @@ export type PonyfillHeadersInit =
   | Record<string, string | string[] | undefined>
   | Headers;
 
+function isHeadersLike(headers: any): headers is Headers {
+  return headers && typeof headers.get === 'function';
+}
+
 export class PonyfillHeaders implements Headers {
   private map = new Map<string, string>();
   constructor(headersInit?: PonyfillHeadersInit) {
     if (headersInit != null) {
       if (Array.isArray(headersInit)) {
-        for (const [key, value] of headersInit) {
-          if (Array.isArray(value)) {
-            for (const v of value) {
-              this.append(key, v);
-            }
-          } else {
-            this.map.set(key, value);
-          }
-        }
-      } else if ('get' in headersInit) {
-        (headersInit as Headers).forEach((value, key) => {
-          this.append(key, value);
+        this.map = new Map(headersInit);
+      } else if (isHeadersLike(headersInit)) {
+        headersInit.forEach((value, key) => {
+          this.map.set(key, value);
         });
       } else {
         for (const key in headersInit) {
           const value = headersInit[key];
-          if (Array.isArray(value)) {
-            for (const v of value) {
-              this.append(key, v);
-            }
-          } else if (value != null) {
-            this.set(key, value);
+          if (value != null) {
+            const normalizedValue = Array.isArray(value) ? value.join(', ') : value;
+            this.map.set(key, normalizedValue);
           }
         }
       }
