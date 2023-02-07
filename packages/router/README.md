@@ -42,7 +42,7 @@ properties:
 Let's create a basic REST API that manages users.
 
 ```ts
-import { createRouter } from '@whatwg-node/router'
+import { createRouter, Response } from '@whatwg-node/router'
 
 const router = createRouter()
 
@@ -51,13 +51,7 @@ const users = [
   { id: '2', name: 'Jane' }
 ]
 
-router.get('/users', request => {
-  return new Response(JSON.stringify(users), {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
-})
+router.get('/users', request => Response.json(users))
 
 // Parameters are given in the `request.params` object
 router.get('/users/:id', request => {
@@ -69,11 +63,7 @@ router.get('/users/:id', request => {
     })
   }
 
-  return new Response(JSON.stringify(user), {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
+  return Response.json(user)
 })
 
 router.delete('/users/:id', request => {
@@ -103,11 +93,7 @@ router.put('/users', async request => {
 
   users.push(user)
 
-  return new Response(JSON.stringify(user), {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
+  return Response.json(user)
 })
 
 // Handle both parameters and JSON body
@@ -124,11 +110,7 @@ router.post('/users/:id', async request => {
 
   user.name = body.name
 
-  return new Response(JSON.stringify(user), {
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
+  return Response.json(user)
 })
 ```
 

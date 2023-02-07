@@ -7,33 +7,11 @@ export function createTestServerAdapter<TServerContext = {}>(base?: string) {
     plugins: [withErrorHandling as any],
   });
 
-  app.get(
-    '/greetings/:name',
-    req =>
-      new Response(
-        JSON.stringify({
-          message: `Hello ${req.params?.name}!`,
-        }),
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        },
-      ),
-  );
+  app.get('/greetings/:name', req => Response.json({ message: `Hello ${req.params?.name}!` }));
 
   app.post('/bye', async req => {
     const { name } = await req.json();
-    return new Response(
-      JSON.stringify({
-        message: `Bye ${name}!`,
-      }),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
+    return Response.json({ message: `Bye ${name}!` });
   });
 
   app.get(

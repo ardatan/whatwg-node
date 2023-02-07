@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
+import type { Http2ServerRequest, Http2ServerResponse, OutgoingHttpHeaders } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
 import { FetchEvent } from './types';
@@ -175,21 +175,55 @@ function configureSocket(rawRequest: NodeRequest) {
   rawRequest?.socket?.setKeepAlive?.(true);
 }
 
+function endResponse(serverResponse: NodeResponse) {
+  // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+  serverResponse.end(null, null, null);
+}
+
+function getHeadersObj(headers: Headers): OutgoingHttpHeaders {
+  return new Proxy(
+    {},
+    {
+      get(_target, prop: string) {
+        return headers.get(prop);
+      },
+      set(_target, prop: string, value: string) {
+        headers.set(prop, value);
+        return true;
+      },
+      has(_target, prop: string) {
+        return headers.has(prop);
+      },
+      deleteProperty(_target, prop: string) {
+        headers.delete(prop);
+        return true;
+      },
+      ownKeys() {
+        const keys: string[] = [];
+        headers.forEach((_, key) => keys.push(key));
+        return keys;
+      },
+      getOwnPropertyDescriptor() {
+        return {
+          enumerable: true,
+          configurable: true,
+        };
+      },
+    },
+  );
+}
+
 export async function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  fetchResponse.headers.forEach((value, name) => {
-    serverResponse.setHeader(name, value);
-  });
-  serverResponse.statusCode = fetchResponse.status;
-  serverResponse.statusMessage = fetchResponse.statusText;
+  const headersObj = getHeadersObj(fetchResponse.headers);
+  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, headersObj);
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);
     // Our Node-fetch enhancements
-
     if (
       'bodyType' in fetchResponse &&
       fetchResponse.bodyType != null &&
@@ -197,14 +231,14 @@ export async function sendNodeResponse(
     ) {
       // @ts-expect-error http and http2 writes are actually compatible
       serverResponse.write(fetchResponse.bodyInit);
-      serverResponse.end();
+      endResponse(serverResponse);
       return;
     }
 
     // Other fetch implementations
     const fetchBody = fetchResponse.body;
     if (fetchBody == null) {
-      serverResponse.end();
+      endResponse(serverResponse);
       return;
     }
 
@@ -212,7 +246,7 @@ export async function sendNodeResponse(
       serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(fetchBody);
-      serverResponse.end();
+      endResponse(serverResponse);
       return;
     }
 
@@ -236,7 +270,7 @@ export async function sendNodeResponse(
           break;
         }
       }
-      serverResponse.end();
+      endResponse(serverResponse);
     }
   });
 }

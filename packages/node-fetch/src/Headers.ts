@@ -3,33 +3,27 @@ export type PonyfillHeadersInit =
   | Record<string, string | string[] | undefined>
   | Headers;
 
+function isHeadersLike(headers: any): headers is Headers {
+  return headers && typeof headers.get === 'function';
+}
+
 export class PonyfillHeaders implements Headers {
   private map = new Map<string, string>();
   constructor(headersInit?: PonyfillHeadersInit) {
     if (headersInit != null) {
       if (Array.isArray(headersInit)) {
-        for (const [key, value] of headersInit) {
-          if (Array.isArray(value)) {
-            for (const v of value) {
-              this.append(key, v);
-            }
-          } else {
-            this.map.set(key, value);
-          }
-        }
-      } else if ('get' in headersInit) {
-        (headersInit as Headers).forEach((value, key) => {
-          this.append(key, value);
+        this.map = new Map(headersInit);
+      } else if (isHeadersLike(headersInit)) {
+        headersInit.forEach((value, key) => {
+          this.map.set(key, value);
         });
       } else {
-        for (const key in headersInit) {
-          const value = headersInit[key];
-          if (Array.isArray(value)) {
-            for (const v of value) {
-              this.append(key, v);
-            }
-          } else if (value != null) {
-            this.set(key, value);
+        for (const initKey in headersInit) {
+          const initValue = headersInit[initKey];
+          if (initValue != null) {
+            const normalizedValue = Array.isArray(initValue) ? initValue.join(', ') : initValue;
+            const normalizedKey = initKey.toLowerCase();
+            this.map.set(normalizedKey, normalizedValue);
           }
         }
       }
@@ -38,10 +32,9 @@ export class PonyfillHeaders implements Headers {
 
   append(name: string, value: string): void {
     const key = name.toLowerCase();
-    if (this.map.has(key)) {
-      value = this.map.get(key) + ', ' + value;
-    }
-    this.map.set(key, value);
+    const existingValue = this.map.get(key);
+    const finalValue = existingValue ? `${existingValue}, ${value}` : value;
+    this.map.set(key, finalValue);
   }
 
   get(name: string): string | null {
