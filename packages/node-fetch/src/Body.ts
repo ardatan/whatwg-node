@@ -259,7 +259,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       for await (const chunk of _body.readable) {
         chunks.push(chunk);
       }
-      return Buffer.concat(chunks).toString(this.contentType || ('utf-8' as any));
+      return Buffer.concat(chunks).toString('utf-8' /* use this.contentType soon */);
     }
 
     const blob = await this.blob();
