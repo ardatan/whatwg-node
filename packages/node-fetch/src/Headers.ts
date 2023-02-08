@@ -28,11 +28,10 @@ export class PonyfillHeaders implements Headers {
 
     const normalized = key.toLowerCase();
     if (Array.isArray(this.headersInit)) {
-      return this.headersInit.find((header) => header[0] === normalized);
+      return this.headersInit.find(header => header[0] === normalized);
     } else if (isHeadersLike(this.headersInit)) {
-      return this.headersInit.get(normalized)
-    }
-    else {
+      return this.headersInit.get(normalized);
+    } else {
       const initValue = this.headersInit[key] || this.headersInit[normalized];
 
       if (initValue != null) {
@@ -40,7 +39,7 @@ export class PonyfillHeaders implements Headers {
       }
 
       if (!this.objectKeysOfeadersInit.length) {
-        this.objectKeysOfeadersInit = Object.keys(this.headersInit).map((k) => k.toLowerCase());
+        this.objectKeysOfeadersInit = Object.keys(this.headersInit).map(k => k.toLowerCase());
       }
       const index = this.objectKeysOfeadersInit.indexOf(normalized);
       if (index === -1) {
@@ -89,7 +88,17 @@ export class PonyfillHeaders implements Headers {
 
   get(name: string): string | null {
     const key = name.toLowerCase();
-    return this._get(key) || null;
+    const value = this._get(key);
+
+    if (value == null) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    }
+
+    return value;
   }
 
   has(name: string): boolean {

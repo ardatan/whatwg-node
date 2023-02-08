@@ -9,7 +9,7 @@ class DummyBlob {
   }
 }
 
-const BaseBlob = (NodeBlob || DummyBlob)
+const BaseBlob = NodeBlob || DummyBlob;
 
 // Will be removed after v14 reaches EOL
 // Needed because v14 doesn't have .stream() implemented
