@@ -251,6 +251,17 @@ export class PonyfillBody<TJSON = any> implements Body {
       );
       return buffer.toString('utf-8');
     }
+
+    // perf: avoid reading the stream twice (we read from Readable to create Blob and then we read from Blob to create a string)
+    const _body = this.generateBody();
+    if (_body) {
+        const chunks = [];
+        for await (const chunk of _body.readable) {
+            chunks.push(chunk);
+        }
+        return Buffer.concat(chunks).toString(this.contentType || 'utf-8' as any);
+    }
+
     const blob = await this.blob();
     return blob.text();
   }

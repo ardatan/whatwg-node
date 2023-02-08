@@ -9,9 +9,11 @@ class DummyBlob {
   }
 }
 
+const BaseBlob = (NodeBlob || DummyBlob)
+
 // Will be removed after v14 reaches EOL
 // Needed because v14 doesn't have .stream() implemented
-export class PonyfillBlob extends (NodeBlob || DummyBlob) implements Blob {
+export class PonyfillBlob extends BaseBlob implements Blob {
   stream(): any {
     return new PonyfillReadableStream({
       start: async controller => {
