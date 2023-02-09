@@ -69,7 +69,7 @@ export function getStreamFromFormData(
           controller.enqueue(Buffer.from(`--${boundary}\r\n`));
           sentInitialHeader = true;
         }
-        entries.push([key, value]);
+        entries.push([key, value as any]);
       });
       if (!sentInitialHeader) {
         controller.enqueue(Buffer.from(`--${boundary}--\r\n`));

@@ -10,5 +10,8 @@ export function getHeadersObj(headers: Headers): Record<string, string> {
 }
 
 export function uint8ArrayToBuffer(uint8array: Uint8Array): ArrayBuffer {
-  return uint8array.buffer.slice(uint8array.byteOffset, uint8array.byteOffset + uint8array.byteLength)
+  return uint8array.buffer.slice(
+    uint8array.byteOffset,
+    uint8array.byteOffset + uint8array.byteLength,
+  );
 }

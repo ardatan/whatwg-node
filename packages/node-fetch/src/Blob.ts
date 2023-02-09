@@ -10,7 +10,7 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
   } else if (blobPart instanceof Uint8Array) {
     return Buffer.from(blobPart);
   } else if ('buffer' in blobPart) {
-    return Buffer.from(blobPart as Buffer);
+    return Buffer.from(blobPart.buffer, blobPart.byteOffset, blobPart.byteLength);
   } else {
     return Buffer.from(blobPart);
   }
@@ -24,10 +24,10 @@ function isBlob(obj: any): obj is Blob {
 // Needed because v14 doesn't have .stream() implemented
 export class PonyfillBlob implements Blob {
   type: string;
-  encoding: string;
+  private encoding: string;
   constructor(private blobParts: BlobPart[], options?: BlobOptions) {
-    this.type = options?.type || 'application/octet-string';
-    this.encoding = options?.encoding || 'utf8'
+    this.type = options?.type || 'application/octet-stream';
+    this.encoding = options?.encoding || 'utf8';
   }
 
   async arrayBuffer() {
@@ -36,7 +36,7 @@ export class PonyfillBlob implements Blob {
       if (isBlob(blobPart)) {
         const arrayBuf = await blobPart.arrayBuffer();
         const buf = Buffer.from(arrayBuf, undefined, blobPart.size);
-        bufferChunks.push(buf)
+        bufferChunks.push(buf);
       } else {
         const buf = getBlobPartAsBuffer(blobPart);
         bufferChunks.push(buf);
@@ -51,10 +51,10 @@ export class PonyfillBlob implements Blob {
       if (typeof blobPart === 'string') {
         text += blobPart;
       } else if ('text' in blobPart) {
-        text += await blobPart.text()
+        text += await blobPart.text();
       } else {
         const buf = getBlobPartAsBuffer(blobPart);
-        return buf.toString(this.encoding as BufferEncoding);
+        text += buf.toString(this.encoding as BufferEncoding);
       }
     }
     return text;
@@ -64,9 +64,9 @@ export class PonyfillBlob implements Blob {
     let size = 0;
     for (const blobPart of this.blobParts) {
       if (typeof blobPart === 'string') {
-        size += Buffer.byteLength(blobPart)
+        size += Buffer.byteLength(blobPart);
       } else if (isBlob(blobPart)) {
-        size += blobPart.size
+        size += blobPart.size;
       } else if ('length' in blobPart) {
         size += (blobPart as Buffer).length;
       } else if ('byteLength' in blobPart) {
@@ -77,9 +77,16 @@ export class PonyfillBlob implements Blob {
   }
 
   stream(): any {
+    let partQueue: BlobPart[] = [];
     return new PonyfillReadableStream({
+      start: controller => {
+        partQueue = [...this.blobParts];
+        if (partQueue.length === 0) {
+          controller.close();
+        }
+      },
       pull: async controller => {
-        const blobPart = this.blobParts.pop();
+        const blobPart = partQueue.pop();
         if (blobPart) {
           if (isBlob(blobPart)) {
             for await (const chunk of blobPart.stream() as any) {
@@ -92,12 +99,12 @@ export class PonyfillBlob implements Blob {
         } else {
           controller.close();
         }
-      }
+      },
     });
   }
 
   slice(): any {
-    throw new Error('Not implemented')
+    throw new Error('Not implemented');
   }
 }
 
