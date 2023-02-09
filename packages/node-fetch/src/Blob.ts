@@ -17,7 +17,7 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
 }
 
 function isBlob(obj: any): obj is Blob {
-  return obj != null && typeof obj === 'object' && obj.stream != null;
+  return obj != null && typeof obj === 'object' && obj.arrayBuffer != null;
 }
 
 // Will be removed after v14 reaches EOL
@@ -89,9 +89,9 @@ export class PonyfillBlob implements Blob {
         const blobPart = partQueue.pop();
         if (blobPart) {
           if (isBlob(blobPart)) {
-            for await (const chunk of blobPart.stream() as any) {
-              controller.enqueue(chunk);
-            }
+            const arrayBuffer = await blobPart.arrayBuffer();
+            const buf = Buffer.from(arrayBuffer, undefined, blobPart.size);
+            controller.enqueue(buf);
           } else {
             const buf = getBlobPartAsBuffer(blobPart);
             controller.enqueue(buf);
