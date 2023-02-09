@@ -93,13 +93,12 @@ export function normalizeNodeRequest(
     }
     fullUrl = urlObj.toString();
   }
-  const baseRequestInit: RequestInit = {
-    method: nodeRequest.method,
-    headers: nodeRequest.headers,
-  };
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
-    return new RequestCtor(fullUrl, baseRequestInit);
+    return new RequestCtor(fullUrl, {
+      method: nodeRequest.method,
+      headers: nodeRequest.headers,
+    });
   }
 
   /**
@@ -112,12 +111,14 @@ export function normalizeNodeRequest(
   if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
     if (isRequestBody(maybeParsedBody)) {
       return new RequestCtor(fullUrl, {
-        ...baseRequestInit,
+        method: nodeRequest.method,
+        headers: nodeRequest.headers,
         body: maybeParsedBody,
       });
     }
     const request = new RequestCtor(fullUrl, {
-      ...baseRequestInit,
+      method: nodeRequest.method,
+      headers: nodeRequest.headers,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
       request.headers.set('content-type', 'application/json');
@@ -136,8 +137,10 @@ export function normalizeNodeRequest(
     });
   }
 
+  // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new RequestCtor(fullUrl, {
-    ...baseRequestInit,
+    method: nodeRequest.method,
+    headers: nodeRequest.headers,
     body: rawRequest as any,
   });
 }
