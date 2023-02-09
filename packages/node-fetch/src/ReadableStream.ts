@@ -6,10 +6,16 @@ function createController<T>(
 ): ReadableStreamDefaultController<T> & { _flush(): void; _closed: boolean } {
   let chunks: Buffer[] = [];
   let _closed = false;
+  let flushed = false;
   return {
     desiredSize,
     enqueue(chunk: any) {
-      chunks.push(Buffer.from(chunk));
+      const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+      if (!flushed) {
+        chunks.push(buf);
+      } else {
+        readable.push(buf);
+      }
     },
     close() {
       if (chunks.length > 0) {
@@ -28,6 +34,7 @@ function createController<T>(
       return _closed;
     },
     _flush() {
+      flushed = true;
       if (chunks.length > 0) {
         const concatenated = Buffer.concat(chunks);
         readable.push(concatenated);
@@ -78,17 +85,28 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       });
     } else {
       let started = false;
+      let ongoing = false;
       this.readable = new Readable({
-        async read(desiredSize) {
-          const controller = createController(desiredSize, this);
-          if (!started) {
-            started = true;
-            await underlyingSource?.start?.(controller);
+        read(desiredSize) {
+          if (ongoing) {
+            return;
           }
-          if (!controller._closed) {
+          ongoing = true;
+          return Promise.resolve().then(async () => {
+            if (!started) {
+              const controller = createController(desiredSize, this);
+              started = true;
+              await underlyingSource?.start?.(controller);
+              controller._flush();
+              if (controller._closed) {
+                return;
+              }
+            }
+            const controller = createController(desiredSize, this);
             await underlyingSource?.pull?.(controller);
-          }
-          controller._flush();
+            controller._flush();
+            ongoing = false;
+          });
         },
         async destroy(err, callback) {
           try {
