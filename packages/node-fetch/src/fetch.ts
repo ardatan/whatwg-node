@@ -46,7 +46,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
         const data = decodeURIComponent(datas.join(','));
         if (mimeType.endsWith(BASE64_SUFFIX)) {
-          const buffer = Buffer.from(data, 'base64');
+          const buffer = Buffer.from(data, 'base64url');
           const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
           const file = new PonyfillBlob([buffer], { type: realMimeType });
           const response = new PonyfillResponse(file, {
