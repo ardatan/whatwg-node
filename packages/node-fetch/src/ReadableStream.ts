@@ -14,7 +14,7 @@ function createController<T>(
       if (!flushed) {
         chunks.push(buf);
       } else {
-        readable.push(buf)
+        readable.push(buf);
       }
     },
     close() {
@@ -106,7 +106,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
             await underlyingSource?.pull?.(controller);
             controller._flush();
             ongoing = false;
-          })
+          });
         },
         async destroy(err, callback) {
           try {

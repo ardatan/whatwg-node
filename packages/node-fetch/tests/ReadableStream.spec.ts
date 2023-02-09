@@ -44,7 +44,7 @@ describe('ReadableStream', () => {
       },
       pull(controller) {
         if (active) {
-          throw new Error('There is still a timeout running')
+          throw new Error('There is still a timeout running');
         }
         active = true;
         return new Promise(resolve => {
