@@ -1,5 +1,19 @@
 # @whatwg-node/node-fetch
 
+## 0.1.0
+
+### Minor Changes
+
+- [#328](https://github.com/ardatan/whatwg-node/pull/328)
+  [`2d6e4aa`](https://github.com/ardatan/whatwg-node/commit/2d6e4aa67fffe2e33eb16b4c30c00f8ea9cf9a9a)
+  Thanks [@ardatan](https://github.com/ardatan)! - New Blob ponyfill instead of the slow native one
+
+### Patch Changes
+
+- [#326](https://github.com/ardatan/whatwg-node/pull/326)
+  [`94150b3`](https://github.com/ardatan/whatwg-node/commit/94150b3452f06f5671e87f59f8ae63e6e751289c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Allow lazy writes from a flushed controller
+
 ## 0.0.6
 
 ### Patch Changes
