@@ -4,6 +4,7 @@ import { PonyfillBlob } from './Blob';
 import { PonyfillFile } from './File';
 import { getStreamFromFormData, PonyfillFormData } from './FormData';
 import { PonyfillReadableStream } from './ReadableStream';
+import { uint8ArrayToBuffer } from './utils';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -105,7 +106,8 @@ export class PonyfillBody<TJSON = any> implements Body {
       return this.bodyInit as ArrayBuffer;
     }
     if (this.bodyType === BodyInitType.Uint8Array || this.bodyType === BodyInitType.Buffer) {
-      return (this.bodyInit as Uint8Array).buffer;
+      const typedBodyInit = this.bodyInit as Uint8Array;
+      return uint8ArrayToBuffer(typedBodyInit);
     }
     const blob = await this.blob();
     return blob.arrayBuffer();
@@ -330,7 +332,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength,
       contentType: null,
       bodyFactory() {
-        const buffer = Buffer.from(bodyInit.buffer, bodyInit.byteOffset, bodyInit.byteLength);
+        const buffer = Buffer.from(bodyInit as Buffer);
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
