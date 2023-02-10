@@ -1,5 +1,28 @@
 # @whatwg-node/node-fetch
 
+## 0.2.0
+
+### Minor Changes
+
+- [`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d)
+  Thanks [@ardatan](https://github.com/ardatan)! - New URL and URLSearchParams ponyfills
+
+### Patch Changes
+
+- [`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Added dependency
+    [`fast-querystring@^1.1.1` ↗︎](https://www.npmjs.com/package/fast-querystring/v/1.1.1) (to
+    `dependencies`)
+  - Added dependency
+    [`fast-url-parser@^1.1.3` ↗︎](https://www.npmjs.com/package/fast-url-parser/v/1.1.3) (to
+    `dependencies`)
+
+- [#331](https://github.com/ardatan/whatwg-node/pull/331)
+  [`ebfbb84`](https://github.com/ardatan/whatwg-node/commit/ebfbb845be1a9f3893f62c850554cf6162f3b6d7)
+  Thanks [@ardatan](https://github.com/ardatan)! - Performance improvements
+
 ## 0.1.0
 
 ### Minor Changes
