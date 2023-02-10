@@ -15,3 +15,5 @@ export {
   PonyfillTextDecoder as TextDecoder,
   PonyfillBtoa as btoa,
 } from './TextEncoderDecoder';
+export { PonyfillURL as URL } from './URL';
+export { PonyfillURLSearchParams as URLSearchParams } from './URLSearchParams';

@@ -21,6 +21,10 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.FormData = newNodeFetch.FormData;
   ponyfills.AbortController = newNodeFetch.AbortController;
   ponyfills.ReadableStream = newNodeFetch.ReadableStream;
+
+  ponyfills.URL = newNodeFetch.URL;
+  ponyfills.URLSearchParams = newNodeFetch.URLSearchParams;
+
   ponyfills.WritableStream = globalThis.WritableStream;
   ponyfills.TransformStream = globalThis.TransformStream;
 

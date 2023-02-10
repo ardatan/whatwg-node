@@ -129,7 +129,7 @@ function createServerAdapter<
     input,
     ...maybeCtx: Partial<TServerContext>[]
   ) => {
-    if (typeof input === 'string' || input instanceof URL) {
+    if (typeof input === 'string' || 'href' in input) {
       const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
         return handleRequestWithWaitUntil(new RequestCtor(input, initOrCtx), ...restOfCtx);

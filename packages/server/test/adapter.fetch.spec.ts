@@ -1,4 +1,4 @@
-import { Request, Response } from '@whatwg-node/fetch';
+import { Request, Response, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src';
 
 describe('adapter.fetch', () => {

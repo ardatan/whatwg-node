@@ -4,10 +4,11 @@ import { PonyfillFile } from '../src/File';
 import { PonyfillFormData } from '../src/FormData';
 import { PonyfillRequest } from '../src/Request';
 import { PonyfillResponse } from '../src/Response';
+import { PonyfillURLSearchParams } from '../src/URLSearchParams';
 
 describe('Form Data', () => {
   it('Consume empty URLSearchParams as PonyfillFormData', async () => {
-    const res = new PonyfillResponse(new URLSearchParams());
+    const res = new PonyfillResponse(new PonyfillURLSearchParams());
     const fd = await res.formData();
 
     expect(fd).toBeInstanceOf(PonyfillFormData);
@@ -16,7 +17,7 @@ describe('Form Data', () => {
   it('Consume empty URLSearchParams as PonyfillFormData', async () => {
     const req = new PonyfillRequest('about:blank', {
       method: 'POST',
-      body: new URLSearchParams(),
+      body: new PonyfillURLSearchParams(),
     });
     const fd = await req.formData();
 
@@ -41,7 +42,7 @@ describe('Form Data', () => {
   });
 
   it('Consume URLSearchParams with entries as PonyfillFormData', async () => {
-    const res = new PonyfillResponse(new URLSearchParams({ foo: 'bar' }));
+    const res = new PonyfillResponse(new PonyfillURLSearchParams({ foo: 'bar' }));
     const fd = await res.formData();
 
     expect(fd.get('foo')).toBe('bar');

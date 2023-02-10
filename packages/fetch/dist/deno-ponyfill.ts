@@ -15,6 +15,8 @@ const btoa = globalThis.btoa;
 const TextDecoder = globalThis.TextDecoder;
 const TextEncoder = globalThis.TextEncoder;
 const URLPattern = (globalThis as any).URLPattern;
+const URL = globalThis.URL;
+const URLSearchParams = globalThis.URLSearchParams;
 
 export const createFetch = () => globalThis;
 export {
@@ -35,4 +37,6 @@ export {
   TextDecoder,
   TextEncoder,
   URLPattern,
+  URL,
+  URLSearchParams,
 };

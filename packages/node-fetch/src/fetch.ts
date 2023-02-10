@@ -7,9 +7,10 @@ import { PonyfillAbortError } from './AbortError';
 import { PonyfillBlob } from './Blob';
 import { PonyfillRequest, RequestPonyfillInit } from './Request';
 import { PonyfillResponse } from './Response';
+import { PonyfillURL } from './URL';
 import { getHeadersObj } from './utils';
 
-function getResponseForFile(url: URL) {
+function getResponseForFile(url: string) {
   const path = fileURLToPath(url);
   const readable = createReadStream(path);
   return new PonyfillResponse(readable);
@@ -31,7 +32,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
   init?: RequestPonyfillInit,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  if (typeof info === 'string' || info instanceof URL) {
+  if (typeof info === 'string' || 'href' in info) {
     const ponyfillRequest = new PonyfillRequest(info, init);
     return fetchPonyfill(ponyfillRequest);
   }
@@ -40,7 +41,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
   return new Promise((resolve, reject) => {
     try {
-      const url = new URL(fetchRequest.url, 'http://localhost');
+      const url = new PonyfillURL(fetchRequest.url, 'http://localhost');
 
       if (url.protocol === 'data:') {
         const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
@@ -68,7 +69,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       }
 
       if (url.protocol === 'file:') {
-        const response = getResponseForFile(url);
+        const response = getResponseForFile(fetchRequest.url);
         resolve(response);
         return;
       }
@@ -92,7 +93,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
       fetchRequest.signal.addEventListener('abort', abortListener);
 
-      const nodeRequest = requestFn(url, {
+      const nodeRequest = requestFn(fetchRequest.url, {
         // signal: fetchRequest.signal will be added when v14 reaches EOL
         method: fetchRequest.method,
         headers: nodeHeaders,
@@ -107,7 +108,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
           if (fetchRequest.redirect === 'follow') {
-            const redirectedUrl = new URL(nodeResponse.headers.location, url);
+            const redirectedUrl = new PonyfillURL(nodeResponse.headers.location, url);
             const redirectResponse$ = fetchPonyfill(redirectedUrl, info);
             resolve(
               redirectResponse$.then(redirectResponse => {

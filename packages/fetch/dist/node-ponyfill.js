@@ -19,5 +19,7 @@ module.exports.btoa = ponyfills.btoa;
 module.exports.TextEncoder = ponyfills.TextEncoder;
 module.exports.TextDecoder = ponyfills.TextDecoder;
 module.exports.URLPattern = ponyfills.URLPattern;
+module.exports.URL = ponyfills.URL;
+module.exports.URLSearchParams = ponyfills.URLSearchParams;
 
 exports.createFetch = createNodePonyfill;
