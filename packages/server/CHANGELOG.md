@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.6.7
+
+### Patch Changes
+
+- [`c7b9c8a`](https://github.com/ardatan/whatwg-node/commit/c7b9c8a4f58926e923bb3f581cf145feb389880f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix handling search parameters
+
 ## 0.6.6
 
 ### Patch Changes
