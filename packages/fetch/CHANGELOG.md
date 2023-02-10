@@ -1,5 +1,20 @@
 # @whatwg-node/fetch
 
+## 0.8.0
+
+### Minor Changes
+
+- [`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d)
+  Thanks [@ardatan](https://github.com/ardatan)! - New URL and URLSearchParams ponyfills
+
+### Patch Changes
+
+- Updated dependencies
+  [[`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d),
+  [`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d),
+  [`ebfbb84`](https://github.com/ardatan/whatwg-node/commit/ebfbb845be1a9f3893f62c850554cf6162f3b6d7)]:
+  - @whatwg-node/node-fetch@0.2.0
+
 ## 0.7.1
 
 ### Patch Changes
