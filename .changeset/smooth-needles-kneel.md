@@ -1,5 +1,5 @@
 ---
-'@whatwg-node/node-fetch': patch
+'@whatwg-node/node-fetch': minor
 '@whatwg-node/server': patch
 ---
 
