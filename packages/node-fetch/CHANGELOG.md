@@ -1,5 +1,17 @@
 # @whatwg-node/node-fetch
 
+## 0.3.0
+
+### Minor Changes
+
+- [`c7b9c8a`](https://github.com/ardatan/whatwg-node/commit/c7b9c8a4f58926e923bb3f581cf145feb389880f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix handling search parameters
+
+### Patch Changes
+
+- [`f28ce1f`](https://github.com/ardatan/whatwg-node/commit/f28ce1f11c888187869a6c4df55f6438dc0eaab6)
+  Thanks [@ardatan](https://github.com/ardatan)! - No need to use Blob for consuming text streams
+
 ## 0.2.0
 
 ### Minor Changes
