@@ -1,5 +1,6 @@
 import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import { createTestServerAdapter } from '@e2e/shared-server';
+import { URL } from '@whatwg-node/fetch';
 
 const app = createTestServerAdapter<ServerContext>();
 

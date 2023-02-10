@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Request as DefaultRequestCtor, URLPattern } from '@whatwg-node/fetch';
+import { Request as DefaultRequestCtor, URL, URLPattern } from '@whatwg-node/fetch';
 import { createServerAdapter, ServerAdapterContext } from '@whatwg-node/server';
 import type {
   HTTPMethod,

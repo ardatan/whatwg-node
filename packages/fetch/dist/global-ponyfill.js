@@ -15,4 +15,6 @@ module.exports.btoa = globalThis.btoa;
 module.exports.TextEncoder = globalThis.TextEncoder;
 module.exports.TextDecoder = globalThis.TextDecoder;
 module.exports.URLPattern = globalThis.URLPattern;
+module.exports.URL = globalThis.URL;
+module.exports.URLSearchParams = globalThis.URLSearchParams;
 module.exports.createFetch = () => globalThis;

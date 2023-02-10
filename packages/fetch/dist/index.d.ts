@@ -27,6 +27,8 @@ declare const _btoa: typeof btoa;
 declare const _TextEncoder: typeof TextEncoder;
 declare const _TextDecoder: typeof TextDecoder;
 declare const _URLPattern: typeof URLPattern;
+declare const _URL: typeof URL;
+declare const _URLSearchParams: typeof URLSearchParams;
 
 declare module "@whatwg-node/fetch" {
   export const fetch: typeof _fetch;
@@ -45,6 +47,8 @@ declare module "@whatwg-node/fetch" {
   export const btoa: typeof _btoa;
   export const TextDecoder: typeof _TextDecoder;
   export const TextEncoder: typeof _TextEncoder;
+  export const URL: typeof _URL;
+  export const URLSearchParams: typeof _URLSearchParams;
   export const URLPattern: typeof _URLPattern;
   export interface FormDataLimits {
     /* Max field name size (in bytes). Default: 100. */
@@ -80,6 +84,8 @@ declare module "@whatwg-node/fetch" {
     TextEncoder: typeof _TextEncoder,
     TextDecoder: typeof _TextDecoder,
     URLPattern: typeof _URLPattern,
+    URL: typeof _URL,
+    URLSearchParams: typeof _URLSearchParams,
   });
 }
 

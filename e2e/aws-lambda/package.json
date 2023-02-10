@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@e2e/shared-scripts": "0.0.0",
+    "@whatwg-node/fetch": "0.7.1",
     "aws-lambda": "1.0.7"
   },
   "devDependencies": {

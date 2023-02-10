@@ -20,7 +20,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
     if (typeof input === 'string') {
       url = input;
-    } else if (input instanceof URL) {
+    } else if ('href' in input) {
       url = input.toString();
     } else if (isRequest(input)) {
       url = input.url;

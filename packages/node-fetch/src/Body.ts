@@ -375,7 +375,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (bodyInit instanceof URLSearchParams) {
+  if ('sort' in bodyInit) {
     const contentType = 'application/x-www-form-urlencoded;charset=UTF-8';
     return {
       bodyType: BodyInitType.String,
