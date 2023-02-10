@@ -2,8 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse, OutgoingHttpHeaders } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
-import { FetchEvent } from './types';
 import { URLSearchParams } from '@whatwg-node/fetch';
+import { FetchEvent } from './types';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
