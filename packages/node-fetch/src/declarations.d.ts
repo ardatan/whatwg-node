@@ -1,3 +1,4 @@
+// @eslint-ignore
 declare module 'fast-url-parser' {
   class Url {
     static queryString: {
