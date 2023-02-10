@@ -12,6 +12,15 @@ describe('Headers', () => {
     const headers = new PonyfillHeaders({
       'X-Header': ['foo', 'bar'],
     });
-    expect(headers.get('X-Header')).toBe('foo, bar');
+    expect(headers.get('x-header')).toBe('foo, bar');
+  });
+  describe('performance optimizations', () => {
+    it('should not create a map if the input is an object and only getter is used', () => {
+      const headers = new PonyfillHeaders({
+        'X-Header': 'foo',
+      });
+      expect(headers.get('x-header')).toBe('foo');
+      expect(headers['mapIsBuilt']).toBe(false);
+    });
   });
 });

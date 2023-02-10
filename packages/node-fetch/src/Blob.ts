@@ -1,6 +1,6 @@
 import { BlobOptions } from 'buffer';
 import { PonyfillReadableStream } from './ReadableStream';
-import { uint8ArrayToBuffer } from './utils';
+import { uint8ArrayToArrayBuffer } from './utils';
 
 function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
   if (typeof blobPart === 'string') {
@@ -30,7 +30,7 @@ export class PonyfillBlob implements Blob {
     this.encoding = options?.encoding || 'utf8';
   }
 
-  async arrayBuffer() {
+  async buffer() {
     const bufferChunks: Buffer[] = [];
     for (const blobPart of this.blobParts) {
       if (isBlob(blobPart)) {
@@ -42,7 +42,12 @@ export class PonyfillBlob implements Blob {
         bufferChunks.push(buf);
       }
     }
-    return uint8ArrayToBuffer(Buffer.concat(bufferChunks));
+    return Buffer.concat(bufferChunks);
+  }
+
+  async arrayBuffer() {
+    const buffer = await this.buffer();
+    return uint8ArrayToArrayBuffer(buffer);
   }
 
   async text() {

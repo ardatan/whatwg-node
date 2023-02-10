@@ -4,7 +4,7 @@ import { PonyfillBlob } from './Blob';
 import { PonyfillFile } from './File';
 import { getStreamFromFormData, PonyfillFormData } from './FormData';
 import { PonyfillReadableStream } from './ReadableStream';
-import { uint8ArrayToBuffer } from './utils';
+import { uint8ArrayToArrayBuffer } from './utils';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -107,10 +107,30 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
     if (this.bodyType === BodyInitType.Uint8Array || this.bodyType === BodyInitType.Buffer) {
       const typedBodyInit = this.bodyInit as Uint8Array;
-      return uint8ArrayToBuffer(typedBodyInit);
+      return uint8ArrayToArrayBuffer(typedBodyInit);
+    }
+    if (this.bodyType === BodyInitType.String) {
+      const buffer = Buffer.from(this.bodyInit as string);
+      return uint8ArrayToArrayBuffer(buffer);
+    }
+    if (this.bodyType === BodyInitType.Blob) {
+      const blob = this.bodyInit as PonyfillBlob;
+      const arrayBuffer = await blob.arrayBuffer();
+      return arrayBuffer;
     }
     const blob = await this.blob();
     return blob.arrayBuffer();
+  }
+
+  async _collectChunksFromReadable() {
+    const chunks: Uint8Array[] = [];
+    const _body = this.generateBody();
+    if (_body) {
+      for await (const chunk of _body.readable) {
+        chunks.push(chunk);
+      }
+    }
+    return chunks;
   }
 
   async blob(): Promise<PonyfillBlob> {
@@ -134,13 +154,7 @@ export class PonyfillBody<TJSON = any> implements Body {
         type: this.contentType || '',
       });
     }
-    const chunks: Uint8Array[] = [];
-    const _body = this.generateBody();
-    if (_body) {
-      for await (const chunk of _body.readable) {
-        chunks.push(chunk);
-      }
-    }
+    const chunks = await this._collectChunksFromReadable();
     return new PonyfillBlob(chunks, {
       type: this.contentType || '',
     });
@@ -218,6 +232,9 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this.bodyType === BodyInitType.Buffer) {
       return this.bodyInit as Buffer;
     }
+    if (this.bodyType === BodyInitType.String) {
+      return Buffer.from(this.bodyInit as string);
+    }
     if (this.bodyType === BodyInitType.Uint8Array || this.bodyType === BodyInitType.ArrayBuffer) {
       const bodyInitTyped = this.bodyInit as Uint8Array | ArrayBuffer;
       const buffer = Buffer.from(
@@ -227,9 +244,16 @@ export class PonyfillBody<TJSON = any> implements Body {
       );
       return buffer;
     }
-    const blob = await this.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    return Buffer.from(arrayBuffer, undefined, arrayBuffer.byteLength);
+    if (this.bodyType === BodyInitType.Blob) {
+      if (this.bodyInit instanceof PonyfillBlob) {
+        return this.bodyInit.buffer();
+      }
+      const bodyInitTyped = this.bodyInit as Blob;
+      const buffer = Buffer.from(await bodyInitTyped.arrayBuffer(), undefined, bodyInitTyped.size);
+      return buffer;
+    }
+    const chunks = await this._collectChunksFromReadable();
+    return Buffer.concat(chunks);
   }
 
   async json(): Promise<TJSON> {
@@ -241,20 +265,8 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this.bodyType === BodyInitType.String) {
       return this.bodyInit as string;
     }
-    if (this.bodyType === BodyInitType.Buffer) {
-      return (this.bodyInit as Buffer).toString('utf-8');
-    }
-    if (this.bodyType === BodyInitType.ArrayBuffer || this.bodyType === BodyInitType.Uint8Array) {
-      const bodyInitTyped = this.bodyInit as ArrayBuffer | Uint8Array;
-      const buffer = Buffer.from(
-        bodyInitTyped,
-        'byteOffset' in bodyInitTyped ? bodyInitTyped.byteOffset : undefined,
-        bodyInitTyped.byteLength,
-      );
-      return buffer.toString('utf-8');
-    }
-    const blob = await this.blob();
-    return blob.text();
+    const buffer = await this.buffer();
+    return buffer.toString('utf-8');
   }
 }
 
