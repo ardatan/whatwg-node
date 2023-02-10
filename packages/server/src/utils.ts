@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse, OutgoingHttpHeaders } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
-import { URLSearchParams } from '@whatwg-node/fetch';
+import { URL } from '@whatwg-node/fetch';
 import { FetchEvent } from './types';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
@@ -87,8 +87,11 @@ export function normalizeNodeRequest(
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
-    const searchParams = new URLSearchParams(nodeRequest.query);
-    fullUrl += searchParams.toString();
+    const url = new URL(fullUrl);
+    for (const key in nodeRequest.query) {
+      url.searchParams.set(key, nodeRequest.query[key]);
+    }
+    fullUrl = url.toString();
   }
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {

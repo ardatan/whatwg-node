@@ -78,14 +78,15 @@ export class PonyfillURLSearchParams implements URLSearchParams {
   }
 
   *entries(): IterableIterator<[string, string]> {
-    for (const key in this.keys()) {
+    for (const key of this.keys()) {
       const value = this.params[key];
       if (Array.isArray(value)) {
         for (const item of value) {
           yield [key, item];
         }
+      } else {
+        yield [key, value];
       }
-      yield [key, value];
     }
   }
 
