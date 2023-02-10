@@ -8,4 +8,10 @@ describe('Headers', () => {
     headers.append('x-HEADER', 'bar');
     expect(headers.get('X-HEADER')).toBe('foo, bar');
   });
+  it('supports inputs with multiple values', () => {
+    const headers = new PonyfillHeaders({
+      'X-Header': ['foo', 'bar'],
+    });
+    expect(headers.get('X-Header')).toBe('foo, bar');
+  });
 });

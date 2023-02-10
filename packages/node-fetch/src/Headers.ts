@@ -9,17 +9,68 @@ function isHeadersLike(headers: any): headers is Headers {
 
 export class PonyfillHeaders implements Headers {
   private map = new Map<string, string>();
-  constructor(headersInit?: PonyfillHeadersInit) {
-    if (headersInit != null) {
-      if (Array.isArray(headersInit)) {
-        this.map = new Map(headersInit);
-      } else if (isHeadersLike(headersInit)) {
-        headersInit.forEach((value, key) => {
+  private mapIsBuilt = false;
+  private objectNormalizedKeysOfHeadersInit: string[] = [];
+  private objectOriginalKeysOfHeadersInit: string[] = [];
+
+  constructor(private headersInit?: PonyfillHeadersInit) {}
+
+  // perf: we don't need to build `this.map` for Requests, as we can access the headers directly
+  private _get(key: string) {
+    // If the map is built, reuse it
+    if (this.mapIsBuilt) {
+      return this.map.get(key.toLowerCase()) || null;
+    }
+
+    // If the map is not built, try to get the value from the this.headersInit
+    if (this.headersInit == null) {
+      return null;
+    }
+
+    const normalized = key.toLowerCase();
+    if (Array.isArray(this.headersInit)) {
+      return this.headersInit.find(header => header[0] === normalized);
+    } else if (isHeadersLike(this.headersInit)) {
+      return this.headersInit.get(normalized);
+    } else {
+      const initValue = this.headersInit[key] || this.headersInit[normalized];
+
+      if (initValue != null) {
+        return initValue;
+      }
+
+      if (!this.objectNormalizedKeysOfHeadersInit.length) {
+        Object.keys(this.headersInit).forEach(k => {
+          this.objectOriginalKeysOfHeadersInit.push(k);
+          this.objectNormalizedKeysOfHeadersInit.push(k.toLowerCase());
+        });
+      }
+      const index = this.objectNormalizedKeysOfHeadersInit.indexOf(normalized);
+      if (index === -1) {
+        return null;
+      }
+      const originalKey = this.objectOriginalKeysOfHeadersInit[index];
+      return this.headersInit[originalKey];
+    }
+  }
+
+  // perf: Build the map of headers lazily, only when we need to access all headers or write to it.
+  // I could do a getter here, but I'm too lazy to type `getter`.
+  private getMap() {
+    if (this.mapIsBuilt) {
+      return this.map;
+    }
+
+    if (this.headersInit != null) {
+      if (Array.isArray(this.headersInit)) {
+        this.map = new Map(this.headersInit);
+      } else if (isHeadersLike(this.headersInit)) {
+        this.headersInit.forEach((value, key) => {
           this.map.set(key, value);
         });
       } else {
-        for (const initKey in headersInit) {
-          const initValue = headersInit[initKey];
+        for (const initKey in this.headersInit) {
+          const initValue = this.headersInit[initKey];
           if (initValue != null) {
             const normalizedValue = Array.isArray(initValue) ? initValue.join(', ') : initValue;
             const normalizedKey = initKey.toLowerCase();
@@ -28,46 +79,59 @@ export class PonyfillHeaders implements Headers {
         }
       }
     }
+
+    this.mapIsBuilt = true;
+    return this.map;
   }
 
   append(name: string, value: string): void {
     const key = name.toLowerCase();
-    const existingValue = this.map.get(key);
+    const existingValue = this.getMap().get(key);
     const finalValue = existingValue ? `${existingValue}, ${value}` : value;
-    this.map.set(key, finalValue);
+    this.getMap().set(key, finalValue);
   }
 
   get(name: string): string | null {
     const key = name.toLowerCase();
-    return this.map.get(key) || null;
+    const value = this._get(key);
+
+    if (value == null) {
+      return null;
+    }
+
+    if (Array.isArray(value)) {
+      return value.join(', ');
+    }
+
+    return value;
   }
 
   has(name: string): boolean {
     const key = name.toLowerCase();
-    return this.map.has(key);
+    return !!this._get(key); // we might need to check if header exists and not just check if it's not nullable
   }
 
   set(name: string, value: string): void {
     const key = name.toLowerCase();
-    this.map.set(key, value);
+    this.getMap().set(key, value);
   }
 
   delete(name: string): void {
     const key = name.toLowerCase();
-    this.map.delete(key);
+    this.getMap().delete(key);
   }
 
   forEach(callback: (value: string, key: string, parent: Headers) => void): void {
-    this.map.forEach((value, key) => {
+    this.getMap().forEach((value, key) => {
       callback(value, key, this);
     });
   }
 
   entries(): IterableIterator<[string, string]> {
-    return this.map.entries();
+    return this.getMap().entries();
   }
 
   [Symbol.iterator](): IterableIterator<[string, string]> {
-    return this.map.entries();
+    return this.getMap().entries();
   }
 }
