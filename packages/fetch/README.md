@@ -76,6 +76,8 @@ The following are exported by this package:
 
 ### URL Standard
 
+- [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)
+- [URLSearchParams](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams)
 - [URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern)
 
 ### Data Types
