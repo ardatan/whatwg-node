@@ -47,6 +47,7 @@ describe('Body', () => {
       jest.spyOn(PonyfillBody.prototype, 'blob');
       const result = await body.text();
       expect(result).toBe('hello world');
+      expect(body.blob).not.toHaveBeenCalled();
     });
   });
 });
