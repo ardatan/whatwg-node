@@ -35,6 +35,19 @@ jobs:
       - name: ESLint
         run: yarn lint
 
+  type-check:
+    name: Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v3
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 18
+      - name: Build
+        run: yarn ts:check
+
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -47,6 +60,8 @@ jobs:
           nodeVersion: 18
       - name: Build
         run: yarn build
+      - name: ESM Check
+        run: yarn esm-check
   test:
     name: Unit Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest

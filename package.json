@@ -18,7 +18,7 @@
     "release": "changeset publish",
     "test": "jest --detectOpenHandles --detectLeaks",
     "ts:check": "tsc --noEmit",
-    "ts:transpile": "tsc --project tsconfig.build.json"
+    "esm:check": "bob check"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
