@@ -1,14 +1,12 @@
 {
   "name": "whatwg-node-monorepo",
   "private": true,
-  "workspaces": {
-    "packages": [
-      "./packages/*",
-      "./e2e/*"
-    ]
-  },
+  "workspaces": [
+    "./packages/*",
+    "./e2e/*"
+  ],
   "scripts": {
-    "build": "yarn ts:transpile && bob build",
+    "build": "bob build",
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
     "clean-dist": "rimraf \"packages/**/dist\" && rimraf \".bob\"",
     "lint": "eslint --ext .ts .",
@@ -36,7 +34,7 @@
     "@typescript-eslint/eslint-plugin": "5.52.0",
     "@typescript-eslint/parser": "5.52.0",
     "babel-jest": "29.4.2",
-    "bob-the-bundler": "1.7.3",
+    "bob-the-bundler": "5.1.0-alpha-20230126161914-54dd016",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-config-standard": "17.0.0",

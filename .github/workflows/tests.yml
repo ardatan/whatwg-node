@@ -36,7 +36,7 @@ jobs:
         run: yarn lint
 
   build:
-    name: Type Check
+    name: Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
@@ -45,8 +45,8 @@ jobs:
         uses: the-guild-org/shared-config/setup@main
         with:
           nodeVersion: 18
-      - name: Type Check
-        run: yarn ts:check
+      - name: Build
+        run: yarn build
   test:
     name: Unit Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest
