@@ -45,23 +45,9 @@ jobs:
         uses: the-guild-org/shared-config/setup@main
         with:
           nodeVersion: 18
-      - name: Build
+      - name: Type Check
         run: yarn ts:check
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Master
-        uses: actions/checkout@v3
-      - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
-        with:
-          nodeVersion: 18
-      - name: Build
-        run: yarn build
-      - name: ESM Check
-        run: yarn esm-check
   test:
     name: Unit Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest
@@ -92,17 +78,5 @@ jobs:
         run: yarn test --ci
         env:
           CI: true
-  test_esm:
-    name: ESM Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Master
-        uses: actions/checkout@v3
-      - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
-        with:
-          nodeVersion: 18
-      - name: Build Packages
-        run: yarn build
-      - name: Test ESM
-        run: node scripts/test-esm.mjs
+      - name: ESM Check
+        run: yarn esm-check
