@@ -3,7 +3,7 @@ import type { Http2ServerRequest, Http2ServerResponse, OutgoingHttpHeaders } fro
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
 import { URL } from '@whatwg-node/fetch';
-import { FetchEvent } from './types';
+import { FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (

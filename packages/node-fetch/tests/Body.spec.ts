@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
-import { PonyfillBlob } from '../src/Blob';
-import { PonyfillBody } from '../src/Body';
+import { PonyfillBlob } from '../src/Blob.js';
+import { PonyfillBody } from '../src/Body.js';
 
 const exampleData = {
   data: {

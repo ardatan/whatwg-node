@@ -1,4 +1,4 @@
-import { PonyfillRequest } from '../src/Request';
+import { PonyfillRequest } from '../src/Request.js';
 
 describe('Request', () => {
   it('should normalize the method name', () => {

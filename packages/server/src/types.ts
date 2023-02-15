@@ -1,5 +1,5 @@
 import type { RequestListener } from 'node:http';
-import type { NodeRequest, NodeResponse } from './utils';
+import type { NodeRequest, NodeResponse } from './utils.js';
 
 export interface FetchEvent extends Event {
   waitUntil(f: Promise<void> | void): void;

@@ -6,7 +6,7 @@ import {
   ServerAdapterBaseObject,
   ServerAdapterObject,
   ServerAdapterRequestHandler,
-} from './types';
+} from './types.js';
 import {
   isFetchEvent,
   isNodeRequest,
@@ -16,7 +16,7 @@ import {
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
-} from './utils';
+} from './utils.js';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);

@@ -3,12 +3,12 @@ import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
-import { PonyfillAbortError } from './AbortError';
-import { PonyfillBlob } from './Blob';
-import { PonyfillRequest, RequestPonyfillInit } from './Request';
-import { PonyfillResponse } from './Response';
-import { PonyfillURL } from './URL';
-import { getHeadersObj } from './utils';
+import { PonyfillAbortError } from './AbortError.js';
+import { PonyfillBlob } from './Blob.js';
+import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
+import { PonyfillResponse } from './Response.js';
+import { PonyfillURL } from './URL.js';
+import { getHeadersObj } from './utils.js';
 
 function getResponseForFile(url: string) {
   const path = fileURLToPath(url);

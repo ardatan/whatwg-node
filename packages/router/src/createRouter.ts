@@ -8,7 +8,7 @@ import type {
   RouterBaseObject,
   RouterHandler,
   RouterRequest,
-} from './types';
+} from './types.js';
 
 interface RouterOptions<TServerContext = {}> {
   base?: string;

@@ -1,4 +1,4 @@
-import { PonyfillURL } from '../src/URL';
+import { PonyfillURL } from '../src/URL.js';
 
 describe('URL', () => {
   it('should parse search params', () => {

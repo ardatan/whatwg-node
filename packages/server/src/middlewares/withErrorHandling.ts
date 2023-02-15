@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
-import { ServerAdapterBaseObject, WaitUntilFn } from '../types';
+import { ServerAdapterBaseObject, WaitUntilFn } from '../types.js';
 
 export function createDefaultErrorHandler<TServerContext = {}>(
   ResponseCtor: typeof Response = DefaultResponseCtor,

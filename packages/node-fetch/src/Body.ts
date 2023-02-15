@@ -1,10 +1,10 @@
 import { Readable } from 'stream';
 import busboy from 'busboy';
-import { PonyfillBlob } from './Blob';
-import { PonyfillFile } from './File';
-import { getStreamFromFormData, PonyfillFormData } from './FormData';
-import { PonyfillReadableStream } from './ReadableStream';
-import { uint8ArrayToArrayBuffer } from './utils';
+import { PonyfillBlob } from './Blob.js';
+import { PonyfillFile } from './File.js';
+import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
+import { PonyfillReadableStream } from './ReadableStream.js';
+import { uint8ArrayToArrayBuffer } from './utils.js';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',

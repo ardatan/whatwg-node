@@ -1,5 +1,5 @@
 import { Response, withErrorHandling } from '@whatwg-node/server';
-import { createRouter } from '../src/createRouter';
+import { createRouter } from '../src/createRouter.js';
 
 describe('Router', () => {
   it('should have parsedUrl in Request object', async () => {

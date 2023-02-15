@@ -1,4 +1,4 @@
-import { PonyfillReadableStream } from '../src/ReadableStream';
+import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('ReadableStream', () => {
   it('pull queueing', async () => {

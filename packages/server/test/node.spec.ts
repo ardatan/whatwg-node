@@ -11,7 +11,7 @@ import {
 import { AddressInfo } from 'net';
 import { fetch, ReadableStream, Request, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
-import { createTestServer, TestServer } from './test-server';
+import { createTestServer, TestServer } from './test-server.js';
 
 describe('Node Specific Cases', () => {
   let testServer: TestServer;

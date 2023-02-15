@@ -2,8 +2,8 @@
   "name": "whatwg-node-monorepo",
   "private": true,
   "workspaces": [
-    "./packages/*",
-    "./e2e/*"
+    "packages/*",
+    "e2e/*"
   ],
   "scripts": {
     "build": "bob build",

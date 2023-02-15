@@ -1,5 +1,5 @@
 import { Request } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src';
+import { createServerAdapter } from '../src/index.js';
 
 describe('Request Container', () => {
   it('should receive correct request and container as a context', async () => {
