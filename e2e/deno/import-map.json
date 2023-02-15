@@ -2,8 +2,8 @@
   "imports": {
     "@whatwg-node/fetch": "../../packages/fetch/dist/deno-ponyfill.ts",
     "@whatwg-node/events": "../../packages/events/dist/deno-ponyfill.ts",
-    "@whatwg-node/router": "../../packages/router/dist/index.mjs",
-    "@whatwg-node/server": "../../packages/server/dist/index.mjs",
+    "@whatwg-node/router": "../../packages/router/dist/esm/index.js",
+    "@whatwg-node/server": "../../packages/server/dist/esm/index.js",
     "@e2e/shared-server": "../../e2e/shared-server/src/index.ts",
     "@e2e/shared-scripts": "../../e2e/shared-scripts/src/utils.ts",
     "@pulumi/pulumi": "npm:@pulumi/pulumi",
