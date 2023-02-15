@@ -1,6 +1,7 @@
 {
   "name": "fetchache",
   "version": "0.1.4",
+  "type": "module",
   "description": "Cross Platform Fetch Wrapper with Key Value Cache support",
   "repository": {
     "type": "git",
@@ -46,6 +47,5 @@
   },
   "typescript": {
     "definition": "dist/typings/index.d.ts"
-  },
-  "type": "module"
+  }
 }

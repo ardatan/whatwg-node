@@ -1,6 +1,7 @@
 {
   "name": "@whatwg-node/router",
   "version": "0.2.7",
+  "type": "module",
   "description": "Fetch API compliant HTTP Router",
   "repository": {
     "type": "git",
@@ -48,6 +49,5 @@
   },
   "typescript": {
     "definition": "dist/typings/index.d.ts"
-  },
-  "type": "module"
+  }
 }

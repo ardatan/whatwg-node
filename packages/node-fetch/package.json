@@ -1,6 +1,7 @@
 {
   "name": "@whatwg-node/node-fetch",
   "version": "0.3.0",
+  "type": "module",
   "description": "Fetch API implementation for Node",
   "repository": {
     "type": "git",
@@ -52,6 +53,5 @@
   },
   "typescript": {
     "definition": "dist/typings/index.d.ts"
-  },
-  "type": "module"
+  }
 }

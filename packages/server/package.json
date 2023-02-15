@@ -1,6 +1,7 @@
 {
   "name": "@whatwg-node/server",
   "version": "0.6.7",
+  "type": "module",
   "description": "Fetch API compliant HTTP Server adapter",
   "repository": {
     "type": "git",
@@ -47,6 +48,5 @@
   },
   "typescript": {
     "definition": "dist/typings/index.d.ts"
-  },
-  "type": "module"
+  }
 }
