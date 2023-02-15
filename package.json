@@ -9,6 +9,7 @@
     "build": "bob build",
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
     "clean-dist": "rimraf \"packages/**/dist\" && rimraf \".bob\"",
+    "esm:check": "bob check",
     "lint": "eslint --ext .ts .",
     "postinstall": "patch-package && husky install",
     "prerelease": "yarn build",
@@ -17,8 +18,7 @@
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
     "test": "jest --detectOpenHandles --detectLeaks",
-    "ts:check": "tsc --noEmit",
-    "esm:check": "bob check"
+    "ts:check": "tsc --noEmit"
   },
   "devDependencies": {
     "@babel/core": "7.20.12",
@@ -34,7 +34,7 @@
     "@typescript-eslint/eslint-plugin": "5.52.0",
     "@typescript-eslint/parser": "5.52.0",
     "babel-jest": "29.4.2",
-    "bob-the-bundler": "5.1.0-alpha-20230126161914-54dd016",
+    "bob-the-bundler": "5.1.0-alpha-20230215083035-d09069e",
     "eslint": "8.34.0",
     "eslint-config-prettier": "8.6.0",
     "eslint-config-standard": "17.0.0",
