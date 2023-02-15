@@ -78,5 +78,18 @@ jobs:
         run: yarn test --ci
         env:
           CI: true
-      - name: ESM Check
-        run: yarn esm-check
+
+  test_esm:
+    name: ESM Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v3
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 18
+      - name: Build Packages
+        run: yarn build
+      - name: Test ESM
+        run: yarn esm:check
