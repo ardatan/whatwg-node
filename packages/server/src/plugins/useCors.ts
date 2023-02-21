@@ -1,4 +1,4 @@
-import { ServerAdapterPlugin } from './types';
+import { ServerAdapterPlugin } from './types.js';
 
 export type CORSOptions =
   | {
@@ -21,17 +21,17 @@ export type CORSOptionsFactory<TServerContext> = (
   ...args: {} extends TServerContext
     ? [serverContext?: TServerContext | undefined]
     : [serverContext: TServerContext]
-) => Promise<CORSOptions> | CORSOptions;
+) => CORSOptions | Promise<CORSOptions>;
 
 export function getCORSHeadersByRequestAndOptions(
   request: Request,
   corsOptions: CORSOptions,
-): Record<string, string> {
-  const headers: Record<string, string> = {};
-
-  if (corsOptions === false) {
-    return headers;
+): Record<string, string> | null {
+  const currentOrigin = request.headers.get('origin');
+  if (corsOptions === false || currentOrigin == null) {
+    return null;
   }
+  const headers: Record<string, string> = {};
 
   // If defined origins have '*' or undefined by any means, we should allow all origins
   if (
@@ -39,15 +39,9 @@ export function getCORSHeadersByRequestAndOptions(
     corsOptions.origin.length === 0 ||
     corsOptions.origin.includes('*')
   ) {
-    const currentOrigin = request.headers.get('origin');
-    // If origin is available in the headers, use it
-    if (currentOrigin != null) {
-      headers['Access-Control-Allow-Origin'] = currentOrigin;
-      // Vary by origin because there are multiple origins
-      headers['Vary'] = 'Origin';
-    } else {
-      headers['Access-Control-Allow-Origin'] = '*';
-    }
+    headers['Access-Control-Allow-Origin'] = currentOrigin;
+    // Vary by origin because there are multiple origins
+    headers['Vary'] = 'Origin';
   } else if (typeof corsOptions.origin === 'string') {
     // If there is one specific origin is specified, use it directly
     headers['Access-Control-Allow-Origin'] = corsOptions.origin;
@@ -55,17 +49,14 @@ export function getCORSHeadersByRequestAndOptions(
     // If there is only one origin defined in the array, consider it as a single one
     if (corsOptions.origin.length === 1) {
       headers['Access-Control-Allow-Origin'] = corsOptions.origin[0];
+    } else if (corsOptions.origin.includes(currentOrigin)) {
+      // If origin is available in the headers, use it
+      headers['Access-Control-Allow-Origin'] = currentOrigin;
+      // Vary by origin because there are multiple origins
+      headers['Vary'] = 'Origin';
     } else {
-      const currentOrigin = request.headers.get('origin');
-      if (currentOrigin != null && corsOptions.origin.includes(currentOrigin)) {
-        // If origin is available in the headers, use it
-        headers['Access-Control-Allow-Origin'] = currentOrigin;
-        // Vary by origin because there are multiple origins
-        headers['Vary'] = 'Origin';
-      } else {
-        // There is no origin found in the headers, so we should return null
-        headers['Access-Control-Allow-Origin'] = 'null';
-      }
+      // There is no origin found in the headers, so we should return null
+      headers['Access-Control-Allow-Origin'] = 'null';
     }
   }
 
@@ -120,8 +111,7 @@ async function getCORSResponseHeaders<TServerContext>(
   return getCORSHeadersByRequestAndOptions(request, corsOptions);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useCORS<TServerContext extends Record<string, any>>(
+export function useCORS<TServerContext>(
   options?: CORSPluginOptions<TServerContext>,
   // eslint-disable-next-line @typescript-eslint/ban-types
 ): ServerAdapterPlugin<TServerContext> {
@@ -156,8 +146,10 @@ export function useCORS<TServerContext extends Record<string, any>>(
     async onResponse({ request, serverContext, response }) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const headers = await getCORSResponseHeaders<any>(request, corsOptionsFactory, serverContext);
-      for (const headerName in headers) {
-        response.headers.set(headerName, headers[headerName]);
+      if (headers != null) {
+        for (const headerName in headers) {
+          response.headers.set(headerName, headers[headerName]);
+        }
       }
     },
   };
