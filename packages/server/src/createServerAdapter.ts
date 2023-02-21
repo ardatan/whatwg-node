@@ -6,7 +6,6 @@ import {
   FetchEvent,
   ServerAdapter,
   ServerAdapterBaseObject,
-  ServerAdapterContext,
   ServerAdapterObject,
   ServerAdapterRequestHandler,
 } from './types';
@@ -122,10 +121,7 @@ function createServerAdapter<
       }
     }
     if (!response) {
-      response = await requestHandler(
-        request,
-        serverContext as ServerAdapterContext<TServerContext>,
-      );
+      response = await requestHandler(request, serverContext);
     }
     for (const onResponseHook of onResponseHooks) {
       await onResponseHook({

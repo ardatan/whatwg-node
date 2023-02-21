@@ -1,9 +1,5 @@
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import {
-  createServerAdapter,
-  ServerAdapterContext,
-  ServerAdapterOptions,
-} from '@whatwg-node/server';
+import { createServerAdapter, ServerAdapterOptions } from '@whatwg-node/server';
 import type {
   HTTPMethod,
   RouteMethodKey,
@@ -59,7 +55,7 @@ export function createRouterBase<TServerContext = {}>({
     const pattern = new fetchAPI.URLPattern({ pathname: fullPath });
     methodPatternMaps.set(pattern, handlers);
   }
-  async function handleRequest(request: Request, context: ServerAdapterContext<TServerContext>) {
+  async function handleRequest(request: Request, context: TServerContext) {
     const method = request.method as HTTPMethod;
     let _parsedUrl: URL;
     function getParsedUrl() {

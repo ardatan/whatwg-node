@@ -1,4 +1,4 @@
-import { ServerAdapter, ServerAdapterBaseObject, ServerAdapterContext } from '@whatwg-node/server';
+import { ServerAdapter, ServerAdapterBaseObject } from '@whatwg-node/server';
 
 export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
@@ -12,7 +12,7 @@ export interface RouterRequest extends Request {
 export type RouteMethodKey = Lowercase<HTTPMethod> | 'all';
 export type RouterHandler<TServerContext> = (
   request: RouterRequest,
-  ctx: ServerAdapterContext<TServerContext>,
+  ctx: TServerContext,
 ) => Promise<Response | void> | Response | void;
 export type RouteMethod<TServerContext> = (
   path: string,

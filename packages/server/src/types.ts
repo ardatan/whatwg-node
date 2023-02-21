@@ -74,7 +74,7 @@ export type ServerAdapter<
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
-  ctx: ServerAdapterContext<TServerContext>,
+  ctx: TServerContext,
 ) => Promise<Response> | Response;
 
 export type ServerAdapterNodeContext = {
@@ -84,5 +84,4 @@ export type ServerAdapterNodeContext = {
 
 export type WaitUntilFn = (promise: Promise<void> | void) => void;
 
-export type ServerAdapterContext<TServerContext> = TServerContext & { waitUntil: WaitUntilFn };
 export type FetchAPI = ReturnType<typeof import('@whatwg-node/fetch').createFetch>;
