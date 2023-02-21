@@ -235,18 +235,4 @@ describe('Router', () => {
     expect(json.message).toBe('Hello John!');
   });
 });
-describe('withErrorHandling', () => {
-  it('should return 500 when error is thrown', async () => {
-    const router = createRouter({
-      plugins: [withErrorHandling],
-    });
-    router.get('/greetings/:name', () => {
-      throw new Error('Unexpected error');
-    });
-    const response = await router.fetch('http://localhost/greetings/John');
-    expect(response.status).toBe(500);
-    expect(response.statusText).toBe('Internal Server Error');
-    const text = await response.text();
-    expect(text).toContain('Error: Unexpected error');
-  });
-});
+

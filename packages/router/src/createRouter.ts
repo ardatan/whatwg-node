@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Request as DefaultRequestCtor, URL, URLPattern } from '@whatwg-node/fetch';
+import { URL, URLPattern } from '@whatwg-node/fetch';
 import { createServerAdapter, ServerAdapterContext } from '@whatwg-node/server';
 import type {
   HTTPMethod,
@@ -13,7 +13,6 @@ import type {
 interface RouterOptions<TServerContext = {}> {
   base?: string;
   RequestCtor?: typeof Request;
-  plugins?: Array<(router: RouterBaseObject<TServerContext>) => RouterBaseObject<TServerContext>>;
 }
 
 const HTTP_METHODS = [
@@ -28,9 +27,9 @@ const HTTP_METHODS = [
   'PATCH',
 ] as HTTPMethod[];
 
-export function createRouter<TServerContext = {}>(
+export function createRouterBase<TServerContext = {}>(
   options?: RouterOptions<TServerContext>,
-): Router<TServerContext> {
+): RouterBaseObject<TServerContext> {
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
   function addHandlersToMethod(
     method: HTTPMethod,
@@ -123,7 +122,7 @@ export function createRouter<TServerContext = {}>(
       }
     }
   }
-  let routerBaseObject = new Proxy({} as RouterBaseObject<TServerContext>, {
+  return new Proxy({} as RouterBaseObject<TServerContext>, {
     get(_, prop) {
       if (prop === 'handle') {
         return handleRequest;
@@ -145,8 +144,11 @@ export function createRouter<TServerContext = {}>(
       };
     },
   });
-  options?.plugins?.forEach(plugin => {
-    routerBaseObject = plugin(routerBaseObject);
-  });
-  return createServerAdapter(routerBaseObject, options?.RequestCtor || DefaultRequestCtor);
+}
+
+export function createRouter<TServerContext = {}>(
+  options?: RouterOptions<TServerContext>,
+): Router<TServerContext> {
+  const routerBaseObject = createRouterBase(options);
+  return createServerAdapter(routerBaseObject, options?.RequestCtor);
 }
