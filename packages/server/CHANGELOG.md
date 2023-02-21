@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.7.1
+
+### Patch Changes
+
+- [`79428fd`](https://github.com/ardatan/whatwg-node/commit/79428fdfe52f897e1d3499c0068d18652cf5eccc)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove `onPluginInit`
+
 ## 0.7.0
 
 ### Minor Changes
