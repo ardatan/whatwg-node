@@ -1,5 +1,23 @@
 # @whatwg-node/server
 
+## 0.7.0
+
+### Minor Changes
+
+- [#264](https://github.com/ardatan/whatwg-node/pull/264)
+  [`f5fa2d7`](https://github.com/ardatan/whatwg-node/commit/f5fa2d743fd06e4da7fa4c4e842d8c45bab9e047)
+  Thanks [@ardatan](https://github.com/ardatan)! - Plugin System
+
+- [`720b6ab`](https://github.com/ardatan/whatwg-node/commit/720b6ab110e7bf0cc36454abdc38d622e8f0c35f)
+  Thanks [@ardatan](https://github.com/ardatan)! - BREAKING: `withCors` and `withErrorHandling` are
+  removed in `server` and `plugins` option is removed in `router`
+
+### Patch Changes
+
+- [`7d94f60`](https://github.com/ardatan/whatwg-node/commit/7d94f60e7d08407a2b4a4e7b7d06bace31466e57)
+  Thanks [@ardatan](https://github.com/ardatan)! - If the first parameter's request property throws,
+  consider it as a Request
+
 ## 0.6.7
 
 ### Patch Changes
