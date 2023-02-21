@@ -1,15 +1,8 @@
 import { FetchAPI, ServerAdapterRequestHandler } from '../types';
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
-  onPluginInit?: OnPluginInitHook;
   onRequest?: OnRequestHook<TServerContext>;
   onResponse?: OnResponseHook<TServerContext>;
-}
-
-export type OnPluginInitHook = (payload: OnPluginInitEventPayload) => void;
-
-export interface OnPluginInitEventPayload {
-  addPlugin(plugin: ServerAdapterPlugin<any>): void;
 }
 
 export type OnRequestHook<TServerContext> = (

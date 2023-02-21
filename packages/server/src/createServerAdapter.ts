@@ -85,14 +85,6 @@ function createServerAdapter<
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
-      if (plugin.onPluginInit) {
-        plugin.onPluginInit({
-          addPlugin(newPlugin) {
-            options.plugins!.push(newPlugin);
-          },
-        });
-        delete plugin.onPluginInit;
-      }
       if (plugin.onRequest) {
         onRequestHooks.push(plugin.onRequest);
       }
