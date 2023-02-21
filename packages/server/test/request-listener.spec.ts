@@ -116,7 +116,7 @@ describe('Request Listener', () => {
         await compareReadableStream(request.body, getRequestBody());
       }
       return expectedResponse;
-    }, fetchAPI.Request);
+    });
     testServer.server.once('request', adapter);
     const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
     const returnedResponse = await fetchAPI.fetch(expectedRequest);

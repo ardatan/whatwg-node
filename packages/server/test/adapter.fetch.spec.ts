@@ -5,7 +5,7 @@ describe('adapter.fetch', () => {
   // Request as first parameter
   it('should accept Request as a first argument', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const request = new Request('http://localhost:8080');
     await adapter(request);
     expect(handleRequest).toHaveBeenCalledWith(request, expect.anything());
@@ -14,7 +14,7 @@ describe('adapter.fetch', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const request = new Request('http://localhost:8080');
     const additionalCtx = { foo: 'bar' };
     await adapter.fetch(request, additionalCtx);
@@ -23,7 +23,7 @@ describe('adapter.fetch', () => {
   // URL as first parameter
   it('should accept URL as a first argument', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const url = new URL('http://localhost:8080');
     await adapter.fetch(url);
     expect(handleRequest).toHaveBeenCalledWith(
@@ -37,7 +37,7 @@ describe('adapter.fetch', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const url = new URL('http://localhost:8080');
     const additionalCtx = { foo: 'bar' };
     await adapter.fetch(url, additionalCtx);
@@ -50,7 +50,7 @@ describe('adapter.fetch', () => {
   });
   it('should accept URL with a RequestInit', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const url = new URL('http://localhost:8080');
     const init = {
       method: 'POST',
@@ -68,7 +68,7 @@ describe('adapter.fetch', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const url = new URL('http://localhost:8080');
     const init = {
       method: 'POST',
@@ -87,7 +87,7 @@ describe('adapter.fetch', () => {
   // String as first parameter
   it('should accept string as a first argument', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const url = 'http://localhost:8080/';
     await adapter.fetch(url);
     expect(handleRequest).toHaveBeenCalledWith(
@@ -101,7 +101,7 @@ describe('adapter.fetch', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const url = 'http://localhost:8080/';
     const additionalCtx = { foo: 'bar' };
     await adapter.fetch(url, additionalCtx);
@@ -114,7 +114,7 @@ describe('adapter.fetch', () => {
   });
   it('should accept string with a RequestInit', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request);
+    const adapter = createServerAdapter(handleRequest);
     const url = 'http://localhost:8080/';
     const init = {
       method: 'POST',
@@ -132,7 +132,7 @@ describe('adapter.fetch', () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const url = 'http://localhost:8080/';
     const init = {
       method: 'POST',
@@ -149,7 +149,7 @@ describe('adapter.fetch', () => {
   });
   it('should copy non-enumerable parameters as server context and keep their descriptors', async () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter<any>(handleRequest, Request);
+    const adapter = createServerAdapter<any>(handleRequest);
     const request = new Request('http://localhost:8080/');
     const env = { VAR: 'abc' };
     const additionalCtx = {};
@@ -168,7 +168,7 @@ describe('adapter.fetch', () => {
   });
   it('should ignore falsy and non object values', () => {
     const handleRequest = jest.fn();
-    const adapter = createServerAdapter(handleRequest, Request) as any;
+    const adapter = createServerAdapter(handleRequest) as any;
     const request = new Request('http://localhost:8080/');
     adapter.fetch(request, null, undefined, 0, false, 'abc', { foo: 'bar' });
     expect(handleRequest).toHaveBeenCalledWith(
@@ -178,7 +178,7 @@ describe('adapter.fetch', () => {
   });
   it('should have the abort signal on the request', async () => {
     const handler = jest.fn((_request: Request) => new Response());
-    const adapter = createServerAdapter(handler, Request);
+    const adapter = createServerAdapter(handler);
 
     await adapter.fetch('http://localhost');
 

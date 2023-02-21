@@ -9,7 +9,7 @@ import {
   Http2ServerResponse,
 } from 'http2';
 import { AddressInfo } from 'net';
-import { fetch, ReadableStream, Request, Response } from '@whatwg-node/fetch';
+import { fetch, ReadableStream, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { createTestServer, TestServer } from './test-server';
 
@@ -26,7 +26,7 @@ describe('Node Specific Cases', () => {
   it('should handle empty responses', async () => {
     const serverAdapter = createServerAdapter(() => {
       return undefined as any;
-    }, Request);
+    });
     testServer.server.once('request', serverAdapter);
     const response = await fetch(testServer.url);
     await response.text();
@@ -44,7 +44,7 @@ describe('Node Specific Cases', () => {
       return new Response(null, {
         status: 204,
       });
-    }, Request);
+    });
     testServer.server.once('request', serverAdapter);
     const response$ = fetch(testServer.url);
     const response = await response$;
@@ -64,7 +64,7 @@ describe('Node Specific Cases', () => {
       req: IncomingMessage;
       res: ServerResponse;
       foo: string;
-    }>(handleRequest, Request);
+    }>(handleRequest);
     const additionalCtx = { foo: 'bar' };
     testServer.server.once('request', (...args) => serverAdapter(...args, additionalCtx));
     const response = await fetch(testServer.url);
@@ -88,7 +88,6 @@ describe('Node Specific Cases', () => {
             cancel: cancelFn,
           }),
         ),
-      Request,
     );
 
     testServer.server.once('request', serverAdapter);

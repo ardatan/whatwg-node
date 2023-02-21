@@ -35,6 +35,7 @@
     "@typescript-eslint/interface-name-prefix": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "default-param-last": "off",
+    "@typescript-eslint/ban-types": "off",
     "import/no-extraneous-dependencies": [
       "error",
       { "devDependencies": ["**/*.test.ts", "**/*.spec.ts"] }
