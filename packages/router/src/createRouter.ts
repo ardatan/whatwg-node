@@ -30,8 +30,8 @@ export function createRouterBase<TServerContext = {}>({
   base: basePath = '/',
 }: RouterOptions<TServerContext> = {}): RouterBaseObject<TServerContext> {
   const fetchAPI = {
-    ...givenFetchAPI,
     ...DefaultFetchAPI,
+    ...givenFetchAPI,
   };
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
   function addHandlersToMethod(
