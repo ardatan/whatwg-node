@@ -10,7 +10,7 @@ import type {
   RouterRequest,
 } from './types';
 
-interface RouterOptions<TServerContext = {}> {
+interface RouterOptions {
   base?: string;
   RequestCtor?: typeof Request;
 }
@@ -28,7 +28,7 @@ const HTTP_METHODS = [
 ] as HTTPMethod[];
 
 export function createRouterBase<TServerContext = {}>(
-  options?: RouterOptions<TServerContext>,
+  options?: RouterOptions,
 ): RouterBaseObject<TServerContext> {
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
   function addHandlersToMethod(
@@ -146,9 +146,7 @@ export function createRouterBase<TServerContext = {}>(
   });
 }
 
-export function createRouter<TServerContext = {}>(
-  options?: RouterOptions<TServerContext>,
-): Router<TServerContext> {
-  const routerBaseObject = createRouterBase(options);
+export function createRouter<TServerContext = {}>(options?: RouterOptions): Router<TServerContext> {
+  const routerBaseObject = createRouterBase<TServerContext>(options);
   return createServerAdapter(routerBaseObject, options?.RequestCtor);
 }

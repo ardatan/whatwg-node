@@ -235,4 +235,3 @@ describe('Router', () => {
     expect(json.message).toBe('Hello John!');
   });
 });
-

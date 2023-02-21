@@ -27,6 +27,17 @@ async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   });
 }
 
+type RequestContainer = { request: Request };
+
+// Required for envs like nextjs edge runtime
+function isRequestAccessible(serverContext: any): serverContext is RequestContainer {
+  try {
+    return !!serverContext?.request;
+  } catch {
+    return false;
+  }
+}
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
@@ -157,7 +168,7 @@ function createServerAdapter<
     }
 
     // Is input a container object over Request?
-    if (typeof input === 'object' && 'request' in input) {
+    if (isRequestAccessible(input)) {
       // Is it FetchEvent?
       if (isFetchEvent(input)) {
         return handleEvent(input, ...maybeCtx);

@@ -1,10 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { createRouter, Response, withErrorHandling } from '@whatwg-node/router';
+import { createRouter, Response } from '@whatwg-node/router';
 
 export function createTestServerAdapter<TServerContext = {}>(base?: string) {
   const app = createRouter<TServerContext>({
     base,
-    plugins: [withErrorHandling as any],
   });
 
   app.get('/greetings/:name', req => Response.json({ message: `Hello ${req.params?.name}!` }));
