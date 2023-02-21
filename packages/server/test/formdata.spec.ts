@@ -31,7 +31,7 @@ describe('FormData', () => {
       return new fetchAPI.Response(null, {
         status: 204,
       });
-    }, fetchAPI.Request);
+    });
     testServer.server.once('request', adapter);
     const formData = new fetchAPI.FormData();
     formData.append('foo', 'bar');
