@@ -35,7 +35,7 @@ describe('Node Specific Cases', () => {
 
   it('should handle waitUntil properly', async () => {
     let flag = false;
-    const serverAdapter = createServerAdapter((_request, { waitUntil }) => {
+    const serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
       waitUntil(
         sleep(100).then(() => {
           flag = true;
