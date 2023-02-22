@@ -234,4 +234,21 @@ describe('Router', () => {
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
+  it('onRoute hook', () => {
+    const onRoute = jest.fn();
+    const router = createRouter({
+      plugins: [
+        {
+          onRoute,
+        },
+      ],
+    });
+    const handler = () => new Response('Hello World!');
+    router.get('/greetings', handler);
+    expect(onRoute).toHaveBeenCalledWith({
+      method: 'GET',
+      path: '/greetings',
+      handlers: [handler],
+    });
+  });
 });

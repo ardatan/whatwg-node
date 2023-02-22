@@ -1,4 +1,4 @@
-import { ServerAdapter, ServerAdapterBaseObject } from '@whatwg-node/server';
+import { ServerAdapter, ServerAdapterBaseObject, ServerAdapterPlugin } from '@whatwg-node/server';
 
 export type HTTPMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 
@@ -25,3 +25,15 @@ export type Router<TServerContext> = ServerAdapter<
   TServerContext,
   RouterBaseObject<TServerContext>
 >;
+
+export type OnRouteHook<TServerContext> = (payload: OnRouteHookPayload<TServerContext>) => void;
+
+export type OnRouteHookPayload<TServerContext> = {
+  method: HTTPMethod;
+  path: string;
+  handlers: RouterHandler<TServerContext>[];
+};
+
+export type RouterPlugin<TServerContext> = ServerAdapterPlugin<TServerContext> & {
+  onRoute?: OnRouteHook<TServerContext>;
+};
