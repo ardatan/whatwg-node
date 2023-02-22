@@ -1,5 +1,4 @@
-import { Response } from '@whatwg-node/server';
-import { createRouter } from '../src/createRouter';
+import { createRouter, Response } from '../src';
 
 describe('Router', () => {
   it('should have parsedUrl in Request object', async () => {
@@ -246,7 +245,7 @@ describe('Router', () => {
     const handler = () => new Response('Hello World!');
     router.get('/greetings', handler);
     expect(onRoute).toHaveBeenCalledWith({
-      method: 'GET',
+      method: 'get',
       path: '/greetings',
       handlers: [handler],
     });

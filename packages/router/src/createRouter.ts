@@ -1,5 +1,6 @@
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter, ServerAdapterOptions } from '@whatwg-node/server';
+import { HTTPMethod, TypedRequest, TypedResponseCtor } from '@whatwg-node/typed-fetch';
 import type {
   OnRouteHook,
   RouteMethodKey,
@@ -8,7 +9,6 @@ import type {
   RouterHandler,
   RouterPlugin,
 } from './types';
-import { HTTPMethod, TypedRequest, TypedResponseCtor } from '@whatwg-node/typed-fetch';
 
 export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
   base?: string;
@@ -43,7 +43,10 @@ export function createRouterBase<TServerContext = {}>({
       onRouteHooks.push(plugin.onRoute);
     }
   }
-  const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext, any, any, any>[]>>();
+  const routesByMethod = new Map<
+    HTTPMethod,
+    Map<URLPattern, RouterHandler<TServerContext, any, any, any>[]>
+  >();
   function addHandlersToMethod(
     method: HTTPMethod,
     path: string,

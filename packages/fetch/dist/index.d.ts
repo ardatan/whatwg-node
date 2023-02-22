@@ -2,7 +2,7 @@
 /// <reference types="urlpattern-polyfill" />
 
 type ResponseCtorWithJson = typeof Response & {
-  json(data: any, init?: ResponseInit): Promise<Response>;
+  json(data: any, init?: ResponseInit): Response;
 }
 
 declare const _fetch: typeof fetch;

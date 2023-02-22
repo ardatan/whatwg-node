@@ -31,6 +31,7 @@ export function createTestServerAdapter<TServerContext = {}>(base?: string) {
           headers: {
             'Content-Type': 'text/html',
           },
+          status: 200,
         },
       ),
   );
