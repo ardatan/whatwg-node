@@ -9,18 +9,21 @@
     ]
   },
   "scripts": {
+    "prebuild": "yarn generate-swagger-ui",
     "build": "yarn ts:transpile && bob build",
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
     "clean-dist": "rimraf \"packages/**/dist\" && rimraf \".bob\"",
     "lint": "eslint --ext .ts .",
     "postinstall": "patch-package && husky install",
-    "prebuild": "node ./packages/router/scripts/generate-swagger-ui.js",
+    "generate-swagger-ui": "node ./packages/router/scripts/generate-swagger-ui.js",
     "prerelease": "yarn build",
     "prerelease-canary": "yarn build",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
+    "pretest": "yarn generate-swagger-ui",
     "test": "jest --detectOpenHandles --detectLeaks",
+    "prets:check": "yarn generate-swagger-ui",
     "ts:check": "tsc --noEmit",
     "ts:transpile": "tsc --project tsconfig.build.json"
   },
