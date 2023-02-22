@@ -4,7 +4,8 @@
   "workspaces": {
     "packages": [
       "./packages/*",
-      "./e2e/*"
+      "./e2e/*",
+      "./examples/todolist"
     ]
   },
   "scripts": {

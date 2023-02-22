@@ -35,7 +35,7 @@ type TestGetOpts = {
   };
 };
 
-const handler: RouterHandler<any, 'get', TestGetOpts['Request'], TestGetOpts['Responses']> = (
+const handler: RouterHandler<any, 'get', unknown, TestGetOpts['Request']['Headers'], TestGetOpts['Request']['QueryParams'], any, TestGetOpts['Responses']> = (
   request,
 ): TypedResponseWithJSONStatusMap<TestGetOpts['Responses']> => {
   // @ts-expect-error - a is not defined in headers

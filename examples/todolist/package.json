@@ -1,0 +1,14 @@
+{
+    "name": "todolist",
+    "private": true,
+    "version": "0.0.0",
+    "description": "A simple todo list app",
+    "scripts": {
+        "start": "ts-node src/index.ts"
+    },
+    "dependencies": {
+        "@whatwg-node/router":"0.3.0",
+        "typescript": "^4.0.2",
+        "ts-node": "10.9.1"
+    }
+}

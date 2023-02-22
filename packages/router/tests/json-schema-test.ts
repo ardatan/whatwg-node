@@ -34,6 +34,7 @@ const headersSchema = {
     'x-token': { type: 'string' },
   },
   required: ['x-token'],
+  additionalProperties: false,
 } as const;
 
 const pathParamsSchema = {
@@ -90,3 +91,55 @@ router.get<{
     },
   );
 });
+
+router.addRoute({
+  method: 'get',
+  path: '/users/:id',
+  schemas: {
+    Request: {
+      PathParams: pathParamsSchema,
+      Headers: headersSchema,
+    },
+    Responses: {
+      200: successfulResponseSchema,
+      401: unauthorizedResponseSchema,
+      404: notFoundResponseSchema,
+    },
+  },
+  handler: async req => {
+    const token = req.headers.get('x-token');
+    if (!token) {
+      return Response.json(
+        {
+          code: 'UNAUTHORIZED',
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+    const userId = req.params.id;
+    // @ts-expect-error - a is not defined in the schema
+    const unexpectedParam = req.params.a;
+    console.log(unexpectedParam);
+    if (userId === 'only_available_id') {
+      return Response.json(
+        {
+          id: userId,
+          name: 'The only one',
+        },
+        {
+          status: 200,
+        },
+      );
+    }
+    return Response.json(
+      {
+        message: 'Not found',
+      },
+      {
+        status: 404,
+      },
+    );
+  }
+})
