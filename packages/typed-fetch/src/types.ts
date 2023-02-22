@@ -1,4 +1,7 @@
-export type TypedBody<TJSON, THeaders extends Record<string, string>> = Omit<Body, 'json' | 'headers'> & {
+export type TypedBody<TJSON, THeaders extends Record<string, string>> = Omit<
+  Body,
+  'json' | 'headers'
+> & {
   json(): Promise<TJSON>;
   headers: TypedHeaders<THeaders>;
 };
@@ -31,10 +34,7 @@ export type TypedResponse<
   TJSON = any,
   THeaders extends Record<string, string> = Record<string, string>,
   TStatusCode extends number = 200,
-> = Omit<
-  Response,
-  'json' | 'status'
-> &
+> = Omit<Response, 'json' | 'status'> &
   TypedBody<TJSON, THeaders> & {
     status: TStatusCode;
   };
@@ -60,22 +60,21 @@ export type HTTPMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 
 
 export type TypedRequestInit<
   THeaders extends Record<string, string>,
-  TMethod extends HTTPMethod
-> =
-  Omit<RequestInit, 'method' | 'headers'> & {
-    method: TMethod;
-    headers: TypedHeaders<THeaders>;
-  };
+  TMethod extends HTTPMethod,
+> = Omit<RequestInit, 'method' | 'headers'> & {
+  method: TMethod;
+  headers: TypedHeaders<THeaders>;
+};
 
 export type TypedRequest<
   TJSON = any,
   THeaders extends Record<string, string> = Record<string, string>,
   TMethod extends HTTPMethod = HTTPMethod,
   TQueryParams extends Record<string, string | string[]> = Record<string, string | string[]>,
-  TPathParams extends Record<string, any> = Record<string, any>
+  TPathParams extends Record<string, any> = Record<string, any>,
 > = Omit<Request, 'json' | 'method' | 'headers'> &
   TypedBody<TJSON, THeaders> & {
-    method: TMethod,
+    method: TMethod;
     parsedUrl: TypedURL<TQueryParams>;
     params: TPathParams;
     query: TQueryParams;
@@ -119,7 +118,10 @@ export type TypedURLSearchParamsCtor = new <TMap extends Record<string, string |
   init?: TMap,
 ) => TypedURLSearchParams<TMap>;
 
-export type TypedURL<TQueryParams extends Record<string, string | string[]>> = Omit<URL, 'searchParams'> & {
+export type TypedURL<TQueryParams extends Record<string, string | string[]>> = Omit<
+  URL,
+  'searchParams'
+> & {
   searchParams: TypedURLSearchParams<TQueryParams>;
 };
 

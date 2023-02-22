@@ -141,5 +141,5 @@ router.addRoute({
         status: 404,
       },
     );
-  }
-})
+  },
+});

@@ -14,6 +14,7 @@
     "clean-dist": "rimraf \"packages/**/dist\" && rimraf \".bob\"",
     "lint": "eslint --ext .ts .",
     "postinstall": "patch-package && husky install",
+    "prebuild": "node ./packages/router/scripts/generate-swagger-ui.js",
     "prerelease": "yarn build",
     "prerelease-canary": "yarn build",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",

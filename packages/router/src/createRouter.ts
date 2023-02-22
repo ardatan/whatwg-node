@@ -54,14 +54,25 @@ export function createRouterBase<TServerContext = {}>({
     HTTPMethod,
     Map<URLPattern, RouterHandler<TServerContext, any, any, any>[]>
   >();
-  function addHandlersToMethod(
-    method: HTTPMethod,
-    path: string,
-    schemas: RouteSchemas | undefined,
-    ...handlers: RouterHandler<TServerContext, any, any, any>[]
-  ) {
+  function addHandlersToMethod({
+    operationId,
+    description,
+    method,
+    path,
+    schemas,
+    handlers,
+  }: {
+    operationId?: string;
+    description?: string;
+    method: HTTPMethod;
+    path: string;
+    schemas?: RouteSchemas;
+    handlers: RouterHandler<TServerContext, any, any, any>[];
+  }) {
     for (const onRouteHook of onRouteHooks) {
       onRouteHook({
+        operationId,
+        description,
         method,
         path,
         schemas,
@@ -160,13 +171,20 @@ export function createRouterBase<TServerContext = {}>({
       }
       if (prop === 'addRoute') {
         return function (
-          this: RouterBaseObject<TServerContext>, 
+          this: RouterBaseObject<TServerContext>,
           opts: Parameters<AddRouteMethod>[0],
         ) {
-          const { method, path, schemas, handler } = opts;
-          addHandlersToMethod(method, path, schemas, handler);
+          const { operationId, description, method, path, schemas, handler } = opts;
+          addHandlersToMethod({
+            operationId,
+            description,
+            method,
+            path,
+            schemas,
+            handlers: [handler],
+          });
           return this;
-        }
+        };
       }
       const method = prop.toString().toLowerCase() as RouteMethodKey;
       return function routeMethodKeyFn(
@@ -176,10 +194,18 @@ export function createRouterBase<TServerContext = {}>({
       ) {
         if (method === 'all') {
           for (const httpMethod of HTTP_METHODS) {
-            addHandlersToMethod(httpMethod, path, undefined, ...handlers);
+            addHandlersToMethod({
+              method: httpMethod.toLowerCase() as HTTPMethod,
+              path,
+              handlers,
+            });
           }
         } else {
-          addHandlersToMethod(method.toLowerCase() as HTTPMethod, path, undefined, ...handlers);
+          addHandlersToMethod({
+            method: method.toLowerCase() as HTTPMethod,
+            path,
+            handlers,
+          });
         }
         return this;
       };
