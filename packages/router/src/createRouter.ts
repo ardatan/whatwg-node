@@ -2,15 +2,18 @@ import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter, ServerAdapterOptions } from '@whatwg-node/server';
 import type {
   HTTPMethod,
+  OnRouteHook,
   RouteMethodKey,
   Router,
   RouterBaseObject,
   RouterHandler,
+  RouterPlugin,
   RouterRequest,
 } from './types';
 
-interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
+export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
   base?: string;
+  plugins?: RouterPlugin<TServerContext>[];
 }
 
 const HTTP_METHODS = [
@@ -28,17 +31,31 @@ const HTTP_METHODS = [
 export function createRouterBase<TServerContext = {}>({
   fetchAPI: givenFetchAPI,
   base: basePath = '/',
+  plugins = [],
 }: RouterOptions<TServerContext> = {}): RouterBaseObject<TServerContext> {
   const fetchAPI = {
     ...DefaultFetchAPI,
     ...givenFetchAPI,
   };
+  const onRouteHooks: OnRouteHook<TServerContext>[] = [];
+  for (const plugin of plugins) {
+    if (plugin.onRoute) {
+      onRouteHooks.push(plugin.onRoute);
+    }
+  }
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
   function addHandlersToMethod(
     method: HTTPMethod,
     path: string,
     ...handlers: RouterHandler<TServerContext>[]
   ) {
+    for (const onRouteHook of onRouteHooks) {
+      onRouteHook({
+        method,
+        path,
+        handlers,
+      });
+    }
     let methodPatternMaps = routesByMethod.get(method);
     if (!methodPatternMaps) {
       methodPatternMaps = new Map();
