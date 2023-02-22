@@ -1,15 +1,14 @@
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter, ServerAdapterOptions } from '@whatwg-node/server';
 import type {
-  HTTPMethod,
   OnRouteHook,
   RouteMethodKey,
   Router,
   RouterBaseObject,
   RouterHandler,
   RouterPlugin,
-  RouterRequest,
 } from './types';
+import { HTTPMethod, TypedRequest, TypedResponseCtor } from '@whatwg-node/typed-fetch';
 
 export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
   base?: string;
@@ -17,16 +16,17 @@ export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions
 }
 
 const HTTP_METHODS = [
-  'GET',
-  'HEAD',
-  'POST',
-  'PUT',
-  'DELETE',
-  'CONNECT',
-  'OPTIONS',
-  'TRACE',
-  'PATCH',
+  'get',
+  'post',
+  'put',
+  'delete',
+  'head',
+  'options',
+  'patch',
+  'trace',
 ] as HTTPMethod[];
+
+export const Response: TypedResponseCtor = DefaultFetchAPI.Response as any;
 
 export function createRouterBase<TServerContext = {}>({
   fetchAPI: givenFetchAPI,
@@ -43,11 +43,11 @@ export function createRouterBase<TServerContext = {}>({
       onRouteHooks.push(plugin.onRoute);
     }
   }
-  const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext>[]>>();
+  const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<TServerContext, any, any, any>[]>>();
   function addHandlersToMethod(
     method: HTTPMethod,
     path: string,
-    ...handlers: RouterHandler<TServerContext>[]
+    ...handlers: RouterHandler<TServerContext, any, any, any>[]
   ) {
     for (const onRouteHook of onRouteHooks) {
       onRouteHook({
@@ -73,7 +73,7 @@ export function createRouterBase<TServerContext = {}>({
     methodPatternMaps.set(pattern, handlers);
   }
   async function handleRequest(request: Request, context: TServerContext) {
-    const method = request.method as HTTPMethod;
+    const method = request.method.toLowerCase() as HTTPMethod;
     let _parsedUrl: URL;
     function getParsedUrl() {
       if (!_parsedUrl) {
@@ -101,7 +101,7 @@ export function createRouterBase<TServerContext = {}>({
         const match = pattern.exec(request.url);
         if (match) {
           const routerRequest = new Proxy(request, {
-            get(target, prop: keyof RouterRequest) {
+            get(target, prop: keyof TypedRequest<any>) {
               if (prop === 'parsedUrl') {
                 return getParsedUrl();
               }
@@ -130,9 +130,9 @@ export function createRouterBase<TServerContext = {}>({
                 prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query'
               );
             },
-          }) as RouterRequest;
+          });
           for (const handler of handlers) {
-            const result = await handler(routerRequest as RouterRequest, context);
+            const result = await handler(routerRequest as TypedRequest<any>, context);
             if (result) {
               return result;
             }
@@ -150,14 +150,14 @@ export function createRouterBase<TServerContext = {}>({
       return function routeMethodKeyFn(
         this: RouterBaseObject<TServerContext>,
         path: string,
-        ...handlers: RouterHandler<TServerContext>[]
+        ...handlers: RouterHandler<TServerContext, any, any, any>[]
       ) {
         if (method === 'all') {
           for (const httpMethod of HTTP_METHODS) {
             addHandlersToMethod(httpMethod, path, ...handlers);
           }
         } else {
-          addHandlersToMethod(method.toUpperCase() as HTTPMethod, path, ...handlers);
+          addHandlersToMethod(method.toLowerCase() as HTTPMethod, path, ...handlers);
         }
         return this;
       };
@@ -165,7 +165,7 @@ export function createRouterBase<TServerContext = {}>({
   });
 }
 
-export function createRouter<TServerContext = {}>(
+export function createRouter<TServerContext = any>(
   options?: RouterOptions<TServerContext>,
 ): Router<TServerContext> {
   const routerBaseObject = createRouterBase(options);
