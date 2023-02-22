@@ -36,4 +36,4 @@ export type OnRouteHookPayload<TServerContext> = {
 
 export type RouterPlugin<TServerContext> = ServerAdapterPlugin<TServerContext> & {
   onRoute?: OnRouteHook<TServerContext>;
-}
+};

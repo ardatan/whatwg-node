@@ -240,8 +240,8 @@ describe('Router', () => {
       plugins: [
         {
           onRoute,
-        }
-      ]
+        },
+      ],
     });
     const handler = () => new Response('Hello World!');
     router.get('/greetings', handler);
@@ -249,6 +249,6 @@ describe('Router', () => {
       method: 'GET',
       path: '/greetings',
       handlers: [handler],
-    })
-  })
+    });
+  });
 });
