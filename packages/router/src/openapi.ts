@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { OpenAPIV3_1 } from 'openapi-types';
 import { Response } from './createRouter';
 import swaggerUiHtml from './swagger-ui-html';
