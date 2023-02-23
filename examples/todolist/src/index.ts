@@ -1,4 +1,6 @@
+import { promises as fsPromises } from 'fs';
 import { createServer } from 'http';
+import { join } from 'path';
 import { createRouter, FromSchema, Response, useOpenAPI } from '@whatwg-node/router';
 
 const router = createRouter({
@@ -141,6 +143,20 @@ router.addRoute({
     );
   },
 });
+
+// Write the OpenAPI spec to a file
+Promise.resolve(router.fetch('http://localhost:3000/openapi.json'))
+  .then(openapiRes => openapiRes.text())
+  .then(openapiText =>
+    fsPromises.writeFile(
+      join(__dirname, 'saved_openapi.ts'),
+      `export default ${openapiText} as const;`,
+    ),
+  )
+  .catch(err => {
+    console.error(`Could not write OpenAPI schema to file: ${err.message}`);
+    process.exit(1);
+  });
 
 createServer(router).listen(3000, () => {
   console.log('See docs on http://localhost:3000/docs');
