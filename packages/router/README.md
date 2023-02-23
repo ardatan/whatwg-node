@@ -215,15 +215,14 @@ This library also provides a plugin system that allows you hook into the request
 
 ### Cookie Management
 
-You can use `useCookies` to parse cookies from the request header and set cookies in the response by using Web Standard [CookieStore](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore).
+You can use `useCookies` to parse cookies from the request header and set cookies in the response by
+using Web Standard [CookieStore](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore).
 
 ```ts
-import { createRouter, useCookies, Response } from '@whatwg-node/router'
+import { createRouter, Response, useCookies } from '@whatwg-node/router'
 
 const router = createRouter({
-  plugins: [
-    useCookies()
-  ]
+  plugins: [useCookies()]
 })
 
 router.get('/me', async req => {
@@ -232,7 +231,7 @@ router.get('/me', async req => {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const user = await getUserBySessionId(sessionId)
-  return Response.json(user)  
+  return Response.json(user)
 })
 
 router.post('/login', async req => {
@@ -248,7 +247,7 @@ router.post('/login', async req => {
 You can also setup a CORS middleware to handle preflight CORS requests.
 
 ```ts
-import { useCORS, createRouter } from '@whatwg-node/router'
+import { createRouter, useCORS } from '@whatwg-node/router'
 
 const router = createRouter({
   plugins: [
@@ -284,51 +283,55 @@ const useRequestId = (): RoutePlugin => {
 }
 
 const router = createRouter({
-  plugins: [
-    useRequestId(),
-  ]
+  plugins: [useRequestId()]
 })
 ```
 
 ## Type Safety with TypeScript, JSON Schema and OpenAPI
 
-This library is written in TypeScript and it provides type safety for your request and response with the power of JSON Schema.
+This library is written in TypeScript and it provides type safety for your request and response with
+the power of JSON Schema.
 
 To define type-safe routes, we use `addRoute` method with specific parameters.
 
 #### Typing the request
 
-You can type individual parts of the `Request` object including JSON body, headers, query parameters, and URL parameters.
+You can type individual parts of the `Request` object including JSON body, headers, query
+parameters, and URL parameters.
 
 ##### JSON Body
+
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
 const router = createRouter()
 
-router.addRoute({
-  method: 'post',
-  path: '/todos',
-  // Define the request body schema
-  schemas: {
-    Request: {
-      JSONBody: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          completed: { type: 'boolean' }
-        },
-        additionalProperties: false,
-        required: ['title']
-      },
+router.addRoute(
+  {
+    method: 'post',
+    path: '/todos',
+    // Define the request body schema
+    schemas: {
+      Request: {
+        JSONBody: {
+          type: 'object',
+          properties: {
+            title: { type: 'string' },
+            completed: { type: 'boolean' }
+          },
+          additionalProperties: false,
+          required: ['title']
+        }
+      }
     }
+  },
+  async request => {
+    // This part is fully typed
+    const { title, completed } = await request.json()
+    // ...
+    return Response.json({ message: 'ok' })
   }
-}, async request => {
-  // This part is fully typed
-  const { title, completed } = await request.json()
-  // ...
-  return Response.json({ message: 'ok' })
-})
+)
 ```
 
 ##### Headers
@@ -338,30 +341,33 @@ import { createRouter, Response } from '@whatwg-node/router'
 
 const router = createRouter()
 
-router.addRoute({
-  method: 'post',
-  path: '/todos',
-  // Define the request body schema
-  schemas: {
-    Request: {
-      Headers: {
-        type: 'object',
-        properties: {
-          'x-api-key': { type: 'string' }
-        },
-        additionalProperties: false,
-        required: ['x-api-key']
-      },
+router.addRoute(
+  {
+    method: 'post',
+    path: '/todos',
+    // Define the request body schema
+    schemas: {
+      Request: {
+        Headers: {
+          type: 'object',
+          properties: {
+            'x-api-key': { type: 'string' }
+          },
+          additionalProperties: false,
+          required: ['x-api-key']
+        }
+      }
     }
+  },
+  async request => {
+    // This part is fully typed
+    const apiKey = request.headers.get('x-api-key')
+    // Would fail on TypeScript compilation
+    const wrongHeaderName = request.headers.get('x-api-key-wrong')
+    // ...
+    return Response.json({ message: 'ok' })
   }
-}, async request => {
-  // This part is fully typed
-  const apiKey = request.headers.get('x-api-key')
-  // Would fail on TypeScript compilation
-  const wrongHeaderName = request.headers.get('x-api-key-wrong')
-  // ...
-  return Response.json({ message: 'ok' })
-})
+)
 ```
 
 ##### Path Parameters
@@ -371,28 +377,31 @@ import { createRouter, Response } from '@whatwg-node/router'
 
 const router = createRouter()
 
-router.addRoute({
-  method: 'get',
-  path: '/todos/:id',
-  // Define the request body schema
-  schemas: {
-    Request: {
-      PathParams: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' }
-        },
-        additionalProperties: false,
-        required: ['id']
-      },
+router.addRoute(
+  {
+    method: 'get',
+    path: '/todos/:id',
+    // Define the request body schema
+    schemas: {
+      Request: {
+        PathParams: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' }
+          },
+          additionalProperties: false,
+          required: ['id']
+        }
+      }
     }
+  },
+  async request => {
+    // This part is fully typed
+    const { id } = request.params
+    // ...
+    return Response.json({ message: 'ok' })
   }
-}, async request => {
-  // This part is fully typed
-  const { id } = request.params
-  // ...
-  return Response.json({ message: 'ok' })
-})
+)
 ```
 
 ##### Query Parameters
@@ -431,67 +440,74 @@ router.addRoute({
 
 #### Typing the response
 
-You can also type the response body by the status code. We strongly recommend to explicitly define the status codes.
+You can also type the response body by the status code. We strongly recommend to explicitly define
+the status codes.
 
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
 const router = createRouter()
 
-router.addRoute({
-  method: 'get',
-  path: '/todos',
-  // Define the request body schema
-  schemas: {
-    Request: {
-      Headers: {
-        type: 'object',
-        properties: {
-          'x-api-key': { type: 'string' }
-        },
-        additionalProperties: false,
-        required: ['x-api-key']
-      }
-    },
-    Response: {
-      200: {
-        type: 'array',
-        items: {
+router.addRoute(
+  {
+    method: 'get',
+    path: '/todos',
+    // Define the request body schema
+    schemas: {
+      Request: {
+        Headers: {
           type: 'object',
           properties: {
-            id: { type: 'string' },
-            title: { type: 'string' },
-            completed: { type: 'boolean' }
+            'x-api-key': { type: 'string' }
           },
           additionalProperties: false,
-          required: ['id', 'title', 'completed']
+          required: ['x-api-key']
         }
       },
-      401: {
-        type: 'object',
-        properties: {
-          message: { type: 'string' }
+      Response: {
+        200: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' },
+              completed: { type: 'boolean' }
+            },
+            additionalProperties: false,
+            required: ['id', 'title', 'completed']
+          }
         },
-        additionalProperties: false,
-        required: ['message']
+        401: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' }
+          },
+          additionalProperties: false,
+          required: ['message']
+        }
       }
     }
-  }
-}, async request => {
-  const apiKey = request.headers.get('x-api-key')
-  if (!apiKey) {
-    return Response.json({ message: 'API key is required' }, {
-      status: 401
+  },
+  async request => {
+    const apiKey = request.headers.get('x-api-key')
+    if (!apiKey) {
+      return Response.json(
+        { message: 'API key is required' },
+        {
+          status: 401
+        }
+      )
+    }
+    const todos = await getTodos({
+      apiKey
+    })
+    // This part is fully typed
+    return Response.json(todos, {
+      status: 200
     })
   }
-  const todos = await getTodos({
-    apiKey
-  })
-  // This part is fully typed
-  return Response.json(todos, {
-    status: 200
-  })
-})
+)
 ```
 
 ## Usage in environments
@@ -499,4 +515,3 @@ router.addRoute({
 `Router` is actually an instance of `ServerAdapter` of `@whatwg-node/server` package. So you can use
 it in any environment just like `ServerAdapter`. See the [documentation](../server/README.md) of
 `@whatwg-node/server` package for more information.
-

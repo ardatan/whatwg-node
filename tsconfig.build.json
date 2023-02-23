@@ -12,6 +12,7 @@
     "**/test-files",
     "packages/testing",
     "e2e",
+    "examples",
     "**/dist"
   ]
 }

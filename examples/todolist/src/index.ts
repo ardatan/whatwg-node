@@ -1,5 +1,4 @@
 import { createServer } from 'http';
-import { crypto } from '@whatwg-node/fetch';
 import { createRouter, FromSchema, Response, useOpenAPI } from '@whatwg-node/router';
 
 const router = createRouter({

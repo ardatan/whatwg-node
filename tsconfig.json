@@ -34,6 +34,6 @@
       "fetchache": ["packages/fetchache/src/index.ts"]
     }
   },
-  "include": ["packages", "e2e"],
+  "include": ["packages", "e2e", "examples"],
   "exclude": ["**/node_modules", "**/test-files", "**/dist", "e2e/bun", "e2e/deno"]
 }

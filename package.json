@@ -11,11 +11,11 @@
   "scripts": {
     "build": "yarn ts:transpile && bob build",
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
-    "clean-dist": "rimraf \"packages/**/dist\" && rimraf \".bob\"",
+    "clean-dist": "rimraf \"dist\" && rimraf \".bob\"",
     "generate-swagger-ui": "node ./packages/router/scripts/generate-swagger-ui.js",
     "lint": "eslint --ext .ts .",
     "postinstall": "patch-package && husky install",
-    "prebuild": "yarn generate-swagger-ui",
+    "prebuild": "yarn generate-swagger-ui && yarn clean-dist",
     "prerelease": "yarn build",
     "prerelease-canary": "yarn build",
     "pretest": "yarn generate-swagger-ui",
