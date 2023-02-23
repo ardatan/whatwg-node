@@ -144,20 +144,23 @@ router.addRoute({
   },
 });
 
+const savedOpenAPIFilePath = join(__dirname, 'saved_openapi.ts');
 // Write the OpenAPI spec to a file
 Promise.resolve(router.fetch('http://localhost:3000/openapi.json'))
   .then(openapiRes => openapiRes.text())
   .then(openapiText =>
     fsPromises.writeFile(
-      join(__dirname, 'saved_openapi.ts'),
-      `export default ${openapiText} as const;`,
+      savedOpenAPIFilePath,
+      `/* eslint-disable */
+export default ${openapiText} as const;`,
     ),
   )
+  .then(() => console.log(`OpenAPI schema is written to ${savedOpenAPIFilePath}`))
   .catch(err => {
     console.error(`Could not write OpenAPI schema to file: ${err.message}`);
     process.exit(1);
   });
 
 createServer(router).listen(3000, () => {
-  console.log('See docs on http://localhost:3000/docs');
+  console.log('SwaggerUI is served at http://localhost:3000/docs');
 });
