@@ -1,23 +1,20 @@
 import { createRouter, Response, useErrorHandling } from '@whatwg-node/router';
 
-export function createTestServerAdapter(base?: string) {
-  const app = createRouter({
+export function createTestServerAdapter<TServerContext = {}>(base?: string) {
+  return createRouter<TServerContext, {}>({
     base,
     plugins: [useErrorHandling()],
-  });
-
-  app.get('/greetings/:name', req => Response.json({ message: `Hello ${req.params?.name}!` }));
-
-  app.post('/bye', async req => {
-    const { name } = await req.json();
-    return Response.json({ message: `Bye ${name}!` });
-  });
-
-  app.get(
-    '/',
-    () =>
-      new Response(
-        `
+  })
+    .get('/greetings/:name', req => Response.json({ message: `Hello ${req.params?.name}!` }))
+    .post('/bye', async req => {
+      const { name } = await req.json();
+      return Response.json({ message: `Bye ${name}!` });
+    })
+    .get(
+      '/',
+      () =>
+        new Response(
+          `
     <html>
         <head>
             <title>Platform Agnostic Server</title>
@@ -27,16 +24,13 @@ export function createTestServerAdapter(base?: string) {
         </body>
     </html>
 `,
-        {
-          headers: {
-            'Content-Type': 'text/html',
+          {
+            headers: {
+              'Content-Type': 'text/html',
+            },
+            status: 200,
           },
-          status: 200,
-        },
-      ),
-  );
-
-  app.all('*', () => new Response('Not Found.', { status: 404 }));
-
-  return app;
+        ),
+    )
+    .all('*', () => new Response('Not Found.', { status: 404 }));
 }

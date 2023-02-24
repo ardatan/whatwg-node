@@ -3,14 +3,10 @@ import { createRouter, Response } from '../src';
 describe('Router', () => {
   it('should have parsedUrl in Request object', async () => {
     const router = createRouter();
-    router.get(
-      '/greetings/:name',
-      request =>
-        new Response(
-          JSON.stringify({
-            message: `Hello ${request.parsedUrl.pathname}!`,
-          }),
-        ),
+    router.get('/greetings/:name', request =>
+      Response.json({
+        message: `Hello ${request.parsedUrl.pathname}!`,
+      }),
     );
     const response = await router.fetch('http://localhost/greetings/John');
     const json = await response.json();
@@ -18,14 +14,10 @@ describe('Router', () => {
   });
   it('should process parameters in the path', async () => {
     const router = createRouter();
-    router.get(
-      '/greetings/:name',
-      request =>
-        new Response(
-          JSON.stringify({
-            message: `Hello ${request.params.name}!`,
-          }),
-        ),
+    router.get('/greetings/:name', request =>
+      Response.json({
+        message: `Hello ${request.params.name}!`,
+      }),
     );
     const response = await router.fetch('http://localhost/greetings/John');
     const json = await response.json();
@@ -33,14 +25,10 @@ describe('Router', () => {
   });
   it('should decode parameters in the path', async () => {
     const router = createRouter();
-    router.get(
-      '/greetings/:name',
-      request =>
-        new Response(
-          JSON.stringify({
-            message: `Hello ${request.params.name}!`,
-          }),
-        ),
+    router.get('/greetings/:name', request =>
+      Response.json({
+        message: `Hello ${request.params.name}!`,
+      }),
     );
     const response = await router.fetch('http://localhost/greetings/John%20Doe');
     const json = await response.json();
@@ -48,14 +36,10 @@ describe('Router', () => {
   });
   it('should process query parameters', async () => {
     const router = createRouter();
-    router.get(
-      '/greetings',
-      request =>
-        new Response(
-          JSON.stringify({
-            message: `Hello ${request.query.name}!`,
-          }),
-        ),
+    router.get('/greetings', request =>
+      Response.json({
+        message: `Hello ${request.query.name}!`,
+      }),
     );
     const response = await router.fetch('http://localhost/greetings?name=John');
     const json = await response.json();
@@ -70,7 +54,7 @@ describe('Router', () => {
       },
       (request: any) => {
         request.message += ` ${request.query.name}!`;
-        return new Response(JSON.stringify({ message: request.message }));
+        return Response.json({ message: request.message });
       },
     );
     const response = await router.fetch('http://localhost/greetings?name=John');
@@ -91,7 +75,7 @@ describe('Router', () => {
     );
     router.get('/greetings', (request: any) => {
       request.message += ` ${request.query.name}!`;
-      return new Response(JSON.stringify({ message: request.message }));
+      return Response.json({ message: request.message });
     });
     const response = await router.fetch('http://localhost/greetings?name=John');
     const json = await response.json();
@@ -99,14 +83,10 @@ describe('Router', () => {
   });
   it('can pull route params from the basepath as well', async () => {
     const router = createRouter({ base: '/api' });
-    router.get(
-      '/greetings/:name',
-      request =>
-        new Response(
-          JSON.stringify({
-            message: `Hello ${request.params.name}!`,
-          }),
-        ),
+    router.get('/greetings/:name', request =>
+      Response.json({
+        message: `Hello ${request.params.name}!`,
+      }),
     );
     const response = await router.fetch('http://localhost/api/greetings/John');
     const json = await response.json();
@@ -114,18 +94,19 @@ describe('Router', () => {
   });
 
   it('can handle nested routers', async () => {
-    const router = createRouter<any, any>();
-    const nested = createRouter<any, any>({
+    const router = createRouter<any, {}>();
+    const nested = createRouter<any, {}>({
       base: '/api',
     });
-    nested.get(
-      '/greetings/:name',
-      request =>
-        new Response(
-          JSON.stringify({
-            message: `Hello ${request.params.name}!`,
-          }),
-        ),
+    nested.get('/greetings/:name', request =>
+      Response.json(
+        {
+          message: `Hello ${request.params.name}!`,
+        },
+        {
+          status: 200,
+        },
+      ),
     );
     router.get('/api/*', nested);
     const response = await router.fetch('http://localhost/api/greetings/John');
@@ -135,16 +116,12 @@ describe('Router', () => {
 
   it('can get query params', async () => {
     const router = createRouter();
-    router.get(
-      '/foo',
-      request =>
-        new Response(
-          JSON.stringify({
-            cat: request.query.cat,
-            foo: request.query.foo,
-            missing: request.query.missing,
-          }),
-        ),
+    router.get('/foo', request =>
+      Response.json({
+        cat: request.query.cat,
+        foo: request.query.foo,
+        missing: request.query.missing,
+      }),
     );
     const response = await router.fetch('https://foo.com/foo?cat=dog&foo=bar&foo=baz&missing=');
     const json = await response.json();
@@ -154,14 +131,10 @@ describe('Router', () => {
     const router = createRouter({
       base: '/api',
     });
-    router.get(
-      '/',
-      () =>
-        new Response(
-          JSON.stringify({
-            message: `Hello Root!`,
-          }),
-        ),
+    router.get('/', () =>
+      Response.json({
+        message: `Hello Root!`,
+      }),
     );
     const response = await router.fetch('http://localhost/api');
     const json = await response.json();
@@ -169,14 +142,10 @@ describe('Router', () => {
   });
   it('supports "/" without base', async () => {
     const router = createRouter();
-    router.get(
-      '/',
-      () =>
-        new Response(
-          JSON.stringify({
-            message: `Hello Root!`,
-          }),
-        ),
+    router.get('/', () =>
+      Response.json({
+        message: `Hello Root!`,
+      }),
     );
     const response = await router.fetch('http://localhost');
     const json = await response.json();
@@ -186,14 +155,10 @@ describe('Router', () => {
     const router = createRouter({
       base: '/',
     });
-    router.get(
-      '/greetings',
-      () =>
-        new Response(
-          JSON.stringify({
-            message: `Hello World!`,
-          }),
-        ),
+    router.get('/greetings', () =>
+      Response.json({
+        message: `Hello World!`,
+      }),
     );
     const response = await router.fetch('http://localhost/greetings');
     const json = await response.json();
@@ -203,14 +168,10 @@ describe('Router', () => {
     const router = createRouter({
       base: '/',
     });
-    router.get(
-      '/',
-      () =>
-        new Response(
-          JSON.stringify({
-            message: `Hello World!`,
-          }),
-        ),
+    router.get('/', () =>
+      Response.json({
+        message: `Hello World!`,
+      }),
     );
     const response = await router.fetch('http://localhost');
     const json = await response.json();
@@ -220,11 +181,9 @@ describe('Router', () => {
     const router = createRouter();
     router.post('/greetings', async request => {
       const json = await request.json();
-      return new Response(
-        JSON.stringify({
-          message: `Hello ${json.name}!`,
-        }),
-      );
+      return Response.json({
+        message: `Hello ${json.name}!`,
+      });
     });
     const response = await router.fetch('http://localhost/greetings', {
       method: 'POST',
