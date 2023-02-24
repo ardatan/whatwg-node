@@ -23,7 +23,6 @@
   },
   "typings": "dist/index.d.ts",
   "dependencies": {
-    "@whatwg-node/fetch": "0.8.1",
     "@whatwg-node/typed-fetch": "0.0.0",
     "json-schema-to-ts": "2.7.2",
     "openapi-types": "12.1.0",

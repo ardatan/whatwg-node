@@ -26,7 +26,7 @@ const someTodosToAdd = ['Drink coffee', 'Write some code', 'Drink more coffee', 
   console.table(getTodosJson);
 
   // Deleting the first todo
-  const deleteTodoRes = await client['/todo/{id}'].delete({
+  const deleteTodoRes = await client['/todo/:id'].delete({
     PathParams: {
       id: getTodosJson[0].id,
     },
