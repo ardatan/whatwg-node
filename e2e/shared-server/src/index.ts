@@ -1,7 +1,7 @@
 import { createRouter, Response, useErrorHandling } from '@whatwg-node/router';
 
-export function createTestServerAdapter<TServerContext = {}>(base?: string) {
-  const app = createRouter<TServerContext>({
+export function createTestServerAdapter(base?: string) {
+  const app = createRouter({
     base,
     plugins: [useErrorHandling()],
   });

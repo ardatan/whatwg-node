@@ -114,8 +114,8 @@ describe('Router', () => {
   });
 
   it('can handle nested routers', async () => {
-    const router = createRouter();
-    const nested = createRouter({
+    const router = createRouter<any, any>();
+    const nested = createRouter<any, any>({
       base: '/api',
     });
     nested.get(
