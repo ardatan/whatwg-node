@@ -304,9 +304,7 @@ parameters, and URL parameters.
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
-const router = createRouter()
-
-router.addRoute(
+const router = createRouter().addRoute(
   {
     method: 'post',
     path: '/todos',
@@ -339,9 +337,7 @@ router.addRoute(
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
-const router = createRouter()
-
-router.addRoute(
+const router = createRouter().addRoute(
   {
     method: 'post',
     path: '/todos',
@@ -375,9 +371,7 @@ router.addRoute(
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
-const router = createRouter()
-
-router.addRoute(
+const router = createRouter().addRoute(
   {
     method: 'get',
     path: '/todos/:id',
@@ -409,9 +403,7 @@ router.addRoute(
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
-const router = createRouter()
-
-router.addRoute({
+const router = createRouter().addRoute({
   method: 'get',
   path: '/todos',
   // Define the request body schema
@@ -446,9 +438,7 @@ the status codes.
 ```ts
 import { createRouter, Response } from '@whatwg-node/router'
 
-const router = createRouter()
-
-router.addRoute(
+const router = createRouter().addRoute(
   {
     method: 'get',
     path: '/todos',

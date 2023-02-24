@@ -83,9 +83,7 @@ const handler: RouterHandler<
 };
 
 // custom types
-router.get<TestGetOpts>('/pet', handler);
-
-router.put<{
+router.get<TestGetOpts>('/pet', handler).put<{
   Request: {
     JSON: {
       name: string;

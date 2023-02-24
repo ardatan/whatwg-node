@@ -44,7 +44,11 @@ export type RouterHandler<
   ctx: TServerContext,
 ) => PromiseOrValue<TypedResponseWithJSONStatusMap<TResponseJSONStatusMap> | void>;
 
-export type RouterMethod<TServerContext, TMethod extends HTTPMethod> = <
+export type RouterMethod<
+  TServerContext,
+  TMethod extends HTTPMethod,
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+> = <
   TTypeConfig extends TypedRouterHandlerTypeConfig<
     any,
     Record<string, string>,
@@ -52,8 +56,9 @@ export type RouterMethod<TServerContext, TMethod extends HTTPMethod> = <
     Record<string, any>,
     Record<number, any>
   >,
+  TPath extends string = string,
 >(
-  path: string,
+  path: TPath,
   ...handlers: RouterHandler<
     TServerContext,
     TMethod,
@@ -69,24 +74,31 @@ export type RouterMethod<TServerContext, TMethod extends HTTPMethod> = <
       : Record<string, any>,
     TTypeConfig['Responses']
   >[]
-) => Router<TServerContext>;
+) => Router<TServerContext, TRouterSDK & RouterSDK<TPath, TypedRequest, TypedResponse>>;
 
 export type RouteMethodKey = HTTPMethod | 'all';
 
-export type RouterMethodsObj<TServerContext> = {
+export type RouterMethodsObj<
+  TServerContext,
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+> = {
   [TMethodKey in RouteMethodKey]: TMethodKey extends HTTPMethod
-    ? RouterMethod<TServerContext, TMethodKey>
-    : RouterMethod<TServerContext, HTTPMethod>;
+    ? RouterMethod<TServerContext, TMethodKey, TRouterSDK>
+    : RouterMethod<TServerContext, HTTPMethod, TRouterSDK>;
 };
 
-export type RouterBaseObject<TServerContext> = RouterMethodsObj<TServerContext> & {
-  addRoute: AddRouteMethod;
-} & ServerAdapterBaseObject<TServerContext>;
-
-export type Router<TServerContext> = ServerAdapter<
+export type RouterBaseObject<
   TServerContext,
-  RouterBaseObject<TServerContext>
->;
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+> = RouterMethodsObj<TServerContext, TRouterSDK> & ServerAdapterBaseObject<TServerContext>;
+
+export type Router<
+  TServerContext,
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+> = ServerAdapter<TServerContext, RouterBaseObject<TServerContext, TRouterSDK>> & {
+  addRoute: AddRouteMethod<TServerContext, TRouterSDK>;
+  sdk: TRouterSDK;
+};
 
 export type OnRouteHook<TServerContext> = (payload: OnRouteHookPayload<TServerContext>) => void;
 
@@ -99,7 +111,7 @@ export type OnRouteHookPayload<TServerContext> = {
   handlers: RouterHandler<TServerContext>[];
 };
 
-export type OnRouterInitHook<TServerContext> = (router: Router<TServerContext>) => void;
+export type OnRouterInitHook<TServerContext> = (router: Router<TServerContext, any>) => void;
 
 export type RouterPlugin<TServerContext> = ServerAdapterPlugin<TServerContext> & {
   onRouterInit?: OnRouterInitHook<TServerContext>;
@@ -115,47 +127,96 @@ export type RouteSchemas = {
   Responses?: Record<number, JSONSchema>;
 };
 
-export type AddRouteMethod = <
+export type RouterSDK<
+  TPath extends string,
+  TTypedRequest extends TypedRequest,
+  TTypedResponse extends TypedResponse,
+> = {
+  [TPathKey in TPath]: {
+    [TMethodKey in TTypedRequest['method']]: (opts?: {
+      JSONBody?: TTypedRequest extends TypedRequest<infer TJSONBody, any, TMethodKey, any, any>
+        ? TJSONBody
+        : never;
+      PathParams?: TTypedRequest extends TypedRequest<any, any, TMethodKey, any, infer TPathParams>
+        ? TPathParams
+        : never;
+      QueryParams?: TTypedRequest extends TypedRequest<
+        any,
+        any,
+        TMethodKey,
+        infer TQueryParams,
+        any
+      >
+        ? TQueryParams
+        : never;
+      Headers?: TTypedRequest extends TypedRequest<any, infer THeaders, TMethodKey, any, any>
+        ? THeaders
+        : never;
+    }) => PromiseOrValue<TTypedResponse>;
+  };
+};
+
+export type TypedRequestFromRouteSchemas<
+  TRouteSchemas extends RouteSchemas,
+  TMethod extends HTTPMethod,
+> = TRouteSchemas extends { Request: Required<RouteSchemas>['Request'] }
+  ? TypedRequest<
+      TRouteSchemas['Request'] extends { JSONBody: JSONSchema }
+        ? FromSchema<TRouteSchemas['Request']['JSONBody']>
+        : any,
+      TRouteSchemas['Request'] extends { Headers: JSONSchema }
+        ? FromSchema<TRouteSchemas['Request']['Headers']> extends Record<string, string>
+          ? FromSchema<TRouteSchemas['Request']['Headers']>
+          : Record<string, string>
+        : Record<string, string>,
+      TMethod,
+      TRouteSchemas['Request'] extends { QueryParams: JSONSchema }
+        ? FromSchema<TRouteSchemas['Request']['QueryParams']> extends Record<string, string>
+          ? FromSchema<TRouteSchemas['Request']['QueryParams']>
+          : Record<string, string | string[]>
+        : Record<string, string | string[]>,
+      TRouteSchemas['Request'] extends { PathParams: JSONSchema }
+        ? FromSchema<TRouteSchemas['Request']['PathParams']> extends Record<string, string>
+          ? FromSchema<TRouteSchemas['Request']['PathParams']>
+          : Record<string, any>
+        : Record<string, any>
+    >
+  : TypedRequest;
+
+export type TypedResponseFromRouteSchemas<TRouteSchemas extends RouteSchemas> =
+  TRouteSchemas extends { Responses: Record<number, JSONSchema> }
+    ? TypedResponseWithJSONStatusMap<{
+        [TStatusCode in keyof TRouteSchemas['Responses']]: TRouteSchemas['Responses'][TStatusCode] extends JSONSchema
+          ? FromSchema<TRouteSchemas['Responses'][TStatusCode]>
+          : never;
+      }>
+    : TypedResponse;
+
+export type AddRouteOpts<
   TServerContext,
   TRouteSchemas extends RouteSchemas,
   TMethod extends HTTPMethod,
->(opts: {
+  TPath extends string,
+  TTypedRequest extends TypedRequestFromRouteSchemas<TRouteSchemas, TMethod>,
+  TTypedResponse extends TypedResponseFromRouteSchemas<TRouteSchemas>,
+> = {
   operationId?: string;
   description?: string;
   method: TMethod;
-  path: string;
+  path: TPath;
   schemas?: TRouteSchemas;
-  handler: (
-    request: TRouteSchemas extends { Request: Required<RouteSchemas>['Request'] }
-      ? TypedRequest<
-          TRouteSchemas['Request'] extends { JSONBody: JSONSchema }
-            ? FromSchema<TRouteSchemas['Request']['JSONBody']>
-            : any,
-          TRouteSchemas['Request'] extends { Headers: JSONSchema }
-            ? FromSchema<TRouteSchemas['Request']['Headers']> extends Record<string, string>
-              ? FromSchema<TRouteSchemas['Request']['Headers']>
-              : Record<string, string>
-            : Record<string, string>,
-          TMethod,
-          TRouteSchemas['Request'] extends { QueryParams: JSONSchema }
-            ? FromSchema<TRouteSchemas['Request']['QueryParams']> extends Record<string, string>
-              ? FromSchema<TRouteSchemas['Request']['QueryParams']>
-              : Record<string, string | string[]>
-            : Record<string, string | string[]>,
-          TRouteSchemas['Request'] extends { PathParams: JSONSchema }
-            ? FromSchema<TRouteSchemas['Request']['PathParams']> extends Record<string, string>
-              ? FromSchema<TRouteSchemas['Request']['PathParams']>
-              : Record<string, any>
-            : Record<string, any>
-        >
-      : TypedRequest,
-  ) => PromiseOrValue<
-    TRouteSchemas extends { Responses: Record<number, JSONSchema> }
-      ? TypedResponseWithJSONStatusMap<{
-          [TStatusCode in keyof TRouteSchemas['Responses']]: TRouteSchemas['Responses'][TStatusCode] extends JSONSchema
-            ? FromSchema<TRouteSchemas['Responses'][TStatusCode]>
-            : never;
-        }>
-      : TypedResponse
-  >;
-}) => Router<TServerContext>;
+  handler: (request: TTypedRequest, ctx: TServerContext) => PromiseOrValue<TTypedResponse>;
+};
+
+export type AddRouteMethod<
+  TServerContext,
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+> = <
+  TRouteSchemas extends RouteSchemas,
+  TMethod extends HTTPMethod,
+  TPath extends string,
+  TTypedRequest extends TypedRequestFromRouteSchemas<TRouteSchemas, TMethod>,
+  TTypedResponse extends TypedResponseFromRouteSchemas<TRouteSchemas>,
+>(
+  opts: AddRouteOpts<TServerContext, TRouteSchemas, TMethod, TPath, TTypedRequest, TTypedResponse>,
+) => Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;

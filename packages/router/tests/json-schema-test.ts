@@ -92,54 +92,93 @@ router.get<{
   );
 });
 
-router.addRoute({
-  method: 'get',
-  path: '/users/:id',
-  schemas: {
-    Request: {
-      PathParams: pathParamsSchema,
-      Headers: headersSchema,
+createRouter()
+  .addRoute({
+    method: 'get',
+    path: '/users/:id',
+    schemas: {
+      Request: {
+        PathParams: pathParamsSchema,
+        Headers: headersSchema,
+      },
+      Responses: {
+        200: successfulResponseSchema,
+        401: unauthorizedResponseSchema,
+        404: notFoundResponseSchema,
+      },
     },
-    Responses: {
-      200: successfulResponseSchema,
-      401: unauthorizedResponseSchema,
-      404: notFoundResponseSchema,
-    },
-  },
-  handler: async req => {
-    const token = req.headers.get('x-token');
-    if (!token) {
+    handler: async req => {
+      const token = req.headers.get('x-token');
+      if (!token) {
+        return Response.json(
+          {
+            code: 'UNAUTHORIZED',
+          },
+          {
+            status: 401,
+          },
+        );
+      }
+      const userId = req.params.id;
+      // @ts-expect-error - a is not defined in the schema
+      const unexpectedParam = req.params.a;
+      console.log(unexpectedParam);
+      if (userId === 'only_available_id') {
+        return Response.json(
+          {
+            id: userId,
+            name: 'The only one',
+          },
+          {
+            status: 200,
+          },
+        );
+      }
       return Response.json(
         {
-          code: 'UNAUTHORIZED',
+          message: 'Not found',
         },
         {
-          status: 401,
+          status: 404,
         },
       );
-    }
-    const userId = req.params.id;
-    // @ts-expect-error - a is not defined in the schema
-    const unexpectedParam = req.params.a;
-    console.log(unexpectedParam);
-    if (userId === 'only_available_id') {
+    },
+  })
+  .addRoute({
+    method: 'get',
+    path: '/users',
+    schemas: {
+      Request: {
+        Headers: headersSchema,
+      },
+      Responses: {
+        200: {
+          type: 'array',
+          items: successfulResponseSchema,
+        },
+        401: unauthorizedResponseSchema,
+      },
+    },
+    handler: async req => {
+      const token = req.headers.get('x-token');
+      if (!token) {
+        return Response.json(
+          {
+            code: 'UNAUTHORIZED',
+          },
+          {
+            status: 401,
+          },
+        );
+      }
       return Response.json(
-        {
-          id: userId,
-          name: 'The only one',
-        },
-        {
-          status: 200,
-        },
+        [
+          {
+            id: 'only_available_id',
+            name: 'The only one',
+          },
+        ],
+        { status: 200 },
       );
-    }
-    return Response.json(
-      {
-        message: 'Not found',
-      },
-      {
-        status: 404,
-      },
-    );
-  },
-});
+    },
+  });
