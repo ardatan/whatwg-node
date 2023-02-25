@@ -2279,10 +2279,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@1.95.0":
-  version "1.95.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.95.0.tgz#169c4e284d5275ef93ab5faab69559957ba5df6c"
-  integrity sha512-64DviFdnoNlscSzoMErHPQkQMtyLcwOsBD70w4dxUWHVWu/HjXcEKkmTsgIltcxdNq0e5nxv0A8G+snlSUdjRg==
+"@pulumi/azure-native@1.96.0":
+  version "1.96.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.96.0.tgz#e788f7f23d65817c6b4f623bca41fcbdf6d0aa31"
+  integrity sha512-3io/DJ1Ra3mElb8RF675nSNhHV144VEVHj32I4FrO7B4Y2/FXp3you10KLzydsna9EjRnE05nih2/+/CbWsoGQ==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -8604,10 +8604,10 @@ word-wrap@^1.2.3:
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-wrangler@2.11.0:
-  version "2.11.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.11.0.tgz#8b96c12f40da73ee98c57f7a39ab2680de2b85ab"
-  integrity sha512-JvqWL8YyzLZsQhWgcCoDJkh47K7PdYH58LbE+7bDtMugkTzDEj0PS8aoJDEUw+5NDHhtoP2TMize44YVdnHgpw==
+wrangler@2.11.1:
+  version "2.11.1"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.11.1.tgz#45a5619a9b25015f5f5a7c0ee3eb63eb0a51d47b"
+  integrity sha512-WtFL3a5dGri74iQR2BE52DIt38Adgg5aPyXldEKU5OFzwRhYKq5LmGWuEI+fGrWpTjJ+WqAk9u6VAdQ1w9lPfw==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.1.1"
