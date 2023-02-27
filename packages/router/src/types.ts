@@ -63,7 +63,7 @@ export type RouterMethod<
   ...handlers: RouterHandler<TServerContext, TTypedRequest, TTypedResponse>[]
 ) => Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
 
-export type RouteMethodKey = HTTPMethod | 'all';
+export type RouteMethodKey = HTTPMethod | 'all' | 'use';
 
 export type RouterMethodsObj<
   TServerContext,

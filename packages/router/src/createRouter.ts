@@ -7,7 +7,7 @@ import {
   TypedResponseCtor,
 } from '@whatwg-node/typed-fetch';
 import type {
-  AddRouteMethod,
+  AddRouteWithSchemasOpts,
   OnRouteHook,
   OnRouterInitHook,
   RouteMethodKey,
@@ -58,7 +58,7 @@ export function createRouterBase({
   }
   const routesByMethod = new Map<
     HTTPMethod,
-    Map<URLPattern, RouterHandler<any, any, any, any>[]>
+    Map<URLPattern, RouterHandler<any>[]>
   >();
   function addHandlersToMethod({
     operationId,
@@ -73,7 +73,7 @@ export function createRouterBase({
     method: HTTPMethod;
     path: string;
     schemas?: RouteSchemas;
-    handlers: RouterHandler<any, any, any, any>[];
+    handlers: RouterHandler<any>[];
   }) {
     for (const onRouteHook of onRouteHooks) {
       onRouteHook({
@@ -148,7 +148,7 @@ export function createRouterBase({
               if (prop === 'query') {
                 return queryProxy;
               }
-              const targetProp = target[prop];
+              const targetProp = target[prop] as Request[keyof Request];
               if (typeof targetProp === 'function') {
                 return targetProp.bind(target);
               }
@@ -178,7 +178,7 @@ export function createRouterBase({
       if (prop === 'addRoute') {
         return function (
           this: RouterBaseObject<any, any>,
-          opts: Parameters<AddRouteMethod<any, any>>[0],
+          opts: AddRouteWithSchemasOpts<any, any, any, any, any, any>,
         ) {
           const { operationId, description, method, path, schemas, handler } = opts;
           addHandlersToMethod({
@@ -198,7 +198,7 @@ export function createRouterBase({
         path: string,
         ...handlers: RouterHandler<any>[]
       ) {
-        if (method === 'all') {
+        if (method === 'all' || method === 'use') {
           for (const httpMethod of HTTP_METHODS) {
             addHandlersToMethod({
               method: httpMethod.toLowerCase() as HTTPMethod,
