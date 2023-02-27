@@ -35,7 +35,9 @@ type TestGetOpts = {
   };
 };
 
-const handler = (request: TypedRequestFromTypeConfig<'get', TestGetOpts>): TypedResponseWithJSONStatusMap<TestGetOpts['Responses']> => {
+const handler = (
+  request: TypedRequestFromTypeConfig<'get', TestGetOpts>,
+): TypedResponseWithJSONStatusMap<TestGetOpts['Responses']> => {
   // @ts-expect-error - a is not defined in headers
   request.headers.set('a', '2');
   if (!request.headers.has('Authorization')) {

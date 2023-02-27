@@ -25,15 +25,26 @@ export type TypedRouterHandlerTypeConfig<
   Responses: TResponseJSONStatusMap;
 };
 
-export type TypedRequestFromTypeConfig<TMethod extends HTTPMethod, TTypeConfig extends TypedRouterHandlerTypeConfig> = 
-  TTypeConfig extends TypedRouterHandlerTypeConfig<infer TRequestJSON, infer TRequestHeaders, infer TRequestQueryParams, infer TRequestPathParams> ?
-  TypedRequest<TRequestJSON, TRequestHeaders, TMethod, TRequestQueryParams, TRequestPathParams> :
-    TypedRequest<any, Record<string, string>, TMethod>;
+export type TypedRequestFromTypeConfig<
+  TMethod extends HTTPMethod,
+  TTypeConfig extends TypedRouterHandlerTypeConfig,
+> = TTypeConfig extends TypedRouterHandlerTypeConfig<
+  infer TRequestJSON,
+  infer TRequestHeaders,
+  infer TRequestQueryParams,
+  infer TRequestPathParams
+>
+  ? TypedRequest<TRequestJSON, TRequestHeaders, TMethod, TRequestQueryParams, TRequestPathParams>
+  : TypedRequest<any, Record<string, string>, TMethod>;
 
-
-export type TypedResponseFromTypeConfig<TTypeConfig extends TypedRouterHandlerTypeConfig> = TTypeConfig extends {
-  Responses: infer TResponses;
-} ? TResponses extends Record<number, any> ? TypedResponseWithJSONStatusMap<TResponses> : TypedResponse : TypedResponse;
+export type TypedResponseFromTypeConfig<TTypeConfig extends TypedRouterHandlerTypeConfig> =
+  TTypeConfig extends {
+    Responses: infer TResponses;
+  }
+    ? TResponses extends Record<number, any>
+      ? TypedResponseWithJSONStatusMap<TResponses>
+      : TypedResponse
+    : TypedResponse;
 
 export type RouterMethod<
   TServerContext,
@@ -41,17 +52,16 @@ export type RouterMethod<
   TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
 > = <
   TTypeConfig extends TypedRouterHandlerTypeConfig,
-  TTypedRequest extends TypedRequestFromTypeConfig<TMethod, TTypeConfig> = TypedRequestFromTypeConfig<TMethod, TTypeConfig>,
+  TTypedRequest extends TypedRequestFromTypeConfig<
+    TMethod,
+    TTypeConfig
+  > = TypedRequestFromTypeConfig<TMethod, TTypeConfig>,
   TTypedResponse extends TypedResponseFromTypeConfig<TTypeConfig> = TypedResponseFromTypeConfig<TTypeConfig>,
   TPath extends string = string,
 >(
   path: TPath,
-  ...handlers: RouterHandler<
-    TServerContext,
-    TTypedRequest,
-    TTypedResponse
-  >[]
-  ) => Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
+  ...handlers: RouterHandler<TServerContext, TTypedRequest, TTypedResponse>[]
+) => Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
 
 export type RouteMethodKey = HTTPMethod | 'all';
 
@@ -72,27 +82,35 @@ export type RouterBaseObject<
 export type Router<
   TServerContext,
   TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
-  > = ServerAdapter<TServerContext, RouterBaseObject<TServerContext, TRouterSDK>> & {
-    addRoute<
-      TRouteSchemas extends RouteSchemas,
-      TMethod extends HTTPMethod,
-      TPath extends string,
-      TTypedRequest extends TypedRequestFromRouteSchemas<TRouteSchemas, TMethod>,
-      TTypedResponse extends TypedResponseFromRouteSchemas<TRouteSchemas>,
-    >(opts: AddRouteWithSchemasOpts<TServerContext, TRouteSchemas, TMethod, TPath, TTypedRequest, TTypedResponse>): Router<
+> = ServerAdapter<TServerContext, RouterBaseObject<TServerContext, TRouterSDK>> & {
+  addRoute<
+    TRouteSchemas extends RouteSchemas,
+    TMethod extends HTTPMethod,
+    TPath extends string,
+    TTypedRequest extends TypedRequestFromRouteSchemas<TRouteSchemas, TMethod>,
+    TTypedResponse extends TypedResponseFromRouteSchemas<TRouteSchemas>,
+  >(
+    opts: AddRouteWithSchemasOpts<
       TServerContext,
-      TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>
-      >;
-    addRoute<
-      TTypeConfig extends TypedRouterHandlerTypeConfig,
-      TMethod extends HTTPMethod = HTTPMethod,
-      TTypedRequest extends TypedRequestFromTypeConfig<TMethod, TTypeConfig> = TypedRequestFromTypeConfig<TMethod, TTypeConfig>,
-      TTypedResponse extends TypedResponseFromTypeConfig<TTypeConfig> = TypedResponseFromTypeConfig<TTypeConfig>,
-      TPath extends string = string,
-      >(opts: AddRouteWithTypesOpts<TServerContext, TTypedRequest, TTypedResponse, TMethod, TPath>): Router<
-      TServerContext,
-      TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>
-    >;
+      TRouteSchemas,
+      TMethod,
+      TPath,
+      TTypedRequest,
+      TTypedResponse
+    >,
+  ): Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
+  addRoute<
+    TTypeConfig extends TypedRouterHandlerTypeConfig,
+    TMethod extends HTTPMethod = HTTPMethod,
+    TTypedRequest extends TypedRequestFromTypeConfig<
+      TMethod,
+      TTypeConfig
+    > = TypedRequestFromTypeConfig<TMethod, TTypeConfig>,
+    TTypedResponse extends TypedResponseFromTypeConfig<TTypeConfig> = TypedResponseFromTypeConfig<TTypeConfig>,
+    TPath extends string = string,
+  >(
+    opts: AddRouteWithTypesOpts<TServerContext, TTypedRequest, TTypedResponse, TMethod, TPath>,
+  ): Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
   sdk: TRouterSDK;
 };
 
@@ -102,10 +120,7 @@ export type RouterHandler<
   TServerContext,
   TTypedRequest extends TypedRequest = TypedRequest,
   TTypedResponse extends TypedResponse = TypedResponse,
-> = (
-  request: TTypedRequest,
-  context: TServerContext,
-) => PromiseOrValue<TTypedResponse>;
+> = (request: TTypedRequest, context: TServerContext) => PromiseOrValue<TTypedResponse>;
 
 export type OnRouteHookPayload<TServerContext> = {
   operationId?: string;
@@ -208,13 +223,7 @@ export type AddRouteWithSchemasOpts<
   operationId?: string;
   description?: string;
   schemas: TRouteSchemas;
-} & AddRouteWithTypesOpts<
-  TServerContext,
-  TTypedRequest,
-  TTypedResponse,
-  TMethod,
-  TPath
->;
+} & AddRouteWithTypesOpts<TServerContext, TTypedRequest, TTypedResponse, TMethod, TPath>;
 
 export type AddRouteWithTypesOpts<
   TServerContext,
@@ -223,7 +232,7 @@ export type AddRouteWithTypesOpts<
   TMethod extends HTTPMethod,
   TPath extends string,
 > = {
-    method: TMethod;
+  method: TMethod;
   path: TPath;
   handler: (request: TTypedRequest, ctx: TServerContext) => PromiseOrValue<TTypedResponse>;
 };

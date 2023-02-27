@@ -196,11 +196,14 @@ const routerWithAddRoute = createRouter()
           },
         );
       }
-      return Response.json({
-        message: 'OK',
-      }, {
-        status: 200,
-      })
+      return Response.json(
+        {
+          message: 'OK',
+        },
+        {
+          status: 200,
+        },
+      );
     },
   });
 
@@ -224,4 +227,3 @@ if (res.status === 500) {
   const error = jsonBody.error;
   console.log(error);
 }
-
