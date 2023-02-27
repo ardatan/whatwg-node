@@ -246,7 +246,7 @@ export type RouterInput<
 > = {
   [TPathKey in keyof TRouterSDK]: {
     [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends HTTPMethod
-      ? Parameters<TRouterSDK[TPathKey][TMethodKey]>[0]
+      ? Required<Exclude<Parameters<TRouterSDK[TPathKey][TMethodKey]>[0], undefined>>
       : never;
   };
 };
