@@ -147,32 +147,33 @@ export type RouteSchemas = {
   Responses?: Record<number, JSONSchema>;
 };
 
+export type RouterSDKOpts<
+  TTypedRequest extends TypedRequest = TypedRequest,
+  TMethod extends HTTPMethod = HTTPMethod,
+> = {
+  JSONBody?: TTypedRequest extends TypedRequest<infer TJSONBody, any, TMethod, any, any>
+    ? TJSONBody
+    : never;
+  PathParams?: TTypedRequest extends TypedRequest<any, any, TMethod, any, infer TPathParams>
+    ? TPathParams
+    : never;
+  QueryParams?: TTypedRequest extends TypedRequest<any, any, TMethod, infer TQueryParams, any>
+    ? TQueryParams
+    : never;
+  Headers?: TTypedRequest extends TypedRequest<any, infer THeaders, TMethod, any, any>
+    ? THeaders
+    : never;
+};
+
 export type RouterSDK<
-  TPath extends string,
-  TTypedRequest extends TypedRequest,
-  TTypedResponse extends TypedResponse,
+  TPath extends string = string,
+  TTypedRequest extends TypedRequest = TypedRequest,
+  TTypedResponse extends TypedResponse = TypedResponse,
 > = {
   [TPathKey in TPath]: {
-    [TMethodKey in TTypedRequest['method']]: (opts?: {
-      JSONBody?: TTypedRequest extends TypedRequest<infer TJSONBody, any, TMethodKey, any, any>
-        ? TJSONBody
-        : never;
-      PathParams?: TTypedRequest extends TypedRequest<any, any, TMethodKey, any, infer TPathParams>
-        ? TPathParams
-        : never;
-      QueryParams?: TTypedRequest extends TypedRequest<
-        any,
-        any,
-        TMethodKey,
-        infer TQueryParams,
-        any
-      >
-        ? TQueryParams
-        : never;
-      Headers?: TTypedRequest extends TypedRequest<any, infer THeaders, TMethodKey, any, any>
-        ? THeaders
-        : never;
-    }) => PromiseOrValue<TTypedResponse>;
+    [TMethod in TTypedRequest['method']]: (
+      opts?: RouterSDKOpts<TTypedRequest, TMethod>,
+    ) => PromiseOrValue<TTypedResponse>;
   };
 };
 
@@ -232,7 +233,44 @@ export type AddRouteWithTypesOpts<
   TMethod extends HTTPMethod,
   TPath extends string,
 > = {
-  method: TMethod;
+  method: TMethod | Uppercase<TMethod>;
   path: TPath;
   handler: (request: TTypedRequest, ctx: TServerContext) => PromiseOrValue<TTypedResponse>;
+};
+
+type ResolvedPromise<T> = T extends Promise<infer U> ? U : T;
+
+export type RouterInput<
+  TRouter extends Router<any, RouterSDK>,
+  TRouterSDK extends RouterSDK = TRouter['__sdk'],
+> = {
+  [TPathKey in keyof TRouterSDK]: {
+    [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends HTTPMethod
+      ? Parameters<TRouterSDK[TPathKey][TMethodKey]>[0]
+      : never;
+  };
+};
+
+type ResponseByPathAndMethod<
+  TRouterSDK extends RouterSDK,
+  TPath extends keyof TRouterSDK,
+  TMethod extends keyof TRouterSDK[TPath],
+> = TMethod extends HTTPMethod ? ResolvedPromise<ReturnType<TRouterSDK[TPath][TMethod]>> : never;
+
+export type RouterOutput<
+  TRouter extends Router<any, RouterSDK>,
+  TRouterSDK extends RouterSDK = TRouter['__sdk'],
+> = {
+  [TPathKey in keyof TRouterSDK]: {
+    [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends HTTPMethod
+      ? ResponseByPathAndMethod<TRouterSDK, TPathKey, TMethodKey> extends {
+          status: infer TStatusCode;
+          json(): Promise<infer TJSON>;
+        }
+        ? {
+            [TStatusCodeKey in TStatusCode extends number ? TStatusCode : never]: TJSON;
+          }
+        : never
+      : never;
+  };
 };

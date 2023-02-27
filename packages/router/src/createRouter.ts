@@ -222,7 +222,9 @@ export function createRouterBase({
 
 export function createRouter<
   TServerContext,
-  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse> = {
+    [TKey: string]: never;
+  },
 >(options?: RouterOptions<TServerContext>): Router<TServerContext, TRouterSDK> {
   const routerBaseObject = createRouterBase(options);
   return createServerAdapter(routerBaseObject, options) as Router<TServerContext, TRouterSDK>;

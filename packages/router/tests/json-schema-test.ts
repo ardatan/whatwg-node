@@ -107,7 +107,7 @@ const routerWithAddRoute = createRouter()
         404: notFoundResponseSchema,
       },
     },
-    handler: async req => {
+    handler(req) {
       const token = req.headers.get('x-token');
       if (!token) {
         return Response.json(
@@ -183,7 +183,7 @@ const routerWithAddRoute = createRouter()
     },
   })
   .addRoute({
-    method: 'get',
+    method: 'GET',
     path: '/health',
     handler: async () => {
       if (!globalThis['db']) {
