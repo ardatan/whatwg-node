@@ -92,7 +92,7 @@ router.get<{
   );
 });
 
-createRouter()
+const routerWithAddRoute = createRouter()
   .addRoute({
     method: 'get',
     path: '/users/:id',
@@ -181,4 +181,47 @@ createRouter()
         { status: 200 },
       );
     },
+  })
+  .addRoute({
+    method: 'get',
+    path: '/health',
+    handler: async () => {
+      if (!globalThis['db']) {
+        return Response.json(
+          {
+            error: 'DB is not available',
+          },
+          {
+            status: 500,
+          },
+        );
+      }
+      return Response.json({
+        message: 'OK',
+      }, {
+        status: 200,
+      })
+    },
   });
+
+const res = await routerWithAddRoute.sdk['/health'].get();
+
+// @ts-expect-error - 300 is not a valid status code
+res.status = 300;
+
+if (res.status === 200) {
+  const jsonBody = await res.json();
+  const message = jsonBody.message;
+  // @ts-expect-error - error is not defined in the schema
+  console.log(jsonBody.error);
+  console.log(message);
+}
+
+if (res.status === 500) {
+  const jsonBody = await res.json();
+  // @ts-expect-error - message is not defined in the schema
+  console.log(jsonBody.message);
+  const error = jsonBody.error;
+  console.log(error);
+}
+

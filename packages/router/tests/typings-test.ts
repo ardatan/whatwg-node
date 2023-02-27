@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServerAdapter } from '@whatwg-node/server';
 import { TypedResponseWithJSONStatusMap } from '@whatwg-node/typed-fetch';
-import { createRouter, Response, RouterHandler } from '../src';
+import { createRouter, Response, TypedRequestFromTypeConfig } from '../src';
 
 const router = createRouter();
 const adapter = createServerAdapter(() => new Response('Hello World'));
@@ -35,15 +35,7 @@ type TestGetOpts = {
   };
 };
 
-const handler: RouterHandler<
-  any,
-  'get',
-  unknown,
-  TestGetOpts['Request']['Headers'],
-  TestGetOpts['Request']['QueryParams'],
-  any,
-  TestGetOpts['Responses']
-> = (request): TypedResponseWithJSONStatusMap<TestGetOpts['Responses']> => {
+const handler = (request: TypedRequestFromTypeConfig<'get', TestGetOpts>): TypedResponseWithJSONStatusMap<TestGetOpts['Responses']> => {
   // @ts-expect-error - a is not defined in headers
   request.headers.set('a', '2');
   if (!request.headers.has('Authorization')) {
