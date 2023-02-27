@@ -56,10 +56,7 @@ export function createRouterBase({
       onRouteHooks.push(plugin.onRoute);
     }
   }
-  const routesByMethod = new Map<
-    HTTPMethod,
-    Map<URLPattern, RouterHandler<any>[]>
-  >();
+  const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<any>[]>>();
   function addHandlersToMethod({
     operationId,
     description,
