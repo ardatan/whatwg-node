@@ -111,7 +111,7 @@ export type Router<
   >(
     opts: AddRouteWithTypesOpts<TServerContext, TTypedRequest, TTypedResponse, TMethod, TPath>,
   ): Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
-  sdk: TRouterSDK;
+  __sdk: TRouterSDK;
 };
 
 export type OnRouteHook<TServerContext> = (payload: OnRouteHookPayload<TServerContext>) => void;
@@ -120,7 +120,7 @@ export type RouterHandler<
   TServerContext,
   TTypedRequest extends TypedRequest = TypedRequest,
   TTypedResponse extends TypedResponse = TypedResponse,
-> = (request: TTypedRequest, context: TServerContext) => PromiseOrValue<TTypedResponse>;
+> = (request: TTypedRequest, context: TServerContext) => PromiseOrValue<TTypedResponse | void>;
 
 export type OnRouteHookPayload<TServerContext> = {
   operationId?: string;

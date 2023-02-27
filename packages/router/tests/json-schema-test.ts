@@ -207,7 +207,7 @@ const routerWithAddRoute = createRouter()
     },
   });
 
-const res = await routerWithAddRoute.sdk['/health'].get();
+const res = await routerWithAddRoute.__sdk['/health'].get();
 
 // @ts-expect-error - 300 is not a valid status code
 res.status = 300;

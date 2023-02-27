@@ -5,6 +5,6 @@ export type RouterSDKOptions = GenericSDKOptions;
 
 export function createRouterSDK<TRouter extends Router<any, any>>(
   opts?: RouterSDKOptions,
-): TRouter['sdk'] {
+): TRouter['__sdk'] {
   return createGenericSDK(opts);
 }

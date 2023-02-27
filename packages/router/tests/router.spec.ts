@@ -63,19 +63,19 @@ describe('Router', () => {
   });
 
   it('can match multiple routes if earlier handlers do not return (as middleware)', async () => {
-    const router = createRouter();
+    const router = createRouter<any, any>();
     router.get(
       '/greetings',
-      (request: any) => {
-        request.message = 'Hello';
+      (_request, ctx) => {
+        ctx.message = 'Hello';
       },
-      (request: any) => {
-        request.message += ` to you`;
+      (_request, ctx) => {
+        ctx.message += ` to you`;
       },
     );
-    router.get('/greetings', (request: any) => {
-      request.message += ` ${request.query.name}!`;
-      return Response.json({ message: request.message });
+    router.get('/greetings', (request, ctx) => {
+      ctx.message += ` ${request.query.name}!`;
+      return Response.json({ message: ctx.message });
     });
     const response = await router.fetch('http://localhost/greetings?name=John');
     const json = await response.json();
