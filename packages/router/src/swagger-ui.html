@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content="SwaggerUI" />
     <title>SwaggerUI</title>
-    <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+    <style>
+      @import 'https://cdn.jsdelivr.net/gh/Itz-fork/Fastapi-Swagger-UI-Dark/assets/swagger_ui_dark.min.css'
+        (prefers-color-scheme: dark);
+
+      @import 'https://unpkg.com/swagger-ui-dist/swagger-ui.css' (prefers-color-scheme: light);
+    </style>
   </head>
 
   <body>
@@ -17,6 +22,12 @@
           url: __OAS_PATH__,
           dom_id: '#swagger-ui',
           displayOperationId: true,
+          tryItOutEnabled: true,
+          requestSnippetsEnabled: true,
+          displayRequestDuration: true,
+          defaultModelRendering: 'model',
+          defaultModelExpandDepth: 3,
+          defaultModelsExpandDepth: 3,
         });
       };
     </script>
