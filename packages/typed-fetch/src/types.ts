@@ -6,21 +6,50 @@ export type TypedBody<TJSON, THeaders extends Record<string, string>> = Omit<
   headers: TypedHeaders<THeaders>;
 };
 
-export type TypedHeaders<TMap extends Record<string, string>> = {
-  append<TName extends keyof TMap & string>(name: TName, value: TMap[TName]): void;
-  delete<TName extends keyof TMap & string>(name: TName): void;
-  get<TName extends string>(name: TName): TName extends keyof TMap ? TMap[TName] : string | null;
-  has<TName extends string>(name: TName): TMap extends Record<TName, any> ? true : boolean;
-  set<TName extends keyof TMap & string>(name: TName, value: TMap[TName]): void;
+type DefaultHTTPHeaders =
+  | 'accept'
+  | 'accept-language'
+  | 'content-language'
+  | 'content-type'
+  | 'content-length';
+
+type Maybe = undefined | null;
+
+export interface TypedHeaders<TMap extends Record<string, string>> {
+  append<TName extends DefaultHTTPHeaders | keyof TMap>(
+    name: TName,
+    value: TName extends keyof TMap ? TMap[TName] : string,
+  ): void;
+  delete<TName extends DefaultHTTPHeaders | keyof TMap>(name: TName): void;
+  get<TName extends DefaultHTTPHeaders | keyof TMap>(
+    name: TName,
+  ): TName extends keyof TMap
+    ? TMap[TName]
+    : TName extends DefaultHTTPHeaders
+    ? string | null
+    : never;
+  has<TName extends DefaultHTTPHeaders | keyof TMap>(
+    name: TName,
+  ): TName extends DefaultHTTPHeaders
+    ? boolean
+    : TName extends keyof TMap
+    ? TMap[TName] extends Maybe
+      ? boolean
+      : true
+    : never;
+  set<TName extends DefaultHTTPHeaders | keyof TMap>(
+    name: TName,
+    value: TName extends keyof TMap ? TMap[TName] : string,
+  ): void;
   forEach(
-    callbackfn: <TName extends keyof TMap & string>(
+    callbackfn: <TName extends keyof TMap>(
       value: TMap[TName],
       key: TName,
       parent: TypedHeaders<TMap>,
     ) => void,
     thisArg?: any,
   ): void;
-};
+}
 
 export type TypedHeadersCtor = new <TMap extends Record<string, string>>(
   init?: TMap,
@@ -89,30 +118,33 @@ export type TypedRequestCtor = new <
   init?: TypedRequestInit<THeaders, TMethod>,
 ) => TypedRequest<any, THeaders, TMethod, TQueryParams, any>;
 
-export type TypedURLSearchParams<TMap extends Record<string, string | string[]>> = {
-  append<TName extends keyof TMap & string>(
+export interface TypedURLSearchParams<TMap extends Record<string, string | string[]>> {
+  append<TName extends keyof TMap>(
     name: TName,
     value: TMap[TName] extends any[] ? TMap[TName][1] : TMap[TName],
   ): void;
-  delete(name: keyof TMap & string): void;
-  get<TName extends keyof TMap & string>(
+  delete(name: keyof TMap): void;
+  get<TName extends keyof TMap>(
     name: TName,
   ): TMap[TName] extends any[] ? TMap[TName][1] : TMap[TName];
-  set<TName extends keyof TMap & string>(
+  getAll<TName extends keyof TMap>(
+    name: TName,
+  ): TMap[TName] extends any[] ? TMap[TName] : [TMap[TName]];
+  set<TName extends keyof TMap>(
     name: TName,
     value: TMap[TName] extends any[] ? TMap[TName][1] : TMap[TName],
   ): void;
   sort(): void;
   toString(): string;
   forEach(
-    callbackfn: <TName extends keyof TMap & string>(
+    callbackfn: <TName extends keyof TMap>(
       value: TMap[TName] extends any[] ? TMap[TName][1] : TMap[TName],
       name: TName,
       parent: TypedURLSearchParams<TMap>,
     ) => void,
     thisArg?: any,
   ): void;
-};
+}
 
 export type TypedURLSearchParamsCtor = new <TMap extends Record<string, string | string[]>>(
   init?: TMap,

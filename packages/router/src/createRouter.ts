@@ -1,11 +1,6 @@
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter, ServerAdapterOptions } from '@whatwg-node/server';
-import {
-  HTTPMethod,
-  TypedRequest,
-  TypedResponse,
-  TypedResponseCtor,
-} from '@whatwg-node/typed-fetch';
+import { HTTPMethod, TypedRequest, TypedResponse } from '@whatwg-node/typed-fetch';
 import type {
   AddRouteWithSchemasOpts,
   OnRouteHook,
@@ -34,8 +29,6 @@ const HTTP_METHODS = [
   'patch',
   'trace',
 ] as HTTPMethod[];
-
-export const Response: TypedResponseCtor = DefaultFetchAPI.Response as any;
 
 export function createRouterBase({
   fetchAPI: givenFetchAPI,
@@ -103,7 +96,7 @@ export function createRouterBase({
     let _parsedUrl: URL;
     function getParsedUrl() {
       if (!_parsedUrl) {
-        _parsedUrl = new fetchAPI.URL(request.url);
+        _parsedUrl = new fetchAPI.URL(request.url, 'http://localhost');
       }
       return _parsedUrl;
     }
@@ -124,7 +117,10 @@ export function createRouterBase({
         },
       );
       for (const [pattern, handlers] of methodPatternMaps) {
-        const match = pattern.exec(request.url);
+        // Do not parse URL if not needed
+        const match = request.url.endsWith(pattern.pathname)
+          ? { pathname: { groups: {} } }
+          : pattern.exec(getParsedUrl());
         if (match) {
           const routerRequest = new Proxy(request, {
             get(target, prop: keyof TypedRequest) {
