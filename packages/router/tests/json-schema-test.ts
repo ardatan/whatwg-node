@@ -212,10 +212,21 @@ const res = await routerWithAddRoute.__sdk['/health'].get();
 // @ts-expect-error - 300 is not a valid status code
 res.status = 300;
 
+let notOkStatus = 500 as const;
+let okStatus = 200 as const;
+
 if (res.ok) {
-  let notOkStatus = 500 as const;
   // @ts-expect-error - res.status cannot be 500
   notOkStatus = res.status;
+  okStatus = res.status;
+  console.log(notOkStatus);
+}
+
+if (!res.ok) {
+  notOkStatus = res.status;
+  // @ts-expect-error - res.status cannot be 200
+  okStatus = res.status;
+  console.log(okStatus);
 }
 
 if (res.status === 200) {
