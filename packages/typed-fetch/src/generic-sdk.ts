@@ -8,6 +8,7 @@ export interface GenericSDKOptions {
 
 export interface GenericRequestParams {
   json?: any;
+  formData?: FormData;
   params?: Record<string, string>;
   query?: Record<string, string | string[]>;
   headers?: Record<string, string>;
@@ -64,6 +65,10 @@ export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOption
             if (requestParams.json) {
               requestInit.body = JSON.stringify(requestParams.json);
               requestInit.headers['Content-Type'] = 'application/json';
+            }
+
+            if (requestParams.formData) {
+              requestInit.body = requestParams.formData;
             }
 
             return fetchFn(url, requestInit).then(async res => {

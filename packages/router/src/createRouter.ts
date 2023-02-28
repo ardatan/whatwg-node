@@ -122,7 +122,7 @@ export function createRouterBase({
           ? { pathname: { groups: {} } }
           : pattern.exec(getParsedUrl());
         if (match) {
-          const routerRequest = new Proxy(request, {
+          const routerRequest = new Proxy(request as any, {
             get(target, prop: keyof TypedRequest) {
               if (prop === 'parsedUrl') {
                 return getParsedUrl();
@@ -141,7 +141,7 @@ export function createRouterBase({
               if (prop === 'query') {
                 return queryProxy;
               }
-              const targetProp = target[prop] as Request[keyof Request];
+              const targetProp = target[prop];
               if (typeof targetProp === 'function') {
                 return targetProp.bind(target);
               }
@@ -154,7 +154,7 @@ export function createRouterBase({
             },
           });
           for (const handler of handlers) {
-            const result = await handler(routerRequest as TypedRequest, context);
+            const result = await handler(routerRequest, context);
             if (result) {
               return result;
             }

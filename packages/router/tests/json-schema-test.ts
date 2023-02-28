@@ -252,3 +252,54 @@ if (res.status === 500) {
   const error = jsonBody.error;
   console.log(error);
 }
+
+// File uploads
+createRouter().addRoute({
+  method: 'post',
+  path: '/upload',
+  schemas: {
+    request: {
+      formData: {
+        type: 'object',
+        properties: {
+          file: {
+            type: 'string',
+            format: 'binary',
+          },
+          description: {
+            type: 'string',
+          },
+        },
+        required: ['file', 'description'],
+        additionalProperties: false,
+      },
+    },
+    responses: {
+      200: {
+        type: 'object',
+        properties: {
+          message: {
+            type: 'string',
+          },
+        },
+      },
+    },
+  } as const,
+  async handler(req) {
+    const formData = await req.formData();
+    const file = formData.get('file');
+    console.log(await file.text());
+    const description = formData.get('description');
+    // @ts-expect-error - description is not a File
+    console.log(await description.text());
+    console.log(description);
+    return Response.json(
+      {
+        message: 'OK',
+      },
+      {
+        status: 200,
+      },
+    );
+  },
+});
