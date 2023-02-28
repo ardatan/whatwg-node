@@ -1,8 +1,7 @@
 /* eslint-disable camelcase */
 import { OpenAPIV3_1 } from 'openapi-types';
-import { Response } from './createRouter';
 import swaggerUiHtml from './swagger-ui-html';
-import { RouterPlugin } from './types';
+import { Response, RouterPlugin } from './types';
 
 export type OpenAPIPluginOptions = {
   oasPath?: string;
@@ -39,7 +38,8 @@ export function useOpenAPI({
     },
     onRoute({ method, path, operationId, description, schemas }) {
       if (schemas) {
-        const pathObj = (paths[path] = paths[path] || {});
+        const pathForOAS = path.replace(/:([^/]+)/g, '{$1}');
+        const pathObj = (paths[pathForOAS] = paths[pathForOAS] || {});
         pathObj[method] = (pathObj[method] || {}) as any;
         const operation = pathObj[method] as OpenAPIV3_1.OperationObject;
         operation.operationId = operationId;

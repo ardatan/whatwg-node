@@ -26,10 +26,12 @@ const someTodosToAdd = ['Drink coffee', 'Write some code', 'Drink more coffee', 
   console.table(getTodosJson);
 
   // Deleting the first todo
-  const deleteTodoRes = await client['/todo/:id'].delete({
+  const deleteTodoRes = await client['/todo/{id}'].delete({
     params: {
       id: getTodosJson[0].id,
     },
   });
-  console.log(deleteTodoRes.status);
+  if (!deleteTodoRes.ok) {
+    console.error('Failed to delete todo');
+  }
 })();

@@ -29,5 +29,7 @@ const someTodosToAdd = ['Drink coffee', 'Write some code', 'Drink more coffee', 
       id: getTodosJson[0].id,
     },
   });
-  console.log(deleteTodoRes.status);
+  if (!deleteTodoRes.ok) {
+    console.error('Failed to delete todo');
+  }
 })();

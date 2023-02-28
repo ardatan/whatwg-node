@@ -212,7 +212,17 @@ const res = await routerWithAddRoute.__sdk['/health'].get();
 // @ts-expect-error - 300 is not a valid status code
 res.status = 300;
 
+if (res.ok) {
+  let notOkStatus = 500 as const;
+  // @ts-expect-error - res.status cannot be 500
+  notOkStatus = res.status;
+}
+
 if (res.status === 200) {
+  const resOk: true = res.ok;
+  // @ts-expect-error - res.ok should be true
+  const resNotOk: false = res.ok;
+  console.log(resOk, resNotOk);
   const jsonBody = await res.json();
   const message = jsonBody.message;
   // @ts-expect-error - error is not defined in the schema
@@ -221,6 +231,10 @@ if (res.status === 200) {
 }
 
 if (res.status === 500) {
+  // @ts-expect-error - res.ok should be false
+  const resOk: true = res.ok;
+  const resNotOk: false = res.ok;
+  console.log(resOk, resNotOk);
   const jsonBody = await res.json();
   // @ts-expect-error - message is not defined in the schema
   console.log(jsonBody.message);

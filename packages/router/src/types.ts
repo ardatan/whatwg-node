@@ -1,4 +1,5 @@
 import { FromSchema, JSONSchema as JSONSchemaOrBoolean } from 'json-schema-to-ts';
+import { Response as OriginalResponse } from '@whatwg-node/fetch';
 import { ServerAdapter, ServerAdapterBaseObject, ServerAdapterPlugin } from '@whatwg-node/server';
 import type {
   HTTPMethod,
@@ -6,6 +7,7 @@ import type {
   TypedResponse,
   TypedResponseWithJSONStatusMap,
 } from '@whatwg-node/typed-fetch';
+import { TypedResponseCtor } from '@whatwg-node/typed-fetch';
 
 type JSONSchema = Exclude<JSONSchemaOrBoolean, boolean>;
 
@@ -276,3 +278,5 @@ export type RouterOutput<
       : never;
   };
 };
+
+export const Response = OriginalResponse as TypedResponseCtor;

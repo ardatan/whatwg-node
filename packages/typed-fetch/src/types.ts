@@ -59,13 +59,29 @@ export type TypedResponseInit<TStatusCode extends number = 200> = Omit<ResponseI
   status: TStatusCode;
 };
 
+type StartsWithNumber<T extends number, K extends number> = `${T}` extends `${K}${number}`
+  ? true
+  : false;
+
 export type TypedResponse<
   TJSON = any,
   THeaders extends Record<string, string> = Record<string, string>,
   TStatusCode extends number = 200,
-> = Omit<Response, 'json' | 'status'> &
+> = Omit<Response, 'json' | 'status' | 'ok'> &
   TypedBody<TJSON, THeaders> & {
     status: TStatusCode;
+  } & {
+    ok: StartsWithNumber<TStatusCode, 1> extends true
+      ? false
+      : StartsWithNumber<TStatusCode, 2> extends true
+      ? true
+      : StartsWithNumber<TStatusCode, 3> extends true
+      ? false
+      : StartsWithNumber<TStatusCode, 4> extends true
+      ? false
+      : StartsWithNumber<TStatusCode, 5> extends true
+      ? false
+      : boolean;
   };
 
 export type TypedResponseCtor = Omit<typeof Response, 'json'> & {
