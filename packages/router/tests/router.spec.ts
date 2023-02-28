@@ -8,7 +8,7 @@ describe('Router', () => {
         message: `Hello ${request.parsedUrl.pathname}!`,
       }),
     );
-    const response = await router.fetch('http://localhost/greetings/John');
+    const response = await router.fetch('/greetings/John');
     const json = await response.json();
     expect(json.message).toBe('Hello /greetings/John!');
   });
@@ -19,7 +19,7 @@ describe('Router', () => {
         message: `Hello ${request.params.name}!`,
       }),
     );
-    const response = await router.fetch('http://localhost/greetings/John');
+    const response = await router.fetch('/greetings/John');
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
@@ -30,7 +30,7 @@ describe('Router', () => {
         message: `Hello ${request.params.name}!`,
       }),
     );
-    const response = await router.fetch('http://localhost/greetings/John%20Doe');
+    const response = await router.fetch('/greetings/John%20Doe');
     const json = await response.json();
     expect(json.message).toBe('Hello John Doe!');
   });
@@ -41,7 +41,7 @@ describe('Router', () => {
         message: `Hello ${request.query.name}!`,
       }),
     );
-    const response = await router.fetch('http://localhost/greetings?name=John');
+    const response = await router.fetch('/greetings?name=John');
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
@@ -57,7 +57,7 @@ describe('Router', () => {
         return Response.json({ message: request.message });
       },
     );
-    const response = await router.fetch('http://localhost/greetings?name=John');
+    const response = await router.fetch('/greetings?name=John');
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
@@ -77,7 +77,7 @@ describe('Router', () => {
       ctx.message += ` ${request.query.name}!`;
       return Response.json({ message: ctx.message });
     });
-    const response = await router.fetch('http://localhost/greetings?name=John');
+    const response = await router.fetch('/greetings?name=John');
     const json = await response.json();
     expect(json.message).toBe('Hello to you John!');
   });
@@ -88,7 +88,7 @@ describe('Router', () => {
         message: `Hello ${request.params.name}!`,
       }),
     );
-    const response = await router.fetch('http://localhost/api/greetings/John');
+    const response = await router.fetch('/api/greetings/John');
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
@@ -109,7 +109,7 @@ describe('Router', () => {
       ),
     );
     router.get('/api/*', nested);
-    const response = await router.fetch('http://localhost/api/greetings/John');
+    const response = await router.fetch('/api/greetings/John');
     const json = await response.json();
     expect(json.message).toBe('Hello John!');
   });
@@ -136,7 +136,7 @@ describe('Router', () => {
         message: `Hello Root!`,
       }),
     );
-    const response = await router.fetch('http://localhost/api');
+    const response = await router.fetch('/api');
     const json = await response.json();
     expect(json.message).toBe('Hello Root!');
   });
@@ -147,7 +147,7 @@ describe('Router', () => {
         message: `Hello Root!`,
       }),
     );
-    const response = await router.fetch('http://localhost');
+    const response = await router.fetch('');
     const json = await response.json();
     expect(json.message).toBe('Hello Root!');
   });
@@ -160,7 +160,7 @@ describe('Router', () => {
         message: `Hello World!`,
       }),
     );
-    const response = await router.fetch('http://localhost/greetings');
+    const response = await router.fetch('/greetings');
     const json = await response.json();
     expect(json.message).toBe('Hello World!');
   });
@@ -173,7 +173,7 @@ describe('Router', () => {
         message: `Hello World!`,
       }),
     );
-    const response = await router.fetch('http://localhost');
+    const response = await router.fetch('');
     const json = await response.json();
     expect(json.message).toBe('Hello World!');
   });
@@ -185,7 +185,7 @@ describe('Router', () => {
         message: `Hello ${json.name}!`,
       });
     });
-    const response = await router.fetch('http://localhost/greetings', {
+    const response = await router.fetch('/greetings', {
       method: 'POST',
       body: JSON.stringify({ name: 'John' }),
     });
