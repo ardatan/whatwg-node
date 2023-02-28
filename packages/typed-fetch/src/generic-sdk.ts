@@ -1,4 +1,5 @@
 import { fetch } from '@whatwg-node/fetch';
+import { HTTPMethod } from './types';
 
 export interface GenericSDKOptions {
   endpoint?: string;
@@ -12,11 +13,31 @@ export interface GenericRequestParams {
   headers?: Record<string, string>;
 }
 
-export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOptions = {}) {
+export type GenericSDKMethod = (requestParams?: GenericRequestParams) => Promise<Response>;
+
+export class SDKValidationError extends Error implements AggregateError {
+  constructor(
+    public readonly path: string,
+    public readonly method: HTTPMethod,
+    public errors: any[],
+    public response: Response,
+  ) {
+    super(`Validation failed for ${method} ${path}`);
+  }
+
+  [Symbol.iterator]() {
+    return this.errors[Symbol.iterator]();
+  }
+}
+
+export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOptions = {}): Record<
+  string,
+  Record<HTTPMethod, GenericSDKMethod>
+> {
   return new Proxy({} as any, {
     get(_target, path: string) {
       return new Proxy({} as any, {
-        get(_target, method: string) {
+        get(_target, method: HTTPMethod) {
           return function (requestParams: GenericRequestParams) {
             const url = new URL(path, endpoint);
             for (const pathParamKey in requestParams.params || {}) {
@@ -45,7 +66,15 @@ export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOption
               requestInit.headers['Content-Type'] = 'application/json';
             }
 
-            return fetchFn(url, requestInit);
+            return fetchFn(url, requestInit).then(async res => {
+              if (res.status === 400 && res.headers.get('x-error-type') === 'validation') {
+                const resJson = await res.json();
+                if (resJson.errors) {
+                  throw new SDKValidationError(path, method, resJson.errors, res);
+                }
+              }
+              return res;
+            });
           };
         },
       });

@@ -7,7 +7,7 @@ async function main() {
   });
 
   const addTodoRes = await a['/todo'].put({
-    JSONBody: {
+    json: {
       content: 'test',
       // @ts-expect-error - test is not a valid property
       test: 1,
@@ -26,12 +26,12 @@ async function main() {
   console.log(getTodosJson[0].bar);
 
   const getTodoRes = await a['/todo/{id}'].get({
-    PathParams: {
+    params: {
       id: '123',
       // @ts-expect-error - test is not a valid property
       name: 'test',
     },
-    Headers: {
+    headers: {
       // @ts-expect-error - Authorization should be a string
       Authorization: 121312321,
     },

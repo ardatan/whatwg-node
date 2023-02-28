@@ -134,7 +134,7 @@ export function createRouterBase({
               if (prop === 'params') {
                 return new Proxy(match.pathname.groups, {
                   get(_, prop) {
-                    const value = match.pathname.groups[prop.toString()];
+                    const value = match.pathname.groups[prop.toString()] as any;
                     if (value != null) {
                       return decodeURIComponent(value);
                     }
@@ -175,13 +175,20 @@ export function createRouterBase({
       if (prop === 'addRoute') {
         return function (
           this: RouterBaseObject<any, any>,
-          opts: AddRouteWithSchemasOpts<any, any, any, any, any, any>,
+          opts: AddRouteWithSchemasOpts<
+            any,
+            RouteSchemas,
+            HTTPMethod,
+            string,
+            TypedRequest,
+            TypedResponse
+          >,
         ) {
           const { operationId, description, method, path, schemas, handler } = opts;
           addHandlersToMethod({
             operationId,
             description,
-            method,
+            method: method.toLowerCase() as HTTPMethod,
             path,
             schemas,
             handlers: [handler],

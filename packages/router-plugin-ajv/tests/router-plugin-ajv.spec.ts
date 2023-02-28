@@ -18,7 +18,7 @@ describe('Router AJV Plugin', () => {
       ],
     }).addRoute({
       path: '/test',
-      method: 'post',
+      method: 'POST',
       schemas: {
         request: {
           json: {
@@ -39,9 +39,9 @@ describe('Router AJV Plugin', () => {
             properties: {
               authorization: {
                 type: 'string',
+                pattern: '^Bearer .+$',
               },
             },
-            additionalProperties: false,
             required: ['authorization'],
           },
           responses: {
@@ -72,6 +72,7 @@ describe('Router AJV Plugin', () => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Authorization: 'Basic 123',
       },
       body: JSON.stringify({
         foo: 123,
@@ -85,14 +86,14 @@ describe('Router AJV Plugin', () => {
       {
         "errors": [
           {
-            "instancePath": "",
-            "keyword": "required",
-            "message": "must have required property 'authorization'",
+            "instancePath": "/authorization",
+            "keyword": "pattern",
+            "message": "must match pattern "^Bearer .+$"",
             "name": "headers",
             "params": {
-              "missingProperty": "authorization",
+              "pattern": "^Bearer .+$",
             },
-            "schemaPath": "#/required",
+            "schemaPath": "#/properties/authorization/pattern",
           },
           {
             "instancePath": "",

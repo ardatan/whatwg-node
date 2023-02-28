@@ -58,7 +58,7 @@ export type OASParamMap<
 export type OASClient<TOAS extends OpenAPIV3_1.Document> = {
   [TPath in keyof OASPathMap<TOAS>]: {
     [TMethod in keyof OASMethodMap<TOAS, TPath>]: (requestParams?: {
-      JSONBody?: OASMethodMap<TOAS, TPath>[TMethod] extends {
+      json?: OASMethodMap<TOAS, TPath>[TMethod] extends {
         requestBody: { content: { 'application/json': { schema: JSONSchema7 } } };
       }
         ? FromSchema<
@@ -68,17 +68,17 @@ export type OASClient<TOAS extends OpenAPIV3_1.Document> = {
             >[TMethod]['requestBody']['content']['application/json']['schema']
           >
         : never;
-      PathParams?: OASMethodMap<TOAS, TPath>[TMethod] extends {
+      params?: OASMethodMap<TOAS, TPath>[TMethod] extends {
         parameters: { name: string; schema: JSONSchema7 }[];
       }
         ? OASParamMap<OASMethodMap<TOAS, TPath>[TMethod]['parameters'], 'path'>
         : never;
-      QueryParams?: OASMethodMap<TOAS, TPath>[TMethod] extends {
+      query?: OASMethodMap<TOAS, TPath>[TMethod] extends {
         parameters: { name: string; schema: JSONSchema7 }[];
       }
         ? OASParamMap<OASMethodMap<TOAS, TPath>[TMethod]['parameters'], 'query'>
         : never;
-      Headers?: OASMethodMap<TOAS, TPath>[TMethod] extends {
+      headers?: OASMethodMap<TOAS, TPath>[TMethod] extends {
         parameters: { name: string; schema: JSONSchema7 }[];
       }
         ? OASParamMap<OASMethodMap<TOAS, TPath>[TMethod]['parameters'], 'header'>
@@ -89,8 +89,6 @@ export type OASClient<TOAS extends OpenAPIV3_1.Document> = {
 
 export type OASClientOptions = GenericSDKOptions;
 
-export function createOASClient<TOAS extends OpenAPIV3_1.Document>(
-  opts?: OASClientOptions,
-): OASClient<TOAS> {
-  return createGenericSDK(opts);
+export function createOASClient<TOAS extends OpenAPIV3_1.Document>(opts?: OASClientOptions) {
+  return createGenericSDK(opts) as OASClient<TOAS>;
 }

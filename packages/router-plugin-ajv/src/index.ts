@@ -77,6 +77,9 @@ export function useAJV({ ajv, request }: AJVPluginOptions): RouterPlugin<any> {
               },
               {
                 status: 400,
+                headers: {
+                  'x-error-type': 'validation',
+                },
               },
             );
           }
