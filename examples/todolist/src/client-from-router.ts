@@ -9,7 +9,7 @@ const someTodosToAdd = ['Drink coffee', 'Write some code', 'Drink more coffee', 
   // Adding some todos
   for (const todo of someTodosToAdd) {
     const addTodoRes = await sdk['/todo'].put({
-      JSONBody: {
+      json: {
         content: todo,
       },
     });
@@ -25,7 +25,7 @@ const someTodosToAdd = ['Drink coffee', 'Write some code', 'Drink more coffee', 
 
   // Deleting the first todo
   const deleteTodoRes = await sdk['/todo/:id'].delete({
-    PathParams: {
+    params: {
       id: getTodosJson[0].id,
     },
   });

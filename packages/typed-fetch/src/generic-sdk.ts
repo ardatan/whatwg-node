@@ -6,10 +6,10 @@ export interface GenericSDKOptions {
 }
 
 export interface GenericRequestParams {
-  JSONBody?: any;
-  PathParams?: Record<string, string>;
-  QueryParams?: Record<string, string | string[]>;
-  Headers?: Record<string, string>;
+  json?: any;
+  params?: Record<string, string>;
+  query?: Record<string, string | string[]>;
+  headers?: Record<string, string>;
 }
 
 export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOptions = {}) {
@@ -19,14 +19,14 @@ export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOption
         get(_target, method: string) {
           return function (requestParams: GenericRequestParams) {
             const url = new URL(path, endpoint);
-            for (const pathParamKey in requestParams.PathParams || {}) {
-              const value = requestParams.PathParams?.[pathParamKey];
+            for (const pathParamKey in requestParams.params || {}) {
+              const value = requestParams.params?.[pathParamKey];
               if (value) {
                 url.pathname = url.pathname.replace(`{${pathParamKey}}`, value);
               }
             }
-            for (const queryParamKey in requestParams.QueryParams || {}) {
-              const value = requestParams.QueryParams?.[queryParamKey];
+            for (const queryParamKey in requestParams.query || {}) {
+              const value = requestParams.query?.[queryParamKey];
               if (value) {
                 if (Array.isArray(value)) {
                   value.forEach(v => url.searchParams.append(queryParamKey, v));
@@ -37,11 +37,11 @@ export function createGenericSDK({ endpoint, fetchFn = fetch }: GenericSDKOption
             }
             const requestInit: RequestInit & { headers: Record<string, string> } = {
               method,
-              headers: requestParams.Headers || {},
+              headers: requestParams.headers || {},
             };
 
-            if (requestParams.JSONBody) {
-              requestInit.body = JSON.stringify(requestParams.JSONBody);
+            if (requestParams.json) {
+              requestInit.body = JSON.stringify(requestParams.json);
               requestInit.headers['Content-Type'] = 'application/json';
             }
 

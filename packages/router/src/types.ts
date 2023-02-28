@@ -1,4 +1,4 @@
-import { FromSchema, JSONSchema } from 'json-schema-to-ts';
+import { FromSchema, JSONSchema as JSONSchemaOrBoolean } from 'json-schema-to-ts';
 import { ServerAdapter, ServerAdapterBaseObject, ServerAdapterPlugin } from '@whatwg-node/server';
 import type {
   HTTPMethod,
@@ -6,6 +6,8 @@ import type {
   TypedResponse,
   TypedResponseWithJSONStatusMap,
 } from '@whatwg-node/typed-fetch';
+
+type JSONSchema = Exclude<JSONSchemaOrBoolean, boolean>;
 
 type PromiseOrValue<T> = T | Promise<T>;
 
@@ -16,13 +18,13 @@ export type TypedRouterHandlerTypeConfig<
   TRequestPathParams extends Record<string, any> = Record<string, any>,
   TResponseJSONStatusMap extends Record<number, any> = Record<number, any>,
 > = {
-  Request: {
-    JSON?: TRequestJSON;
-    Headers?: TRequestHeaders;
-    QueryParams?: TRequestQueryParams;
-    PathParams?: TRequestPathParams;
+  request: {
+    json?: TRequestJSON;
+    headers?: TRequestHeaders;
+    query?: TRequestQueryParams;
+    params?: TRequestPathParams;
   };
-  Responses: TResponseJSONStatusMap;
+  responses: TResponseJSONStatusMap;
 };
 
 export type TypedRequestFromTypeConfig<
@@ -39,7 +41,7 @@ export type TypedRequestFromTypeConfig<
 
 export type TypedResponseFromTypeConfig<TTypeConfig extends TypedRouterHandlerTypeConfig> =
   TTypeConfig extends {
-    Responses: infer TResponses;
+    responses: infer TResponses;
   }
     ? TResponses extends Record<number, any>
       ? TypedResponseWithJSONStatusMap<TResponses>
@@ -138,29 +140,29 @@ export type RouterPlugin<TServerContext> = ServerAdapterPlugin<TServerContext> &
   onRoute?: OnRouteHook<TServerContext>;
 };
 export type RouteSchemas = {
-  Request?: {
-    Headers?: JSONSchema;
-    PathParams?: JSONSchema;
-    QueryParams?: JSONSchema;
-    JSONBody?: JSONSchema;
+  request?: {
+    headers?: JSONSchema;
+    params?: JSONSchema;
+    query?: JSONSchema;
+    json?: JSONSchema;
   };
-  Responses?: Record<number, JSONSchema>;
+  responses?: Record<number, JSONSchema>;
 };
 
 export type RouterSDKOpts<
   TTypedRequest extends TypedRequest = TypedRequest,
   TMethod extends HTTPMethod = HTTPMethod,
 > = {
-  JSONBody?: TTypedRequest extends TypedRequest<infer TJSONBody, any, TMethod, any, any>
+  json?: TTypedRequest extends TypedRequest<infer TJSONBody, any, TMethod, any, any>
     ? TJSONBody
     : never;
-  PathParams?: TTypedRequest extends TypedRequest<any, any, TMethod, any, infer TPathParams>
+  params?: TTypedRequest extends TypedRequest<any, any, TMethod, any, infer TPathParams>
     ? TPathParams
     : never;
-  QueryParams?: TTypedRequest extends TypedRequest<any, any, TMethod, infer TQueryParams, any>
+  query?: TTypedRequest extends TypedRequest<any, any, TMethod, infer TQueryParams, any>
     ? TQueryParams
     : never;
-  Headers?: TTypedRequest extends TypedRequest<any, infer THeaders, TMethod, any, any>
+  headers?: TTypedRequest extends TypedRequest<any, infer THeaders, TMethod, any, any>
     ? THeaders
     : never;
 };
@@ -180,35 +182,35 @@ export type RouterSDK<
 export type TypedRequestFromRouteSchemas<
   TRouteSchemas extends RouteSchemas,
   TMethod extends HTTPMethod,
-> = TRouteSchemas extends { Request: Required<RouteSchemas>['Request'] }
+> = TRouteSchemas extends { request: Required<RouteSchemas>['request'] }
   ? TypedRequest<
-      TRouteSchemas['Request'] extends { JSONBody: JSONSchema }
-        ? FromSchema<TRouteSchemas['Request']['JSONBody']>
+      TRouteSchemas['request'] extends { json: JSONSchema }
+        ? FromSchema<TRouteSchemas['request']['json']>
         : any,
-      TRouteSchemas['Request'] extends { Headers: JSONSchema }
-        ? FromSchema<TRouteSchemas['Request']['Headers']> extends Record<string, string>
-          ? FromSchema<TRouteSchemas['Request']['Headers']>
+      TRouteSchemas['request'] extends { headers: JSONSchema }
+        ? FromSchema<TRouteSchemas['request']['headers']> extends Record<string, string>
+          ? FromSchema<TRouteSchemas['request']['headers']>
           : Record<string, string>
         : Record<string, string>,
       TMethod,
-      TRouteSchemas['Request'] extends { QueryParams: JSONSchema }
-        ? FromSchema<TRouteSchemas['Request']['QueryParams']> extends Record<string, string>
-          ? FromSchema<TRouteSchemas['Request']['QueryParams']>
+      TRouteSchemas['request'] extends { query: JSONSchema }
+        ? FromSchema<TRouteSchemas['request']['query']> extends Record<string, string>
+          ? FromSchema<TRouteSchemas['request']['query']>
           : Record<string, string | string[]>
         : Record<string, string | string[]>,
-      TRouteSchemas['Request'] extends { PathParams: JSONSchema }
-        ? FromSchema<TRouteSchemas['Request']['PathParams']> extends Record<string, string>
-          ? FromSchema<TRouteSchemas['Request']['PathParams']>
+      TRouteSchemas['request'] extends { params: JSONSchema }
+        ? FromSchema<TRouteSchemas['request']['params']> extends Record<string, string>
+          ? FromSchema<TRouteSchemas['request']['params']>
           : Record<string, any>
         : Record<string, any>
     >
   : TypedRequest;
 
 export type TypedResponseFromRouteSchemas<TRouteSchemas extends RouteSchemas> =
-  TRouteSchemas extends { Responses: Record<number, JSONSchema> }
+  TRouteSchemas extends { responses: Record<number, JSONSchema> }
     ? TypedResponseWithJSONStatusMap<{
-        [TStatusCode in keyof TRouteSchemas['Responses']]: TRouteSchemas['Responses'][TStatusCode] extends JSONSchema
-          ? FromSchema<TRouteSchemas['Responses'][TStatusCode]>
+        [TStatusCode in keyof TRouteSchemas['responses']]: TRouteSchemas['responses'][TStatusCode] extends JSONSchema
+          ? FromSchema<TRouteSchemas['responses'][TStatusCode]>
           : never;
       }>
     : TypedResponse;

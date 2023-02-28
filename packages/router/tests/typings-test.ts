@@ -12,15 +12,15 @@ app.use('/router', router);
 app.use('/adapter', adapter);
 
 type TestGetOpts = {
-  Request: {
-    QueryParams: {
+  request: {
+    query: {
       id: string;
     };
-    Headers: {
+    headers: {
       Authorization: `Bearer ${string}`;
     };
   };
-  Responses: {
+  responses: {
     200: {
       id: string;
       name: string;
@@ -37,7 +37,7 @@ type TestGetOpts = {
 
 const handler = (
   request: TypedRequestFromTypeConfig<'get', TestGetOpts>,
-): TypedResponseWithJSONStatusMap<TestGetOpts['Responses']> => {
+): TypedResponseWithJSONStatusMap<TestGetOpts['responses']> => {
   // @ts-expect-error - a is not defined in headers
   request.headers.set('a', '2');
   if (!request.headers.has('Authorization')) {
@@ -78,12 +78,12 @@ const handler = (
 
 // custom types
 router.get<TestGetOpts>('/pet', handler).put<{
-  Request: {
-    JSON: {
+  request: {
+    json: {
       name: string;
     };
   };
-  Responses: {
+  responses: {
     200: {
       id: string;
     };

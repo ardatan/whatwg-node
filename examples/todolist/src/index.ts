@@ -38,7 +38,7 @@ export const router = createRouter({
     method: 'get',
     path: '/todos',
     schemas: {
-      Responses: {
+      responses: {
         200: {
           type: 'array',
           items: TodoSchema,
@@ -56,8 +56,8 @@ export const router = createRouter({
     method: 'put',
     path: '/todo',
     schemas: {
-      Request: {
-        JSONBody: {
+      request: {
+        json: {
           type: 'object',
           properties: {
             content: { type: 'string' },
@@ -66,7 +66,7 @@ export const router = createRouter({
           additionalProperties: false,
         },
       },
-      Responses: {
+      responses: {
         200: TodoSchema,
       },
     } as const,
@@ -88,8 +88,8 @@ export const router = createRouter({
     method: 'delete',
     path: '/todo/:id',
     schemas: {
-      Request: {
-        PathParams: {
+      request: {
+        params: {
           type: 'object',
           properties: {
             id: { type: 'string' },
@@ -98,7 +98,7 @@ export const router = createRouter({
           required: ['id'],
         },
       },
-      Responses: {
+      responses: {
         200: {
           type: 'object',
           properties: {

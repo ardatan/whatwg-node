@@ -46,11 +46,11 @@ const pathParamsSchema = {
 } as const;
 
 router.get<{
-  Request: {
-    PathParams: FromSchema<typeof pathParamsSchema>;
-    Headers: FromSchema<typeof headersSchema>;
+  request: {
+    params: FromSchema<typeof pathParamsSchema>;
+    headers: FromSchema<typeof headersSchema>;
   };
-  Responses: {
+  responses: {
     200: FromSchema<typeof successfulResponseSchema>;
     401: FromSchema<typeof unauthorizedResponseSchema>;
     404: FromSchema<typeof notFoundResponseSchema>;
@@ -97,11 +97,11 @@ const routerWithAddRoute = createRouter()
     method: 'get',
     path: '/users/:id',
     schemas: {
-      Request: {
-        PathParams: pathParamsSchema,
-        Headers: headersSchema,
+      request: {
+        params: pathParamsSchema,
+        headers: headersSchema,
       },
-      Responses: {
+      responses: {
         200: successfulResponseSchema,
         401: unauthorizedResponseSchema,
         404: notFoundResponseSchema,
@@ -148,10 +148,10 @@ const routerWithAddRoute = createRouter()
     method: 'get',
     path: '/users',
     schemas: {
-      Request: {
-        Headers: headersSchema,
+      request: {
+        headers: headersSchema,
       },
-      Responses: {
+      responses: {
         200: {
           type: 'array',
           items: successfulResponseSchema,

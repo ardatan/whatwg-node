@@ -44,9 +44,9 @@ export function useOpenAPI({
         const operation = pathObj[method] as OpenAPIV3_1.OperationObject;
         operation.operationId = operationId;
         operation.description = description;
-        if (schemas.Responses) {
-          for (const statusCode in schemas.Responses) {
-            const response = schemas.Responses[statusCode as any as number];
+        if (schemas.responses) {
+          for (const statusCode in schemas.responses) {
+            const response = schemas.responses[statusCode as any as number];
             operation.responses = operation.responses || {};
             operation.responses[statusCode] = {
               description: '',
@@ -59,58 +59,58 @@ export function useOpenAPI({
           }
         }
         if (
-          schemas.Request?.Headers &&
-          typeof schemas.Request.Headers === 'object' &&
-          'properties' in schemas.Request.Headers
+          schemas.request?.headers &&
+          typeof schemas.request.headers === 'object' &&
+          'properties' in schemas.request.headers
         ) {
-          for (const headerName in schemas.Request.Headers.properties) {
-            const headersSchema = schemas.Request.Headers.properties[headerName];
+          for (const headerName in schemas.request.headers.properties) {
+            const headersSchema = schemas.request.headers.properties[headerName];
             operation.parameters = operation.parameters || [];
             operation.parameters.push({
               name: headerName,
               in: 'header',
-              required: schemas.Request.Headers.required?.includes(headerName),
+              required: schemas.request.headers.required?.includes(headerName),
               schema: headersSchema as any,
             });
           }
         }
         if (
-          schemas.Request?.PathParams &&
-          typeof schemas.Request.PathParams === 'object' &&
-          'properties' in schemas.Request.PathParams
+          schemas.request?.params &&
+          typeof schemas.request.params === 'object' &&
+          'properties' in schemas.request.params
         ) {
-          for (const paramName in schemas.Request.PathParams.properties) {
-            const paramSchema = schemas.Request.PathParams.properties[paramName];
+          for (const paramName in schemas.request.params.properties) {
+            const paramSchema = schemas.request.params.properties[paramName];
             operation.parameters = operation.parameters || [];
             operation.parameters.push({
               name: paramName,
               in: 'path',
-              required: schemas.Request.PathParams.required?.includes(paramName),
+              required: schemas.request.params.required?.includes(paramName),
               schema: paramSchema as any,
             });
           }
         }
         if (
-          schemas.Request?.QueryParams &&
-          typeof schemas.Request.QueryParams === 'object' &&
-          'properties' in schemas.Request.QueryParams
+          schemas.request?.query &&
+          typeof schemas.request.query === 'object' &&
+          'properties' in schemas.request.query
         ) {
-          for (const paramName in schemas.Request.QueryParams.properties) {
-            const paramSchema = schemas.Request.QueryParams.properties[paramName];
+          for (const paramName in schemas.request.query.properties) {
+            const paramSchema = schemas.request.query.properties[paramName];
             operation.parameters = operation.parameters || [];
             operation.parameters.push({
               name: paramName,
               in: 'query',
-              required: schemas.Request.QueryParams.required?.includes(paramName),
+              required: schemas.request.query.required?.includes(paramName),
               schema: paramSchema as any,
             });
           }
         }
-        if (schemas.Request?.JSONBody) {
+        if (schemas.request?.json) {
           operation.requestBody = {
             content: {
               'application/json': {
-                schema: schemas.Request.JSONBody as any,
+                schema: schemas.request.json as any,
               },
             },
           };
