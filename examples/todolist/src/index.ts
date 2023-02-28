@@ -51,6 +51,51 @@ export const router = createRouter({
       }),
   })
   .addRoute({
+    operationId: 'getTodo',
+    description: 'Get a todo',
+    method: 'get',
+    path: '/todo/:id',
+    schemas: {
+      request: {
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+          },
+          required: ['id'],
+          additionalProperties: false,
+        },
+      },
+      responses: {
+        200: TodoSchema,
+        404: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+          additionalProperties: false,
+        },
+      },
+    } as const,
+    handler: async request => {
+      const { id } = request.params;
+      const todo = todos.find(todo => todo.id === id);
+      if (!todo) {
+        return Response.json(
+          {
+            message: `Todo with id ${id} not found`,
+          },
+          {
+            status: 404,
+          },
+        );
+      }
+      return Response.json(todo, {
+        status: 200,
+      });
+    },
+  })
+  .addRoute({
     operationId: 'addTodo',
     description: 'Add a todo',
     method: 'put',
@@ -133,6 +178,63 @@ export const router = createRouter({
       return Response.json(
         {
           id: todo.id,
+        },
+        {
+          status: 200,
+        },
+      );
+    },
+  })
+  // BONUS
+  .addRoute({
+    operationId: 'uploadFile',
+    description: 'Upload a file',
+    method: 'post',
+    path: '/upload',
+    schemas: {
+      request: {
+        formData: {
+          type: 'object',
+          properties: {
+            file: {
+              type: 'string',
+              format: 'binary',
+            },
+            description: {
+              type: 'string',
+              maxLength: 255,
+            },
+          },
+          required: ['file'],
+          additionalProperties: false,
+        },
+      },
+      responses: {
+        200: {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+            description: { type: 'string' },
+            type: { type: 'string' },
+            size: { type: 'number' },
+            lastModified: { type: 'number' },
+          },
+          required: ['name', 'type', 'size', 'lastModified'],
+          additionalProperties: false,
+        },
+      },
+    } as const,
+    handler: async request => {
+      const body = await request.formData();
+      const file = body.get('file');
+      const description = body.get('description');
+      return Response.json(
+        {
+          name: file.name,
+          description,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified,
         },
         {
           status: 200,

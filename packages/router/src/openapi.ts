@@ -115,6 +115,15 @@ export function useOpenAPI({
             },
           };
         }
+        if (schemas.request?.formData) {
+          operation.requestBody = {
+            content: {
+              'multipart/form-data': {
+                schema: schemas.request.formData as any,
+              },
+            },
+          };
+        }
       }
     },
   };
