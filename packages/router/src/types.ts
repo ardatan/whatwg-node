@@ -245,7 +245,7 @@ export type AddRouteWithTypesOpts<
 type ResolvedPromise<T> = T extends Promise<infer U> ? U : T;
 
 export type RouterInput<
-  TRouter extends Router<any, RouterSDK>,
+  TRouter extends Router<any, {}>,
   TRouterSDK extends RouterSDK = TRouter['__sdk'],
 > = {
   [TPathKey in keyof TRouterSDK]: {
@@ -262,7 +262,7 @@ type ResponseByPathAndMethod<
 > = TMethod extends HTTPMethod ? ResolvedPromise<ReturnType<TRouterSDK[TPath][TMethod]>> : never;
 
 export type RouterOutput<
-  TRouter extends Router<any, RouterSDK>,
+  TRouter extends Router<any, {}>,
   TRouterSDK extends RouterSDK = TRouter['__sdk'],
 > = {
   [TPathKey in keyof TRouterSDK]: {
