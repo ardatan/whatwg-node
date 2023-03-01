@@ -3,7 +3,7 @@ import { CookieStore } from './CookieStore';
 
 declare global {
   interface Request {
-    cookieStore: CookieStore;
+    cookieStore?: CookieStore;
   }
 }
 

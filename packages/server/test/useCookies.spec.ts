@@ -6,7 +6,7 @@ describe('Cookie Management', () => {
   it('should receive a cookie', async () => {
     const serverAdapter = createServerAdapter(
       async request => {
-        const fooCookie = await request.cookieStore.get('foo');
+        const fooCookie = await request.cookieStore?.get('foo');
         return Response.json({ foo: fooCookie?.value });
       },
       {
@@ -24,7 +24,7 @@ describe('Cookie Management', () => {
   it('should set a cookie', async () => {
     const serverAdapter = createServerAdapter(
       async request => {
-        await request.cookieStore.set('foo', 'bar');
+        await request.cookieStore?.set('foo', 'bar');
         return new Response('OK');
       },
       {
@@ -38,7 +38,7 @@ describe('Cookie Management', () => {
   it('should set a cookie with options', async () => {
     const serverAdapter = createServerAdapter(
       async request => {
-        await request.cookieStore.set({
+        await request.cookieStore?.set({
           name: 'foo',
           value: 'bar',
           expires: 1000,
@@ -62,7 +62,7 @@ describe('Cookie Management', () => {
   it('should delete a cookie', async () => {
     const serverAdapter = createServerAdapter(
       async request => {
-        await request.cookieStore.delete('foo');
+        await request.cookieStore?.delete('foo');
         return new Response('OK');
       },
       {
@@ -78,7 +78,7 @@ describe('Cookie Management', () => {
   it('should change a cookie', async () => {
     const serverAdapter = createServerAdapter(
       async request => {
-        await request.cookieStore.set('foo', 'baz');
+        await request.cookieStore?.set('foo', 'baz');
         return new Response('OK');
       },
       {
