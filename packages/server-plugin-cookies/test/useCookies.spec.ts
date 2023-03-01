@@ -1,6 +1,6 @@
 import { Response } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src/createServerAdapter';
-import { useCookies } from '../src/plugins/cookies/useCookies';
+import { createServerAdapter } from '@whatwg-node/server';
+import { useCookies } from '../src/useCookies';
 
 describe('Cookie Management', () => {
   it('should receive a cookie', async () => {

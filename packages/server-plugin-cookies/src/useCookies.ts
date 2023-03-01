@@ -1,4 +1,4 @@
-import { ServerAdapterPlugin } from '../types';
+import { ServerAdapterPlugin } from '@whatwg-node/server';
 import { CookieStore } from './CookieStore';
 
 declare global {
