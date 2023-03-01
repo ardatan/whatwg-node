@@ -603,6 +603,7 @@ import { createRouter, useOpenAPI } from '@whatwg-node/router'
 const router = createRouter({
   plugins: [
     useOpenAPI({
+      // You can define the header of the OpenAPI specification here
       baseOas: {
         openapi: '3.0.1',
         info: {
@@ -611,7 +612,11 @@ const router = createRouter({
           version: '1.0.0'
         },
         components: {}
-      }
+      },
+      // You can access the Swagger UI at `/docs`
+      swaggerUIPath: '/docs',
+      // You can download the OpenAPI specification as a JSON file
+      oasPath: '/openapi.json'
     })
   ]
 })
@@ -655,11 +660,52 @@ options;
 
 ```ts file=examples/client.ts
 import { createRouterSDK } from '@whatwg-node/router'
+// Notice `type` in the import to avoid to import it on runtime
 import type { router } from '../router'
 
 const sdk = createRouterSDK<typeof router>({
   endpoint: 'http://localhost:3000'
 })
+
+// Everything below is fully typed
+const response = await sdk['/todo'].put({
+  json: {
+    title: 'Buy milk',
+    completed: false
+  }
+})
+const responseJson = await response.json()
+console.table(responseJson)
+```
+
+#### Using OpenAPI Client
+
+You need to save the OpenAPI document to a code file like below;
+
+```ts
+export default { openapi: '3.0.1' /* ... */ }
+```
+
+Then you need to import the OpenAPI document to the client code;
+
+```ts file=examples/client.ts
+import { createOASClient, Mutable } from '@whatwg-node/oas-client'
+// Notice `type` in the import to avoid to import it on runtime
+import type oas from './saved_openapi'
+
+const client = createOASClient<Mutable<typeof oas>>({
+  endpoint: 'http://localhost:3000'
+})
+
+// Everything below is fully typed
+const response = await client['/todo'].put({
+  json: {
+    title: 'Buy milk',
+    completed: false
+  }
+})
+const responseJson = await response.json()
+console.table(responseJson)
 ```
 
 ## Usage in environments
