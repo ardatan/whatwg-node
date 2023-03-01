@@ -36,7 +36,7 @@ type TestGetOpts = {
 };
 
 const handler = (
-  request: TypedRequestFromTypeConfig<'get', TestGetOpts>,
+  request: TypedRequestFromTypeConfig<'GET', TestGetOpts>,
 ): TypedResponseWithJSONStatusMap<TestGetOpts['responses']> => {
   // @ts-expect-error - a is not defined in headers
   request.headers.set('a', '2');
@@ -77,41 +77,51 @@ const handler = (
 };
 
 // custom types
-router.get<TestGetOpts>('/pet', handler).put<{
-  request: {
-    json: {
-      name: string;
+router
+  .route<TestGetOpts, 'GET'>({
+    method: 'GET',
+    path: '/pet',
+    handler,
+  })
+  .route<{
+    request: {
+      json: {
+        name: string;
+      };
     };
-  };
-  responses: {
-    200: {
-      id: string;
+    responses: {
+      200: {
+        id: string;
+      };
+      400: {
+        message: string;
+      };
     };
-    400: {
-      message: string;
-    };
-  };
-}>('/pet', async request => {
-  const a = await request.json();
-  a.name = '2';
-  // @ts-expect-error - name is string
-  a.name = 2;
-  if (a.name.length < 3) {
-    return Response.json(
-      {
-        message: 'Name is invalid',
-      },
-      {
-        status: 400,
-      },
-    );
-  }
-  return Response.json(
-    {
-      id: 'TEST_ID',
+  }>({
+    method: 'PUT',
+    path: '/pet',
+    async handler(request) {
+      const a = await request.json();
+      a.name = '2';
+      // @ts-expect-error - name is string
+      a.name = 2;
+      if (a.name.length < 3) {
+        return Response.json(
+          {
+            message: 'Name is invalid',
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+      return Response.json(
+        {
+          id: 'TEST_ID',
+        },
+        {
+          status: 200,
+        },
+      );
     },
-    {
-      status: 200,
-    },
-  );
-});
+  });

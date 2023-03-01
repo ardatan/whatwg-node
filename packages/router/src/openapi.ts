@@ -24,24 +24,31 @@ export function useOpenAPI({
   const paths: OpenAPIV3_1.PathsObject = (oas.paths ||= {});
   return {
     onRouterInit(router) {
-      router.get(oasPath, () => Response.json(oas));
-      router.get(
-        swaggerUIPath,
-        () =>
-          new Response(swaggerUiHtml.replace('__OAS_PATH__', JSON.stringify(oasPath)), {
+      router.route({
+        method: 'GET',
+        path: oasPath,
+        handler: () => Response.json(oas),
+      });
+      const finalSwaggerUiHtml = swaggerUiHtml.replace('__OAS_PATH__', JSON.stringify(oasPath));
+      router.route({
+        method: 'GET',
+        path: swaggerUIPath,
+        handler: () =>
+          new Response(finalSwaggerUiHtml, {
             headers: {
               'Content-Type': 'text/html',
             },
             status: 200,
           }),
-      );
+      });
     },
     onRoute({ method, path, operationId, description, schemas }) {
       if (schemas) {
         const pathForOAS = path.replace(/:([^/]+)/g, '{$1}');
         const pathObj = (paths[pathForOAS] = paths[pathForOAS] || {});
-        pathObj[method] = (pathObj[method] || {}) as any;
-        const operation = pathObj[method] as OpenAPIV3_1.OperationObject;
+        const lowerCasedMethod = method.toLowerCase();
+        pathObj[lowerCasedMethod] = (pathObj[lowerCasedMethod] || {}) as any;
+        const operation = pathObj[lowerCasedMethod] as OpenAPIV3_1.OperationObject;
         operation.operationId = operationId;
         operation.description = description;
         if (schemas.responses) {

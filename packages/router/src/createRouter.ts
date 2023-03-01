@@ -5,10 +5,9 @@ import type {
   AddRouteWithSchemasOpts,
   OnRouteHook,
   OnRouterInitHook,
-  RouteMethodKey,
+  RouteHandler,
   Router,
   RouterBaseObject,
-  RouterHandler,
   RouterPlugin,
   RouterSDK,
   RouteSchemas,
@@ -19,16 +18,17 @@ export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions
   plugins?: RouterPlugin<TServerContext>[];
 }
 
-const HTTP_METHODS = [
-  'get',
-  'post',
-  'put',
-  'delete',
-  'head',
-  'options',
-  'patch',
-  'trace',
-] as HTTPMethod[];
+const HTTP_METHODS: HTTPMethod[] = [
+  'GET',
+  'HEAD',
+  'POST',
+  'PUT',
+  'DELETE',
+  'CONNECT',
+  'OPTIONS',
+  'TRACE',
+  'PATCH',
+];
 
 export function createRouterBase({
   fetchAPI: givenFetchAPI,
@@ -39,17 +39,17 @@ export function createRouterBase({
     ...DefaultFetchAPI,
     ...givenFetchAPI,
   };
-  const onRouterInit: OnRouterInitHook<any>[] = [];
+  const __onRouterInitHooks: OnRouterInitHook<any>[] = [];
   const onRouteHooks: OnRouteHook<any>[] = [];
   for (const plugin of plugins) {
     if (plugin.onRouterInit) {
-      onRouterInit.push(plugin.onRouterInit);
+      __onRouterInitHooks.push(plugin.onRouterInit);
     }
     if (plugin.onRoute) {
       onRouteHooks.push(plugin.onRoute);
     }
   }
-  const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouterHandler<any>[]>>();
+  const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouteHandler<any>[]>>();
   function addHandlersToMethod({
     operationId,
     description,
@@ -63,7 +63,7 @@ export function createRouterBase({
     method: HTTPMethod;
     path: string;
     schemas?: RouteSchemas;
-    handlers: RouterHandler<any>[];
+    handlers: RouteHandler<any>[];
   }) {
     for (const onRouteHook of onRouteHooks) {
       onRouteHook({
@@ -91,136 +91,118 @@ export function createRouterBase({
     const pattern = new fetchAPI.URLPattern({ pathname: fullPath });
     methodPatternMaps.set(pattern, handlers);
   }
-  async function handleRequest(request: Request, context: any) {
-    const method = request.method.toLowerCase() as HTTPMethod;
-    let _parsedUrl: URL;
-    function getParsedUrl() {
-      if (!_parsedUrl) {
-        _parsedUrl = new fetchAPI.URL(request.url, 'http://localhost');
+  return {
+    async handle(request: Request, context: any) {
+      let _parsedUrl: URL;
+      function getParsedUrl() {
+        if (!_parsedUrl) {
+          _parsedUrl = new fetchAPI.URL(request.url, 'http://localhost');
+        }
+        return _parsedUrl;
       }
-      return _parsedUrl;
-    }
-    const methodPatternMaps = routesByMethod.get(method);
-    if (methodPatternMaps) {
-      const queryProxy = new Proxy(
-        {},
-        {
-          get(_, prop) {
-            const parsedUrl = getParsedUrl();
-            const allQueries = parsedUrl.searchParams.getAll(prop.toString());
-            return allQueries.length === 1 ? allQueries[0] : allQueries;
-          },
-          has(_, prop) {
-            const parsedUrl = getParsedUrl();
-            return parsedUrl.searchParams.has(prop.toString());
-          },
-        },
-      );
-      for (const [pattern, handlers] of methodPatternMaps) {
-        // Do not parse URL if not needed
-        const match = request.url.endsWith(pattern.pathname)
-          ? { pathname: { groups: {} } }
-          : pattern.exec(getParsedUrl());
-        if (match) {
-          const routerRequest = new Proxy(request as any, {
-            get(target, prop: keyof TypedRequest) {
-              if (prop === 'parsedUrl') {
-                return getParsedUrl();
-              }
-              if (prop === 'params') {
-                return new Proxy(match.pathname.groups, {
-                  get(_, prop) {
-                    const value = match.pathname.groups[prop.toString()] as any;
-                    if (value != null) {
-                      return decodeURIComponent(value);
-                    }
-                    return value;
-                  },
-                });
-              }
-              if (prop === 'query') {
-                return queryProxy;
-              }
-              const targetProp = target[prop];
-              if (typeof targetProp === 'function') {
-                return targetProp.bind(target);
-              }
-              return targetProp;
+      const methodPatternMaps = routesByMethod.get(request.method as HTTPMethod);
+      if (methodPatternMaps) {
+        const queryProxy = new Proxy(
+          {},
+          {
+            get(_, prop) {
+              const parsedUrl = getParsedUrl();
+              const allQueries = parsedUrl.searchParams.getAll(prop.toString());
+              return allQueries.length === 1 ? allQueries[0] : allQueries;
             },
-            has(target, prop) {
-              return (
-                prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query'
-              );
+            has(_, prop) {
+              const parsedUrl = getParsedUrl();
+              return parsedUrl.searchParams.has(prop.toString());
             },
-          });
-          for (const handler of handlers) {
-            const result = await handler(routerRequest, context);
-            if (result) {
-              return result;
+          },
+        );
+        for (const [pattern, handlers] of methodPatternMaps) {
+          // Do not parse URL if not needed
+          const match = request.url.endsWith(pattern.pathname)
+            ? { pathname: { groups: {} } }
+            : pattern.exec(getParsedUrl());
+          console.log(pattern);
+          if (match) {
+            const routerRequest = new Proxy(request as any, {
+              get(target, prop: keyof TypedRequest) {
+                if (prop === 'parsedUrl') {
+                  return getParsedUrl();
+                }
+                if (prop === 'params') {
+                  return new Proxy(match.pathname.groups, {
+                    get(_, prop) {
+                      const value = match.pathname.groups[prop.toString()] as any;
+                      if (value != null) {
+                        return decodeURIComponent(value);
+                      }
+                      return value;
+                    },
+                  });
+                }
+                if (prop === 'query') {
+                  return queryProxy;
+                }
+                const targetProp = target[prop] as any;
+                if (typeof targetProp === 'function') {
+                  return targetProp.bind(target);
+                }
+                return targetProp;
+              },
+              has(target, prop) {
+                return (
+                  prop in target || prop === 'parsedUrl' || prop === 'params' || prop === 'query'
+                );
+              },
+            });
+            for (const handler of handlers) {
+              const result = await handler(routerRequest, context);
+              if (result) {
+                return result;
+              }
             }
           }
         }
       }
-    }
-  }
-  const router = new Proxy({} as RouterBaseObject<any, any>, {
-    get(_, prop) {
-      if (prop === 'handle') {
-        return handleRequest;
-      }
-      if (prop === 'addRoute') {
-        return function (
-          this: RouterBaseObject<any, any>,
-          opts: AddRouteWithSchemasOpts<
-            any,
-            RouteSchemas,
-            HTTPMethod,
-            string,
-            TypedRequest,
-            TypedResponse
-          >,
-        ) {
-          const { operationId, description, method, path, schemas, handler } = opts;
+      return new fetchAPI.Response(null, { status: 404 });
+    },
+    route(
+      opts: AddRouteWithSchemasOpts<
+        any,
+        RouteSchemas,
+        HTTPMethod,
+        string,
+        TypedRequest,
+        TypedResponse
+      >,
+    ) {
+      const { operationId, description, method, path, schemas, handler } = opts;
+      const handlers = Array.isArray(handler) ? handler : [handler];
+      if (!method) {
+        for (const method of HTTP_METHODS) {
           addHandlersToMethod({
             operationId,
             description,
-            method: method.toLowerCase() as HTTPMethod,
+            method,
             path,
             schemas,
-            handlers: [handler],
-          });
-          return this;
-        };
-      }
-      const method = prop.toString().toLowerCase() as RouteMethodKey;
-      return function routeMethodKeyFn(
-        this: RouterBaseObject<any, any>,
-        path: string,
-        ...handlers: RouterHandler<any>[]
-      ) {
-        if (method === 'all' || method === 'use') {
-          for (const httpMethod of HTTP_METHODS) {
-            addHandlersToMethod({
-              method: httpMethod.toLowerCase() as HTTPMethod,
-              path,
-              handlers,
-            });
-          }
-        } else {
-          addHandlersToMethod({
-            method: method.toLowerCase() as HTTPMethod,
-            path,
             handlers,
           });
         }
-        return this;
-      };
+      } else {
+        addHandlersToMethod({
+          operationId,
+          description,
+          method,
+          path,
+          schemas,
+          handlers,
+        });
+      }
+      return this as any;
     },
-  });
-  for (const onRouterInitHook of onRouterInit) {
-    onRouterInitHook(router as Router<any, any>);
-  }
-  return router;
+    __sdk: {},
+    __onRouterInitHooks,
+  };
 }
 
 export function createRouter<
@@ -230,5 +212,9 @@ export function createRouter<
   },
 >(options?: RouterOptions<TServerContext>): Router<TServerContext, TRouterSDK> {
   const routerBaseObject = createRouterBase(options);
-  return createServerAdapter(routerBaseObject, options) as Router<TServerContext, TRouterSDK>;
+  const router = createServerAdapter(routerBaseObject, options);
+  for (const onRouterInitHook of routerBaseObject.__onRouterInitHooks) {
+    onRouterInitHook(router);
+  }
+  return router;
 }

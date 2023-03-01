@@ -3,7 +3,11 @@ import {
   JSONSchema as JSONSchemaOrBoolean,
 } from 'json-schema-to-ts';
 import { Response as OriginalResponse } from '@whatwg-node/fetch';
-import { ServerAdapter, ServerAdapterBaseObject, ServerAdapterPlugin } from '@whatwg-node/server';
+import {
+  ServerAdapter,
+  ServerAdapterPlugin,
+  ServerAdapterRequestHandler,
+} from '@whatwg-node/server';
 import type {
   HTTPMethod,
   TypedRequest,
@@ -89,44 +93,12 @@ export type TypedResponseFromTypeConfig<TTypeConfig extends TypedRouterHandlerTy
       : never
     : TypedResponse;
 
-export type RouterMethod<
-  TServerContext,
-  TMethod extends HTTPMethod,
-  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
-> = <
-  TTypeConfig extends TypedRouterHandlerTypeConfig,
-  TTypedRequest extends TypedRequestFromTypeConfig<
-    TMethod,
-    TTypeConfig
-  > = TypedRequestFromTypeConfig<TMethod, TTypeConfig>,
-  TTypedResponse extends TypedResponseFromTypeConfig<TTypeConfig> = TypedResponseFromTypeConfig<TTypeConfig>,
-  TPath extends string = string,
->(
-  path: TPath,
-  ...handlers: RouterHandler<TServerContext, TTypedRequest, TTypedResponse>[]
-) => Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
-
-export type RouteMethodKey = HTTPMethod | 'all' | 'use';
-
-export type RouterMethodsObj<
+export interface RouterBaseObject<
   TServerContext,
   TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
-> = {
-  [TMethodKey in RouteMethodKey]: TMethodKey extends HTTPMethod
-    ? RouterMethod<TServerContext, TMethodKey, TRouterSDK>
-    : RouterMethod<TServerContext, HTTPMethod, TRouterSDK>;
-};
-
-export type RouterBaseObject<
-  TServerContext,
-  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
-> = RouterMethodsObj<TServerContext, TRouterSDK> & ServerAdapterBaseObject<TServerContext>;
-
-export type Router<
-  TServerContext,
-  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
-> = ServerAdapter<TServerContext, RouterBaseObject<TServerContext, TRouterSDK>> & {
-  addRoute<
+> {
+  handle: ServerAdapterRequestHandler<TServerContext>;
+  route<
     TRouteSchemas extends RouteSchemas,
     TMethod extends HTTPMethod,
     TPath extends string,
@@ -142,7 +114,7 @@ export type Router<
       TTypedResponse
     >,
   ): Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
-  addRoute<
+  route<
     TTypeConfig extends TypedRouterHandlerTypeConfig,
     TMethod extends HTTPMethod = HTTPMethod,
     TTypedRequest extends TypedRequestFromTypeConfig<
@@ -155,11 +127,17 @@ export type Router<
     opts: AddRouteWithTypesOpts<TServerContext, TTypedRequest, TTypedResponse, TMethod, TPath>,
   ): Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
   __sdk: TRouterSDK;
-};
+  __onRouterInitHooks: OnRouterInitHook<TServerContext>[];
+}
+
+export type Router<
+  TServerContext,
+  TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse>,
+> = ServerAdapter<TServerContext, RouterBaseObject<TServerContext, TRouterSDK>>;
 
 export type OnRouteHook<TServerContext> = (payload: OnRouteHookPayload<TServerContext>) => void;
 
-export type RouterHandler<
+export type RouteHandler<
   TServerContext,
   TTypedRequest extends TypedRequest = TypedRequest,
   TTypedResponse extends TypedResponse = TypedResponse,
@@ -171,7 +149,7 @@ export type OnRouteHookPayload<TServerContext> = {
   method: HTTPMethod;
   path: string;
   schemas?: RouteSchemas;
-  handlers: RouterHandler<TServerContext>[];
+  handlers: RouteHandler<TServerContext>[];
 };
 
 export type OnRouterInitHook<TServerContext> = (router: Router<TServerContext, any>) => void;
@@ -218,8 +196,8 @@ export type RouterSDK<
   TTypedResponse extends TypedResponse = TypedResponse,
 > = {
   [TPathKey in TPath]: {
-    [TMethod in TTypedRequest['method']]: (
-      opts?: RouterSDKOpts<TTypedRequest, TMethod>,
+    [TMethod in Lowercase<TTypedRequest['method']>]: (
+      opts?: RouterSDKOpts<TTypedRequest, TTypedRequest['method']>,
     ) => PromiseOrValue<TTypedResponse>;
   };
 };
@@ -288,9 +266,11 @@ export type AddRouteWithTypesOpts<
   TMethod extends HTTPMethod,
   TPath extends string,
 > = {
-  method: TMethod | Uppercase<TMethod>;
+  method?: TMethod | Uppercase<TMethod>;
   path: TPath;
-  handler: (request: TTypedRequest, ctx: TServerContext) => PromiseOrValue<TTypedResponse>;
+  handler:
+    | RouteHandler<TServerContext, TTypedRequest, TTypedResponse>
+    | RouteHandler<TServerContext, TTypedRequest, TTypedResponse>[];
 };
 
 type ResolvedPromise<T> = T extends Promise<infer U> ? U : T;
@@ -300,7 +280,7 @@ export type RouterInput<
   TRouterSDK extends RouterSDK = TRouter['__sdk'],
 > = {
   [TPathKey in keyof TRouterSDK]: {
-    [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends HTTPMethod
+    [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends Lowercase<HTTPMethod>
       ? Required<Exclude<Parameters<TRouterSDK[TPathKey][TMethodKey]>[0], undefined>>
       : never;
   };
@@ -310,7 +290,9 @@ type ResponseByPathAndMethod<
   TRouterSDK extends RouterSDK,
   TPath extends keyof TRouterSDK,
   TMethod extends keyof TRouterSDK[TPath],
-> = TMethod extends HTTPMethod ? ResolvedPromise<ReturnType<TRouterSDK[TPath][TMethod]>> : never;
+> = TMethod extends Lowercase<HTTPMethod>
+  ? ResolvedPromise<ReturnType<TRouterSDK[TPath][TMethod]>>
+  : never;
 
 export type RouterOutput<
   TRouter extends Router<any, {}>,

@@ -1,73 +1,68 @@
-import Ajv from 'ajv';
+import { File, FormData } from '@whatwg-node/fetch';
 import { createRouter, Response } from '@whatwg-node/router';
-import { useAJV } from '@whatwg-node/router-plugin-ajv';
+import { useAjv } from '@whatwg-node/router-plugin-ajv';
 
 describe('Router AJV Plugin', () => {
-  it('should return errors correctly', async () => {
-    const router = createRouter({
-      plugins: [
-        useAJV({
-          ajv: new Ajv(),
-          request: {
-            headers: true,
-            params: true,
-            query: true,
-            json: true,
-          },
-        }),
-      ],
-    }).addRoute({
-      path: '/test',
-      method: 'POST',
-      schemas: {
-        request: {
-          json: {
-            type: 'object',
-            properties: {
-              foo: {
-                type: 'string',
-              },
-              bar: {
-                type: 'number',
-              },
+  const router = createRouter({
+    plugins: [useAjv()],
+  }).route({
+    path: '/test',
+    method: 'POST',
+    schemas: {
+      request: {
+        json: {
+          type: 'object',
+          properties: {
+            foo: {
+              type: 'string',
             },
-            additionalProperties: false,
-            required: ['foo', 'bar'],
-          },
-          headers: {
-            type: 'object',
-            properties: {
-              authorization: {
-                type: 'string',
-                pattern: '^Bearer .+$',
-              },
-            },
-            required: ['authorization'],
-          },
-          responses: {
-            200: {
-              type: 'object',
-              properties: {
-                baz: {
-                  type: 'boolean',
-                },
-              },
+            bar: {
+              type: 'number',
             },
           },
+          additionalProperties: false,
+          required: ['foo', 'bar'],
         },
-      } as const,
-      handler() {
-        return Response.json(
-          {
-            baz: true,
+        formData: {
+          type: 'object',
+          properties: {
+            file: {
+              type: 'string',
+              format: 'binary',
+              maxLength: 10,
+            },
+            description: {
+              type: 'string',
+              minLength: 10,
+            },
           },
-          {
-            status: 200,
+          required: ['file', 'description'],
+          additionalProperties: false,
+        },
+        headers: {
+          type: 'object',
+          properties: {
+            authorization: {
+              type: 'string',
+              pattern: '^Bearer .+$',
+            },
           },
-        );
+          required: ['authorization'],
+        },
       },
-    });
-
+    } as const,
+    handler() {
+      return Response.json(
+        {
+          baz: true,
+        },
+        {
+          status: 200,
+        },
+      );
+    },
+  });
+  it('should return errors correctly for json request', async () => {
     const response = await router.fetch('http://localhost:3000/test', {
       method: 'POST',
       headers: {
@@ -104,6 +99,43 @@ describe('Router AJV Plugin', () => {
               "additionalProperty": "baz",
             },
             "schemaPath": "#/additionalProperties",
+          },
+        ],
+      }
+    `);
+    expect(response.status).toBe(400);
+  });
+  it('should return errors correctly for form data request', async () => {
+    const formData = new FormData();
+    formData.append('file', new File(['Hello World!'], 'hello.txt'));
+    formData.append('description', 'HI!');
+    const response = await router.fetch('http://localhost:3000/test', {
+      method: 'POST',
+      body: formData,
+    });
+    const resultJson = await response.json();
+    expect(resultJson).toMatchInlineSnapshot(`
+      {
+        "errors": [
+          {
+            "instancePath": "",
+            "keyword": "required",
+            "message": "must have required property 'authorization'",
+            "name": "headers",
+            "params": {
+              "missingProperty": "authorization",
+            },
+            "schemaPath": "#/required",
+          },
+          {
+            "instancePath": "/file",
+            "keyword": "maxLength",
+            "message": "must NOT have more than 10 characters",
+            "name": "formData",
+            "params": {
+              "limit": 10,
+            },
+            "schemaPath": "#/properties/file/maxLength",
           },
         ],
       }

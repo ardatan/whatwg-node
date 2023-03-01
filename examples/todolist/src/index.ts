@@ -32,10 +32,10 @@ export const router = createRouter({
     }),
   ],
 })
-  .addRoute({
+  .route({
     operationId: 'getTodos',
     description: 'Get all todos',
-    method: 'get',
+    method: 'GET',
     path: '/todos',
     schemas: {
       responses: {
@@ -50,10 +50,10 @@ export const router = createRouter({
         status: 200,
       }),
   })
-  .addRoute({
+  .route({
     operationId: 'getTodo',
     description: 'Get a todo',
-    method: 'get',
+    method: 'GET',
     path: '/todo/:id',
     schemas: {
       request: {
@@ -95,10 +95,10 @@ export const router = createRouter({
       });
     },
   })
-  .addRoute({
+  .route({
     operationId: 'addTodo',
     description: 'Add a todo',
-    method: 'put',
+    method: 'PUT',
     path: '/todo',
     schemas: {
       request: {
@@ -127,10 +127,10 @@ export const router = createRouter({
       });
     },
   })
-  .addRoute({
+  .route({
     operationId: 'deleteTodo',
     description: 'Delete a todo',
-    method: 'delete',
+    method: 'DELETE',
     path: '/todo/:id',
     schemas: {
       request: {
@@ -186,10 +186,10 @@ export const router = createRouter({
     },
   })
   // BONUS
-  .addRoute({
+  .route({
     operationId: 'uploadFile',
     description: 'Upload a file',
-    method: 'post',
+    method: 'POST',
     path: '/upload',
     schemas: {
       request: {

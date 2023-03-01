@@ -1,7 +1,4 @@
-import { FromSchema } from 'json-schema-to-ts';
 import { createRouter, Response } from '../src';
-
-const router = createRouter();
 
 const successfulResponseSchema = {
   type: 'object',
@@ -45,56 +42,9 @@ const pathParamsSchema = {
   additionalProperties: false,
 } as const;
 
-router.get<{
-  request: {
-    params: FromSchema<typeof pathParamsSchema>;
-    headers: FromSchema<typeof headersSchema>;
-  };
-  responses: {
-    200: FromSchema<typeof successfulResponseSchema>;
-    401: FromSchema<typeof unauthorizedResponseSchema>;
-    404: FromSchema<typeof notFoundResponseSchema>;
-  };
-}>('/users/:id', async req => {
-  const token = req.headers.get('x-token');
-  if (!token) {
-    return Response.json(
-      {
-        code: 'UNAUTHORIZED',
-      },
-      {
-        status: 401,
-      },
-    );
-  }
-  const userId = req.params.id;
-  // @ts-expect-error - a is not defined in the schema
-  const unexpectedParam = req.params.a;
-  console.log(unexpectedParam);
-  if (userId === 'only_available_id') {
-    return Response.json(
-      {
-        id: userId,
-        name: 'The only one',
-      },
-      {
-        status: 200,
-      },
-    );
-  }
-  return Response.json(
-    {
-      message: 'Not found',
-    },
-    {
-      status: 404,
-    },
-  );
-});
-
-const routerWithAddRoute = createRouter()
-  .addRoute({
-    method: 'get',
+const routerWithroute = createRouter()
+  .route({
+    method: 'GET',
     path: '/users/:id',
     schemas: {
       request: {
@@ -144,8 +94,8 @@ const routerWithAddRoute = createRouter()
       );
     },
   })
-  .addRoute({
-    method: 'get',
+  .route({
+    method: 'GET',
     path: '/users',
     schemas: {
       request: {
@@ -182,7 +132,7 @@ const routerWithAddRoute = createRouter()
       );
     },
   })
-  .addRoute({
+  .route({
     method: 'GET',
     path: '/health',
     handler: async () => {
@@ -207,7 +157,7 @@ const routerWithAddRoute = createRouter()
     },
   });
 
-const res = await routerWithAddRoute.__sdk['/health'].get();
+const res = await routerWithroute.__sdk['/health'].get();
 
 // @ts-expect-error - 300 is not a valid status code
 res.status = 300;
@@ -254,8 +204,8 @@ if (res.status === 500) {
 }
 
 // File uploads
-createRouter().addRoute({
-  method: 'post',
+createRouter().route({
+  method: 'POST',
   path: '/upload',
   schemas: {
     request: {

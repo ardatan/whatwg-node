@@ -1,71 +1,129 @@
 import Ajv, { ErrorObject } from 'ajv';
+import addFormats from 'ajv-formats';
 import { Response, RouterPlugin, RouterRequest } from '@whatwg-node/router';
 
-type ValidateRequestFn = (request: RouterRequest) => Promise<any>;
+type PromiseOrValue<T> = T | Promise<T>;
+
+type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 
 export interface AJVPluginOptions {
-  ajv: Ajv;
-  request: {
-    headers: boolean;
-    params: boolean;
-    query: boolean;
-    json: boolean;
+  request?: {
+    headers?: boolean;
+    params?: boolean;
+    query?: boolean;
+    json?: boolean;
+    formData?: boolean;
   };
 }
 
-export function useAJV({ ajv, request }: AJVPluginOptions): RouterPlugin<any> {
+export function useAjv({ request }: AJVPluginOptions = {}): RouterPlugin<any> {
   return {
     onRoute({ schemas, handlers }) {
+      const ajv = new Ajv();
+      addFormats(ajv as any);
       const validationMiddlewares = new Map<string, ValidateRequestFn>();
-      if (request.headers && schemas?.request?.headers) {
-        const validateFn = ajv.compile({ ...schemas.request.headers, $async: true });
+      if (request?.headers !== false && schemas?.request?.headers) {
+        const validateFn = ajv.compile(schemas.request.headers);
         validationMiddlewares.set('headers', request => {
           const headersObj: any = {};
           request.headers.forEach((value, key) => {
             headersObj[key] = value;
           });
-          return validateFn(headersObj);
+          const isValid = validateFn(headersObj);
+          if (!isValid) {
+            return validateFn.errors!;
+          }
+          return [];
         });
       }
-      if (request.params && schemas?.request?.params) {
-        const validateFn = ajv.compile({ ...schemas.request.params, $async: true });
+      if (request?.params !== false && schemas?.request?.params) {
+        const validateFn = ajv.compile(schemas.request.params);
         validationMiddlewares.set('params', request => {
-          return validateFn(request.params);
+          const isValid = validateFn(request.params);
+          if (!isValid) {
+            return validateFn.errors!;
+          }
+          return [];
         });
       }
-      if (request.query && schemas?.request?.query) {
+      if (request?.query !== false && schemas?.request?.query) {
         const validateFn = ajv.compile({
           ...schemas.request.query,
           $async: true,
         });
         validationMiddlewares.set('query', request => {
-          return validateFn(request.query);
+          const isValid = validateFn(request.query);
+          if (!isValid) {
+            return validateFn.errors!;
+          }
+          return [];
         });
       }
-      if (request.json && schemas?.request?.json) {
-        const validateFn = ajv.compile({ ...schemas.request.json, $async: true });
+      if (request?.json !== false && schemas?.request?.json) {
+        const validateFn = ajv.compile(schemas.request.json);
         validationMiddlewares.set('json', async request => {
-          const jsonObj = await request.json();
-          Object.defineProperty(request, 'json', {
-            value: async () => jsonObj,
-          });
-          return validateFn(jsonObj);
+          if (request.headers.get('content-type').includes('json')) {
+            const jsonObj = await request.json();
+            Object.defineProperty(request, 'json', {
+              value: async () => jsonObj,
+            });
+            const isValid = validateFn(jsonObj);
+            if (!isValid) {
+              return validateFn.errors!;
+            }
+          }
+          return [];
+        });
+      }
+      if (request?.formData !== false && schemas?.request?.formData) {
+        const validateFn = ajv.compile(schemas.request.formData);
+        validationMiddlewares.set('formData', async request => {
+          const contentType = request.headers.get('content-type');
+          if (
+            contentType.includes('multipart/form-data') ||
+            contentType.includes('application/x-www-form-urlencoded')
+          ) {
+            const formData = await request.formData();
+            const formDataObj: Record<string, FormDataEntryValue> = {};
+            const jobs: Promise<void>[] = [];
+            formData.forEach((value, key) => {
+              if (typeof value === 'string') {
+                formDataObj[key] = value;
+              } else {
+                jobs.push(
+                  value.arrayBuffer().then(buffer => {
+                    const typedArray = new Uint8Array(buffer);
+                    const binaryStrParts: string[] = [];
+                    typedArray.forEach((byte, index) => {
+                      binaryStrParts[index] = String.fromCharCode(byte);
+                    });
+                    formDataObj[key] = binaryStrParts.join('');
+                  }),
+                );
+              }
+            });
+            await Promise.all(jobs);
+            Object.defineProperty(request, 'formData', {
+              value: async () => formDataObj,
+            });
+            const isValid = validateFn(formDataObj);
+            if (!isValid) {
+              return validateFn.errors!;
+            }
+          }
+          return [];
         });
       }
       if (validationMiddlewares.size > 0) {
         handlers.unshift(async (request): Promise<any> => {
           const validationErrorsNonFlat = await Promise.all(
             [...validationMiddlewares.entries()].map(async ([name, fn]) => {
-              try {
-                await fn(request);
-              } catch (e) {
-                if (e instanceof Ajv.ValidationError) {
-                  return e.errors.map(error => ({
-                    ...error,
-                    name,
-                  }));
-                }
-                throw e;
+              const errors = await fn(request);
+              if (errors.length > 0) {
+                return errors.map(error => ({
+                  name,
+                  ...error,
+                }));
               }
             }),
           );

@@ -103,7 +103,16 @@ export type TypedResponseWithJSONStatusMap<TResponseJSONStatusMap extends Record
     : never;
 }[keyof TResponseJSONStatusMap];
 
-export type HTTPMethod = 'get' | 'post' | 'put' | 'patch' | 'delete' | 'head' | 'options';
+export type HTTPMethod =
+  | 'GET'
+  | 'POST'
+  | 'PUT'
+  | 'PATCH'
+  | 'DELETE'
+  | 'HEAD'
+  | 'OPTIONS'
+  | 'CONNECT'
+  | 'TRACE';
 
 export type TypedRequestInit<
   THeaders extends Record<string, string>,
@@ -202,4 +211,8 @@ export interface TypedFormData<
   has<TName extends string>(
     name: TName,
   ): TName extends keyof TMap ? (TMap[TName] extends Maybe ? boolean : true) : false;
+  forEach(
+    callbackfn: <TName extends keyof TMap>(value: TMap[TName], key: TName, parent: this) => void,
+    thisArg?: any,
+  ): void;
 }
