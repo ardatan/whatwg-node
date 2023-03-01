@@ -1,12 +1,6 @@
 import { CookieChangeEvent } from './CookieChangeEvent';
 import { parse } from './parse';
-import {
-  Cookie,
-  CookieListItem,
-  CookieSameSite,
-  CookieStoreDeleteOptions,
-  CookieStoreGetOptions,
-} from './types';
+import { Cookie, CookieListItem, CookieStoreDeleteOptions, CookieStoreGetOptions } from './types';
 
 export class CookieStore extends EventTarget {
   onchange?: (event: CookieChangeEvent) => void;
@@ -36,7 +30,7 @@ export class CookieStore extends EventTarget {
       value: '',
       path: '/',
       secure: false,
-      sameSite: CookieSameSite.strict,
+      sameSite: 'strict',
       expires: null,
       domain: null,
     };
@@ -95,18 +89,18 @@ export class CookieStore extends EventTarget {
     }
 
     if ((item.name && item.name.startsWith('__Secure')) || item.secure) {
-      item.sameSite = CookieSameSite.lax;
+      item.sameSite = 'lax';
       cookieString += '; Secure';
     }
 
     switch (item.sameSite) {
-      case CookieSameSite.lax:
+      case 'lax':
         cookieString += '; SameSite=Lax';
         break;
-      case CookieSameSite.strict:
+      case 'strict':
         cookieString += '; SameSite=Strict';
         break;
-      case CookieSameSite.none:
+      case 'none':
         cookieString += '; SameSite=None';
         break;
     }
@@ -150,7 +144,7 @@ export class CookieStore extends EventTarget {
       value: '',
       path: '/',
       secure: false,
-      sameSite: CookieSameSite.strict,
+      sameSite: 'strict',
       expires: null,
       domain: null,
     };

@@ -259,16 +259,28 @@ If an unexpected error is thrown, the response will have a `500` status code. Yo
 `try/catch` method to handle errors. Or you can use the plugins to handle errors like below.
 
 ```ts
-const router = createRouter().route({
+import { HTTPError, useErrorHandling } from '@whatwg-node/router'
+
+const router = createRouter({
+  plugins: [useErrorHandling()]
+}).route({
   path: '/users',
   method: 'GET',
   handler: request => {
-    try {
-      // Do something
-    } catch (error) {
-      return new Response('I handled the error gracefully', {
-        status: 500
-      })
+    if (!request.headers.get('Authorization')) {
+      // You can use `HTTPError` to return a custom error response.
+      // It accepts a status code, a message, headers and a body.
+      // If you pass a json object as the body, the response will be a json response.
+      throw new HTTPError(
+        401,
+        'Unauthorized',
+        {
+          'WWW-Authenticate': 'Basic'
+        },
+        {
+          message: 'You need to be authenticated to access this resource.'
+        }
+      )
     }
   }
 })

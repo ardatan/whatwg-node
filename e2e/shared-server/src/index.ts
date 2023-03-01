@@ -5,14 +5,23 @@ export function createTestServerAdapter<TServerContext = {}>(base?: string) {
     base,
     plugins: [useErrorHandling()],
   })
-    .get('/greetings/:name', req => Response.json({ message: `Hello ${req.params?.name}!` }))
-    .post('/bye', async req => {
-      const { name } = await req.json();
-      return Response.json({ message: `Bye ${name}!` });
+    .route({
+      method: 'GET',
+      path: '/greetings/:name',
+      handler: req => Response.json({ message: `Hello ${req.params?.name}!` }),
     })
-    .get(
-      '/',
-      () =>
+    .route({
+      method: 'POST',
+      path: '/bye',
+      handler: async req => {
+        const { name } = await req.json();
+        return Response.json({ message: `Bye ${name}!` });
+      },
+    })
+    .route({
+      method: 'GET',
+      path: '/',
+      handler: () =>
         new Response(
           `
     <html>
@@ -31,6 +40,5 @@ export function createTestServerAdapter<TServerContext = {}>(base?: string) {
             status: 200,
           },
         ),
-    )
-    .all('*', () => new Response('Not Found.', { status: 404 }));
+    });
 }
