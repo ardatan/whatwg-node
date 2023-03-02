@@ -14,6 +14,7 @@
     "sourceMap": true,
     "declaration": true,
     "downlevelIteration": true,
+    "incremental": true,
 
     "suppressImplicitAnyIndexErrors": true,
 
@@ -26,12 +27,12 @@
     "noPropertyAccessFromIndexSignature": false,
     "paths": {
       "@whatwg-node/server": ["packages/server/src/index.ts"],
-      "@whatwg-node/router": ["packages/router/src/index.ts"],
+      "fets": ["packages/fets/src/index.ts"],
       "@whatwg-node/node-fetch": ["packages/node-fetch/src/index.ts"],
       "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
     }
   },
-  "include": ["packages", "e2e"],
+  "include": ["packages", "e2e", "examples"],
   "exclude": ["**/node_modules", "**/test-files", "**/dist", "e2e/bun", "e2e/deno"]
 }

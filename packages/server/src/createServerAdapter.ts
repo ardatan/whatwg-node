@@ -253,7 +253,7 @@ function createServerAdapter<
     handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
   };
 
-  return new Proxy(genericRequestHandler, {
+  const serverAdapter = new Proxy(genericRequestHandler, {
     // It should have all the attributes of the handler function and the server instance
     has: (_, prop) => {
       return (
@@ -281,7 +281,12 @@ function createServerAdapter<
         const serverAdapterBaseObjectProp = serverAdapterBaseObject[prop];
         if (serverAdapterBaseObjectProp) {
           if (serverAdapterBaseObjectProp.bind) {
-            return serverAdapterBaseObjectProp.bind(serverAdapterBaseObject);
+            return function (...args: any[]) {
+              const returnedVal = serverAdapterBaseObject[prop](...args);
+              if (returnedVal === serverAdapterBaseObject) {
+                return serverAdapter;
+              }
+            };
           }
           return serverAdapterBaseObjectProp;
         }
@@ -290,7 +295,8 @@ function createServerAdapter<
     apply(_, __, args: Parameters<ServerAdapterObject<TServerContext>['handle']>) {
       return genericRequestHandler(...args);
     },
-  }) as any; // 😡
+  });
+  return serverAdapter as any;
 }
 
 export { createServerAdapter };

@@ -1,3 +1,4 @@
+import { STATUS_CODES } from 'http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body';
 import { PonyfillHeaders, PonyfillHeadersInit } from './Headers';
 
@@ -15,7 +16,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     if (init) {
       this.headers = new PonyfillHeaders(init.headers);
       this.status = init.status || 200;
-      this.statusText = init.statusText || 'OK';
+      this.statusText = init.statusText || STATUS_CODES[this.status] || 'OK';
       this.url = init.url || '';
       this.redirected = init.redirected || false;
       this.type = init.type || 'default';

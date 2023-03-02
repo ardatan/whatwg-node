@@ -291,12 +291,7 @@ const myServerAdapter = createServerAdapter(async request => {
   // Select the other text parameter
   const regularTextData = formData.get('additionalStuff')
   // ...
-  return new Response('{ "message": "ok" }', {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  })
+  return Response.json({ message: 'ok' })
 })
 ```
 
@@ -305,62 +300,7 @@ documentation.
 
 ## Routing and Middlewares
 
-We'd recommend to use `@whatwg-node/router` to handle routing and middleware approach. It uses
+We'd recommend to use `fets` to handle routing and middleware approach. It uses
 `@whatwg-node/server` under the hood.
 
-> Learn more about `@whatwg-node/router` [here](../router)
-
-### Basic Routing
-
-```ts
-// Then use it in any environment
-import { createServer } from 'http'
-import { createRouter, Router } from '@whatwg-node/router'
-
-const router = createRouter()
-// GET collection index
-router.get('/todos', () => new Response('Todos Index!'))
-// GET item
-router.get('/todos/:id', ({ params }) => new Response(`Todo #${params.id}`))
-// POST to the collection (we'll use async here)
-router.post('/todos', async request => {
-  const content = await request.json()
-  return new Response('Creating Todo: ' + JSON.stringify(content))
-})
-
-// Redirect to a URL
-router.get('/google', () => Response.redirect('http://www.google.com'))
-
-// 404 for everything else
-router.all('*', () => new Response('Not Found.', { status: 404 }))
-
-const httpServer = createServer(router)
-httpServer.listen(4000)
-```
-
-### Middlewares to handle CORS, cookies and more
-
-This package also provides some utilities for your platform agnostic server implementation. The
-following example shows how to get the cookies as an object from the request.
-
-```ts
-import { withCookies } from '@whatwg-node/server'
-
-router.get('/foo', withCookies, ({ cookies }) => {
-  // cookies are parsed from the header into request.cookies
-  return new Response(`Cookies: ${JSON.stringify(cookies)}`)
-})
-```
-
-You can also setup a CORS middleware to handle preflight CORS requests.
-
-```ts
-import { withCors } from '@whatwg-node/server'
-
-const corsWithRouter = withCors(router, {
-  origin: 'http://localhost:4000',
-  methods: 'GET, POST, PATCH, DELETE',
-  headers: 'authorization, referer, origin, content-type',
-  credentials: false
-})
-```
+> Learn more about `fets` [here](../fets)

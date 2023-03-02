@@ -3,6 +3,6 @@
   "version": "0.0.23",
   "private": true,
   "dependencies": {
-    "@whatwg-node/router": "0.3.0"
+    "fets": "0.0.0"
   }
 }

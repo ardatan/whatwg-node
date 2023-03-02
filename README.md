@@ -33,14 +33,13 @@ etc. For Node.js, it transpiles Node.js specific APIs to the standard ones, and 
 environments, it uses the standard APIs directly. Even if your environment doesn't use Fetch API for
 the server implementation, you can still use `fetch` method to handle requests.
 
-### [@whatwg-node/router](./packages/router)
+### [fets](./packages/fets)
 
-A platform-independent JavaScript HTTP router that uses the
-[URL Standard](https://url.spec.whatwg.org/) and [Fetch Standard](https://fetch.spec.whatwg.org/) to
-match requests to handlers. The HTTP router implemented with this library can be used in any JS
-environment like Node.js, Deno, Cloudflare Workers, Bun, etc. It uses
-[@whatwg-node/server](./packages/server) and
-[URLPattern](https://developer.mozilla.org/en-US/docs/Web/API/URLPattern) specifically.
+FETS is a fully type-safe, web standards compliant, platform independent, and lightweight HTTP
+framework written in TypeScript, it includes a fully type-safe server and OpenAPI client.
+
+FETS works with the WHATWG Fetch API that works in any JavaScript environment including Node.js,
+Deno, Bun, Cloudflare Workers, Next.js, Fastify, Express, AWS Lambdas and even in browsers.
 
 ### [fetchache](./packages/fetchache)
 

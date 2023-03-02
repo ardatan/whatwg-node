@@ -19,11 +19,7 @@ export interface CookieStoreGetOptions {
   url?: string;
 }
 
-export enum CookieSameSite {
-  strict = 'strict',
-  lax = 'lax',
-  none = 'none',
-}
+export type CookieSameSite = 'strict' | 'lax' | 'none';
 
 export interface CookieListItem {
   name?: string;
