@@ -1,7 +1,13 @@
 import { promises as fsPromises } from 'fs';
 import { createServer } from 'http';
 import { join } from 'path';
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
+import jsonSerializerFactory from 'fast-json-stringify';
 import { createRouter, FromSchema, Response } from 'fets';
+
+const ajv = new Ajv();
+addFormats(ajv);
 
 const TodoSchema = {
   type: 'object',
@@ -21,6 +27,8 @@ export const router = createRouter({
   title: 'Todo List Example',
   description: 'A simple todo list example with FETS',
   version: '1.0.0',
+  ajv,
+  jsonSerializerFactory,
 })
   .route({
     description: 'Get all todos',

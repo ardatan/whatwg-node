@@ -569,7 +569,7 @@ import { createRouter } from 'fets'
 
 const ajv = new Ajv()
 // Some type issues with Ajv
-addFormats(ajv as any)
+addFormats(ajv)
 
 const router = createRouter({
   ajv

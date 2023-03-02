@@ -1,13 +1,23 @@
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
-import { createRouter, Response } from 'fets';
 import { File, FormData } from '@whatwg-node/fetch';
+import { createRouter, Response } from '../../src';
 
 describe('AJV', () => {
+  let serializerCalled: boolean;
+  beforeEach(() => {
+    serializerCalled = false;
+  });
   const ajv = new Ajv();
-  addFormats(ajv as any);
+  addFormats(ajv);
   const router = createRouter({
     ajv,
+    jsonSerializerFactory() {
+      return obj => {
+        serializerCalled = true;
+        return JSON.stringify(obj);
+      };
+    },
   }).route({
     path: '/test',
     method: 'POST',
@@ -53,11 +63,23 @@ describe('AJV', () => {
           required: ['authorization'],
         },
       },
+      responses: {
+        200: {
+          type: 'object',
+          properties: {
+            baz: {
+              type: 'string',
+            },
+          },
+          additionalProperties: false,
+          required: ['baz'],
+        },
+      },
     } as const,
     handler() {
       return Response.json(
         {
-          baz: true,
+          baz: '123',
         },
         {
           status: 200,
@@ -144,5 +166,23 @@ describe('AJV', () => {
       }
     `);
     expect(response.status).toBe(400);
+  });
+  it('should allow custom serializers', async () => {
+    const response = await router.fetch('http://localhost:3000/test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer 123',
+      },
+      body: JSON.stringify({
+        foo: '123',
+        bar: 123,
+      }),
+    });
+    const resultJson = await response.json();
+    expect(resultJson).toStrictEqual({
+      baz: '123',
+    });
+    expect(serializerCalled).toBe(true);
   });
 });

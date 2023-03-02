@@ -1,18 +1,23 @@
 import type Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
-import { JSONSchema } from 'json-schema-to-ts';
-import { PromiseOrValue, Response, RouterPlugin, RouterRequest } from '../types';
+import {
+  JSONSchema,
+  JSONSerializer,
+  PromiseOrValue,
+  Response,
+  RouterPlugin,
+  RouterRequest,
+} from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 
-export type JSONStringifier = (json: any) => string;
-
 export interface AJVPluginOptions {
   ajv: Ajv;
-  jsonSerializerFactory?: (schema: JSONSchema) => JSONStringifier;
+  jsonSerializerFactory?: (schema: JSONSchema) => JSONSerializer;
 }
 
 export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): RouterPlugin<any> {
+  const serializersByCtx = new WeakMap<any, Map<number, JSONSerializer>>();
   return {
     onRoute({ schemas, handlers }) {
       const validationMiddlewares = new Map<string, ValidateRequestFn>();
@@ -60,6 +65,7 @@ export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): Router
             const jsonObj = await request.json();
             Object.defineProperty(request, 'json', {
               value: async () => jsonObj,
+              configurable: true,
             });
             const isValid = validateFn(jsonObj);
             if (!isValid) {
@@ -108,6 +114,16 @@ export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): Router
           return [];
         });
       }
+      if (jsonSerializerFactory && schemas?.responses) {
+        const serializerByStatusCode = new Map<number, JSONSerializer>();
+        for (const statusCode in schemas.responses) {
+          const schema = schemas.responses[statusCode];
+          serializerByStatusCode.set(Number(statusCode), jsonSerializerFactory(schema));
+        }
+        handlers.unshift((_request, ctx) => {
+          serializersByCtx.set(ctx, serializerByStatusCode);
+        });
+      }
       if (validationMiddlewares.size > 0) {
         handlers.unshift(async (request): Promise<any> => {
           const validationErrorsNonFlat = await Promise.all(
@@ -137,11 +153,13 @@ export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): Router
           }
         });
       }
-      if (jsonSerializerFactory && schemas?.responses) {
-        const serializerByStatusCode = new Map<number, JSONStringifier>();
-        for (const statusCode in schemas.responses) {
-          const schema = schemas.responses[statusCode];
-          serializerByStatusCode.set(Number(statusCode), jsonSerializerFactory(schema));
+    },
+    onResponse({ serverContext, response }) {
+      const serializers = serializersByCtx.get(serverContext);
+      if (serializers) {
+        const serializer = serializers.get(response.status);
+        if (serializer) {
+          response['serializer'] = serializer;
         }
       }
     },

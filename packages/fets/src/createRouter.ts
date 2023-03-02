@@ -30,13 +30,7 @@ const HTTP_METHODS: HTTPMethod[] = [
 export function createRouterBase({
   fetchAPI: givenFetchAPI,
   base: basePath = '/',
-  plugins: userPlugins = [],
-  title = 'FETS API',
-  description = 'An API written with FETS',
-  version = '1.0.0',
-  oasEndpoint = '/openapi.json',
-  swaggerUIEndpoint = '/docs',
-  ajv,
+  plugins = [],
 }: RouterOptions<any> = {}): RouterBaseObject<any, any> {
   const fetchAPI = {
     ...DefaultFetchAPI,
@@ -44,27 +38,6 @@ export function createRouterBase({
   };
   const __onRouterInitHooks: OnRouterInitHook<any>[] = [];
   const onRouteHooks: OnRouteHook<any>[] = [];
-  const plugins = [
-    ...(oasEndpoint || swaggerUIEndpoint
-      ? [
-          useOpenAPI({
-            oasEndpoint,
-            swaggerUIEndpoint,
-            baseOas: {
-              openapi: '3.0.1',
-              info: {
-                title,
-                description,
-                version,
-              },
-              components: {},
-            },
-          }),
-        ]
-      : []),
-    ...(ajv ? [useAjv({ ajv })] : []),
-    ...userPlugins,
-  ];
   for (const plugin of plugins) {
     if (plugin.onRouterInit) {
       __onRouterInitHooks.push(plugin.onRouterInit);
@@ -233,9 +206,44 @@ export function createRouter<
   TRouterSDK extends RouterSDK<string, TypedRequest, TypedResponse> = {
     [TKey: string]: never;
   },
->(options?: RouterOptions<TServerContext>): Router<TServerContext, TRouterSDK> {
-  const routerBaseObject = createRouterBase(options);
-  const router = createServerAdapter(routerBaseObject, options);
+>({
+  title = 'FETS API',
+  description = 'An API written with FETS',
+  version = '1.0.0',
+  oasEndpoint = '/openapi.json',
+  swaggerUIEndpoint = '/docs',
+  ajv,
+  jsonSerializerFactory,
+  plugins: userPlugins = [],
+  ...options
+}: RouterOptions<TServerContext> = {}): Router<TServerContext, TRouterSDK> {
+  const plugins = [
+    ...(oasEndpoint || swaggerUIEndpoint
+      ? [
+          useOpenAPI({
+            oasEndpoint,
+            swaggerUIEndpoint,
+            baseOas: {
+              openapi: '3.0.1',
+              info: {
+                title,
+                description,
+                version,
+              },
+              components: {},
+            },
+          }),
+        ]
+      : []),
+    ...(ajv ? [useAjv({ ajv, jsonSerializerFactory })] : []),
+    ...userPlugins,
+  ];
+  const finalOpts = {
+    ...options,
+    plugins,
+  };
+  const routerBaseObject = createRouterBase(finalOpts);
+  const router = createServerAdapter(routerBaseObject, finalOpts);
   for (const onRouterInitHook of routerBaseObject.__onRouterInitHooks) {
     onRouterInitHook(router);
   }

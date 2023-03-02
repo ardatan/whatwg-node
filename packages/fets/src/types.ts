@@ -20,6 +20,10 @@ import { TypedResponseCtor } from './typed-fetch';
 
 export { TypedRequest as RouterRequest };
 
+export type JSONSerializer = (obj: any) => string;
+
+export type JSONSchema = Exclude<JSONSchemaOrBoolean, boolean>;
+
 export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
   base?: string;
   plugins?: RouterPlugin<TServerContext>[];
@@ -32,9 +36,8 @@ export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions
   swaggerUIEndpoint?: string | false;
 
   ajv?: Ajv;
+  jsonSerializerFactory?: (jsonSchema: any) => JSONSerializer;
 }
-
-type JSONSchema = Exclude<JSONSchemaOrBoolean, boolean>;
 
 export type FromSchema<T> = T extends JSONSchema
   ? FromSchemaOriginal<
@@ -330,32 +333,49 @@ export type RouterOutput<
   };
 };
 
+// This allows us to hook into serialization of the response body
 export const Response = new Proxy(OriginalResponse, {
   get(OriginalResponse, prop, receiver) {
     if (prop === 'json') {
-      return function createProxyResponseJson(json: any, init?: ResponseInit) {
+      return function createProxyResponseJson(jsonObj: any, init?: ResponseInit) {
         let response: Response;
+        let serializer: JSONSerializer = obj => JSON.stringify(obj);
         function getResponse() {
           if (!response) {
-            response = OriginalResponse.json(json, init);
+            response = new OriginalResponse(serializer(jsonObj), {
+              ...init,
+              headers: {
+                'Content-Type': 'application/json',
+                ...(init?.headers || {}),
+              },
+            });
           }
           return response;
         }
         return new Proxy({} as any, {
           get(_, prop, receiver) {
-            if (prop === 'json') {
-              return json;
+            if (prop === 'then') {
+              return undefined;
+            }
+            if (prop === 'status') {
+              return init?.status || 200;
+            }
+            if (prop === 'serializer') {
+              return serializer;
             }
             return Reflect.get(getResponse(), prop, receiver);
           },
           set(_, prop, value, receiver) {
-            if (prop === 'json') {
-              json = value;
+            if (prop === 'serializer') {
+              serializer = value;
               return true;
             }
             return Reflect.set(getResponse(), prop, value, receiver);
           },
           has(_, prop) {
+            if (prop === 'then') {
+              return false;
+            }
             return Reflect.has(getResponse(), prop);
           },
           ownKeys() {
