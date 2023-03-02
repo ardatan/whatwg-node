@@ -67,107 +67,7 @@ properties:
 You can learn more about the original `Request` object
 [here](https://developer.mozilla.org/en-US/docs/Web/API/Request).
 
-### Basic Routing
-
-```ts
-// Then use it in any environment
-import { createServer } from 'http'
-import { createRouter, Response, Router } from 'fets'
-
-const router = createRouter()
-  // GET collection index
-  .route({
-    method: 'GET',
-    path: '/todos',
-    schemas: {
-      response: {
-        200: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              title: { type: 'string' }
-            }
-          }
-        }
-      // as const is required
-      } as const,
-    }
-    handler: () => new Response('Todos Index!')
-  })
-  // GET item
-  .route({
-    method: 'GET',
-    path: '/todos/:id',
-    handler: ({ params }) => new Response(`Todo #${params.id}`)
-  })
-  // POST to the collection (we'll use async here)
-  .route({
-    method: 'POST',
-    path: '/todos',
-    handler: async request => {
-      const content = await request.json()
-      return new Response('Creating Todo: ' + JSON.stringify(content))
-    }
-  })
-
-  // Redirect to a URL
-  .route({
-    method: 'GET',
-    path: '/google',
-    handler: () => Response.redirect('http://www.google.com')
-  })
-
-  // 404 for everything else
-  .route({
-    path: '*',
-    handler: () => new Response('Not Found.', { status: 404 })
-  })
-
-const httpServer = createServer(router)
-httpServer.listen(4000)
-```
-
-## Quick Start
-
-### FETS Client
-
-```typescript
-import { createClient, Mutable } from 'fets'
-import type oas from './oas'
-
-// OpenAPI document should be exported from a TypeScript file with as const
-
-const client = createClient<Mutable<oas>>({
-  endpoint: 'https://example.com'
-})
-
-/* 
-    or you can import the router types if you use monorepos
-import type { router } from './router';
-
-const client = createClient<router>({
-    endpoint: 'https://example.com',
-});
-*/
-
-const response = await client['/user/:id'].get({
-  params: {
-    id: '1'
-  }
-})
-
-if (!response.ok) {
-  const errorJson = await response.json()
-  console.error(errorJson.message)
-}
-
-const user = await response.json()
-console.log(`User's name is ${user.name}`)
-```
-
-[See this section to learn more about the type safety on the client side](#type-safety-on-the-client-side)
+## Basic Examples
 
 ### FETS Server
 
@@ -221,6 +121,44 @@ createServer(router).listen(3000, () => {
 ```
 
 [See this section to learn more about the type safety on the server side](#end-to-end-type-safety-and-validation-with-json-schema)
+
+### FETS Client
+
+```typescript
+import { createClient, Mutable } from 'fets'
+import type oas from './oas'
+
+// OpenAPI document should be exported from a TypeScript file with as const
+
+const client = createClient<Mutable<oas>>({
+  endpoint: 'https://example.com'
+})
+
+/* 
+    or you can import the router types if you use monorepos
+import type { router } from './router';
+
+const client = createClient<router>({
+    endpoint: 'https://example.com',
+});
+*/
+
+const response = await client['/user/:id'].get({
+  params: {
+    id: '1'
+  }
+})
+
+if (!response.ok) {
+  const errorJson = await response.json()
+  console.error(errorJson.message)
+}
+
+const user = await response.json()
+console.log(`User's name is ${user.name}`)
+```
+
+[See this section to learn more about the type safety on the client side](#type-safety-on-the-client-side)
 
 ## Middlewares
 
