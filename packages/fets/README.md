@@ -67,7 +67,7 @@ properties:
 You can learn more about the original `Request` object
 [here](https://developer.mozilla.org/en-US/docs/Web/API/Request).
 
-## Basic Examples
+## Basic Examples for Client & Server
 
 ### FETS Server
 
