@@ -1,6 +1,8 @@
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { createServerAdapter, ServerAdapterOptions } from '@whatwg-node/server';
-import { HTTPMethod, TypedRequest, TypedResponse } from '@whatwg-node/typed-fetch';
+import { createServerAdapter } from '@whatwg-node/server';
+import { useAjv } from './internal-plugins/ajv';
+import { useOpenAPI } from './internal-plugins/openapi';
+import { HTTPMethod, TypedRequest, TypedResponse } from './typed-fetch';
 import type {
   AddRouteWithSchemasOpts,
   OnRouteHook,
@@ -8,15 +10,10 @@ import type {
   RouteHandler,
   Router,
   RouterBaseObject,
-  RouterPlugin,
+  RouterOptions,
   RouterSDK,
   RouteSchemas,
 } from './types';
-
-export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
-  base?: string;
-  plugins?: RouterPlugin<TServerContext>[];
-}
 
 const HTTP_METHODS: HTTPMethod[] = [
   'GET',
@@ -33,7 +30,13 @@ const HTTP_METHODS: HTTPMethod[] = [
 export function createRouterBase({
   fetchAPI: givenFetchAPI,
   base: basePath = '/',
-  plugins = [],
+  plugins: userPlugins = [],
+  title = 'FETS API',
+  description = 'An API written with FETS',
+  version = '1.0.0',
+  oasEndpoint = '/openapi.json',
+  swaggerUIEndpoint = '/docs',
+  ajv,
 }: RouterOptions<any> = {}): RouterBaseObject<any, any> {
   const fetchAPI = {
     ...DefaultFetchAPI,
@@ -41,6 +44,23 @@ export function createRouterBase({
   };
   const __onRouterInitHooks: OnRouterInitHook<any>[] = [];
   const onRouteHooks: OnRouteHook<any>[] = [];
+  const plugins = [
+    useOpenAPI({
+      oasEndpoint,
+      swaggerUIEndpoint,
+      baseOas: {
+        openapi: '3.0.1',
+        info: {
+          title,
+          description,
+          version,
+        },
+        components: {},
+      },
+    }),
+    ...(ajv ? [useAjv({ ajv })] : []),
+    ...userPlugins,
+  ];
   for (const plugin of plugins) {
     if (plugin.onRouterInit) {
       __onRouterInitHooks.push(plugin.onRouterInit);
@@ -121,7 +141,6 @@ export function createRouterBase({
           const match = request.url.endsWith(pattern.pathname)
             ? { pathname: { groups: {} } }
             : pattern.exec(getParsedUrl());
-          console.log(pattern);
           if (match) {
             const routerRequest = new Proxy(request as any, {
               get(target, prop: keyof TypedRequest) {
@@ -200,7 +219,7 @@ export function createRouterBase({
       }
       return this as any;
     },
-    __sdk: {},
+    __client: {},
     __onRouterInitHooks,
   };
 }

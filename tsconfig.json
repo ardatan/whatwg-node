@@ -27,11 +27,8 @@
     "noPropertyAccessFromIndexSignature": false,
     "paths": {
       "@whatwg-node/server": ["packages/server/src/index.ts"],
-      "@whatwg-node/router": ["packages/router/src/index.ts"],
-      "@whatwg-node/router-plugin-ajv": ["packages/router-plugin-ajv/src/index.ts"],
+      "fets": ["packages/fets/src/index.ts"],
       "@whatwg-node/node-fetch": ["packages/node-fetch/src/index.ts"],
-      "@whatwg-node/typed-fetch": ["packages/typed-fetch/src/index.ts"],
-      "@whatwg-node/oas-client": ["packages/oas-client/src/index.ts"],
       "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
     }

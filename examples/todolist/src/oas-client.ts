@@ -1,7 +1,7 @@
-import { createOASClient, Mutable } from '@whatwg-node/oas-client';
+import { createClient, Mutable } from 'fets';
 import type oas from './saved_openapi';
 
-const client = createOASClient<Mutable<typeof oas>>({
+const client = createClient<Mutable<typeof oas>>({
   endpoint: 'http://localhost:3000',
 });
 

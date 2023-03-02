@@ -8,7 +8,7 @@ const adapter = createServerAdapter(() => new Response('Hello World'));
 
 // express-compat
 const app = express();
-app.use('/router', router);
+app.use('/fets', router);
 app.use('/adapter', adapter);
 
 type TestGetOpts = {

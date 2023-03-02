@@ -1,4 +1,4 @@
-import { createRouter, Response, useErrorHandling } from '@whatwg-node/router';
+import { createRouter, Response, useErrorHandling } from 'fets';
 
 export function createTestServerAdapter<TServerContext = {}>(base?: string) {
   return createRouter<TServerContext, {}>({

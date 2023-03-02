@@ -1,19 +1,25 @@
-# Platform agnostic fully type-safe JavaScript HTTP Router
+# FETS
 
-[![npm version](https://badge.fury.io/js/%40whatwg-node%2Frouter.svg)](https://badge.fury.io/js/%40whatwg-node%2Frouter)
+[![npm version](https://badge.fury.io/js/fets.svg)](https://badge.fury.io/js/fets)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`@whatwg-node/router` is a package that allows you to create modern JavaScript HTTP router with the
-WHATWG Fetch API that works in any JavaScript environment including Node.js, Deno, Bun, Cloudflare
-Workers, Next.js, Fastify, Express, AWS Lambdas and even in browsers.
+FETS is a fully type-safe, web standards compliant, platform independent, and lightweight HTTP
+framework written in TypeScript, it includes a fully type-safe server and OpenAPI client.
 
-It also allows you to create end-to-end type-safe and validated HTTP APIs with JSON Schema without
-**ANY CODE GENERATION**.
+FETS works with the WHATWG Fetch API that works in any JavaScript environment including Node.js,
+Deno, Bun, Cloudflare Workers, Next.js, Fastify, Express, AWS Lambdas and even in browsers.
+
+- FETS Client is a fully type-safe HTTP client that accepts any valid OpenAPI document.
+
+- FETS Server is a platform independent HTTP server that can be deployed to any JavaScript
+  environment.
+
+It doesn't need **ANY CODE GENERATION**.
 
 ## Installation
 
 ```bash
-yarn add @whatwg-node/router
+yarn add fets
 ```
 
 ## Why should I use this package instead of other packages like `itty-router`, `express` or `fastify`?
@@ -24,12 +30,12 @@ package, your router will work in any environment that uses JavaScript.
 
 ## Why should I use this package instead of tRPC?
 
-tRPC doesn't need a code generation like this library, but this library allows you export an OpenAPI
-document based on the JSON Schema definitions if you don't want to share TypeScript definitions
-between the client and the server. And this library uses [JSON Schema](https://json-schema.org/)
-instead of a programmatic schema solution like zod which is more portable and has bigger ecosystem.
-So even if you don't want to write JSON Schemas manually, you can use `@sinclair/typebox` to
-generate them by using an API like `zod` has.
+tRPC doesn't need a code generation like FETS, but FETS allows you export an OpenAPI document based
+on the JSON Schema definitions if you don't want to share TypeScript definitions between the client
+and the server. And FETS uses [JSON Schema](https://json-schema.org/) instead of a programmatic
+schema solution like zod which is more portable and has bigger ecosystem. So even if you don't want
+to write JSON Schemas manually, you can use `@sinclair/typebox` to generate them by using an API
+like `zod` has.
 
 ## Usage
 
@@ -62,7 +68,7 @@ You can learn more about the original `Request` object
 ```ts
 // Then use it in any environment
 import { createServer } from 'http'
-import { createRouter, Response, Router } from '@whatwg-node/router'
+import { createRouter, Response, Router } from 'fets'
 
 const router = createRouter()
   // GET collection index
@@ -109,7 +115,7 @@ httpServer.listen(4000)
 Let's create a basic REST API that manages users.
 
 ```ts
-import { createRouter, Response } from '@whatwg-node/router'
+import { createRouter, Response } from 'fets'
 
 const users = [
   { id: '1', name: 'John' },
@@ -231,7 +237,7 @@ You can also chain multiple handlers to a single route. In the following example
 the request has an `Authorization` header and if the user is an admin.
 
 ```ts
-import { RouteHandler } from '@whatwg-node/router'
+import { RouteHandler } from 'fets'
 
 const withAuth: RouteHandler = request => {
   if (!request.headers.get('Authorization')) {
@@ -259,7 +265,7 @@ If an unexpected error is thrown, the response will have a `500` status code. Yo
 `try/catch` method to handle errors. Or you can use the plugins to handle errors like below.
 
 ```ts
-import { HTTPError, useErrorHandling } from '@whatwg-node/router'
+import { HTTPError, useErrorHandling } from 'fets'
 
 const router = createRouter({
   plugins: [useErrorHandling()]
@@ -288,7 +294,7 @@ const router = createRouter({
 
 ## Plugins to handle CORS, cookies and more
 
-This library also provides a plugin system that allows you hook into the request/response lifecycle.
+FETS also provides a plugin system that allows you hook into the request/response lifecycle.
 
 - `onRequest` - Called before the request is handled by the router
 - - It has `endResponse` method that accepts a `Response` object to short-circuit the request
@@ -301,7 +307,7 @@ You can use `useCookies` to parse cookies from the request header and set cookie
 using Web Standard [CookieStore](https://developer.mozilla.org/en-US/docs/Web/API/CookieStore).
 
 ```ts
-import { createRouter, Response, useCookies } from '@whatwg-node/router'
+import { createRouter, Response, useCookies } from 'fets'
 
 const router = createRouter({
   plugins: [useCookies()]
@@ -335,7 +341,7 @@ const router = createRouter({
 You can also setup a CORS middleware to handle preflight CORS requests.
 
 ```ts
-import { createRouter, useCORS } from '@whatwg-node/router'
+import { createRouter, useCORS } from 'fets'
 
 const router = createRouter({
   plugins: [
@@ -353,7 +359,7 @@ const router = createRouter({
 You can also create your own plugins to handle errors, logging, etc.
 
 ```ts
-import { createRouter } from '@whatwg-node/router'
+import { createRouter } from 'fets'
 
 const useRequestId = (): RoutePlugin => {
   return {
@@ -390,7 +396,7 @@ parameters, and URL parameters.
 #### JSON Body
 
 ```ts
-import { createRouter, Response } from '@whatwg-node/router'
+import { createRouter, Response } from 'fets'
 
 const router = createRouter().route(
   {
@@ -423,7 +429,7 @@ const router = createRouter().route(
 #### Headers
 
 ```ts
-import { createRouter, Response } from '@whatwg-node/router'
+import { createRouter, Response } from 'fets'
 
 const router = createRouter().route(
   {
@@ -457,7 +463,7 @@ const router = createRouter().route(
 #### Path Parameters
 
 ```ts
-import { createRouter, Response } from '@whatwg-node/router'
+import { createRouter, Response } from 'fets'
 
 const router = createRouter().route(
   {
@@ -489,7 +495,7 @@ const router = createRouter().route(
 #### Query Parameters
 
 ```ts
-import { createRouter, Response } from '@whatwg-node/router'
+import { createRouter, Response } from 'fets'
 
 const router = createRouter().addRoute({
   method: 'get',
@@ -524,7 +530,7 @@ You can also type the response body by the status code. We strongly recommend to
 the status codes.
 
 ```ts
-import { createRouter, Response } from '@whatwg-node/router'
+import { createRouter, Response } from 'fets'
 
 const router = createRouter().addRoute(
   {
@@ -592,15 +598,20 @@ const router = createRouter().addRoute(
 
 The library itself doesn't include a runtime validation by default. But you can use that plugin to
 have a runtime validation with the provided JSON Schemas above. This plugin uses
-[Ajv](https://ajv.js.org/) under the hood. All you have to do is to install
-`@whatwg-node/router-plugin-ajv` package and add it to the plugins.
+[Ajv](https://ajv.js.org/) under the hood. All you have to do is to install `ajv` and `ajv-formats`
+packages and pass `Ajv` to the router.
 
 ```ts
-import { createRouter } from '@whatwg-node/router'
-import { useAjv } from '@whatwg-node/router-plugin-ajv'
+import Ajv from 'ajv'
+import { addFormats } from 'ajv-formats'
+import { createRouter } from 'fets'
+
+const ajv = new Ajv()
+// Some type issues with Ajv
+addFormats(ajv as any)
 
 const router = createRouter({
-  plugins: [useAjv()]
+  ajv
 })
 ```
 
@@ -610,26 +621,17 @@ You can generate OpenAPI specification from the defined routes by using OpenAPI 
 also provides you a [Swagger UI](https://swagger.io/tools/swagger-ui/) to test the API.
 
 ```ts
-import { createRouter, useOpenAPI } from '@whatwg-node/router'
+import { createRouter } from 'fets'
 
 const router = createRouter({
   plugins: [
-    useOpenAPI({
-      // You can define the header of the OpenAPI specification here
-      baseOas: {
-        openapi: '3.0.1',
-        info: {
           title: 'Todo List Example',
-          description: 'A simple todo list example with @whatwg-node/router',
+          description: 'A simple todo list example with fets',
           version: '1.0.0'
-        },
-        components: {}
-      },
       // You can access the Swagger UI at `/docs`
       swaggerUIPath: '/docs',
       // You can download the OpenAPI specification as a JSON file
       oasPath: '/openapi.json'
-    })
   ]
 })
 ```
@@ -662,25 +664,24 @@ const router = createRouter().route({
 
 ### Type-safety on the client side
 
-With this library, you can also type the request and response on the client side. But you have two
-options;
+With FETS, you can also type the request and response on the client side. But you have two options;
 
-1. You can infer the types from the router itself by using `createRouterSDK` from this library.
-2. You can use OpenAPI client package that infers the types from the given OpenAPI document.
+1. You can infer the types from the router itself.
+2. You can use OpenAPI specification
 
-#### Using `createRouterSDK`
+#### Using the `router`
 
 ```ts file=examples/client.ts
-import { createRouterSDK } from '@whatwg-node/router'
+import { createClient } from 'fets'
 // Notice `type` in the import to avoid to import it on runtime
-import type { router } from '../router'
+import type { router } from '../fets'
 
-const sdk = createRouterSDK<typeof router>({
+const client = createClient<typeof router>({
   endpoint: 'http://localhost:3000'
 })
 
 // Everything below is fully typed
-const response = await sdk['/todo'].put({
+const response = await client['/todo'].put({
   json: {
     title: 'Buy milk',
     completed: false
@@ -690,7 +691,7 @@ const responseJson = await response.json()
 console.table(responseJson)
 ```
 
-#### Using OpenAPI Client
+#### Using OpenAPI
 
 You need to save the OpenAPI document to a code file like below;
 
@@ -701,7 +702,7 @@ export default { openapi: '3.0.1' /* ... */ }
 Then you need to import the OpenAPI document to the client code;
 
 ```ts file=examples/client.ts
-import { createOASClient, Mutable } from '@whatwg-node/oas-client'
+import { createOASClient, Mutable } from 'fets'
 // Notice `type` in the import to avoid to import it on runtime
 import type oas from './saved_openapi'
 

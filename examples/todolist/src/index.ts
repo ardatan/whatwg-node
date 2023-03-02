@@ -1,7 +1,7 @@
 import { promises as fsPromises } from 'fs';
 import { createServer } from 'http';
 import { join } from 'path';
-import { createRouter, FromSchema, Response, useOpenAPI } from '@whatwg-node/router';
+import { createRouter, FromSchema, Response } from 'fets';
 
 const TodoSchema = {
   type: 'object',
@@ -18,22 +18,11 @@ type Todo = FromSchema<typeof TodoSchema>;
 const todos: Todo[] = [];
 
 export const router = createRouter({
-  plugins: [
-    useOpenAPI({
-      baseOas: {
-        openapi: '3.0.1',
-        info: {
-          title: 'Todo List Example',
-          description: 'A simple todo list example with @whatwg-node/router',
-          version: '1.0.0',
-        },
-        components: {},
-      },
-    }),
-  ],
+  title: 'Todo List Example',
+  description: 'A simple todo list example with FETS',
+  version: '1.0.0',
 })
   .route({
-    operationId: 'getTodos',
     description: 'Get all todos',
     method: 'GET',
     path: '/todos',
@@ -51,7 +40,6 @@ export const router = createRouter({
       }),
   })
   .route({
-    operationId: 'getTodo',
     description: 'Get a todo',
     method: 'GET',
     path: '/todo/:id',
@@ -96,7 +84,6 @@ export const router = createRouter({
     },
   })
   .route({
-    operationId: 'addTodo',
     description: 'Add a todo',
     method: 'PUT',
     path: '/todo',
@@ -128,7 +115,6 @@ export const router = createRouter({
     },
   })
   .route({
-    operationId: 'deleteTodo',
     description: 'Delete a todo',
     method: 'DELETE',
     path: '/todo/:id',
@@ -187,7 +173,6 @@ export const router = createRouter({
   })
   // BONUS
   .route({
-    operationId: 'uploadFile',
     description: 'Upload a file',
     method: 'POST',
     path: '/upload',

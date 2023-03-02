@@ -1,28 +1,18 @@
-import Ajv, { ErrorObject } from 'ajv';
-import addFormats from 'ajv-formats';
-import { Response, RouterPlugin, RouterRequest } from '@whatwg-node/router';
-
-type PromiseOrValue<T> = T | Promise<T>;
+import type Ajv from 'ajv';
+import type { ErrorObject } from 'ajv';
+import { Response, PromiseOrValue, RouterPlugin, RouterRequest } from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 
 export interface AJVPluginOptions {
-  request?: {
-    headers?: boolean;
-    params?: boolean;
-    query?: boolean;
-    json?: boolean;
-    formData?: boolean;
-  };
+  ajv: Ajv;
 }
 
-export function useAjv({ request }: AJVPluginOptions = {}): RouterPlugin<any> {
+export function useAjv({ ajv }: AJVPluginOptions): RouterPlugin<any> {
   return {
     onRoute({ schemas, handlers }) {
-      const ajv = new Ajv();
-      addFormats(ajv as any);
       const validationMiddlewares = new Map<string, ValidateRequestFn>();
-      if (request?.headers !== false && schemas?.request?.headers) {
+      if (schemas?.request?.headers) {
         const validateFn = ajv.compile(schemas.request.headers);
         validationMiddlewares.set('headers', request => {
           const headersObj: any = {};
@@ -36,7 +26,7 @@ export function useAjv({ request }: AJVPluginOptions = {}): RouterPlugin<any> {
           return [];
         });
       }
-      if (request?.params !== false && schemas?.request?.params) {
+      if (schemas?.request?.params) {
         const validateFn = ajv.compile(schemas.request.params);
         validationMiddlewares.set('params', request => {
           const isValid = validateFn(request.params);
@@ -46,7 +36,7 @@ export function useAjv({ request }: AJVPluginOptions = {}): RouterPlugin<any> {
           return [];
         });
       }
-      if (request?.query !== false && schemas?.request?.query) {
+      if (schemas?.request?.query) {
         const validateFn = ajv.compile({
           ...schemas.request.query,
           $async: true,
@@ -59,7 +49,7 @@ export function useAjv({ request }: AJVPluginOptions = {}): RouterPlugin<any> {
           return [];
         });
       }
-      if (request?.json !== false && schemas?.request?.json) {
+      if (schemas?.request?.json) {
         const validateFn = ajv.compile(schemas.request.json);
         validationMiddlewares.set('json', async request => {
           if (request.headers.get('content-type').includes('json')) {
@@ -75,7 +65,7 @@ export function useAjv({ request }: AJVPluginOptions = {}): RouterPlugin<any> {
           return [];
         });
       }
-      if (request?.formData !== false && schemas?.request?.formData) {
+      if (schemas?.request?.formData) {
         const validateFn = ajv.compile(schemas.request.formData);
         validationMiddlewares.set('formData', async request => {
           const contentType = request.headers.get('content-type');

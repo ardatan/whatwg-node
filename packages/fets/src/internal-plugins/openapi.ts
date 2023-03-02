@@ -1,38 +1,31 @@
 /* eslint-disable camelcase */
 import { OpenAPIV3_1 } from 'openapi-types';
-import swaggerUiHtml from './swagger-ui-html';
-import { Response, RouterPlugin } from './types';
+import swaggerUiHtml from '../swagger-ui-html';
+import { Response, RouterPlugin } from '../types';
 
 export type OpenAPIPluginOptions = {
-  oasPath?: string;
-  swaggerUIPath?: string;
-  baseOas?: OpenAPIV3_1.Document;
+  oasEndpoint: string;
+  swaggerUIEndpoint: string;
+  baseOas: OpenAPIV3_1.Document;
 };
 
 export function useOpenAPI({
-  oasPath = '/openapi.json',
-  swaggerUIPath = '/docs',
-  baseOas: oas = {
-    openapi: '3.0.1',
-    info: {
-      title: 'My API',
-      version: '1.0.0',
-    },
-    components: {},
-  },
-}: OpenAPIPluginOptions = {}): RouterPlugin<any> {
+  oasEndpoint,
+  swaggerUIEndpoint,
+  baseOas: oas,
+}: OpenAPIPluginOptions): RouterPlugin<any> {
   const paths: OpenAPIV3_1.PathsObject = (oas.paths ||= {});
   return {
     onRouterInit(router) {
       router.route({
         method: 'GET',
-        path: oasPath,
+        path: oasEndpoint,
         handler: () => Response.json(oas),
       });
-      const finalSwaggerUiHtml = swaggerUiHtml.replace('__OAS_PATH__', JSON.stringify(oasPath));
+      const finalSwaggerUiHtml = swaggerUiHtml.replace('__OAS_PATH__', JSON.stringify(oasEndpoint));
       router.route({
         method: 'GET',
-        path: swaggerUIPath,
+        path: swaggerUIEndpoint,
         handler: () =>
           new Response(finalSwaggerUiHtml, {
             headers: {

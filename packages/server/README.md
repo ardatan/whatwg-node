@@ -300,7 +300,7 @@ documentation.
 
 ## Routing and Middlewares
 
-We'd recommend to use `@whatwg-node/router` to handle routing and middleware approach. It uses
+We'd recommend to use `fets` to handle routing and middleware approach. It uses
 `@whatwg-node/server` under the hood.
 
-> Learn more about `@whatwg-node/router` [here](../router)
+> Learn more about `fets` [here](../fets)

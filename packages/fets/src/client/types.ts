@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { FromSchema, JSONSchema7 } from 'json-schema-to-ts';
 import { OpenAPIV3_1 } from 'openapi-types';
-import { createGenericSDK, GenericSDKOptions, TypedResponse } from '@whatwg-node/typed-fetch';
+import { TypedResponse } from '../typed-fetch';
 
 export type Mutable<Type> = {
   -readonly [Key in keyof Type]: Mutable<Type[Key]>;
@@ -87,8 +87,17 @@ export type OASClient<TOAS extends OpenAPIV3_1.Document> = {
   };
 };
 
-export type OASClientOptions = GenericSDKOptions;
-
-export function createOASClient<TOAS extends OpenAPIV3_1.Document>(opts?: OASClientOptions) {
-  return createGenericSDK(opts) as OASClient<TOAS>;
+export interface ClientOptions {
+  endpoint?: string;
+  fetchFn?: typeof fetch;
 }
+
+export interface ClientRequestParams {
+  json?: any;
+  formData?: FormData;
+  params?: Record<string, string>;
+  query?: Record<string, string | string[]>;
+  headers?: Record<string, string>;
+}
+
+export type ClientMethod = (requestParams?: ClientRequestParams) => Promise<Response>;

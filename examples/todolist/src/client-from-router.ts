@@ -1,7 +1,7 @@
-import { createRouterSDK } from '@whatwg-node/router';
+import { createClient } from 'fets';
 import type { router } from '.';
 
-const sdk = createRouterSDK<typeof router>();
+const sdk = createClient<typeof router>();
 
 const someTodosToAdd = ['Drink coffee', 'Write some code', 'Drink more coffee', 'Write more code'];
 

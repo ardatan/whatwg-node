@@ -1,3 +1,4 @@
+import type Ajv from 'ajv';
 import {
   FromSchema as FromSchemaOriginal,
   JSONSchema as JSONSchemaOrBoolean,
@@ -5,6 +6,7 @@ import {
 import { Response as OriginalResponse } from '@whatwg-node/fetch';
 import {
   ServerAdapter,
+  ServerAdapterOptions,
   ServerAdapterPlugin,
   ServerAdapterRequestHandler,
 } from '@whatwg-node/server';
@@ -13,8 +15,24 @@ import type {
   TypedRequest,
   TypedResponse,
   TypedResponseWithJSONStatusMap,
-} from '@whatwg-node/typed-fetch';
-import { TypedResponseCtor } from '@whatwg-node/typed-fetch';
+} from './typed-fetch';
+import { TypedResponseCtor } from './typed-fetch';
+
+export { TypedRequest as RouterRequest };
+
+export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions<TServerContext> {
+  base?: string;
+  plugins?: RouterPlugin<TServerContext>[];
+
+  // OAS Related
+  title?: string;
+  description?: string;
+  version?: string;
+  oasEndpoint?: string;
+  swaggerUIEndpoint?: string;
+
+  ajv?: Ajv;
+}
 
 type JSONSchema = Exclude<JSONSchemaOrBoolean, boolean>;
 
@@ -42,7 +60,7 @@ export type FromSchema<T> = T extends JSONSchema
     >
   : never;
 
-type PromiseOrValue<T> = T | Promise<T>;
+export type PromiseOrValue<T> = T | Promise<T>;
 
 export type TypedRouterHandlerTypeConfig<
   TRequestJSON = any,
@@ -126,7 +144,7 @@ export interface RouterBaseObject<
   >(
     opts: AddRouteWithTypesOpts<TServerContext, TTypedRequest, TTypedResponse, TMethod, TPath>,
   ): Router<TServerContext, TRouterSDK & RouterSDK<TPath, TTypedRequest, TTypedResponse>>;
-  __sdk: TRouterSDK;
+  __client: TRouterSDK;
   __onRouterInitHooks: OnRouterInitHook<TServerContext>[];
 }
 
@@ -277,7 +295,7 @@ type ResolvedPromise<T> = T extends Promise<infer U> ? U : T;
 
 export type RouterInput<
   TRouter extends Router<any, {}>,
-  TRouterSDK extends RouterSDK = TRouter['__sdk'],
+  TRouterSDK extends RouterSDK = TRouter['__client'],
 > = {
   [TPathKey in keyof TRouterSDK]: {
     [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends Lowercase<HTTPMethod>
@@ -296,7 +314,7 @@ type ResponseByPathAndMethod<
 
 export type RouterOutput<
   TRouter extends Router<any, {}>,
-  TRouterSDK extends RouterSDK = TRouter['__sdk'],
+  TRouterSDK extends RouterSDK = TRouter['__client'],
 > = {
   [TPathKey in keyof TRouterSDK]: {
     [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends HTTPMethod
