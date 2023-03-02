@@ -582,7 +582,6 @@ also provides you a [Swagger UI](https://swagger.io/tools/swagger-ui/) to test t
 import { createRouter } from 'fets'
 
 const router = createRouter({
-  plugins: [
           title: 'Todo List Example',
           description: 'A simple todo list example with fets',
           version: '1.0.0'
@@ -590,7 +589,6 @@ const router = createRouter({
       swaggerUIPath: '/docs',
       // You can download the OpenAPI specification as a JSON file
       oasPath: '/openapi.json'
-  ]
 })
 ```
 
@@ -610,9 +608,6 @@ type Todo = Static<typeof Todo>
 const router = createRouter().route({
   path: '/todos',
   schemas: {
-    request: {
-      body: Todo
-    },
     response: {
       200: Type.Array(Todo)
     }
