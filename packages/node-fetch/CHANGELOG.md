@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.3.1
+
+### Patch Changes
+
+- [#380](https://github.com/ardatan/whatwg-node/pull/380)
+  [`0df1ac7`](https://github.com/ardatan/whatwg-node/commit/0df1ac7d577ba831ce6431d68628b2028c37762f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Choose the correct status text for the given
+  status code if not provided by the user
+
 ## 0.3.0
 
 ### Minor Changes

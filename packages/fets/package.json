@@ -1,6 +1,6 @@
 {
   "name": "fets",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "TypeScript HTTP Framework focusing on e2e type-safety, easy setup, performance & great developer experience",
   "repository": {
     "type": "git",
@@ -23,8 +23,8 @@
   },
   "typings": "dist/index.d.ts",
   "dependencies": {
-    "@whatwg-node/fetch": "^0.8.0",
-    "@whatwg-node/server": "^0.7.0",
+    "@whatwg-node/fetch": "^0.8.2",
+    "@whatwg-node/server": "^0.7.2",
     "json-schema-to-ts": "2.7.2",
     "openapi-types": "12.1.0",
     "tslib": "^2.3.1"
