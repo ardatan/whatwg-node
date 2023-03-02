@@ -45,19 +45,23 @@ export function createRouterBase({
   const __onRouterInitHooks: OnRouterInitHook<any>[] = [];
   const onRouteHooks: OnRouteHook<any>[] = [];
   const plugins = [
-    useOpenAPI({
-      oasEndpoint,
-      swaggerUIEndpoint,
-      baseOas: {
-        openapi: '3.0.1',
-        info: {
-          title,
-          description,
-          version,
-        },
-        components: {},
-      },
-    }),
+    ...(oasEndpoint || swaggerUIEndpoint
+      ? [
+          useOpenAPI({
+            oasEndpoint,
+            swaggerUIEndpoint,
+            baseOas: {
+              openapi: '3.0.1',
+              info: {
+                title,
+                description,
+                version,
+              },
+              components: {},
+            },
+          }),
+        ]
+      : []),
     ...(ajv ? [useAjv({ ajv })] : []),
     ...userPlugins,
   ];

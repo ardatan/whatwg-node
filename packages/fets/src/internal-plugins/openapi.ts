@@ -4,8 +4,8 @@ import swaggerUiHtml from '../swagger-ui-html';
 import { Response, RouterPlugin } from '../types';
 
 export type OpenAPIPluginOptions = {
-  oasEndpoint: string;
-  swaggerUIEndpoint: string;
+  oasEndpoint: string | false;
+  swaggerUIEndpoint: string | false;
   baseOas: OpenAPIV3_1.Document;
 };
 
@@ -17,23 +17,26 @@ export function useOpenAPI({
   const paths: OpenAPIV3_1.PathsObject = (oas.paths ||= {});
   return {
     onRouterInit(router) {
-      router.route({
-        method: 'GET',
-        path: oasEndpoint,
-        handler: () => Response.json(oas),
-      });
-      const finalSwaggerUiHtml = swaggerUiHtml.replace('__OAS_PATH__', JSON.stringify(oasEndpoint));
-      router.route({
-        method: 'GET',
-        path: swaggerUIEndpoint,
-        handler: () =>
-          new Response(finalSwaggerUiHtml, {
-            headers: {
-              'Content-Type': 'text/html',
-            },
-            status: 200,
-          }),
-      });
+      if (oasEndpoint) {
+        router.route({
+          method: 'GET',
+          path: oasEndpoint,
+          handler: () => Response.json(oas),
+        });
+      }
+      if (swaggerUIEndpoint) {
+        router.route({
+          method: 'GET',
+          path: swaggerUIEndpoint,
+          handler: () =>
+            new Response(swaggerUiHtml.replace('__OAS__', JSON.stringify(oas)), {
+              headers: {
+                'Content-Type': 'text/html',
+              },
+              status: 200,
+            }),
+        });
+      }
     },
     onRoute({ method, path, operationId, description, schemas }) {
       if (schemas) {

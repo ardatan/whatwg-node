@@ -28,8 +28,8 @@ export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions
   title?: string;
   description?: string;
   version?: string;
-  oasEndpoint?: string;
-  swaggerUIEndpoint?: string;
+  oasEndpoint?: string | false;
+  swaggerUIEndpoint?: string | false;
 
   ajv?: Ajv;
 }
