@@ -1,6 +1,6 @@
 import type Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
-import { Response, PromiseOrValue, RouterPlugin, RouterRequest } from '../types';
+import { PromiseOrValue, Response, RouterPlugin, RouterRequest } from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 

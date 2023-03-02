@@ -75,6 +75,21 @@ const router = createRouter()
   .route({
     method: 'GET',
     path: '/todos',
+    schemas: {
+      response: {
+        200: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              title: { type: 'string' }
+            }
+          }
+        }
+      // as const is required
+      } as const,
+    }
     handler: () => new Response('Todos Index!')
   })
   // GET item
@@ -110,97 +125,98 @@ const httpServer = createServer(router)
 httpServer.listen(4000)
 ```
 
-## Example
+## Quick Start
 
-Let's create a basic REST API that manages users.
+### FETS Client
 
-```ts
-import { createRouter, Response } from 'fets'
+```typescript
+import { createClient, Mutable } from 'fets'
+import type oas from './oas'
+
+// OpenAPI document should be exported from a TypeScript file with as const
+
+const client = createClient<Mutable<oas>>({
+  endpoint: 'https://example.com'
+})
+
+/* 
+    or you can import the router types if you use monorepos
+import type { router } from './router';
+
+const client = createClient<router>({
+    endpoint: 'https://example.com',
+});
+*/
+
+const response = await client['/user/:id'].get({
+  params: {
+    id: '1'
+  }
+})
+
+if (!response.ok) {
+  const errorJson = await response.json()
+  console.error(errorJson.message)
+}
+
+const user = await response.json()
+console.log(`User's name is ${user.name}`)
+```
+
+[See this section to learn more about the type safety on the client side](#type-safety-on-the-client-side)
+
+### FETS Server
+
+```typescript
+import { createServer } from 'node:http';
+import { createRouter, FromSchema } from 'fets';
 
 const users = [
-  { id: '1', name: 'John' },
-  { id: '2', name: 'Jane' }
-]
+    { id: "1", name: 'John Doe' },
+    { id: "2", name: 'Jane Doe' },
+];
 
-const router = createRouter()
-  .route({
-    method: 'GET',
-    path: '/users',
-    handler: () => Response.json(users)
-  })
-  // Parameters are given in the `request.params` object
-  .route({
-    method: 'GET',
-    path: '/users/:id',
-    handler: request => {
-      const user = users.find(user => user.id === request.params.id)
-
-      if (!user) {
-        return new Response(null, {
-          status: 404
-        })
+const router = createRouter().route({
+  method: 'GET',
+  path: '/user/:id',
+  schemas: {
+    request: {
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        },
+        required: ['id']
+        additionalProperties: false
       }
-
-      return Response.json(user)
+    },
+    response: {
+      200: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' }
+        }
+      } as const,
     }
-  })
-  .route({
-    method: 'DELETE',
-    path: '/users/:id',
-    handler: request => {
-      const user = users.find(user => user.id === request.params.id)
-
-      if (!user) {
-        return new Response(null, {
-          status: 404
-        })
-      }
-
-      users.splice(users.indexOf(user), 1)
-
+  },
+  handler: ({ params }) => {
+    const user = users.find(user => user.id === params.id);
+    if (!user) {
       return new Response(null, {
-        status: 204
-      })
+        status: 404
+      });
     }
-  })
-  // Handle JSON bodies
-  .route({
-    method: 'PUT',
-    path: '/users',
-    handler: async request => {
-      const body = await request.json()
+    return new Response(JSON.stringify(user));
+  }
+});
 
-      const user = {
-        id: String(users.length + 1),
-        name: body.name
-      }
-
-      users.push(user)
-
-      return Response.json(user)
-    }
-  })
-  // Handle both parameters and JSON body
-  .route({
-    method: 'PATCH',
-    path: '/users/:id',
-    handler: async request => {
-      const user = users.find(user => user.id === request.params.id)
-
-      if (!user) {
-        return new Response(null, {
-          status: 404
-        })
-      }
-
-      const body = await request.json()
-
-      user.name = body.name
-
-      return Response.json(user)
-    }
-  })
+createServer(router).listen(3000, () => {
+    console.log(`Swagger UI is available at http://localhost:3000/docs`)
+});
 ```
+
+[See this section to learn more about the type safety on the server side](#end-to-end-type-safety-and-validation-with-json-schema)
 
 ## Middlewares
 
