@@ -1,14 +1,18 @@
 import type Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
+import { JSONSchema } from 'json-schema-to-ts';
 import { PromiseOrValue, Response, RouterPlugin, RouterRequest } from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 
+export type JSONStringifier = (json: any) => string;
+
 export interface AJVPluginOptions {
   ajv: Ajv;
+  jsonSerializerFactory?: (schema: JSONSchema) => JSONStringifier;
 }
 
-export function useAjv({ ajv }: AJVPluginOptions): RouterPlugin<any> {
+export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): RouterPlugin<any> {
   return {
     onRoute({ schemas, handlers }) {
       const validationMiddlewares = new Map<string, ValidateRequestFn>();
@@ -132,6 +136,13 @@ export function useAjv({ ajv }: AJVPluginOptions): RouterPlugin<any> {
             );
           }
         });
+      }
+      if (jsonSerializerFactory && schemas?.responses) {
+        const serializerByStatusCode = new Map<number, JSONStringifier>();
+        for (const statusCode in schemas.responses) {
+          const schema = schemas.responses[statusCode];
+          serializerByStatusCode.set(Number(statusCode), jsonSerializerFactory(schema));
+        }
       }
     },
   };

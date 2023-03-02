@@ -330,4 +330,61 @@ export type RouterOutput<
   };
 };
 
-export const Response = OriginalResponse as TypedResponseCtor;
+export const Response = new Proxy(OriginalResponse, {
+  get(OriginalResponse, prop, receiver) {
+    if (prop === 'json') {
+      return function createProxyResponseJson(json: any, init?: ResponseInit) {
+        let response: Response;
+        function getResponse() {
+          if (!response) {
+            response = OriginalResponse.json(json, init);
+          }
+          return response;
+        }
+        return new Proxy({} as any, {
+          get(_, prop, receiver) {
+            if (prop === 'json') {
+              return json;
+            }
+            return Reflect.get(getResponse(), prop, receiver);
+          },
+          set(_, prop, value, receiver) {
+            if (prop === 'json') {
+              json = value;
+              return true;
+            }
+            return Reflect.set(getResponse(), prop, value, receiver);
+          },
+          has(_, prop) {
+            return Reflect.has(getResponse(), prop);
+          },
+          ownKeys() {
+            return Reflect.ownKeys(getResponse());
+          },
+          getOwnPropertyDescriptor(_, prop) {
+            return Reflect.getOwnPropertyDescriptor(getResponse(), prop);
+          },
+          getPrototypeOf() {
+            return Reflect.getPrototypeOf(getResponse());
+          },
+          setPrototypeOf(_, prototype) {
+            return Reflect.setPrototypeOf(getResponse(), prototype);
+          },
+          isExtensible() {
+            return Reflect.isExtensible(getResponse());
+          },
+          preventExtensions() {
+            return Reflect.preventExtensions(getResponse());
+          },
+          defineProperty(_, prop, descriptor) {
+            return Reflect.defineProperty(getResponse(), prop, descriptor);
+          },
+          deleteProperty(_, prop) {
+            return Reflect.deleteProperty(getResponse(), prop);
+          },
+        });
+      };
+    }
+    return Reflect.get(OriginalResponse, prop, receiver);
+  },
+}) as TypedResponseCtor;

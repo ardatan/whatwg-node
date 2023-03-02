@@ -14,7 +14,10 @@ Deno, Bun, Cloudflare Workers, Next.js, Fastify, Express, AWS Lambdas and even i
 - FETS Server is a platform independent HTTP server that can be deployed to any JavaScript
   environment.
 
-It doesn't need **ANY CODE GENERATION**.
+> JSON Schema allows you to have a type-safety during the implementation, request validation and 2x
+> faster JSON serialization.
+
+All these doesn't need **ANY CODE GENERATION** at all!
 
 ## Installation
 
@@ -570,6 +573,22 @@ addFormats(ajv as any)
 
 const router = createRouter({
   ajv
+})
+```
+
+### Safe and faster JSON serialization with `fast-json-stringify`
+
+[`fast-json-stringify`](https://github.com/fastify/fast-json-stringify) is a library that serializes
+JavaScript objects into JSON 2x faster than `JSON.stringify` by using JSON Schemas. So FETS can use
+that library to serialize the response body. All you have to do is to install `fast-json-stringify`
+package and pass `fastJsonStringify` to the router.
+
+```ts
+import jsonSerializerFactory from 'fast-json-stringify'
+import { createRouter } from 'fets'
+
+const router = createRouter({
+  jsonSerializerFactory
 })
 ```
 
