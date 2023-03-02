@@ -114,7 +114,7 @@ const router = createRouter().route({
         status: 404
       });
     }
-    return new Response(JSON.stringify(user));
+    return Response.json(user, { status: 200 });
   }
 });
 
