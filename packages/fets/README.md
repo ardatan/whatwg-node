@@ -22,20 +22,24 @@ It doesn't need **ANY CODE GENERATION**.
 yarn add fets
 ```
 
-## Why should I use this package instead of other packages like `itty-router`, `express` or `fastify`?
+## Comparison with the existing solutions in the ecosystem
+
+#### Why should I use this package instead of other packages like `itty-router`, `express` or `fastify`?
 
 There are many packages out there that allow you to create HTTP routers, but they are not platform
 agnostic. They are only for Node.js or only for those specific environments. But if you use this
 package, your router will work in any environment that uses JavaScript.
 
-## Why should I use this package instead of tRPC?
+#### Why should I use this package instead of tRPC?
 
-tRPC doesn't need a code generation like FETS, but FETS allows you export an OpenAPI document based
-on the JSON Schema definitions if you don't want to share TypeScript definitions between the client
-and the server. And FETS uses [JSON Schema](https://json-schema.org/) instead of a programmatic
-schema solution like zod which is more portable and has bigger ecosystem. So even if you don't want
-to write JSON Schemas manually, you can use `@sinclair/typebox` to generate them by using an API
-like `zod` has.
+FETS also doesn't need a code generation like tRPC, but FETS also allows you to export an OpenAPI
+document based on the JSON Schema definitions if you don't want to share TypeScript definitions
+between the client and the server. tRPC uses a programmatic solution like `zod` but FETS uses a more
+popular alternative [JSON Schema](https://json-schema.org/) which is more portable and completely
+language agnostic. If you want to have a similar experience like `zod` instead of writing JSON
+Schemas manually with objects, you can use `@sinclair/typebox` to generate them by using an API like
+`zod` has.
+[See how to use typebox with FETS.](#using-a-programmatic-json-schema-builder-zod-like-api)
 
 ## Usage
 
