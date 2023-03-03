@@ -104,15 +104,19 @@ const router = createRouter().route({
           id: { type: 'string' },
           name: { type: 'string' }
         }
-      } as const,
-    }
+      },
+      404: {
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
+        }
+      }
+    } as const // schemas should always be const
   },
   handler: ({ params }) => {
     const user = users.find(user => user.id === params.id);
     if (!user) {
-      return new Response(null, {
-        status: 404
-      });
+      return Response.json({ message: 'User not found' }, { status: 404 });
     }
     return Response.json(user, { status: 200 });
   }

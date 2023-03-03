@@ -320,7 +320,7 @@ export type RouterOutput<
   TRouterSDK extends RouterSDK = TRouter['__client'],
 > = {
   [TPathKey in keyof TRouterSDK]: {
-    [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends HTTPMethod
+    [TMethodKey in keyof TRouterSDK[TPathKey]]: TMethodKey extends Lowercase<HTTPMethod>
       ? ResponseByPathAndMethod<TRouterSDK, TPathKey, TMethodKey> extends {
           status: infer TStatusCode;
           json(): Promise<infer TJSON>;
@@ -332,6 +332,8 @@ export type RouterOutput<
       : never;
   };
 };
+
+export type RouterClient<TRouter extends Router<any, any>> = TRouter['__client'];
 
 // This allows us to hook into serialization of the response body
 export const Response = new Proxy(OriginalResponse, {
