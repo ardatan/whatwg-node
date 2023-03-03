@@ -97,7 +97,7 @@ const router = createRouter().route({
         additionalProperties: false
       }
     },
-    response: {
+    responses: {
       200: {
         type: 'object',
         properties: {
@@ -513,7 +513,7 @@ const router = createRouter().addRoute(
           required: ['x-api-key']
         }
       },
-      response: {
+      responses: {
         200: {
           type: 'array',
           items: {
@@ -559,42 +559,15 @@ const router = createRouter().addRoute(
 )
 ```
 
-### Runtime validation with Ajv
+### Runtime validation
 
-The library itself doesn't include a runtime validation by default. But you can use that plugin to
-have a runtime validation with the provided JSON Schemas above. This plugin uses
-[Ajv](https://ajv.js.org/) under the hood. All you have to do is to install `ajv` and `ajv-formats`
-packages and pass `Ajv` to the router.
+FETS uses [`ajv`](https://ajv.js.org/) to validate the request and response bodies at runtime.
 
-```ts
-import Ajv from 'ajv'
-import { addFormats } from 'ajv-formats'
-import { createRouter } from 'fets'
+### Safe and faster JSON serialization with response schemas
 
-const ajv = new Ajv()
-// Some type issues with Ajv
-addFormats(ajv)
-
-const router = createRouter({
-  ajv
-})
-```
-
-### Safe and faster JSON serialization with `fast-json-stringify`
-
-[`fast-json-stringify`](https://github.com/fastify/fast-json-stringify) is a library that serializes
-JavaScript objects into JSON 2x faster than `JSON.stringify` by using JSON Schemas. So FETS can use
-that library to serialize the response body. All you have to do is to install `fast-json-stringify`
-package and pass `fastJsonStringify` to the router.
-
-```ts
-import jsonSerializerFactory from 'fast-json-stringify'
-import { createRouter } from 'fets'
-
-const router = createRouter({
-  jsonSerializerFactory
-})
-```
+FETS uses [`fast-json-stringify`](https://github.com/fastify/fast-json-stringify) that serializes
+JavaScript objects into JSON 2x faster than `JSON.stringify` by using JSON Schemas. All you have to
+do is to define a correct response schema.
 
 ### OpenAPI Generation
 
@@ -631,7 +604,7 @@ type Todo = Static<typeof Todo>
 const router = createRouter().route({
   path: '/todos',
   schemas: {
-    response: {
+    responses: {
       200: Type.Array(Todo)
     }
   }

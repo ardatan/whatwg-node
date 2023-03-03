@@ -1,4 +1,3 @@
-import type Ajv from 'ajv';
 import {
   FromSchema as FromSchemaOriginal,
   JSONSchema as JSONSchemaOrBoolean,
@@ -34,9 +33,6 @@ export interface RouterOptions<TServerContext = {}> extends ServerAdapterOptions
   version?: string;
   oasEndpoint?: string | false;
   swaggerUIEndpoint?: string | false;
-
-  ajv?: Ajv;
-  jsonSerializerFactory?: (jsonSchema: any) => JSONSerializer;
 }
 
 export type FromSchema<T> = T extends JSONSchema

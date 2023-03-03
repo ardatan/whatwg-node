@@ -212,8 +212,6 @@ export function createRouter<
   version = '1.0.0',
   oasEndpoint = '/openapi.json',
   swaggerUIEndpoint = '/docs',
-  ajv,
-  jsonSerializerFactory,
   plugins: userPlugins = [],
   ...options
 }: RouterOptions<TServerContext> = {}): Router<TServerContext, TRouterSDK> {
@@ -235,7 +233,7 @@ export function createRouter<
           }),
         ]
       : []),
-    ...(ajv ? [useAjv({ ajv, jsonSerializerFactory })] : []),
+    useAjv(),
     ...userPlugins,
   ];
   const finalOpts = {

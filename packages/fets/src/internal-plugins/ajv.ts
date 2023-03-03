@@ -1,22 +1,15 @@
-import type Ajv from 'ajv';
+import Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
-import {
-  JSONSchema,
-  JSONSerializer,
-  PromiseOrValue,
-  Response,
-  RouterPlugin,
-  RouterRequest,
-} from '../types';
+import addFormats from 'ajv-formats';
+import jsonSerializerFactory from 'fast-json-stringify';
+import { JSONSerializer, PromiseOrValue, Response, RouterPlugin, RouterRequest } from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 
-export interface AJVPluginOptions {
-  ajv: Ajv;
-  jsonSerializerFactory?: (schema: JSONSchema) => JSONSerializer;
-}
+export function useAjv(): RouterPlugin<any> {
+  const ajv = new Ajv();
+  addFormats(ajv);
 
-export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): RouterPlugin<any> {
   const serializersByCtx = new WeakMap<any, Map<number, JSONSerializer>>();
   return {
     onRoute({ schemas, handlers }) {
@@ -118,7 +111,7 @@ export function useAjv({ ajv, jsonSerializerFactory }: AJVPluginOptions): Router
         const serializerByStatusCode = new Map<number, JSONSerializer>();
         for (const statusCode in schemas.responses) {
           const schema = schemas.responses[statusCode];
-          serializerByStatusCode.set(Number(statusCode), jsonSerializerFactory(schema));
+          serializerByStatusCode.set(Number(statusCode), jsonSerializerFactory(schema as any));
         }
         handlers.unshift((_request, ctx) => {
           serializersByCtx.set(ctx, serializerByStatusCode);

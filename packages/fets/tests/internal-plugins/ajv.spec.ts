@@ -4,21 +4,9 @@ import { File, FormData } from '@whatwg-node/fetch';
 import { createRouter, Response } from '../../src';
 
 describe('AJV', () => {
-  let serializerCalled: boolean;
-  beforeEach(() => {
-    serializerCalled = false;
-  });
   const ajv = new Ajv();
   addFormats(ajv);
-  const router = createRouter({
-    ajv,
-    jsonSerializerFactory() {
-      return obj => {
-        serializerCalled = true;
-        return JSON.stringify(obj);
-      };
-    },
-  }).route({
+  const router = createRouter().route({
     path: '/test',
     method: 'POST',
     schemas: {
@@ -80,6 +68,7 @@ describe('AJV', () => {
       return Response.json(
         {
           baz: '123',
+          foo: 123,
         },
         {
           status: 200,
@@ -167,7 +156,7 @@ describe('AJV', () => {
     `);
     expect(response.status).toBe(400);
   });
-  it('should allow custom serializers', async () => {
+  it('should not return extra responses', async () => {
     const response = await router.fetch('http://localhost:3000/test', {
       method: 'POST',
       headers: {
@@ -183,6 +172,5 @@ describe('AJV', () => {
     expect(resultJson).toStrictEqual({
       baz: '123',
     });
-    expect(serializerCalled).toBe(true);
   });
 });
