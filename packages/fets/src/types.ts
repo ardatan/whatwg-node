@@ -2,7 +2,6 @@ import {
   FromSchema as FromSchemaOriginal,
   JSONSchema as JSONSchemaOrBoolean,
 } from 'json-schema-to-ts';
-import { Response as OriginalResponse } from '@whatwg-node/fetch';
 import {
   ServerAdapter,
   ServerAdapterOptions,
@@ -15,7 +14,6 @@ import type {
   TypedResponse,
   TypedResponseWithJSONStatusMap,
 } from './typed-fetch';
-import { TypedResponseCtor } from './typed-fetch';
 
 export { TypedRequest as RouterRequest };
 
@@ -330,79 +328,3 @@ export type RouterOutput<
 };
 
 export type RouterClient<TRouter extends Router<any, any>> = TRouter['__client'];
-
-// This allows us to hook into serialization of the response body
-export const Response = new Proxy(OriginalResponse, {
-  get(OriginalResponse, prop, receiver) {
-    if (prop === 'json') {
-      return function createProxyResponseJson(jsonObj: any, init?: ResponseInit) {
-        let response: Response;
-        let serializer: JSONSerializer = obj => JSON.stringify(obj);
-        function getResponse() {
-          if (!response) {
-            response = new OriginalResponse(serializer(jsonObj), {
-              ...init,
-              headers: {
-                'Content-Type': 'application/json',
-                ...(init?.headers || {}),
-              },
-            });
-          }
-          return response;
-        }
-        return new Proxy({} as any, {
-          get(_, prop, receiver) {
-            if (prop === 'then') {
-              return undefined;
-            }
-            if (prop === 'status') {
-              return init?.status || 200;
-            }
-            if (prop === 'serializer') {
-              return serializer;
-            }
-            return Reflect.get(getResponse(), prop, receiver);
-          },
-          set(_, prop, value, receiver) {
-            if (prop === 'serializer') {
-              serializer = value;
-              return true;
-            }
-            return Reflect.set(getResponse(), prop, value, receiver);
-          },
-          has(_, prop) {
-            if (prop === 'then') {
-              return false;
-            }
-            return Reflect.has(getResponse(), prop);
-          },
-          ownKeys() {
-            return Reflect.ownKeys(getResponse());
-          },
-          getOwnPropertyDescriptor(_, prop) {
-            return Reflect.getOwnPropertyDescriptor(getResponse(), prop);
-          },
-          getPrototypeOf() {
-            return Reflect.getPrototypeOf(getResponse());
-          },
-          setPrototypeOf(_, prototype) {
-            return Reflect.setPrototypeOf(getResponse(), prototype);
-          },
-          isExtensible() {
-            return Reflect.isExtensible(getResponse());
-          },
-          preventExtensions() {
-            return Reflect.preventExtensions(getResponse());
-          },
-          defineProperty(_, prop, descriptor) {
-            return Reflect.defineProperty(getResponse(), prop, descriptor);
-          },
-          deleteProperty(_, prop) {
-            return Reflect.deleteProperty(getResponse(), prop);
-          },
-        });
-      };
-    }
-    return Reflect.get(OriginalResponse, prop, receiver);
-  },
-}) as TypedResponseCtor;

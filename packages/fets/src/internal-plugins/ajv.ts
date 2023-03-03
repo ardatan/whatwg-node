@@ -1,8 +1,9 @@
 import Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
-import jsonSerializerFactory from 'fast-json-stringify';
-import { JSONSerializer, PromiseOrValue, Response, RouterPlugin, RouterRequest } from '../types';
+import jsonSerializerFactory from '@ardatan/fast-json-stringify';
+import { Response, serializerByResponse } from '../Response';
+import { JSONSerializer, PromiseOrValue, RouterPlugin, RouterRequest } from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
 
@@ -152,7 +153,7 @@ export function useAjv(): RouterPlugin<any> {
       if (serializers) {
         const serializer = serializers.get(response.status);
         if (serializer) {
-          response['serializer'] = serializer;
+          serializerByResponse.set(response, serializer);
         }
       }
     },
