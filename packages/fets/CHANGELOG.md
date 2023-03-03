@@ -1,5 +1,12 @@
 # fets
 
+## 0.0.2
+
+### Patch Changes
+
+- [`5146153`](https://github.com/ardatan/whatwg-node/commit/5146153fda49bc6e617c5849c23bb205bef28232)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix `RouterOutput` and add `RouterClient`
+
 ## 0.0.1
 
 ### Patch Changes
