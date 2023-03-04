@@ -27,8 +27,8 @@
     "tslib": "^2.3.1"
   },
   "devDependencies": {
-    "@types/node": "18.14.4",
-    "fastify": "4.13.0"
+    "@types/node": "18.14.6",
+    "fastify": "4.14.0"
   },
   "publishConfig": {
     "access": "public",
