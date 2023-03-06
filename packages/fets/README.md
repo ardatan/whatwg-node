@@ -145,7 +145,7 @@ const client = createClient<Mutable<oas>>({
     or you can import the router types if you use monorepos
 import type { router } from './router';
 
-const client = createClient<router>({
+const client = createClient<typeof router>({
     endpoint: 'https://example.com',
 });
 */
@@ -706,7 +706,7 @@ console.assert(responseJson.title === 'Buy milk', 'Title should be "Buy milk"')
 import { createClient } from 'fets'
 import { router } from './router'
 
-const client = createClient({
+const client = createClient<typeof router>({
   fetchFn: router.fetch,
   endpoint: 'http://localhost:3000'
 })
