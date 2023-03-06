@@ -111,8 +111,8 @@ const router = createRouter().route({
           message: { type: 'string' }
         }
       }
-    } as const // schemas should always be const
-  },
+    }
+  } as const /* schemas should always be const */,
   handler: ({ params }) => {
     const user = users.find(user => user.id === params.id);
     if (!user) {
@@ -192,7 +192,8 @@ const router = createRouter()
     path: '/users',
     method: 'GET',
     handler: request => {
-    // It doesn't reach here if the request doesn't have an `Authorization` header.
+      // It doesn't reach here if the request doesn't have an `Authorization` header.
+    }
   });
 ```
 
@@ -380,14 +381,14 @@ const router = createRouter().route(
           required: ['title']
         }
       }
+    } as const,
+    handler: async request => {
+      // This part is fully typed
+      const { title, completed } = await request.json()
+      // ...
+      return Response.json({ message: 'ok' })
     }
   },
-  async request => {
-    // This part is fully typed
-    const { title, completed } = await request.json()
-    // ...
-    return Response.json({ message: 'ok' })
-  }
 )
 ```
 
@@ -412,16 +413,16 @@ const router = createRouter().route(
           required: ['x-api-key']
         }
       }
+    } as const,
+    handler: async request => {
+      // This part is fully typed
+      const apiKey = request.headers.get('x-api-key')
+      // Would fail on TypeScript compilation
+      const wrongHeaderName = request.headers.get('x-api-key-wrong')
+      // ...
+      return Response.json({ message: 'ok' })
     }
   },
-  async request => {
-    // This part is fully typed
-    const apiKey = request.headers.get('x-api-key')
-    // Would fail on TypeScript compilation
-    const wrongHeaderName = request.headers.get('x-api-key-wrong')
-    // ...
-    return Response.json({ message: 'ok' })
-  }
 )
 ```
 
@@ -446,14 +447,14 @@ const router = createRouter().route(
           required: ['id']
         }
       }
+    } as const,
+    handler: async request => {
+      // This part is fully typed
+      const { id } = request.params
+      // ...
+      return Response.json({ message: 'ok' })
     }
   },
-  async request => {
-    // This part is fully typed
-    const { id } = request.params
-    // ...
-    return Response.json({ message: 'ok' })
-  }
 )
 ```
 
@@ -478,14 +479,15 @@ const router = createRouter().addRoute({
         required: ['limit']
       },
     }
+  } as const,
+  handler: async request => {
+    // This part is fully typed
+    const { limit, offset } = request.query
+    // You can also use `URLSearchParams` API
+    const limit = request.parsedURL.searchParams.get('limit')
+    // ...
+    return Response.json({ message: 'ok' })
   }
-}, async request => {
-  // This part is fully typed
-  const { limit, offset } = request.query
-  // You can also use `URLSearchParams` API
-  const limit = request.parsedURL.searchParams.get('limit')
-  // ...
-  return Response.json({ message: 'ok' })
 })
 ```
 
@@ -536,25 +538,25 @@ const router = createRouter().addRoute(
           required: ['message']
         }
       }
+    } as const,
+    handler: async request => {
+      const apiKey = request.headers.get('x-api-key')
+      if (!apiKey) {
+        return Response.json(
+          { message: 'API key is required' },
+          {
+            status: 401
+          }
+        )
+      }
+      const todos = await getTodos({
+        apiKey
+      })
+      // This part is fully typed
+      return Response.json(todos, {
+        status: 200
+      })
     }
-  },
-  async request => {
-    const apiKey = request.headers.get('x-api-key')
-    if (!apiKey) {
-      return Response.json(
-        { message: 'API key is required' },
-        {
-          status: 401
-        }
-      )
-    }
-    const todos = await getTodos({
-      apiKey
-    })
-    // This part is fully typed
-    return Response.json(todos, {
-      status: 200
-    })
   }
 )
 ```
@@ -578,9 +580,10 @@ also provides you a [Swagger UI](https://swagger.io/tools/swagger-ui/) to test t
 import { createRouter } from 'fets'
 
 const router = createRouter({
-          title: 'Todo List Example',
-          description: 'A simple todo list example with fets',
-          version: '1.0.0'
+      // Details for the generated OpenAPI document
+      title: 'Todo List Example',
+      description: 'A simple todo list example with fets',
+      version: '1.0.0'
       // You can access the Swagger UI at `/docs`
       swaggerUIPath: '/docs',
       // You can download the OpenAPI specification as a JSON file
@@ -607,7 +610,7 @@ const router = createRouter().route({
     responses: {
       200: Type.Array(Todo)
     }
-  }
+  } as const
 })
 ```
 
