@@ -35,7 +35,7 @@ package, your router will work in any environment that uses JavaScript.
 
 #### Why should I use this package instead of tRPC?
 
-FETS also doesn't need a code generation like tRPC, but FETS also allows you to export an OpenAPI
+FETS also doesn't need a code generation like tRPC doesn't, but FETS also allows you to export an OpenAPI
 document based on the JSON Schema definitions if you don't want to share TypeScript definitions
 between the client and the server. tRPC uses a programmatic solution like `zod` but FETS uses a more
 popular alternative [JSON Schema](https://json-schema.org/) which is more portable and completely
