@@ -1,5 +1,14 @@
 # fets
 
+## 0.0.5
+
+### Patch Changes
+
+- [#400](https://github.com/ardatan/whatwg-node/pull/400)
+  [`60a215d`](https://github.com/ardatan/whatwg-node/commit/60a215d13602737c53c271ce4bb3077ad43ad943)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix Response.json incompatibility issues by
+  replacing streams with deferred promises
+
 ## 0.0.4
 
 ### Patch Changes

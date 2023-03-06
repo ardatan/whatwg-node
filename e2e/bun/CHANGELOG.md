@@ -1,5 +1,12 @@
 # @e2e/bun
 
+## 0.0.28
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @e2e/shared-server@0.0.28
+
 ## 0.0.27
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # todolist
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies
+  [[`60a215d`](https://github.com/ardatan/whatwg-node/commit/60a215d13602737c53c271ce4bb3077ad43ad943)]:
+  - fets@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
