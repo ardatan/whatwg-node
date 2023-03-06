@@ -1,11 +1,7 @@
-import Ajv from 'ajv';
-import addFormats from 'ajv-formats';
 import { File, FormData } from '@whatwg-node/fetch';
 import { createRouter, Response } from '../../src';
 
 describe('AJV', () => {
-  const ajv = new Ajv();
-  addFormats(ajv);
   const router = createRouter().route({
     path: '/test',
     method: 'POST',

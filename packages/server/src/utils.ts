@@ -183,12 +183,12 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-function getHeadersObj(headers: Headers): OutgoingHttpHeaders {
+export function getHeadersObj(headers: Headers): OutgoingHttpHeaders {
   return new Proxy(
     {},
     {
       get(_target, prop: string) {
-        return headers.get(prop);
+        return headers.get(prop) || undefined;
       },
       set(_target, prop: string, value: string) {
         headers.set(prop, value);

@@ -2,7 +2,7 @@ import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { useAjv } from './internal-plugins/ajv';
 import { useOpenAPI } from './internal-plugins/openapi';
-import { defaultSerializer, isLazySerializedResponse } from './Response';
+import { isLazySerializedResponse } from './Response';
 import { HTTPMethod, TypedRequest, TypedResponse } from './typed-fetch';
 import type {
   AddRouteWithSchemasOpts,
@@ -167,12 +167,9 @@ export function createRouterBase({
                   });
                 }
                 if (!handlerResult.serializerSet) {
-                  handlerResult.resolveWithSerializer(defaultSerializer);
+                  return fetchAPI.Response.json(handlerResult.jsonObj, handlerResult.init);
                 }
-                const realResponse = await handlerResult.responsePromise;
-                if (realResponse) {
-                  return realResponse;
-                }
+                return handlerResult.responsePromise;
               } else if (handlerResult) {
                 return handlerResult;
               }
