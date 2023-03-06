@@ -2,11 +2,13 @@ import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { useAjv } from './internal-plugins/ajv';
 import { useOpenAPI } from './internal-plugins/openapi';
+import { defaultSerializer, isLazySerializedResponse } from './Response';
 import { HTTPMethod, TypedRequest, TypedResponse } from './typed-fetch';
 import type {
   AddRouteWithSchemasOpts,
   OnRouteHook,
   OnRouterInitHook,
+  OnSerializeResponseHook,
   RouteHandler,
   Router,
   RouterBaseObject,
@@ -38,12 +40,16 @@ export function createRouterBase({
   };
   const __onRouterInitHooks: OnRouterInitHook<any>[] = [];
   const onRouteHooks: OnRouteHook<any>[] = [];
+  const onSerializeResponseHooks: OnSerializeResponseHook<any>[] = [];
   for (const plugin of plugins) {
     if (plugin.onRouterInit) {
       __onRouterInitHooks.push(plugin.onRouterInit);
     }
     if (plugin.onRoute) {
       onRouteHooks.push(plugin.onRoute);
+    }
+    if (plugin.onSerializeResponse) {
+      onSerializeResponseHooks.push(plugin.onSerializeResponse);
     }
   }
   const routesByMethod = new Map<HTTPMethod, Map<URLPattern, RouteHandler<any>[]>>();
@@ -151,9 +157,24 @@ export function createRouterBase({
               },
             });
             for (const handler of handlers) {
-              const result = await handler(routerRequest, context);
-              if (result) {
-                return result;
+              const handlerResult = await handler(routerRequest, context);
+              if (isLazySerializedResponse(handlerResult)) {
+                for (const onSerializeResponseHook of onSerializeResponseHooks) {
+                  onSerializeResponseHook({
+                    request: routerRequest,
+                    lazyResponse: handlerResult,
+                    serverContext: context,
+                  });
+                }
+                if (!handlerResult.serializerSet) {
+                  handlerResult.resolveWithSerializer(defaultSerializer)
+                }
+                const realResponse = await handlerResult.responsePromise;
+                if (realResponse) {
+                  return realResponse;
+                }
+              } else if (handlerResult) {
+                return handlerResult;
               }
             }
           }

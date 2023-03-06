@@ -14,6 +14,7 @@ import type {
   TypedResponse,
   TypedResponseWithJSONStatusMap,
 } from './typed-fetch';
+import { LazySerializedResponse } from './Response';
 
 export { TypedRequest as RouterRequest };
 
@@ -169,10 +170,20 @@ export type OnRouteHookPayload<TServerContext> = {
 
 export type OnRouterInitHook<TServerContext> = (router: Router<TServerContext, any>) => void;
 
+export type OnSerializeResponsePayload<TServerContext> = {
+  request: TypedRequest;
+  serverContext: TServerContext;
+  lazyResponse: LazySerializedResponse;
+}
+
+export type OnSerializeResponseHook<TServerContext> = (payload: OnSerializeResponsePayload<TServerContext>) => void;
+
 export type RouterPlugin<TServerContext> = ServerAdapterPlugin<TServerContext> & {
   onRouterInit?: OnRouterInitHook<TServerContext>;
   onRoute?: OnRouteHook<TServerContext>;
+  onSerializeResponse?: OnSerializeResponseHook<TServerContext>;
 };
+
 export type RouteSchemas = {
   request?: {
     headers?: JSONSchema;

@@ -2,7 +2,7 @@ import Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import jsonSerializerFactory from '@ardatan/fast-json-stringify';
-import { Response, serializerByResponse } from '../Response';
+import { Response } from '../Response';
 import { JSONSerializer, PromiseOrValue, RouterPlugin, RouterRequest } from '../types';
 
 type ValidateRequestFn = (request: RouterRequest) => PromiseOrValue<ErrorObject[]>;
@@ -148,12 +148,12 @@ export function useAjv(): RouterPlugin<any> {
         });
       }
     },
-    onResponse({ serverContext, response }) {
+    onSerializeResponse({ serverContext, lazyResponse }) {
       const serializers = serializersByCtx.get(serverContext);
       if (serializers) {
-        const serializer = serializers.get(response.status);
+        const serializer = serializers.get(lazyResponse.init?.status || 200);
         if (serializer) {
-          serializerByResponse.set(response, serializer);
+          lazyResponse.resolveWithSerializer(serializer);
         }
       }
     },
