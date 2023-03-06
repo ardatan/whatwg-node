@@ -670,6 +670,59 @@ const responseJson = await response.json()
 console.table(responseJson)
 ```
 
+## Testing
+
+FETS has built-in support for HTTP injection. You can use any testing framework of your choice.
+
+You can use the fetch method on your router instance for calling the router instance as if you were
+doing an HTTP request.
+
+> Calling the router.fetch method does not send an actual HTTP request. It basically simulates the
+> HTTP request which is 100% conform with how Request/Response work.
+
+### Using `fetch` method
+
+```ts
+import { router } from './router'
+
+const response = await router.fetch('/todo', {
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    title: 'Buy milk',
+    completed: false
+  })
+})
+
+const responseJson = await response.json()
+console.assert(responseJson.title === 'Buy milk', 'Title should be "Buy milk"')
+```
+
+### Creating a test client
+
+```ts
+import { createClient } from 'fets'
+import { router } from './router'
+
+const client = createClient({
+  fetchFn: router.fetch,
+  endpoint: 'http://localhost:3000'
+})
+
+// Everything below is fully typed
+const response = await client['/todo'].put({
+  json: {
+    title: 'Buy milk',
+    completed: false
+  }
+})
+
+const responseJson = await response.json()
+console.assert(responseJson.title === 'Buy milk', 'Title should be "Buy milk"')
+```
+
 ## Usage in environments
 
 `Router` is actually an instance of `ServerAdapter` of `@whatwg-node/server` package. So you can use
