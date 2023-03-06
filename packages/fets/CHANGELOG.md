@@ -1,5 +1,16 @@
 # fets
 
+## 0.0.4
+
+### Patch Changes
+
+- [`0ced08d`](https://github.com/ardatan/whatwg-node/commit/0ced08d7177aa53cc8ef5f73acdf8e08811dcd51)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix Cloudflare Workers compatibility
+
+- Updated dependencies
+  [[`3bac7e3`](https://github.com/ardatan/whatwg-node/commit/3bac7e375df861a2f7c5807731791dd3b863a9fe)]:
+  - @whatwg-node/server@0.7.3
+
 ## 0.0.3
 
 ### Patch Changes
