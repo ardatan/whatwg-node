@@ -167,7 +167,7 @@ export function createRouterBase({
                   });
                 }
                 if (!handlerResult.serializerSet) {
-                  handlerResult.resolveWithSerializer(defaultSerializer)
+                  handlerResult.resolveWithSerializer(defaultSerializer);
                 }
                 const realResponse = await handlerResult.responsePromise;
                 if (realResponse) {

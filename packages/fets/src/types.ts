@@ -8,13 +8,13 @@ import {
   ServerAdapterPlugin,
   ServerAdapterRequestHandler,
 } from '@whatwg-node/server';
+import { LazySerializedResponse } from './Response';
 import type {
   HTTPMethod,
   TypedRequest,
   TypedResponse,
   TypedResponseWithJSONStatusMap,
 } from './typed-fetch';
-import { LazySerializedResponse } from './Response';
 
 export { TypedRequest as RouterRequest };
 
@@ -174,9 +174,11 @@ export type OnSerializeResponsePayload<TServerContext> = {
   request: TypedRequest;
   serverContext: TServerContext;
   lazyResponse: LazySerializedResponse;
-}
+};
 
-export type OnSerializeResponseHook<TServerContext> = (payload: OnSerializeResponsePayload<TServerContext>) => void;
+export type OnSerializeResponseHook<TServerContext> = (
+  payload: OnSerializeResponsePayload<TServerContext>,
+) => void;
 
 export type RouterPlugin<TServerContext> = ServerAdapterPlugin<TServerContext> & {
   onRouterInit?: OnRouterInitHook<TServerContext>;
