@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.7.3
+
+### Patch Changes
+
+- [`3bac7e3`](https://github.com/ardatan/whatwg-node/commit/3bac7e375df861a2f7c5807731791dd3b863a9fe)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix regression on handling methods from base
+  object
+
 ## 0.7.2
 
 ### Patch Changes
