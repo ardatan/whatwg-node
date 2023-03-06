@@ -35,13 +35,13 @@ package, your router will work in any environment that uses JavaScript.
 
 #### Why should I use this package instead of tRPC?
 
-FETS also doesn't need a code generation like tRPC doesn't, but FETS also allows you to export an OpenAPI
-document based on the JSON Schema definitions if you don't want to share TypeScript definitions
-between the client and the server. tRPC uses a programmatic solution like `zod` but FETS uses a more
-popular alternative [JSON Schema](https://json-schema.org/) which is more portable and completely
-language agnostic. If you want to have a similar experience like `zod` instead of writing JSON
-Schemas manually with objects, you can use `@sinclair/typebox` to generate them by using an API like
-`zod` has.
+FETS also doesn't need a code generation like tRPC doesn't, but FETS also allows you to export an
+OpenAPI document based on the JSON Schema definitions if you don't want to share TypeScript
+definitions between the client and the server. tRPC uses a programmatic solution like `zod` but FETS
+uses a more popular alternative [JSON Schema](https://json-schema.org/) which is more portable and
+completely language agnostic. If you want to have a similar experience like `zod` instead of writing
+JSON Schemas manually with objects, you can use `@sinclair/typebox` to generate them by using an API
+like `zod` has.
 [See how to use typebox with FETS.](#using-a-programmatic-json-schema-builder-zod-like-api)
 
 ## Usage
@@ -194,7 +194,7 @@ const router = createRouter()
     handler: request => {
       // It doesn't reach here if the request doesn't have an `Authorization` header.
     }
-  });
+  })
 ```
 
 ### Handler chaining
@@ -364,32 +364,30 @@ parameters, and URL parameters.
 ```ts
 import { createRouter, Response } from 'fets'
 
-const router = createRouter().route(
-  {
-    method: 'post',
-    path: '/todos',
-    // Define the request body schema
-    schemas: {
-      request: {
-        json: {
-          type: 'object',
-          properties: {
-            title: { type: 'string' },
-            completed: { type: 'boolean' }
-          },
-          additionalProperties: false,
-          required: ['title']
-        }
+const router = createRouter().route({
+  method: 'post',
+  path: '/todos',
+  // Define the request body schema
+  schemas: {
+    request: {
+      json: {
+        type: 'object',
+        properties: {
+          title: { type: 'string' },
+          completed: { type: 'boolean' }
+        },
+        additionalProperties: false,
+        required: ['title']
       }
-    } as const,
-    handler: async request => {
-      // This part is fully typed
-      const { title, completed } = await request.json()
-      // ...
-      return Response.json({ message: 'ok' })
     }
-  },
-)
+  } as const,
+  handler: async request => {
+    // This part is fully typed
+    const { title, completed } = await request.json()
+    // ...
+    return Response.json({ message: 'ok' })
+  }
+})
 ```
 
 #### Headers
@@ -397,33 +395,31 @@ const router = createRouter().route(
 ```ts
 import { createRouter, Response } from 'fets'
 
-const router = createRouter().route(
-  {
-    method: 'post',
-    path: '/todos',
-    // Define the request body schema
-    schemas: {
-      request: {
-        headers: {
-          type: 'object',
-          properties: {
-            'x-api-key': { type: 'string' }
-          },
-          additionalProperties: false,
-          required: ['x-api-key']
-        }
+const router = createRouter().route({
+  method: 'post',
+  path: '/todos',
+  // Define the request body schema
+  schemas: {
+    request: {
+      headers: {
+        type: 'object',
+        properties: {
+          'x-api-key': { type: 'string' }
+        },
+        additionalProperties: false,
+        required: ['x-api-key']
       }
-    } as const,
-    handler: async request => {
-      // This part is fully typed
-      const apiKey = request.headers.get('x-api-key')
-      // Would fail on TypeScript compilation
-      const wrongHeaderName = request.headers.get('x-api-key-wrong')
-      // ...
-      return Response.json({ message: 'ok' })
     }
-  },
-)
+  } as const,
+  handler: async request => {
+    // This part is fully typed
+    const apiKey = request.headers.get('x-api-key')
+    // Would fail on TypeScript compilation
+    const wrongHeaderName = request.headers.get('x-api-key-wrong')
+    // ...
+    return Response.json({ message: 'ok' })
+  }
+})
 ```
 
 #### Path Parameters
@@ -431,31 +427,29 @@ const router = createRouter().route(
 ```ts
 import { createRouter, Response } from 'fets'
 
-const router = createRouter().route(
-  {
-    method: 'get',
-    path: '/todos/:id',
-    // Define the request body schema
-    schemas: {
-      request: {
-        params: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' }
-          },
-          additionalProperties: false,
-          required: ['id']
-        }
+const router = createRouter().route({
+  method: 'get',
+  path: '/todos/:id',
+  // Define the request body schema
+  schemas: {
+    request: {
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' }
+        },
+        additionalProperties: false,
+        required: ['id']
       }
-    } as const,
-    handler: async request => {
-      // This part is fully typed
-      const { id } = request.params
-      // ...
-      return Response.json({ message: 'ok' })
     }
-  },
-)
+  } as const,
+  handler: async request => {
+    // This part is fully typed
+    const { id } = request.params
+    // ...
+    return Response.json({ message: 'ok' })
+  }
+})
 ```
 
 #### Query Parameters
@@ -499,66 +493,64 @@ the status codes.
 ```ts
 import { createRouter, Response } from 'fets'
 
-const router = createRouter().addRoute(
-  {
-    method: 'get',
-    path: '/todos',
-    // Define the request body schema
-    schemas: {
-      request: {
-        headers: {
+const router = createRouter().addRoute({
+  method: 'get',
+  path: '/todos',
+  // Define the request body schema
+  schemas: {
+    request: {
+      headers: {
+        type: 'object',
+        properties: {
+          'x-api-key': { type: 'string' }
+        },
+        additionalProperties: false,
+        required: ['x-api-key']
+      }
+    },
+    responses: {
+      200: {
+        type: 'array',
+        items: {
           type: 'object',
           properties: {
-            'x-api-key': { type: 'string' }
+            id: { type: 'string' },
+            title: { type: 'string' },
+            completed: { type: 'boolean' }
           },
           additionalProperties: false,
-          required: ['x-api-key']
+          required: ['id', 'title', 'completed']
         }
       },
-      responses: {
-        200: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'string' },
-              title: { type: 'string' },
-              completed: { type: 'boolean' }
-            },
-            additionalProperties: false,
-            required: ['id', 'title', 'completed']
-          }
+      401: {
+        type: 'object',
+        properties: {
+          message: { type: 'string' }
         },
-        401: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' }
-          },
-          additionalProperties: false,
-          required: ['message']
-        }
+        additionalProperties: false,
+        required: ['message']
       }
-    } as const,
-    handler: async request => {
-      const apiKey = request.headers.get('x-api-key')
-      if (!apiKey) {
-        return Response.json(
-          { message: 'API key is required' },
-          {
-            status: 401
-          }
-        )
-      }
-      const todos = await getTodos({
-        apiKey
-      })
-      // This part is fully typed
-      return Response.json(todos, {
-        status: 200
-      })
     }
+  } as const,
+  handler: async request => {
+    const apiKey = request.headers.get('x-api-key')
+    if (!apiKey) {
+      return Response.json(
+        { message: 'API key is required' },
+        {
+          status: 401
+        }
+      )
+    }
+    const todos = await getTodos({
+      apiKey
+    })
+    // This part is fully typed
+    return Response.json(todos, {
+      status: 200
+    })
   }
-)
+})
 ```
 
 ### Runtime validation
