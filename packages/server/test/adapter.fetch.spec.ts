@@ -191,11 +191,11 @@ describe('adapter.fetch', () => {
       },
       foo() {
         return 'foo';
-      }
-    }
+      },
+    };
     const adapter = createServerAdapter(baseObj);
     expect(adapter.foo()).toBe('foo');
-  })
+  });
   it('should respect existing methods returning the object itself', async () => {
     const baseObj = {
       async handle() {
@@ -203,8 +203,8 @@ describe('adapter.fetch', () => {
       },
       returnThis() {
         return this;
-      }
-    }
+      },
+    };
     const adapter = createServerAdapter(baseObj);
     expect(adapter.returnThis()).toBe(adapter);
   });
