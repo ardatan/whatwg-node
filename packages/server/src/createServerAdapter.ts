@@ -286,6 +286,7 @@ function createServerAdapter<
               if (returnedVal === serverAdapterBaseObject) {
                 return serverAdapter;
               }
+              return returnedVal;
             };
           }
           return serverAdapterBaseObjectProp;

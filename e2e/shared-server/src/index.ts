@@ -8,14 +8,24 @@ export function createTestServerAdapter<TServerContext = {}>(base?: string) {
     .route({
       method: 'GET',
       path: '/greetings/:name',
-      handler: req => Response.json({ message: `Hello ${req.params?.name}!` }),
+      handler: req => new Response(JSON.stringify({ message: `Hello ${req.params?.name}!` }), {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        status: 200,
+      }),
     })
     .route({
       method: 'POST',
       path: '/bye',
       handler: async req => {
         const { name } = await req.json();
-        return Response.json({ message: `Bye ${name}!` });
+        return new Response(JSON.stringify({ message: `Bye ${name}!` }), {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          status: 200,
+        });
       },
     })
     .route({

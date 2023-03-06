@@ -184,4 +184,28 @@ describe('adapter.fetch', () => {
 
     expect(handler.mock.lastCall?.[0].signal).toBeTruthy();
   });
+  it('should respect existing methods', () => {
+    const baseObj = {
+      async handle() {
+        return new Response();
+      },
+      foo() {
+        return 'foo';
+      }
+    }
+    const adapter = createServerAdapter(baseObj);
+    expect(adapter.foo()).toBe('foo');
+  })
+  it('should respect existing methods returning the object itself', async () => {
+    const baseObj = {
+      async handle() {
+        return new Response();
+      },
+      returnThis() {
+        return this;
+      }
+    }
+    const adapter = createServerAdapter(baseObj);
+    expect(adapter.returnThis()).toBe(adapter);
+  });
 });
