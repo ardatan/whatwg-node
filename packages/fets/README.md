@@ -651,11 +651,11 @@ export default { openapi: '3.0.1' /* ... */ }
 Then you need to import the OpenAPI document to the client code;
 
 ```ts file=examples/client.ts
-import { createOASClient, Mutable } from 'fets'
+import { createClient, Mutable } from 'fets'
 // Notice `type` in the import to avoid to import it on runtime
 import type oas from './saved_openapi'
 
-const client = createOASClient<Mutable<typeof oas>>({
+const client = createClient<Mutable<typeof oas>>({
   endpoint: 'http://localhost:3000'
 })
 
