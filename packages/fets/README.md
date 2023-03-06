@@ -642,10 +642,10 @@ console.table(responseJson)
 
 #### Using OpenAPI
 
-You need to save the OpenAPI document to a code file like below;
+You need to save the OpenAPI document to a code file like below and export OAS with `as const`;
 
 ```ts
-export default { openapi: '3.0.1' /* ... */ }
+export default { openapi: '3.0.1' /* ... */ } as const
 ```
 
 Then you need to import the OpenAPI document to the client code;
