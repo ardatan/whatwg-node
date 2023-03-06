@@ -1,6 +1,6 @@
 {
   "name": "fets",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "TypeScript HTTP Framework focusing on e2e type-safety, easy setup, performance & great developer experience",
   "repository": {
     "type": "git",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@ardatan/fast-json-stringify": "^0.0.3",
     "@whatwg-node/fetch": "^0.8.2",
-    "@whatwg-node/server": "^0.7.3",
+    "@whatwg-node/server": "^0.7.4",
     "ajv": "^8.12.0",
     "ajv-formats": "^2.1.1",
     "json-schema-to-ts": "2.7.2",

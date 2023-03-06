@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.7.4
+
+### Patch Changes
+
+- [#403](https://github.com/ardatan/whatwg-node/pull/403)
+  [`225b5fd`](https://github.com/ardatan/whatwg-node/commit/225b5fde78d53702fecb968cb2c8f7c113d41b47)
+  Thanks [@ardatan](https://github.com/ardatan)! - Improvements
+
 ## 0.7.3
 
 ### Patch Changes
