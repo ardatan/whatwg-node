@@ -12,6 +12,7 @@ export interface LazySerializedResponse {
   init?: ResponseInit;
   serializerSet: boolean;
   responsePromise: Promise<Response>;
+  jsonObj: any;
 }
 
 export function isLazySerializedResponse(response: any): response is LazySerializedResponse {
@@ -28,6 +29,7 @@ export function createLazySerializedResponse(
   });
   let _serializerSet = false;
   return {
+    jsonObj,
     responsePromise: promise,
     [LAZY_SERIALIZED_RESPONSE]: true,
     init,

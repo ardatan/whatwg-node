@@ -2,6 +2,7 @@ import Ajv from 'ajv';
 import type { ErrorObject } from 'ajv';
 import addFormats from 'ajv-formats';
 import jsonSerializerFactory from '@ardatan/fast-json-stringify';
+import { getHeadersObj } from '@whatwg-node/server';
 import { Response } from '../Response';
 import { JSONSerializer, PromiseOrValue, RouterPlugin, RouterRequest } from '../types';
 
@@ -18,10 +19,7 @@ export function useAjv(): RouterPlugin<any> {
       if (schemas?.request?.headers) {
         const validateFn = ajv.compile(schemas.request.headers);
         validationMiddlewares.set('headers', request => {
-          const headersObj: any = {};
-          request.headers.forEach((value, key) => {
-            headersObj[key] = value;
-          });
+          const headersObj = getHeadersObj(request.headers);
           const isValid = validateFn(headersObj);
           if (!isValid) {
             return validateFn.errors!;
