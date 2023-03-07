@@ -36,8 +36,8 @@ export async function waitForEndpoint(
         throw new Error(`⚠️ Endpoint not ready yet, response text includes "Vercel"`);
       }
 
-      if (lastResponseText.includes('Azure')) {
-        throw new Error(`⚠️ Endpoint not ready yet, response text includes "Azure"`);
+      if (lastResponseText.includes('<title>Microsoft')) {
+        throw new Error(`⚠️ Endpoint not ready yet, response text includes "<title>Microsoft"`);
       }
 
       console.log(`\t✅ Endpoint is ready!`);
