@@ -7,7 +7,7 @@ export function createTestServerAdapter<TServerContext = {}>() {
       url: req.url,
       method: req.method,
       headers: getHeadersObj(req.headers),
-      reqText: await req.text(),
+      reqText: req.method === 'POST' ? await req.text() : '',
     });
   });
 }
