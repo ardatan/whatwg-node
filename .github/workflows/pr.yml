@@ -5,17 +5,6 @@ on:
     branches:
       - master
 
-  workflow_dispatch:
-    inputs:
-      onDemand:
-        description: 'Are you sure?'
-        required: true
-        default: 'yes'
-      npmTag:
-        description: 'NPM Tag'
-        required: true
-        default: 'alpha'
-
 jobs:
   dependencies:
     uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yaml@main

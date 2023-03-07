@@ -33,14 +33,6 @@ etc. For Node.js, it transpiles Node.js specific APIs to the standard ones, and 
 environments, it uses the standard APIs directly. Even if your environment doesn't use Fetch API for
 the server implementation, you can still use `fetch` method to handle requests.
 
-### [fets](./packages/fets)
-
-FETS is a fully type-safe, web standards compliant, platform independent, and lightweight HTTP
-framework written in TypeScript, it includes a fully type-safe server and OpenAPI client.
-
-FETS works with the WHATWG Fetch API that works in any JavaScript environment including Node.js,
-Deno, Bun, Cloudflare Workers, Next.js, Fastify, Express, AWS Lambdas and even in browsers.
-
 ### [fetchache](./packages/fetchache)
 
 A fetch wrapper that allows you to respect HTTP caching strategies on non-browser environments with

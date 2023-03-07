@@ -1,11 +1,10 @@
 import { join } from 'path';
 import {
-  assertIndex,
+  assertDeployedEndpoint,
   DeploymentConfiguration,
   env,
   execPromise,
   fsPromises,
-  waitForEndpoint,
 } from '@e2e/shared-scripts';
 import * as pulumi from '@pulumi/pulumi';
 
@@ -159,9 +158,7 @@ export function createVercelDeployment(): DeploymentConfiguration<{
     },
     test: async ({ functionUrl }) => {
       console.log(`ℹ️ Vercel Function deployed to URL: ${functionUrl.value}`);
-      // await assertDeployedEndpoint(functionUrl.value);
-      await waitForEndpoint(functionUrl.value, 5, 10000);
-      assertIndex(functionUrl.value);
+      await assertDeployedEndpoint(functionUrl.value);
     },
   };
 }
