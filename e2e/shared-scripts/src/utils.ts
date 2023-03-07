@@ -110,6 +110,7 @@ export async function assertPOST(endpoint: string) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
     body: JSON.stringify({
       name: 'pulumi',
