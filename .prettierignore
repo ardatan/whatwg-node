@@ -5,5 +5,3 @@ CHANGELOG.md
 .changeset
 .husky
 .bob
-examples/todolist/src/saved_openapi.ts
-packages/fets/src/swagger-ui-html.ts

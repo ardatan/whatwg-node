@@ -303,4 +303,4 @@ documentation.
 We'd recommend to use `fets` to handle routing and middleware approach. It uses
 `@whatwg-node/server` under the hood.
 
-> Learn more about `fets` [here](../fets)
+> Learn more about `fets` [here](https://github.com/ardatan/fets)
