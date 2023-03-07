@@ -70,7 +70,7 @@ export async function assertGET(endpoint: string) {
   const response = await fetch(endpoint, {
     method: 'GET',
     headers: {
-      accept: 'application/json'
+      accept: 'application/json',
     },
   });
 
@@ -97,7 +97,9 @@ export async function assertGET(endpoint: string) {
   }
 
   if (!json.headers.accept !== 'application/json') {
-    throw new Error(`⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`);
+    throw new Error(
+      `⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`,
+    );
   }
 
   console.log(`\t✅ GET is available`);
@@ -137,11 +139,15 @@ export async function assertPOST(endpoint: string) {
   }
 
   if (!json.headers.accept !== 'application/json') {
-    throw new Error(`⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`);
+    throw new Error(
+      `⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`,
+    );
   }
 
   if (json.body !== '{"name":"pulumi"}') {
-    throw new Error(`⚠️ Expected '{"name":"pulumi"}', but received ${json.body} for ${response.url}`);
+    throw new Error(
+      `⚠️ Expected '{"name":"pulumi"}', but received ${json.body} for ${response.url}`,
+    );
   }
 
   console.log(`\t✅ POST is available`);
@@ -149,10 +155,7 @@ export async function assertPOST(endpoint: string) {
 
 export async function assertDeployedEndpoint(url: string) {
   await waitForEndpoint(url, 5, 10000);
-  const results = await Promise.allSettled([
-    assertGET(url),
-    assertPOST(url),
-  ]);
+  const results = await Promise.allSettled([assertGET(url), assertPOST(url)]);
   let failed = false;
   results.forEach(result => {
     if (result.status === 'rejected') {

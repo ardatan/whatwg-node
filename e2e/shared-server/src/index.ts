@@ -1,5 +1,5 @@
-import { createServerAdapter, getHeadersObj } from '@whatwg-node/server';
 import { Response } from '@whatwg-node/fetch';
+import { createServerAdapter, getHeadersObj } from '@whatwg-node/server';
 
 export function createTestServerAdapter<TServerContext = {}>() {
   return createServerAdapter<TServerContext>(async req => {
@@ -8,6 +8,6 @@ export function createTestServerAdapter<TServerContext = {}>() {
       method: req.method,
       headers: getHeadersObj(req.headers),
       reqText: await req.text(),
-    })
-  })
+    });
+  });
 }
