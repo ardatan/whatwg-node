@@ -86,12 +86,7 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
             eventHandler: func,
           },
           {
-            path: '/greetings/{name}',
-            method: 'GET',
-            eventHandler: func,
-          },
-          {
-            path: '/bye',
+            path: '/',
             method: 'POST',
             eventHandler: func,
           },
