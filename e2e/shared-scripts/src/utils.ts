@@ -145,9 +145,9 @@ export async function assertPOST(endpoint: string) {
     );
   }
 
-  if (json.body !== '{"name":"pulumi"}') {
+  if (json.reqText !== '{"name":"pulumi"}') {
     throw new Error(
-      `⚠️ Expected '{"name":"pulumi"}', but received ${json.body} for ${response.url}`,
+      `⚠️ Expected '{"name":"pulumi"}', but received ${json.reqText} for ${response.url}`,
     );
   }
 
