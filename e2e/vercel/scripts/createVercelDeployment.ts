@@ -5,7 +5,6 @@ import {
   env,
   execPromise,
   fsPromises,
-  waitForEndpoint,
 } from '@e2e/shared-scripts';
 import * as pulumi from '@pulumi/pulumi';
 
