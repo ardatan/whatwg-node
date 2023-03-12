@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/server-plugin-cookies",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Cookies Plugin",
   "repository": {
     "type": "git",
