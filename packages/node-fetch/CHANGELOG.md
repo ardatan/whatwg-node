@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.3.2
+
+### Patch Changes
+
+- [`40dd7b5`](https://github.com/ardatan/whatwg-node/commit/40dd7b51181badf4e31edb53a481d52bc6fdb416)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support compression content encodings like zlib,
+  gzip, deflate, br, etc. in Node.js
+
 ## 0.3.1
 
 ### Patch Changes
