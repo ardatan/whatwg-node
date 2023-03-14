@@ -104,9 +104,11 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         let responseBody: Readable = nodeResponse;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
+          case 'x-gzip':
           case 'gzip':
             responseBody = nodeResponse.pipe(createGunzip());
             break;
+          case 'x-deflate':
           case 'deflate':
             responseBody = nodeResponse.pipe(createInflate());
             break;
