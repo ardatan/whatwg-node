@@ -129,4 +129,22 @@ describe('Node Fetch Ponyfill', () => {
       }),
     ).rejects.toThrow('The operation was aborted.');
   });
+  it('should respect gzip', async () => {
+    const response = await fetchPonyfill(baseUrl + '/gzip');
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.gzipped).toBe(true);
+  });
+  it('should respect deflate', async () => {
+    const response = await fetchPonyfill(baseUrl + '/deflate');
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.deflated).toBe(true);
+  });
+  it('should respect brotli', async () => {
+    const response = await fetchPonyfill(baseUrl + '/brotli');
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.brotli).toBe(true);
+  });
 });

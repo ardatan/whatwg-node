@@ -3,6 +3,7 @@ import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
+import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { PonyfillAbortError } from './AbortError';
 import { PonyfillBlob } from './Blob';
 import { PonyfillRequest, RequestPonyfillInit } from './Request';
@@ -100,6 +101,19 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       });
 
       nodeRequest.once('response', nodeResponse => {
+        let responseBody: Readable = nodeResponse;
+        const contentEncoding = nodeResponse.headers['content-encoding'];
+        switch (contentEncoding) {
+          case 'gzip':
+            responseBody = nodeResponse.pipe(createGunzip());
+            break;
+          case 'deflate':
+            responseBody = nodeResponse.pipe(createInflate());
+            break;
+          case 'br':
+            responseBody = nodeResponse.pipe(createBrotliDecompress());
+            break;
+        }
         if (nodeResponse.headers.location) {
           if (fetchRequest.redirect === 'error') {
             const redirectError = new Error('Redirects are not allowed');
@@ -121,7 +135,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
           }
         }
         const responseHeaders: Record<string, string | string[] | undefined> = nodeResponse.headers;
-        const ponyfillResponse = new PonyfillResponse(nodeResponse, {
+        const ponyfillResponse = new PonyfillResponse(responseBody, {
           status: nodeResponse.statusCode,
           statusText: nodeResponse.statusMessage,
           headers: responseHeaders,
