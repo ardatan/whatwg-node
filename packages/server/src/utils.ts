@@ -245,7 +245,7 @@ export async function sendNodeResponse(
       return;
     }
 
-    if (fetchBody[Symbol.toStringTag] === 'Uint8Array') {
+    if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
       serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(fetchBody);

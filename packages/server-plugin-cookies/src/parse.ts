@@ -53,7 +53,7 @@ export function parse(str: string, options: ParseOptions = {}): Cookie[] {
     }
 
     // only assign once
-    if (obj[key] == null) {
+    if ((obj as any)[key] == null) {
       obj.push({
         name: key,
         value: tryDecode(val, dec),

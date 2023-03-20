@@ -82,14 +82,14 @@ export class PonyfillBody<TJSON = any> implements Body {
       return new Proxy(_body.readable as any, {
         get(_, prop) {
           if (prop in ponyfillReadableStream) {
-            const ponyfillReadableStreamProp: any = ponyfillReadableStream[prop];
+            const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
             if (typeof ponyfillReadableStreamProp === 'function') {
               return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
             }
             return ponyfillReadableStreamProp;
           }
           if (prop in readable) {
-            const readableProp: any = readable[prop];
+            const readableProp: any = (readable as any)[prop];
             if (typeof readableProp === 'function') {
               return readableProp.bind(readable);
             }
@@ -411,7 +411,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
 
-  if (bodyInit[Symbol.iterator] || bodyInit[Symbol.asyncIterator]) {
+  if ((bodyInit as any)[Symbol.iterator] || (bodyInit as any)[Symbol.asyncIterator]) {
     return {
       contentType: null,
       contentLength: null,

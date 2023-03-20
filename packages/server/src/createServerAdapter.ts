@@ -263,14 +263,14 @@ function createServerAdapter<
       );
     },
     get: (_, prop) => {
-      const adapterProp = adapterObj[prop];
+      const adapterProp = (adapterObj as any)[prop];
       if (adapterProp) {
         if (adapterProp.bind) {
           return adapterProp.bind(adapterObj);
         }
         return adapterProp;
       }
-      const handleProp = genericRequestHandler[prop];
+      const handleProp = (genericRequestHandler as any)[prop];
       if (handleProp) {
         if (handleProp.bind) {
           return handleProp.bind(genericRequestHandler);
@@ -278,11 +278,11 @@ function createServerAdapter<
         return handleProp;
       }
       if (serverAdapterBaseObject) {
-        const serverAdapterBaseObjectProp = serverAdapterBaseObject[prop];
+        const serverAdapterBaseObjectProp = (serverAdapterBaseObject as any)[prop];
         if (serverAdapterBaseObjectProp) {
           if (serverAdapterBaseObjectProp.bind) {
             return function (...args: any[]) {
-              const returnedVal = serverAdapterBaseObject[prop](...args);
+              const returnedVal = (serverAdapterBaseObject as any)[prop](...args);
               if (returnedVal === serverAdapterBaseObject) {
                 return serverAdapter;
               }
@@ -308,7 +308,7 @@ function completeAssign(target: any, ...sources: any[]) {
     if (source != null && typeof source === 'object') {
       // modified Object.keys to Object.getOwnPropertyNames
       // because Object.keys only returns enumerable properties
-      const descriptors = Object.getOwnPropertyNames(source).reduce((descriptors, key) => {
+      const descriptors: any = Object.getOwnPropertyNames(source).reduce((descriptors: any, key) => {
         descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
         return descriptors;
       }, {});

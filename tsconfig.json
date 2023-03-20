@@ -16,8 +16,6 @@
     "downlevelIteration": true,
     "incremental": true,
 
-    "suppressImplicitAnyIndexErrors": true,
-
     "skipLibCheck": false,
 
     "strict": true,
