@@ -16,6 +16,7 @@
     "access": "public"
   },
   "sideEffects": false,
+  "bob": false,
   "denoify": {
     "index": "dist/deno-ponyfill.ts"
   },
