@@ -1,5 +1,13 @@
 # @e2e/aws-lambda
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies
+  [[`bf585a3`](https://github.com/ardatan/whatwg-node/commit/bf585a3b1cafa63bdee86dace6a0e08f98a9b554)]:
+  - @whatwg-node/fetch@0.8.3
+
 ## 0.0.3
 
 ### Patch Changes

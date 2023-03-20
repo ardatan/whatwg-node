@@ -1,5 +1,17 @@
 # @whatwg-node/server
 
+## 0.7.5
+
+### Patch Changes
+
+- [#434](https://github.com/ardatan/whatwg-node/pull/434)
+  [`9f242f8`](https://github.com/ardatan/whatwg-node/commit/9f242f8268748345899ea4b6f05dac3c6dcecbeb)
+  Thanks [@ardatan](https://github.com/ardatan)! - Update bob
+
+- Updated dependencies
+  [[`bf585a3`](https://github.com/ardatan/whatwg-node/commit/bf585a3b1cafa63bdee86dace6a0e08f98a9b554)]:
+  - @whatwg-node/fetch@0.8.3
+
 ## 0.7.4
 
 ### Patch Changes
