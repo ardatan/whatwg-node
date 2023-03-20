@@ -1,6 +1,6 @@
 import { Request, Response } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src/createServerAdapter';
-import { CORSOptions, getCORSHeadersByRequestAndOptions, useCORS } from '../src/plugins/useCors';
+import { createServerAdapter } from '../src/createServerAdapter.js';
+import { CORSOptions, getCORSHeadersByRequestAndOptions, useCORS } from '../src/plugins/useCors.js';
 
 describe('CORS', () => {
   describe('OPTIONS call', () => {

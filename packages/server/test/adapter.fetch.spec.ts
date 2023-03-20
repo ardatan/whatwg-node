@@ -1,5 +1,5 @@
 import { Request, Response, URL } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src';
+import { createServerAdapter } from '../src/index.js';
 
 describe('adapter.fetch', () => {
   // Request as first parameter

@@ -1,5 +1,6 @@
-const { resolve } = require('path');
+const { resolve, join } = require('path');
 const { pathsToModuleNameMapper } = require('ts-jest');
+const fs = require('fs');
 const CI = !!process.env.CI;
 
 const ROOT_DIR = __dirname;
@@ -24,4 +25,5 @@ module.exports = {
   },
   collectCoverage: false,
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
+  resolver: 'bob-the-bundler/jest-resolver',
 };

@@ -1,7 +1,12 @@
 import { EventTarget } from '@whatwg-node/events';
-import { CookieChangeEvent } from './CookieChangeEvent';
-import { parse } from './parse';
-import { Cookie, CookieListItem, CookieStoreDeleteOptions, CookieStoreGetOptions } from './types';
+import { CookieChangeEvent } from './CookieChangeEvent.js';
+import { parse } from './parse.js';
+import {
+  Cookie,
+  CookieListItem,
+  CookieStoreDeleteOptions,
+  CookieStoreGetOptions,
+} from './types.js';
 
 export class CookieStore extends EventTarget {
   onchange?: (event: CookieChangeEvent) => void;

@@ -1,4 +1,4 @@
-import { PonyfillBlob } from './Blob';
+import { PonyfillBlob } from './Blob.js';
 
 export class PonyfillFile extends PonyfillBlob implements File {
   public lastModified: number;

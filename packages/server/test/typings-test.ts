@@ -1,6 +1,6 @@
 import { createServer as createHttpServer, IncomingMessage, ServerResponse } from 'http';
 import { createServer as createHttp2Server, Http2ServerRequest, Http2ServerResponse } from 'http2';
-import { createServerAdapter } from '../src/createServerAdapter';
+import { createServerAdapter } from '../src/createServerAdapter.js';
 
 const adapter = createServerAdapter(() => {
   return null as any;

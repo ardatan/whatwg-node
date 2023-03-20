@@ -35,7 +35,7 @@ jobs:
       - name: ESLint
         run: yarn lint
 
-  build:
+  type-check:
     name: Type Check
     runs-on: ubuntu-latest
     steps:
@@ -47,6 +47,7 @@ jobs:
           nodeVersion: 18
       - name: Type Check
         run: yarn ts:check
+
   test:
     name: Unit Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest
@@ -77,6 +78,7 @@ jobs:
         run: yarn test --ci
         env:
           CI: true
+
   test_esm:
     name: ESM Test
     runs-on: ubuntu-latest
@@ -90,4 +92,4 @@ jobs:
       - name: Build Packages
         run: yarn build
       - name: Test ESM
-        run: node scripts/test-esm.mjs
+        run: yarn esm:check

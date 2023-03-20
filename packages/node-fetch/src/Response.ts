@@ -1,6 +1,6 @@
 import { STATUS_CODES } from 'http';
-import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body';
-import { PonyfillHeaders, PonyfillHeadersInit } from './Headers';
+import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
+import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 
 export type ResponsePonyfilInit = PonyfillBodyOptions &
   Omit<ResponseInit, 'headers'> & {

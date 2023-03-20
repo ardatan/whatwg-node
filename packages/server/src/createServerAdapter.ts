@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types';
+import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
   FetchAPI,
   FetchEvent,
@@ -8,7 +8,7 @@ import {
   ServerAdapterBaseObject,
   ServerAdapterObject,
   ServerAdapterRequestHandler,
-} from './types';
+} from './types.js';
 import {
   isFetchEvent,
   isNodeRequest,
@@ -18,7 +18,7 @@ import {
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
-} from './utils';
+} from './utils.js';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
@@ -308,10 +308,13 @@ function completeAssign(target: any, ...sources: any[]) {
     if (source != null && typeof source === 'object') {
       // modified Object.keys to Object.getOwnPropertyNames
       // because Object.keys only returns enumerable properties
-      const descriptors: any = Object.getOwnPropertyNames(source).reduce((descriptors: any, key) => {
-        descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
-        return descriptors;
-      }, {});
+      const descriptors: any = Object.getOwnPropertyNames(source).reduce(
+        (descriptors: any, key) => {
+          descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+          return descriptors;
+        },
+        {},
+      );
 
       // By default, Object.assign copies enumerable Symbols, too
       Object.getOwnPropertySymbols(source).forEach(sym => {

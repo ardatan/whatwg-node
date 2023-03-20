@@ -1,7 +1,7 @@
 import { AddressInfo, Socket } from 'net';
 import fastify, { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { fetch, ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src/createServerAdapter';
+import { createServerAdapter } from '../src/createServerAdapter.js';
 
 describe('Fastify', () => {
   let fastifyServer: FastifyInstance;
