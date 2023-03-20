@@ -127,6 +127,14 @@ export class PonyfillHeaders implements Headers {
     });
   }
 
+  keys(): IterableIterator<string> {
+    return this.getMap().keys();
+  }
+
+  values(): IterableIterator<string> {
+    return this.getMap().values();
+  }
+
   entries(): IterableIterator<[string, string]> {
     return this.getMap().entries();
   }

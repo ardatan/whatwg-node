@@ -1,4 +1,5 @@
 /// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
 /// <reference types="urlpattern-polyfill" />
 
 type ResponseCtorWithJson = typeof Response & {

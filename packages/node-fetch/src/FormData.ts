@@ -49,6 +49,22 @@ export class PonyfillFormData implements FormData {
     }
   }
 
+  entries(): IterableIterator<[string, FormDataEntryValue]> {
+    return this[Symbol.iterator]();
+  }
+
+  keys(): IterableIterator<string> {
+    return this.map.keys();
+  }
+
+  *values(): IterableIterator<FormDataEntryValue> {
+    for (const values of this.map.values()) {
+      for (const value of values) {
+        yield value;
+      }
+    }
+  }
+
   forEach(callback: (value: FormDataEntryValue, key: string, parent: this) => void): void {
     for (const [key, value] of this) {
       callback(value, key, this);
