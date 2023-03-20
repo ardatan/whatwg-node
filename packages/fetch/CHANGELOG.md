@@ -1,5 +1,17 @@
 # @whatwg-node/fetch
 
+## 0.8.3
+
+### Patch Changes
+
+- [`bf585a3`](https://github.com/ardatan/whatwg-node/commit/bf585a3b1cafa63bdee86dace6a0e08f98a9b554)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support iterable Fetch API methods
+
+- Updated dependencies
+  [[`9f242f8`](https://github.com/ardatan/whatwg-node/commit/9f242f8268748345899ea4b6f05dac3c6dcecbeb),
+  [`bf585a3`](https://github.com/ardatan/whatwg-node/commit/bf585a3b1cafa63bdee86dace6a0e08f98a9b554)]:
+  - @whatwg-node/node-fetch@0.3.3
+
 ## 0.8.2
 
 ### Patch Changes
