@@ -1,6 +1,6 @@
-import { PonyfillAbortController } from './AbortController';
-import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body';
-import { PonyfillHeaders, PonyfillHeadersInit } from './Headers';
+import { PonyfillAbortController } from './AbortController.js';
+import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
+import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 
 function isRequest(input: any): input is PonyfillRequest {
   return input[Symbol.toStringTag] === 'Request';

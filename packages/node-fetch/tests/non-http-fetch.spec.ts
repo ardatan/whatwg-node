@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { pathToFileURL } from 'url';
-import { fetchPonyfill } from '../src/fetch';
+import { fetchPonyfill } from '../src/fetch.js';
 
 it('should respect file protocol', async () => {
   const response = await fetchPonyfill(pathToFileURL(join(__dirname, './fixtures/test.json')));

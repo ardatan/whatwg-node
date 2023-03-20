@@ -1,6 +1,6 @@
 import { CustomEvent } from '@whatwg-node/events';
 import { Request, Response } from '@whatwg-node/fetch';
-import { createServerAdapter } from '../src';
+import { createServerAdapter } from '../src/index.js';
 
 describe('FetchEvent listener', () => {
   it('should not return a promise to event listener', async () => {

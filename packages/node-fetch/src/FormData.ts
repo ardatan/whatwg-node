@@ -1,6 +1,6 @@
-import { PonyfillBlob } from './Blob';
-import { PonyfillFile } from './File';
-import { PonyfillReadableStream } from './ReadableStream';
+import { PonyfillBlob } from './Blob.js';
+import { PonyfillFile } from './File.js';
+import { PonyfillReadableStream } from './ReadableStream.js';
 
 export class PonyfillFormData implements FormData {
   private map = new Map<string, FormDataEntryValue[]>();

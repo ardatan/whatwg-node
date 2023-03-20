@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
-import { PonyfillBlob } from '../src/Blob';
-import { PonyfillBody } from '../src/Body';
+import { PonyfillBlob } from '../src/Blob.js';
+import { PonyfillBody } from '../src/Body.js';
 
 const exampleData = {
   data: {
@@ -16,7 +16,7 @@ const examples = {
 };
 
 function runExamples(fn: (body: PonyfillBody) => void | Promise<void>) {
-  const exampleTypes = Object.keys(examples);
+  const exampleTypes = Object.keys(examples) as (keyof typeof examples)[];
   exampleTypes.forEach(exampleName => {
     const example = examples[exampleName];
     exampleTypes.forEach(toType => {

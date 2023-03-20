@@ -1,6 +1,6 @@
 import { BlobOptions } from 'buffer';
-import { PonyfillReadableStream } from './ReadableStream';
-import { uint8ArrayToArrayBuffer } from './utils';
+import { PonyfillReadableStream } from './ReadableStream.js';
+import { uint8ArrayToArrayBuffer } from './utils.js';
 
 function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
   if (typeof blobPart === 'string') {

@@ -1,5 +1,5 @@
-import { createServerAdapter } from '../src/createServerAdapter';
-import { useErrorHandling } from '../src/plugins/useErrorHandling';
+import { createServerAdapter } from '../src/createServerAdapter.js';
+import { useErrorHandling } from '../src/plugins/useErrorHandling.js';
 
 describe('useErrorHandling', () => {
   it('should return 500 when error is thrown', async () => {

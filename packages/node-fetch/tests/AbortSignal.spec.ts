@@ -1,4 +1,4 @@
-import { PonyfillAbortSignal } from '../src/AbortSignal';
+import { PonyfillAbortSignal } from '../src/AbortSignal.js';
 
 describe('AbortSignal', () => {
   it('timeout', done => {

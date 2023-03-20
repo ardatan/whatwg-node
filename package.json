@@ -1,16 +1,15 @@
 {
   "name": "whatwg-node-monorepo",
   "private": true,
-  "workspaces": {
-    "packages": [
-      "./packages/*",
-      "./e2e/*"
-    ]
-  },
+  "workspaces": [
+    "packages/*",
+    "e2e/*"
+  ],
   "scripts": {
-    "build": "yarn ts:transpile && bob build",
+    "build": "bob build",
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
     "clean-dist": "rimraf \"dist\" && rimraf \".bob\"",
+    "esm:check": "bob check",
     "lint": "eslint --ext .ts .",
     "postinstall": "patch-package && husky install",
     "prebuild": "yarn clean-dist",
@@ -20,8 +19,7 @@
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
     "test": "jest --detectOpenHandles --detectLeaks",
-    "ts:check": "tsc --noEmit",
-    "ts:transpile": "tsc --project tsconfig.build.json"
+    "ts:check": "tsc --noEmit"
   },
   "devDependencies": {
     "@babel/core": "7.21.3",
@@ -37,7 +35,7 @@
     "@typescript-eslint/eslint-plugin": "5.55.0",
     "@typescript-eslint/parser": "5.55.0",
     "babel-jest": "29.5.0",
-    "bob-the-bundler": "1.7.3",
+    "bob-the-bundler": "6.0.0",
     "eslint": "8.36.0",
     "eslint-config-prettier": "8.7.0",
     "eslint-config-standard": "17.0.0",

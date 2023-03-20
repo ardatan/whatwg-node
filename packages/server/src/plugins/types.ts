@@ -1,4 +1,4 @@
-import { FetchAPI, ServerAdapterRequestHandler } from '../types';
+import { FetchAPI, ServerAdapterRequestHandler } from '../types.js';
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
   onRequest?: OnRequestHook<TServerContext>;

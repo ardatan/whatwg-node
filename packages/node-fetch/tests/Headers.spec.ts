@@ -1,4 +1,4 @@
-import { PonyfillHeaders } from '../src/Headers';
+import { PonyfillHeaders } from '../src/Headers.js';
 
 describe('Headers', () => {
   it('be case-insensitive', () => {

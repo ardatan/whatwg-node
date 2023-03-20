@@ -1,7 +1,7 @@
-export * from './createServerAdapter';
-export * from './types';
-export * from './utils';
-export * from './plugins/types';
-export * from './plugins/useCors';
-export * from './plugins/useErrorHandling';
+export * from './createServerAdapter.js';
+export * from './types.js';
+export * from './utils.js';
+export * from './plugins/types.js';
+export * from './plugins/useCors.js';
+export * from './plugins/useErrorHandling.js';
 export { Response } from '@whatwg-node/fetch';

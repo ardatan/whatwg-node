@@ -1,11 +1,11 @@
 import { globalAgent as httpGlobalAgent } from 'http';
 import { globalAgent as httpsGlobalAgent } from 'https';
 import { Readable } from 'stream';
-import { PonyfillAbortController } from '../src/AbortController';
-import { PonyfillBlob } from '../src/Blob';
-import { fetchPonyfill } from '../src/fetch';
-import { PonyfillFormData } from '../src/FormData';
-import { PonyfillReadableStream } from '../src/ReadableStream';
+import { PonyfillAbortController } from '../src/AbortController.js';
+import { PonyfillBlob } from '../src/Blob.js';
+import { fetchPonyfill } from '../src/fetch.js';
+import { PonyfillFormData } from '../src/FormData.js';
+import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('Node Fetch Ponyfill', () => {
   afterAll(() => {

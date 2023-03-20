@@ -1,4 +1,4 @@
-import { Cookie } from './types';
+import { Cookie } from './types.js';
 
 export interface ParseOptions {
   decode?: boolean;

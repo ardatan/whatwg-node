@@ -1,10 +1,10 @@
 import { Blob as NodeBlob } from 'buffer';
-import { PonyfillBlob } from '../src/Blob';
-import { PonyfillFile } from '../src/File';
-import { PonyfillFormData } from '../src/FormData';
-import { PonyfillRequest } from '../src/Request';
-import { PonyfillResponse } from '../src/Response';
-import { PonyfillURLSearchParams } from '../src/URLSearchParams';
+import { PonyfillBlob } from '../src/Blob.js';
+import { PonyfillFile } from '../src/File.js';
+import { PonyfillFormData } from '../src/FormData.js';
+import { PonyfillRequest } from '../src/Request.js';
+import { PonyfillResponse } from '../src/Response.js';
+import { PonyfillURLSearchParams } from '../src/URLSearchParams.js';
 
 describe('Form Data', () => {
   it('Consume empty URLSearchParams as PonyfillFormData', async () => {
