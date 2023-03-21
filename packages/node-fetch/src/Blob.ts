@@ -1,6 +1,18 @@
-import { BlobOptions } from 'buffer';
 import { PonyfillReadableStream } from './ReadableStream.js';
 import { uint8ArrayToArrayBuffer } from './utils.js';
+
+interface BlobOptions {
+  /**
+   * @default 'utf8'
+   */
+  encoding?: BufferEncoding | undefined;
+  /**
+   * The Blob content-type. The intent is for `type` to convey
+   * the MIME media type of the data, however no validation of the type format
+   * is performed.
+   */
+  type?: string | undefined;
+}
 
 function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
   if (typeof blobPart === 'string') {
