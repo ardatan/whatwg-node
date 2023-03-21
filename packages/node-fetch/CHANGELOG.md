@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.3.4
+
+### Patch Changes
+
+- [`d1e2043`](https://github.com/ardatan/whatwg-node/commit/d1e2043b88e5bb62fd9507cc9169dc74f45fd1b1)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove @types/node peer dependency
+
 ## 0.3.3
 
 ### Patch Changes
