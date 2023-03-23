@@ -1,5 +1,13 @@
 # @whatwg-node/fetch
 
+## 0.8.4
+
+### Patch Changes
+
+- [`207ee1d`](https://github.com/ardatan/whatwg-node/commit/207ee1de374a38e9c2b61bd4896d1591e3e57117)
+  Thanks [@ardatan](https://github.com/ardatan)! - Detect Deno if the module is imported via 'npm:'
+  or any other Node compatibility method
+
 ## 0.8.3
 
 ### Patch Changes
