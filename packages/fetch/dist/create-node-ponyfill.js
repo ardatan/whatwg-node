@@ -7,8 +7,8 @@ module.exports = function createNodePonyfill(opts = {}) {
     ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
-  // Bun already has a Fetch API
-  if (process.versions.bun) {
+  // Bun and Deno already have a Fetch API
+  if (globalThis.Deno || process.versions.bun) {
     return globalThis;
   }
 
