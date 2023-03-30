@@ -25,12 +25,12 @@ function tryDecode(
  * Parse the given cookie header string into an object
  * The object has the various cookies as keys(names) => values
  */
-export function parse(str: string, options: ParseOptions = {}): Cookie[] {
+export function parse(str: string, options: ParseOptions = {}): Map<string, Cookie> {
   if (typeof str !== 'string') {
     throw new TypeError('argument str must be a string');
   }
 
-  const obj = [];
+  const map = new Map<string, Cookie>();
   const opt = options || {};
   const pairs = str.split(pairSplitRegExp);
   const dec = opt.decode || decode;
@@ -52,14 +52,11 @@ export function parse(str: string, options: ParseOptions = {}): Cookie[] {
       val = val.slice(1, -1);
     }
 
-    // only assign once
-    if ((obj as any)[key] == null) {
-      obj.push({
-        name: key,
-        value: tryDecode(val, dec),
-      });
+    const cookiesPerKey = map.get(key);
+    if (!cookiesPerKey) {
+      map.set(key, { name: key, value: tryDecode(val, dec) });
     }
   }
 
-  return obj;
+  return map;
 }

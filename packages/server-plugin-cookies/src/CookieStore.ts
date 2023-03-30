@@ -11,12 +11,15 @@ import {
 export class CookieStore extends EventTarget {
   onchange?: (event: CookieChangeEvent) => void;
 
+  private cookieMap = new Map<string, Cookie>();
+
   get [Symbol.toStringTag](): 'CookieStore' {
     return 'CookieStore';
   }
 
-  constructor(public cookieString: string) {
+  constructor(cookieString: string) {
     super();
+    this.cookieMap = parse(cookieString);
   }
 
   async get(
@@ -77,42 +80,8 @@ export class CookieStore extends EventTarget {
       item.secure = true;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    let cookieString = `${item.name}=${encodeURIComponent(item.value!)}`;
-
-    if (item.domain) {
-      cookieString += '; Domain=' + item.domain;
-    }
-
-    if (item.path) {
-      cookieString += '; Path=' + item.path;
-    }
-
-    if (typeof item.expires === 'number') {
-      cookieString += '; Expires=' + new Date(item.expires).toUTCString();
-    } else if (item.expires instanceof Date) {
-      cookieString += '; Expires=' + item.expires.toUTCString();
-    }
-
-    if ((item.name && item.name.startsWith('__Secure')) || item.secure) {
-      item.sameSite = 'lax';
-      cookieString += '; Secure';
-    }
-
-    switch (item.sameSite) {
-      case 'lax':
-        cookieString += '; SameSite=Lax';
-        break;
-      case 'strict':
-        cookieString += '; SameSite=Strict';
-        break;
-      case 'none':
-        cookieString += '; SameSite=None';
-        break;
-    }
-
     const previousCookie = await this.get(item);
-    this.cookieString = cookieString;
+    this.cookieMap.set(item.name || '', item as Cookie);
 
     if (this.onchange) {
       const changed = [];
@@ -123,15 +92,13 @@ export class CookieStore extends EventTarget {
       } else {
         changed.push(item);
       }
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
       const event = new CookieChangeEvent('change', { changed, deleted });
       this.onchange(event);
     }
   }
 
   async getAll(init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions): Promise<Cookie[]> {
-    const cookies = parse(this.cookieString);
+    const cookies = Array.from(this.cookieMap.values());
     if (init == null || Object.keys(init).length === 0) {
       return cookies;
     }
@@ -163,5 +130,46 @@ export class CookieStore extends EventTarget {
     item.expires = 0;
 
     await this.set(item);
+  }
+
+  get cookieString(): string {
+    const cookieStrings: string[] = [];
+    for (const [, item] of this.cookieMap) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      let cookieString = `${item.name}=${encodeURIComponent(item.value!)}`;
+
+      if (item.domain) {
+        cookieString += '; Domain=' + item.domain;
+      }
+
+      if (item.path) {
+        cookieString += '; Path=' + item.path;
+      }
+
+      if (typeof item.expires === 'number') {
+        cookieString += '; Expires=' + new Date(item.expires).toUTCString();
+      }
+
+      if ((item.name && item.name.startsWith('__Secure')) || item.secure) {
+        item.sameSite = 'lax';
+        cookieString += '; Secure';
+      }
+
+      switch (item.sameSite) {
+        case 'lax':
+          cookieString += '; SameSite=Lax';
+          break;
+        case 'strict':
+          cookieString += '; SameSite=Strict';
+          break;
+        case 'none':
+          cookieString += '; SameSite=None';
+          break;
+      }
+
+      cookieStrings.push(cookieString);
+    }
+
+    return cookieStrings.join('; ');
   }
 }

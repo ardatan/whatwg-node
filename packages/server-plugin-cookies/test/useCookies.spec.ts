@@ -93,4 +93,21 @@ describe('Cookie Management', () => {
     await response.text();
     expect(response.headers.get('set-cookie')).toContain('foo=baz');
   });
+  it('should set multiple cookies', async () => {
+    const serverAdapter = createServerAdapter(
+      async request => {
+        await request.cookieStore?.set('foo', 'bar');
+        await request.cookieStore?.set('baz', 'qux');
+        return new Response('OK');
+      },
+      {
+        plugins: [useCookies()],
+      },
+    );
+    const response = await serverAdapter.fetch('/');
+    await response.text();
+    const setCookies = response.headers.get('set-cookie');
+    expect(setCookies).toContain('foo=bar');
+    expect(setCookies).toContain('baz=qux');
+  });
 });
