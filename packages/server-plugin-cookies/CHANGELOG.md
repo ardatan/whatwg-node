@@ -1,5 +1,12 @@
 # @whatwg-node/server-plugin-cookies
 
+## 0.0.3
+
+### Patch Changes
+
+- [`c1875b7`](https://github.com/ardatan/whatwg-node/commit/c1875b7a4f6b456a1f94e3d73a3286ad8cd000c0)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix setting multiple cookies
+
 ## 0.0.2
 
 ### Patch Changes
