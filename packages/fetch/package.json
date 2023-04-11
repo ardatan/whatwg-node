@@ -16,7 +16,7 @@
     "@peculiar/webcrypto": "^1.4.0",
     "@whatwg-node/node-fetch": "^0.3.3",
     "busboy": "^1.6.0",
-    "urlpattern-polyfill": "^6.0.2",
+    "urlpattern-polyfill": "^7.0.0",
     "web-streams-polyfill": "^3.2.1"
   },
   "publishConfig": {
