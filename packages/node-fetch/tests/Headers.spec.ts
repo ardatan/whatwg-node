@@ -25,10 +25,10 @@ describe('Headers', () => {
       expect(headers['mapIsBuilt']).toBe(false);
     });
   });
+  jest.setTimeout(60000);
   it('should respect custom header serializer', async () => {
-    jest.setTimeout(10000);
     jest.spyOn(https, 'request');
-    await fetchPonyfill(`https://httpbin.org`, {
+    const res = await fetchPonyfill(`https://httpbin.org/headers`, {
       headersSerializer() {
         return {
           'X-TesT': 'test',
@@ -37,7 +37,7 @@ describe('Headers', () => {
       },
     });
     expect(https.request).toHaveBeenCalledWith(
-      'https://httpbin.org',
+      'https://httpbin.org/headers',
       expect.objectContaining({
         headers: {
           'X-TesT': 'test',
@@ -45,5 +45,7 @@ describe('Headers', () => {
         },
       }),
     );
+    expect(res.status).toBe(200);
+    await res.text();
   });
 });
