@@ -1,5 +1,16 @@
 # @whatwg-node/fetch
 
+## 0.8.5
+
+### Patch Changes
+
+- [#475](https://github.com/ardatan/whatwg-node/pull/475)
+  [`9dbda2b`](https://github.com/ardatan/whatwg-node/commit/9dbda2bfb2393b8aaee2bfc64a9021b187ecac1e)
+  Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+  - Updated dependency
+    [`urlpattern-polyfill@^7.0.0` ↗︎](https://www.npmjs.com/package/urlpattern-polyfill/v/7.0.0)
+    (from `^6.0.2`, in `dependencies`)
+
 ## 0.8.4
 
 ### Patch Changes
