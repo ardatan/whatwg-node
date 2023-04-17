@@ -84,7 +84,8 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
             : Readable.from(fetchRequest.body)
           : null
       ) as Readable | null;
-      const nodeHeaders = getHeadersObj(fetchRequest.headers);
+      const headersSerializer = fetchRequest.headersSerializer || getHeadersObj;
+      const nodeHeaders = headersSerializer(fetchRequest.headers);
 
       const abortListener: EventListener = function abortListener(event: Event) {
         nodeRequest.destroy();
