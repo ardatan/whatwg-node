@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.3.5
+
+### Patch Changes
+
+- [#482](https://github.com/ardatan/whatwg-node/pull/482)
+  [`7e4237e`](https://github.com/ardatan/whatwg-node/commit/7e4237eff499abe11d38732edef2db3230922356)
+  Thanks [@ardatan](https://github.com/ardatan)! - Allow custom header serializer
+
 ## 0.3.4
 
 ### Patch Changes
