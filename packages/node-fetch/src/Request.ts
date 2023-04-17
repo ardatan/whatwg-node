@@ -1,6 +1,7 @@
 import { PonyfillAbortController } from './AbortController.js';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
+import { getHeadersObj } from './utils.js';
 
 function isRequest(input: any): input is PonyfillRequest {
   return input[Symbol.toStringTag] === 'Request';
@@ -10,7 +11,10 @@ export type RequestPonyfillInit = PonyfillBodyOptions &
   Omit<RequestInit, 'body' | 'headers'> & {
     body?: BodyPonyfillInit | null;
     headers?: PonyfillHeadersInit;
+    headersSerializer?: HeadersSerializer;
   };
+
+type HeadersSerializer = (headers: Headers) => Record<string, string>;
 
 export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements Request {
   constructor(input: RequestInfo | URL, options?: RequestPonyfillInit) {
@@ -47,6 +51,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.referrer = requestInit?.referrer || 'about:client';
     this.referrerPolicy = requestInit?.referrerPolicy || 'no-referrer';
     this.signal = requestInit?.signal || new PonyfillAbortController().signal;
+    this.headersSerializer = requestInit?.headersSerializer || getHeadersObj;
 
     this.url = url || '';
 
@@ -69,6 +74,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     }
   }
 
+  headersSerializer: HeadersSerializer;
   cache: RequestCache;
   credentials: RequestCredentials;
   destination: RequestDestination = '';

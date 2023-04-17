@@ -1,3 +1,5 @@
+import https from 'https';
+import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
 
 describe('Headers', () => {
@@ -22,5 +24,26 @@ describe('Headers', () => {
       expect(headers.get('x-header')).toBe('foo');
       expect(headers['mapIsBuilt']).toBe(false);
     });
+  });
+  it('should respect custom header serializer', async () => {
+    jest.setTimeout(10000);
+    jest.spyOn(https, 'request');
+    await fetchPonyfill(`https://httpbin.org`, {
+      headersSerializer() {
+        return {
+          'X-TesT': 'test',
+          Accept: 'application/json',
+        };
+      },
+    });
+    expect(https.request).toHaveBeenCalledWith(
+      'https://httpbin.org',
+      expect.objectContaining({
+        headers: {
+          'X-TesT': 'test',
+          Accept: 'application/json',
+        },
+      }),
+    );
   });
 });
