@@ -2287,10 +2287,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@5.35.0":
-  version "5.35.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.35.0.tgz#fa5a767c1379c51508cd76c58533041f18782845"
-  integrity sha512-GplJF6Iy0lR8Ygx6FceV7HhcIJv1rjyRjU1fKeuMKjgTZmiWqbRmgD5DokalYe0aQlr0gs/QZidkQdPQt/OUsQ==
+"@pulumi/aws@5.36.0":
+  version "5.36.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.36.0.tgz#747eb3593747f06738379c78f668eca7f5a41b5e"
+  integrity sha512-rn+wNWU41BLotO58U1TWTW3np+i1huezqxP18jwEr72/hNh/GTDppKO9nNNY4tQYeyY9T8ebcssjZaipQAkvdg==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     aws-sdk "^2.0.0"
@@ -2591,10 +2591,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@18.0.35":
-  version "18.0.35"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.35.tgz#192061cb1044fe01f2d3a94272cd35dd50502741"
-  integrity sha512-6Laome31HpetaIUGFWl1VQ3mdSImwxtFZ39rh059a1MNnKGqBpC88J6NJ8n/Is3Qx7CefDGLgf/KhN/sYCf7ag==
+"@types/react@*", "@types/react@18.0.37":
+  version "18.0.37"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.0.37.tgz#7a784e2a8b8f83abb04dc6b9ed9c9b4c0aee9be7"
+  integrity sha512-4yaZZtkRN3ZIQD3KSEwkfcik8s0SWV+82dlJot1AbGYHCzJkWP3ENBY6wYeDRmKZ6HkrgoGAmR2HqdwYGp6OEw==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
@@ -8144,10 +8144,10 @@ word-wrap@^1.2.3:
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-wrangler@2.15.1:
-  version "2.15.1"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.15.1.tgz#7b8b1357e2d28885c3b67171214ee0e57d571eb1"
-  integrity sha512-nGcvyE6rStlPFiK8Uz2sB+Z6DyaVfThLYvKa6LfCsM5rN1C/3+flb3qp3DeEkFs09lLdSW0nAeaZavGkZSczvA==
+wrangler@2.16.0:
+  version "2.16.0"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.16.0.tgz#218aafccf14adac901086db5eb9715756f0f3a52"
+  integrity sha512-jhkOmEAF7jH58VvnGx7Uqjs2u2T17e/5r9W3OsqESyBjc/8ALUYuwqQ2gr8JsXFny/cE0ysJas0fdY9wggWMCw==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.1.1"
