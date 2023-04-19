@@ -53,7 +53,7 @@
     "typescript": "5.0.4"
   },
   "resolutions": {
-    "@pulumi/pulumi": "3.63.0"
+    "@pulumi/pulumi": "3.64.0"
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
