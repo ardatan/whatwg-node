@@ -2287,10 +2287,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@5.36.0":
-  version "5.36.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.36.0.tgz#747eb3593747f06738379c78f668eca7f5a41b5e"
-  integrity sha512-rn+wNWU41BLotO58U1TWTW3np+i1huezqxP18jwEr72/hNh/GTDppKO9nNNY4tQYeyY9T8ebcssjZaipQAkvdg==
+"@pulumi/aws@5.36.1":
+  version "5.36.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-5.36.1.tgz#c7736518295788f0ecf378c5a5d2c4af45189264"
+  integrity sha512-TabW7ix2yH8jnkZZSGDHbpjBxUeyPP/kQYYr29C01PFbu6ccdPQrp6YfgN44gNCGE71rkAOY7zdv/RifLNZO5w==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     aws-sdk "^2.0.0"
@@ -2308,10 +2308,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@1.100.0":
-  version "1.100.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.100.0.tgz#2ee4daad7102d35319fc35de16482cac75d6948b"
-  integrity sha512-NYUoGNvyOZYVR04IEjnnzf/SFof76f/qe6y7XaFWZW5cSBLhM9IiyFwia8ndN4Ec8cPQMinzR3l7GHUXDMH4kQ==
+"@pulumi/azure-native@1.100.1":
+  version "1.100.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.100.1.tgz#36ca4c74681c070384500864ff4033d1b59a266a"
+  integrity sha512-iBmjLhjWdVNhsxx1ycH5NKYwj4+WTD9eZU1YLUsThUN1PjG9DYGdNCxu0621iGa800ZpOr00SyLjb/tjV1k04g==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -2531,10 +2531,10 @@
   dependencies:
     "@types/istanbul-lib-report" "*"
 
-"@types/jest@29.5.0":
-  version "29.5.0"
-  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-29.5.0.tgz#337b90bbcfe42158f39c2fb5619ad044bbb518ac"
-  integrity sha512-3Emr5VOl/aoBwnWcH/EFQvlSAmjV+XtV9GGu5mwdYew5vhQh0IUZx/60x0TzHDu09Bi7HMx10t/namdJw5QIcg==
+"@types/jest@29.5.1":
+  version "29.5.1"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-29.5.1.tgz#83c818aa9a87da27d6da85d3378e5a34d2f31a47"
+  integrity sha512-tEuVcHrpaixS36w7hpsfLBLpjtMRJUE09/MHXn923LOVojDwyC14cWcfc0rDs0VEfUyYmt/+iX1kxxp+gZMcaQ==
   dependencies:
     expect "^29.0.0"
     pretty-format "^29.0.0"
@@ -2559,10 +2559,10 @@
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
 
-"@types/node@*", "@types/node@18.15.11", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
-  version "18.15.11"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.15.11.tgz#b3b790f09cb1696cffcec605de025b088fa4225f"
-  integrity sha512-E5Kwq2n4SbMzQOn6wnmBjuK9ouqlURrcZDVfbo9ftDDTFt3nk7ZKK4GMOzoYgnpQJKcxwQw+lGaBvvlMo0qN/Q==
+"@types/node@*", "@types/node@18.15.13", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
+  version "18.15.13"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.15.13.tgz#f64277c341150c979e42b00e4ac289290c9df469"
+  integrity sha512-N+0kuo9KgrUQ1Sn/ifDXsvg0TTleP7rIy4zOBGECxAljqvqfqpTfzx0Q1NUedOixRMBfe2Whhb056a42cWs26Q==
 
 "@types/node@^12.7.1":
   version "12.20.55"
