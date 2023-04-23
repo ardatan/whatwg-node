@@ -105,4 +105,8 @@ export class PonyfillURLSearchParams implements URLSearchParams {
       callback(value, key, this);
     }
   }
+  
+  get size(): number {
+    return Object.keys(this.params).length;
+  }
 }
