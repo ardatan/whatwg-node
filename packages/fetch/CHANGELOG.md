@@ -1,5 +1,18 @@
 # @whatwg-node/fetch
 
+## 0.8.6
+
+### Patch Changes
+
+- [#427](https://github.com/ardatan/whatwg-node/pull/427)
+  [`e8bda7c`](https://github.com/ardatan/whatwg-node/commit/e8bda7cdf440a7f4bb617ee1b5df8ee1becb4ad6)
+  Thanks [@Rugvip](https://github.com/Rugvip)! - Restructure type declarations to avoid polluting
+  global namespace.
+
+- Updated dependencies
+  [[`f3ce0e8`](https://github.com/ardatan/whatwg-node/commit/f3ce0e815f6085d199590359a39048c39920e6ce)]:
+  - @whatwg-node/node-fetch@0.3.6
+
 ## 0.8.5
 
 ### Patch Changes

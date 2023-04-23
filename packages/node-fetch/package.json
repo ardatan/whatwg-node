@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/node-fetch",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "type": "module",
   "description": "Fetch API implementation for Node",
   "repository": {
@@ -31,7 +31,7 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
-    "@whatwg-node/events": "^0.0.2",
+    "@whatwg-node/events": "^0.0.3",
     "busboy": "^1.6.0",
     "fast-querystring": "^1.1.1",
     "fast-url-parser": "^1.1.3",
