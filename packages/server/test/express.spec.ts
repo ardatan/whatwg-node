@@ -11,7 +11,7 @@ describe('express', () => {
     const app = express();
     app.use(
       '/my-path',
-      createServerAdapter(async (req, ctx) => {
+      createServerAdapter(async req => {
         const data = await req.json();
         return new Response(null, { status: data.status });
       }),
