@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/server-plugin-cookies",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "description": "Cookies Plugin",
   "repository": {
@@ -34,7 +34,7 @@
     "@whatwg-node/server": "^0.7.5"
   },
   "dependencies": {
-    "@whatwg-node/events": "^0.0.2",
+    "@whatwg-node/events": "^0.0.3",
     "tslib": "^2.3.1"
   },
   "publishConfig": {

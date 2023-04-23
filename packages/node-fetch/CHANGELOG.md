@@ -1,5 +1,18 @@
 # @whatwg-node/node-fetch
 
+## 0.3.6
+
+### Patch Changes
+
+- [#492](https://github.com/ardatan/whatwg-node/pull/492)
+  [`f3ce0e8`](https://github.com/ardatan/whatwg-node/commit/f3ce0e815f6085d199590359a39048c39920e6ce)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Add missing `size` property of
+  `URLSearchParams`
+
+- Updated dependencies
+  [[`e8bda7c`](https://github.com/ardatan/whatwg-node/commit/e8bda7cdf440a7f4bb617ee1b5df8ee1becb4ad6)]:
+  - @whatwg-node/events@0.0.3
+
 ## 0.3.5
 
 ### Patch Changes
