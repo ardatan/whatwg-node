@@ -2,6 +2,8 @@
 /// <reference lib="dom.iterable" />
 /// <reference types="urlpattern-polyfill" />
 
+declare type _URLPattern = typeof URLPattern
+
 declare module '@whatwg-node/fetch' {
   export const fetch: typeof globalThis.fetch;
   export const Request: typeof globalThis.Request;
@@ -23,7 +25,7 @@ declare module '@whatwg-node/fetch' {
   export const TextEncoder: typeof globalThis.TextEncoder;
   export const URL: typeof globalThis.URL;
   export const URLSearchParams: typeof globalThis.URLSearchParams;
-  export const URLPattern: globalThis.URLPattern;
+  export const URLPattern: _URLPattern;
   export interface FormDataLimits {
     /* Max field name size (in bytes). Default: 100. */
     fieldNameSize?: number;
