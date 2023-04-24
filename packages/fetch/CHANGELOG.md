@@ -1,5 +1,12 @@
 # @whatwg-node/fetch
 
+## 0.8.8
+
+### Patch Changes
+
+- [`29b9328`](https://github.com/ardatan/whatwg-node/commit/29b9328509f1b7d5e2d86cc450adcbd773b71d41)
+  Thanks [@ardatan](https://github.com/ardatan)! - Export URLPattern constructor not type
+
 ## 0.8.7
 
 ### Patch Changes
