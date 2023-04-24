@@ -8322,10 +8322,10 @@ urlpattern-polyfill@^4.0.3:
   resolved "https://registry.yarnpkg.com/urlpattern-polyfill/-/urlpattern-polyfill-4.0.3.tgz#c1fa7a73eb4e6c6a1ffb41b24cf31974f7392d3b"
   integrity sha512-DOE84vZT2fEcl9gqCUTcnAw5ZY5Id55ikUcziSUntuEFL3pRvavg5kwDmTEUJkeCHInTlV/HexFomgYnzO5kdQ==
 
-urlpattern-polyfill@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/urlpattern-polyfill/-/urlpattern-polyfill-7.0.0.tgz#dc9e5098efc492b4f09bc9fc6acfba545dfb149d"
-  integrity sha512-fErMjbZwveQIk+EY4vxM5GKDuInBOigxmjM6WT2R/cV2ETVyFtDHeU+VmbnfuJ5sp0qNbyUBelTO/60/d+/SSQ==
+urlpattern-polyfill@^8.0.0:
+  version "8.0.1"
+  resolved "https://registry.yarnpkg.com/urlpattern-polyfill/-/urlpattern-polyfill-8.0.1.tgz#aa302bf8d584d36fbbe90dac0c1a6c28bf914d6b"
+  integrity sha512-uRsgZkqvviY4s6XsG3Jc5ti7L+tH0lH14PuAXAJRsxldtPtXZjIhlPnoAimds6c9JJaFhxXW8qCJQB/WknPJUw==
   dependencies:
     braces "^3.0.2"
 
