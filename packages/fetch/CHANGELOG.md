@@ -1,5 +1,20 @@
 # @whatwg-node/fetch
 
+## 0.8.7
+
+### Patch Changes
+
+- [#495](https://github.com/ardatan/whatwg-node/pull/495)
+  [`1a2a92f`](https://github.com/ardatan/whatwg-node/commit/1a2a92fcc4e06342bcc5b18b8c7f2373edfa1552)
+  Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+
+  - Updated dependency
+    [`urlpattern-polyfill@^8.0.0` ↗︎](https://www.npmjs.com/package/urlpattern-polyfill/v/8.0.0)
+    (from `^7.0.0`, in `dependencies`)
+
+- [`6c58ca1`](https://github.com/ardatan/whatwg-node/commit/6c58ca182b2d4538c8f2fe6367add7bbda3c9a38)
+  Thanks [@ardatan](https://github.com/ardatan)! - Return correct types in createFetch
+
 ## 0.8.6
 
 ### Patch Changes
