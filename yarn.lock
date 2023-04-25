@@ -8323,11 +8323,9 @@ urlpattern-polyfill@^4.0.3:
   integrity sha512-DOE84vZT2fEcl9gqCUTcnAw5ZY5Id55ikUcziSUntuEFL3pRvavg5kwDmTEUJkeCHInTlV/HexFomgYnzO5kdQ==
 
 urlpattern-polyfill@^8.0.0:
-  version "8.0.1"
-  resolved "https://registry.yarnpkg.com/urlpattern-polyfill/-/urlpattern-polyfill-8.0.1.tgz#aa302bf8d584d36fbbe90dac0c1a6c28bf914d6b"
-  integrity sha512-uRsgZkqvviY4s6XsG3Jc5ti7L+tH0lH14PuAXAJRsxldtPtXZjIhlPnoAimds6c9JJaFhxXW8qCJQB/WknPJUw==
-  dependencies:
-    braces "^3.0.2"
+  version "8.0.2"
+  resolved "https://registry.yarnpkg.com/urlpattern-polyfill/-/urlpattern-polyfill-8.0.2.tgz#99f096e35eff8bf4b5a2aa7d58a1523d6ebc7ce5"
+  integrity sha512-Qp95D4TPJl1kC9SKigDcqgyM2VDVO4RiJc2d4qe5GrYm+zbIQCWWKAFaJNQ4BhdFeDGwBmAxqJBwWSJDb9T3BQ==
 
 util-promisify@^2.1.0:
   version "2.1.0"
@@ -8526,10 +8524,10 @@ word-wrap@^1.2.3:
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"
   integrity sha512-Hz/mrNwitNRh/HUAtM/VT/5VH+ygD6DV7mYKZAtHOrbs8U7lvPS6xf7EJKMF0uW1KJCl0H701g3ZGus+muE5vQ==
 
-wrangler@2.16.0:
-  version "2.16.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.16.0.tgz#218aafccf14adac901086db5eb9715756f0f3a52"
-  integrity sha512-jhkOmEAF7jH58VvnGx7Uqjs2u2T17e/5r9W3OsqESyBjc/8ALUYuwqQ2gr8JsXFny/cE0ysJas0fdY9wggWMCw==
+wrangler@2.17.0:
+  version "2.17.0"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-2.17.0.tgz#e3ff4e524f6f328470671e805228b5ffc2fed2de"
+  integrity sha512-ucmVHP5BAUVyC/18hReEKgxGSgU0EOxGd+ElHRHVBeGH6LPcsOoC1TolTaDYYnbOuZMbYmHAR5OH1agayr3kZg==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.1.1"
