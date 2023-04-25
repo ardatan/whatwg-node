@@ -1,12 +1,12 @@
 {
-  "name": "@whatwg-node/server-plugin-cookies",
-  "version": "0.0.4",
+  "name": "@whatwg-node/cookie-store",
+  "version": "0.0.0",
   "type": "module",
-  "description": "Cookies Plugin",
+  "description": "Cookie Store",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
-    "directory": "packages/server-plugin-cookies"
+    "directory": "packages/cookie-store"
   },
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
@@ -30,11 +30,8 @@
     "./package.json": "./package.json"
   },
   "typings": "dist/typings/index.d.ts",
-  "peerDependencies": {
-    "@whatwg-node/server": "^0.7.5"
-  },
   "dependencies": {
-    "@whatwg-node/cookie-store": "0.0.0",
+    "@whatwg-node/events": "^0.0.3",
     "tslib": "^2.3.1"
   },
   "publishConfig": {

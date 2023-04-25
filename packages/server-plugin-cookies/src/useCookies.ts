@@ -1,5 +1,5 @@
 import { ServerAdapterPlugin } from '@whatwg-node/server';
-import { CookieStore } from './CookieStore.js';
+import { CookieStore } from '@whatwg-node/cookie-store';
 
 declare global {
   interface Request {
