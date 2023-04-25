@@ -172,4 +172,8 @@ export class CookieStore extends EventTarget {
 
     return cookieStrings.join('; ');
   }
+
+  set cookieString(cookieString: string) {
+    this.cookieMap = parse(cookieString);
+  }
 }
