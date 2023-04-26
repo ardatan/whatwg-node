@@ -2598,10 +2598,10 @@
   resolved "https://registry.yarnpkg.com/@types/minimist/-/minimist-1.2.2.tgz#ee771e2ba4b3dc5b372935d549fd9617bf345b8c"
   integrity sha512-jhuKLIRrhvCPLqwPcx6INqmKeiA5EWrsCOPhrlFSrbrmU4ZMPjj5Ul/oLCMDO98XRUIwVm78xICz4EPCektzeQ==
 
-"@types/node@*", "@types/node@18.16.0", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
-  version "18.16.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.16.0.tgz#4668bc392bb6938637b47e98b1f2ed5426f33316"
-  integrity sha512-BsAaKhB+7X+H4GnSjGhJG9Qi8Tw+inU9nJDwmD5CgOmBLEI6ArdhikpLX7DjbjDRDTbqZzU2LSQNZg8WGPiSZQ==
+"@types/node@*", "@types/node@18.16.1", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
+  version "18.16.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.16.1.tgz#5db121e9c5352925bb1f1b892c4ae620e3526799"
+  integrity sha512-DZxSZWXxFfOlx7k7Rv4LAyiMroaxa3Ly/7OOzZO8cBNho0YzAi4qlbrx8W27JGqG57IgR/6J7r+nOJWw6kcvZA==
 
 "@types/node@^12.7.1":
   version "12.20.55"
@@ -4627,10 +4627,10 @@ fast-url-parser@^1.1.3:
   dependencies:
     punycode "^1.3.2"
 
-fastify@4.15.0:
-  version "4.15.0"
-  resolved "https://registry.yarnpkg.com/fastify/-/fastify-4.15.0.tgz#4ebadaea706217467a332341f9cfa632072d51f2"
-  integrity sha512-m/CaRN8nf5uyYdrDe2qqq+0z3oGyE+A++qlKQoLJTI4WI0nWK9D6R3FxXQ3MVwt/md977GMR4F43pE9oqrS2zw==
+fastify@4.16.0:
+  version "4.16.0"
+  resolved "https://registry.yarnpkg.com/fastify/-/fastify-4.16.0.tgz#7eb9e83d974b1fa4ab192e816744bb32b271f2ac"
+  integrity sha512-Js9VNCqQ2n82X1U49lQGff1bkmOvA2KtoN7nWw99f3AVA51sr20zfDkQyzjHiHU/DV2FLHdEiPUB12eA4CWTWA==
   dependencies:
     "@fastify/ajv-compiler" "^3.5.0"
     "@fastify/error" "^3.0.0"
@@ -4646,7 +4646,7 @@ fastify@4.15.0:
     rfdc "^1.3.0"
     secure-json-parse "^2.5.0"
     semver "^7.3.7"
-    tiny-lru "^10.0.0"
+    tiny-lru "^11.0.1"
 
 fastq@^1.6.0, fastq@^1.6.1:
   version "1.15.0"
@@ -7960,10 +7960,10 @@ tiny-glob@^0.2.9:
     globalyzer "0.1.0"
     globrex "^0.1.2"
 
-tiny-lru@^10.0.0:
-  version "10.4.1"
-  resolved "https://registry.yarnpkg.com/tiny-lru/-/tiny-lru-10.4.1.tgz#dec67a62115a4cb31d2065b8116d010daac362fe"
-  integrity sha512-buLIzw7ppqymuO3pt10jHk/6QMeZLbidihMQU+N6sogF6EnBzG0qtDWIHuhw1x3dyNgVL/KTGIZsTK81+yCzLg==
+tiny-lru@^11.0.1:
+  version "11.0.1"
+  resolved "https://registry.yarnpkg.com/tiny-lru/-/tiny-lru-11.0.1.tgz#629d6ddd88bd03c0929722680167f1feadf576f2"
+  integrity sha512-iNgFugVuQgBKrqeO/mpiTTgmBsTP0WL6yeuLfLs/Ctf0pI/ixGqIRm8sDCwMcXGe9WWvt2sGXI5mNqZbValmJg==
 
 tmp@^0.0.33:
   version "0.0.33"
