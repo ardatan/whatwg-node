@@ -2308,10 +2308,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@1.100.1":
-  version "1.100.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.100.1.tgz#36ca4c74681c070384500864ff4033d1b59a266a"
-  integrity sha512-iBmjLhjWdVNhsxx1ycH5NKYwj4+WTD9eZU1YLUsThUN1PjG9DYGdNCxu0621iGa800ZpOr00SyLjb/tjV1k04g==
+"@pulumi/azure-native@1.101.0":
+  version "1.101.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-1.101.0.tgz#14ca60a84109a265f31edccf97076883ebcfcded"
+  integrity sha512-SMtiOLfiDS0QW98op1lxo4YRQ2q8DHTFhV56FPwCXVatMjLaJlMmGIKtzjiSnh50ztIr6zUMCG++lokdPaAtUQ==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -2330,10 +2330,10 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.64.0", "@pulumi/pulumi@^3.0.0":
-  version "3.64.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.64.0.tgz#8b599b6bb53dcee935192e154e3cf56ae3b30178"
-  integrity sha512-yKEABPiNqOXAlZcGiBSbYElwDrx82IjDUS07R+K3g05EzEttMN5YKv/NjTZsiSWtOGuGscStJnwEWWCjj4GhGQ==
+"@pulumi/pulumi@3.65.1", "@pulumi/pulumi@^3.0.0":
+  version "3.65.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.65.1.tgz#2e8e1a30ac8f543db9250a5ae771751bcbb50254"
+  integrity sha512-XhyBtrA8dvgpiMt7jTnhIuRKIVQ0e/P89WRcsPdkYpnJVM3dc7YdMrFPZ4ceWrDdbNuNgq/fNOCsnxjo5BM/WA==
   dependencies:
     "@grpc/grpc-js" "^1.3.8"
     "@logdna/tail-file" "^2.0.6"
@@ -6005,10 +6005,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-lint-staged@13.2.1:
-  version "13.2.1"
-  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-13.2.1.tgz#9d30a14e3e42897ef417bc98556fb757f75cae87"
-  integrity sha512-8gfzinVXoPfga5Dz/ZOn8I2GOhf81Wvs+KwbEXQn/oWZAvCVS2PivrXfVbFJc93zD16uC0neS47RXHIjXKYZQw==
+lint-staged@13.2.2:
+  version "13.2.2"
+  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-13.2.2.tgz#5e711d3139c234f73402177be2f8dd312e6508ca"
+  integrity sha512-71gSwXKy649VrSU09s10uAT0rWCcY3aewhMaHyl2N84oBk4Xs9HgxvUp3AYu+bNsK4NrOYYxvSgg7FyGJ+jGcA==
   dependencies:
     chalk "5.2.0"
     cli-truncate "^3.1.0"
@@ -6022,7 +6022,7 @@ lint-staged@13.2.1:
     object-inspect "^1.12.3"
     pidtree "^0.6.0"
     string-argv "^0.3.1"
-    yaml "^2.2.1"
+    yaml "^2.2.2"
 
 listr2@^5.0.7:
   version "5.0.8"
@@ -8599,7 +8599,7 @@ yaml@^1.10.2:
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-1.10.2.tgz#2301c5ffbf12b467de8da2333a459e29e7920e4b"
   integrity sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==
 
-yaml@^2.2.1, yaml@^2.2.2:
+yaml@^2.2.2:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/yaml/-/yaml-2.2.2.tgz#ec551ef37326e6d42872dad1970300f8eb83a073"
   integrity sha512-CBKFWExMn46Foo4cldiChEzn7S7SRV+wqiluAb6xmueD/fGyRHIhX8m14vVGgeFWjN540nKCNVj6P21eQjgTuA==
