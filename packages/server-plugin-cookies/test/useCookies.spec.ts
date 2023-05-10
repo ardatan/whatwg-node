@@ -111,13 +111,11 @@ describe('Cookie Management', () => {
     expect(setCookies).toContain('baz=qux');
   });
   it('should not set set-cookie header if no cookie is set', async () => {
-    const serverAdapter = createServerAdapter(
-      () => {
-        return new Response('OK');
-      }
-    );
+    const serverAdapter = createServerAdapter(() => {
+      return new Response('OK');
+    });
     const response = await serverAdapter.fetch('/');
     await response.text();
     expect(response.headers.get('set-cookie')).toBeNull();
-  })
+  });
 });
