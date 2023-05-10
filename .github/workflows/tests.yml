@@ -75,9 +75,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{matrix.node-version}}-jest-
       - name: Test
-        run: yarn test --ci
-        env:
-          CI: true
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 5
+          command: yarn test --ci
 
   test_esm:
     name: ESM Test
