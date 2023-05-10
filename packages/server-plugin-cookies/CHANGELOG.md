@@ -1,5 +1,12 @@
 # @whatwg-node/server-plugin-cookies
 
+## 0.0.6
+
+### Patch Changes
+
+- [`503627f`](https://github.com/ardatan/whatwg-node/commit/503627f67e44395ec0050c2877427aa2f706ff3f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not set set-cookie header if no cookie is set
+
 ## 0.0.5
 
 ### Patch Changes
