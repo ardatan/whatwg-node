@@ -4,7 +4,6 @@ import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
-import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillBlob } from './Blob.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -87,18 +86,11 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       const headersSerializer = fetchRequest.headersSerializer || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
 
-      const abortListener: EventListener = function abortListener(event: Event) {
-        nodeRequest.destroy();
-        const reason = (event as CustomEvent).detail;
-        reject(new PonyfillAbortError(reason));
-      };
-
-      fetchRequest.signal.addEventListener('abort', abortListener);
-
       const nodeRequest = requestFn(fetchRequest.url, {
         // signal: fetchRequest.signal will be added when v14 reaches EOL
         method: fetchRequest.method,
         headers: nodeHeaders,
+        signal: fetchRequest.signal,
       });
 
       nodeRequest.once('response', nodeResponse => {

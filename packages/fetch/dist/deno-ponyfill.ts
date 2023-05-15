@@ -3,8 +3,6 @@ const Request = globalThis.Request;
 const Response = globalThis.Response;
 const Headers = globalThis.Headers;
 const FormData = globalThis.FormData;
-const AbortSignal = globalThis.AbortSignal;
-const AbortController = globalThis.AbortController;
 const ReadableStream = globalThis.ReadableStream;
 const WritableStream = globalThis.WritableStream;
 const TransformStream = globalThis.TransformStream;
@@ -25,8 +23,6 @@ export {
   Request,
   Response,
   FormData,
-  AbortSignal,
-  AbortController,
   ReadableStream,
   WritableStream,
   TransformStream,

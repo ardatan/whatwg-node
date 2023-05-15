@@ -6,9 +6,6 @@ export { PonyfillResponse as Response, ResponsePonyfilInit as ResponseInit } fro
 export { PonyfillReadableStream as ReadableStream } from './ReadableStream.js';
 export { PonyfillFile as File } from './File.js';
 export { PonyfillFormData as FormData } from './FormData.js';
-export { PonyfillAbortController as AbortController } from './AbortController.js';
-export { PonyfillAbortSignal as AbortSignal } from './AbortSignal.js';
-export { PonyfillAbortError as AbortError } from './AbortError.js';
 export { PonyfillBlob as Blob } from './Blob.js';
 export {
   PonyfillTextEncoder as TextEncoder,

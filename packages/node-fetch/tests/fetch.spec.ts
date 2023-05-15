@@ -1,7 +1,6 @@
 import { globalAgent as httpGlobalAgent } from 'http';
 import { globalAgent as httpsGlobalAgent } from 'https';
 import { Readable } from 'stream';
-import { PonyfillAbortController } from '../src/AbortController.js';
 import { PonyfillBlob } from '../src/Blob.js';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillFormData } from '../src/FormData.js';
@@ -119,7 +118,7 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.files['test-file']).toBe('test-content');
   });
   it('should respect AbortSignal', async () => {
-    const controller = new PonyfillAbortController();
+    const controller = new AbortController();
     setTimeout(() => {
       controller.abort();
     }, 300);

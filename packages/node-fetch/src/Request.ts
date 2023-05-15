@@ -1,4 +1,3 @@
-import { PonyfillAbortController } from './AbortController.js';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 import { getHeadersObj } from './utils.js';
@@ -50,7 +49,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.redirect = requestInit?.redirect || 'follow';
     this.referrer = requestInit?.referrer || 'about:client';
     this.referrerPolicy = requestInit?.referrerPolicy || 'no-referrer';
-    this.signal = requestInit?.signal || new PonyfillAbortController().signal;
+    this.signal = requestInit?.signal || new AbortController().signal;
     this.headersSerializer = requestInit?.headersSerializer || getHeadersObj;
 
     this.url = url || '';
