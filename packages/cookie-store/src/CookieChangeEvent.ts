@@ -1,4 +1,3 @@
-import { Event } from '@whatwg-node/events';
 import { CookieChangeEventInit, CookieList } from './types.js';
 
 export class CookieChangeEvent extends Event {
