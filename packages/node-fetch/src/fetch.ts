@@ -4,12 +4,12 @@ import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
+import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillBlob } from './Blob.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import { getHeadersObj } from './utils.js';
-import { PonyfillAbortError } from './AbortError.js';
 
 function getResponseForFile(url: string) {
   const path = fileURLToPath(url);
@@ -18,24 +18,24 @@ function getResponseForFile(url: string) {
 }
 
 function getResponseForDataUri(url: URL) {
-    const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
-    const data = decodeURIComponent(datas.join(','));
-    if (mimeType.endsWith(BASE64_SUFFIX)) {
-      const buffer = Buffer.from(data, 'base64url');
-      const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
-      const file = new PonyfillBlob([buffer], { type: realMimeType });
-      return new PonyfillResponse(file, {
-        status: 200,
-        statusText: 'OK',
-      });
-    }
-    return new PonyfillResponse(data, {
+  const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
+  const data = decodeURIComponent(datas.join(','));
+  if (mimeType.endsWith(BASE64_SUFFIX)) {
+    const buffer = Buffer.from(data, 'base64url');
+    const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
+    const file = new PonyfillBlob([buffer], { type: realMimeType });
+    return new PonyfillResponse(file, {
       status: 200,
       statusText: 'OK',
-      headers: {
-        'content-type': mimeType,
-      },
     });
+  }
+  return new PonyfillResponse(data, {
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      'content-type': mimeType,
+    },
+  });
 }
 
 function getRequestFnForProtocol(protocol: string) {
@@ -143,7 +143,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       // TODO: will be removed after v16 reaches EOL
       nodeRequest.once('abort', (reason: any) => {
         reject(new PonyfillAbortError(reason));
-      })
+      });
       nodeRequest.once('error', reject);
 
       if (nodeReadable) {
