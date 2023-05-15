@@ -9,11 +9,33 @@ import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import { getHeadersObj } from './utils.js';
+import { PonyfillAbortError } from './AbortError.js';
 
 function getResponseForFile(url: string) {
   const path = fileURLToPath(url);
   const readable = createReadStream(path);
   return new PonyfillResponse(readable);
+}
+
+function getResponseForDataUri(url: URL) {
+    const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
+    const data = decodeURIComponent(datas.join(','));
+    if (mimeType.endsWith(BASE64_SUFFIX)) {
+      const buffer = Buffer.from(data, 'base64url');
+      const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
+      const file = new PonyfillBlob([buffer], { type: realMimeType });
+      return new PonyfillResponse(file, {
+        status: 200,
+        statusText: 'OK',
+      });
+    }
+    return new PonyfillResponse(data, {
+      status: 200,
+      statusText: 'OK',
+      headers: {
+        'content-type': mimeType,
+      },
+    });
 }
 
 function getRequestFnForProtocol(protocol: string) {
@@ -44,26 +66,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       const url = new PonyfillURL(fetchRequest.url, 'http://localhost');
 
       if (url.protocol === 'data:') {
-        const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
-        const data = decodeURIComponent(datas.join(','));
-        if (mimeType.endsWith(BASE64_SUFFIX)) {
-          const buffer = Buffer.from(data, 'base64url');
-          const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
-          const file = new PonyfillBlob([buffer], { type: realMimeType });
-          const response = new PonyfillResponse(file, {
-            status: 200,
-            statusText: 'OK',
-          });
-          resolve(response);
-          return;
-        }
-        const response = new PonyfillResponse(data, {
-          status: 200,
-          statusText: 'OK',
-          headers: {
-            'content-type': mimeType,
-          },
-        });
+        const response = getResponseForDataUri(url);
         resolve(response);
         return;
       }
@@ -87,7 +90,6 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       const nodeHeaders = headersSerializer(fetchRequest.headers);
 
       const nodeRequest = requestFn(fetchRequest.url, {
-        // signal: fetchRequest.signal will be added when v14 reaches EOL
         method: fetchRequest.method,
         headers: nodeHeaders,
         signal: fetchRequest.signal,
@@ -138,6 +140,10 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         });
         resolve(ponyfillResponse);
       });
+      // TODO: will be removed after v16 reaches EOL
+      nodeRequest.once('abort', (reason: any) => {
+        reject(new PonyfillAbortError(reason));
+      })
       nodeRequest.once('error', reject);
 
       if (nodeReadable) {
