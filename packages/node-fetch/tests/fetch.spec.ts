@@ -118,13 +118,9 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.files['test-file']).toBe('test-content');
   });
   it('should respect AbortSignal', async () => {
-    const controller = new AbortController();
-    setTimeout(() => {
-      controller.abort();
-    }, 300);
     await expect(
       fetchPonyfill(baseUrl + '/delay/5', {
-        signal: controller.signal,
+        signal: AbortSignal.timeout(1000),
       }),
     ).rejects.toThrow('The operation was aborted');
   });
