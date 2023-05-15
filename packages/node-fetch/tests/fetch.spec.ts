@@ -126,7 +126,7 @@ describe('Node Fetch Ponyfill', () => {
       fetchPonyfill(baseUrl + '/delay/5', {
         signal: controller.signal,
       }),
-    ).rejects.toThrow('The operation was aborted.');
+    ).rejects.toThrow('The operation was aborted');
   });
   it('should respect gzip', async () => {
     const response = await fetchPonyfill(baseUrl + '/gzip');
