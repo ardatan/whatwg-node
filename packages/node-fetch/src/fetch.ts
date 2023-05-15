@@ -95,6 +95,17 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         signal: fetchRequest.signal,
       });
 
+      // TODO: will be removed after v16 reaches EOL
+      fetchRequest.signal?.addEventListener('abort', () => {
+        if (!nodeRequest.aborted) {
+          nodeRequest.abort();
+        }
+      });
+      // TODO: will be removed after v16 reaches EOL
+      nodeRequest.once('abort', (reason: any) => {
+        reject(new PonyfillAbortError(reason));
+      });
+
       nodeRequest.once('response', nodeResponse => {
         let responseBody: Readable = nodeResponse;
         const contentEncoding = nodeResponse.headers['content-encoding'];
@@ -139,10 +150,6 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
           url: info.url,
         });
         resolve(ponyfillResponse);
-      });
-      // TODO: will be removed after v16 reaches EOL
-      nodeRequest.once('abort', (reason: any) => {
-        reject(new PonyfillAbortError(reason));
       });
       nodeRequest.once('error', reject);
 
