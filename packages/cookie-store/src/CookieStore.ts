@@ -1,4 +1,3 @@
-import { EventTarget } from '@whatwg-node/events';
 import { CookieChangeEvent } from './CookieChangeEvent.js';
 import { parse } from './parse.js';
 import {

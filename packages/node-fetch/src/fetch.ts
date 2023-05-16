@@ -17,6 +17,27 @@ function getResponseForFile(url: string) {
   return new PonyfillResponse(readable);
 }
 
+function getResponseForDataUri(url: URL) {
+  const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
+  const data = decodeURIComponent(datas.join(','));
+  if (mimeType.endsWith(BASE64_SUFFIX)) {
+    const buffer = Buffer.from(data, 'base64url');
+    const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
+    const file = new PonyfillBlob([buffer], { type: realMimeType });
+    return new PonyfillResponse(file, {
+      status: 200,
+      statusText: 'OK',
+    });
+  }
+  return new PonyfillResponse(data, {
+    status: 200,
+    statusText: 'OK',
+    headers: {
+      'content-type': mimeType,
+    },
+  });
+}
+
 function getRequestFnForProtocol(protocol: string) {
   switch (protocol) {
     case 'http:':
@@ -45,26 +66,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       const url = new PonyfillURL(fetchRequest.url, 'http://localhost');
 
       if (url.protocol === 'data:') {
-        const [mimeType = 'text/plain', ...datas] = url.pathname.split(',');
-        const data = decodeURIComponent(datas.join(','));
-        if (mimeType.endsWith(BASE64_SUFFIX)) {
-          const buffer = Buffer.from(data, 'base64url');
-          const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
-          const file = new PonyfillBlob([buffer], { type: realMimeType });
-          const response = new PonyfillResponse(file, {
-            status: 200,
-            statusText: 'OK',
-          });
-          resolve(response);
-          return;
-        }
-        const response = new PonyfillResponse(data, {
-          status: 200,
-          statusText: 'OK',
-          headers: {
-            'content-type': mimeType,
-          },
-        });
+        const response = getResponseForDataUri(url);
         resolve(response);
         return;
       }
@@ -87,18 +89,21 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
       const headersSerializer = fetchRequest.headersSerializer || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
 
-      const abortListener: EventListener = function abortListener(event: Event) {
-        nodeRequest.destroy();
-        const reason = (event as CustomEvent).detail;
-        reject(new PonyfillAbortError(reason));
-      };
-
-      fetchRequest.signal.addEventListener('abort', abortListener);
-
       const nodeRequest = requestFn(fetchRequest.url, {
-        // signal: fetchRequest.signal will be added when v14 reaches EOL
         method: fetchRequest.method,
         headers: nodeHeaders,
+        signal: fetchRequest.signal,
+      });
+
+      // TODO: will be removed after v16 reaches EOL
+      fetchRequest.signal?.addEventListener('abort', () => {
+        if (!nodeRequest.aborted) {
+          nodeRequest.abort();
+        }
+      });
+      // TODO: will be removed after v16 reaches EOL
+      nodeRequest.once('abort', (reason: any) => {
+        reject(new PonyfillAbortError(reason));
       });
 
       nodeRequest.once('response', nodeResponse => {

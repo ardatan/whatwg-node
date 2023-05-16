@@ -13,11 +13,8 @@
   "browser": "dist/global-ponyfill.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@peculiar/webcrypto": "^1.4.0",
     "@whatwg-node/node-fetch": "^0.3.6",
-    "busboy": "^1.6.0",
-    "urlpattern-polyfill": "^8.0.0",
-    "web-streams-polyfill": "^3.2.1"
+    "urlpattern-polyfill": "^8.0.0"
   },
   "publishConfig": {
     "access": "public"

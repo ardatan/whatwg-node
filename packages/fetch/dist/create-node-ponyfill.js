@@ -19,7 +19,6 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.Response = newNodeFetch.Response;
   ponyfills.Headers = newNodeFetch.Headers;
   ponyfills.FormData = newNodeFetch.FormData;
-  ponyfills.AbortController = newNodeFetch.AbortController;
   ponyfills.ReadableStream = newNodeFetch.ReadableStream;
 
   ponyfills.URL = newNodeFetch.URL;
@@ -29,15 +28,9 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.TransformStream = globalThis.TransformStream;
 
   if (!ponyfills.WritableStream) {
-    try {
-      const streamsWeb = require("stream/web");
-      ponyfills.WritableStream = streamsWeb.WritableStream;
-      ponyfills.TransformStream = streamsWeb.TransformStream;
-    } catch (e) {
-      const streamsWeb = require("web-streams-polyfill/ponyfill");
-      ponyfills.WritableStream = streamsWeb.WritableStream;
-      ponyfills.TransformStream = streamsWeb.TransformStream;
-    }
+    const streamsWeb = require("stream/web");
+    ponyfills.WritableStream = streamsWeb.WritableStream;
+    ponyfills.TransformStream = streamsWeb.TransformStream;
   }
 
   ponyfills.Blob = newNodeFetch.Blob;
@@ -46,7 +39,6 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.btoa = newNodeFetch.btoa;
   ponyfills.TextEncoder = newNodeFetch.TextEncoder;
   ponyfills.TextDecoder = newNodeFetch.TextDecoder;
-  ponyfills.AbortSignal = newNodeFetch.AbortSignal;
 
   if (opts.formDataLimits) {
     ponyfills.Body = class Body extends newNodeFetch.Body {
@@ -78,11 +70,6 @@ module.exports = function createNodePonyfill(opts = {}) {
   if (!ponyfills.crypto) {
     const cryptoModule = require("crypto");
     ponyfills.crypto = cryptoModule.webcrypto;
-  }
-
-  if (!ponyfills.crypto) {
-    const cryptoPonyfill = require('@peculiar/webcrypto');
-    ponyfills.crypto = new cryptoPonyfill.Crypto();
   }
 
   return ponyfills;

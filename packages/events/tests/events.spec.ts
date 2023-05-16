@@ -1,22 +1,4 @@
-import { CustomEvent, Event, EventTarget } from '@whatwg-node/events';
-
-describe('EventTarget', () => {
-  it('addEventListener + dispatchEvent', () => {
-    const target = new EventTarget();
-    const listener = jest.fn();
-    target.addEventListener('test', listener);
-    target.dispatchEvent(new Event('test'));
-    expect(listener).toHaveBeenCalled();
-  });
-  it('removeEventListener', () => {
-    const target = new EventTarget();
-    const listener = jest.fn();
-    target.addEventListener('test', listener);
-    target.removeEventListener('test', listener);
-    target.dispatchEvent(new Event('test'));
-    expect(listener).not.toHaveBeenCalled();
-  });
-});
+import { CustomEvent } from '@whatwg-node/events';
 
 describe('CustomEvent', () => {
   it('detail', () => {

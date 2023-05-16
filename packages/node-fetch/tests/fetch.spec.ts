@@ -1,7 +1,6 @@
 import { globalAgent as httpGlobalAgent } from 'http';
 import { globalAgent as httpsGlobalAgent } from 'https';
 import { Readable } from 'stream';
-import { PonyfillAbortController } from '../src/AbortController.js';
 import { PonyfillBlob } from '../src/Blob.js';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillFormData } from '../src/FormData.js';
@@ -119,15 +118,11 @@ describe('Node Fetch Ponyfill', () => {
     expect(body.files['test-file']).toBe('test-content');
   });
   it('should respect AbortSignal', async () => {
-    const controller = new PonyfillAbortController();
-    setTimeout(() => {
-      controller.abort();
-    }, 300);
     await expect(
       fetchPonyfill(baseUrl + '/delay/5', {
-        signal: controller.signal,
+        signal: AbortSignal.timeout(1000),
       }),
-    ).rejects.toThrow('The operation was aborted.');
+    ).rejects.toThrow('The operation was aborted');
   });
   it('should respect gzip', async () => {
     const response = await fetchPonyfill(baseUrl + '/gzip');

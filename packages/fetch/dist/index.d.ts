@@ -12,8 +12,6 @@ declare module '@whatwg-node/fetch' {
   };
   export const Headers: typeof globalThis.Headers;
   export const FormData: typeof globalThis.FormData;
-  export const AbortSignal: typeof globalThis.AbortSignal;
-  export const AbortController: typeof globalThis.AbortController;
   export const ReadableStream: typeof globalThis.ReadableStream;
   export const WritableStream: typeof globalThis.WritableStream;
   export const TransformStream: typeof globalThis.TransformStream;
@@ -51,8 +49,6 @@ declare module '@whatwg-node/fetch' {
     Response: typeof Response;
     Headers: typeof Headers;
     FormData: typeof FormData;
-    AbortSignal: typeof AbortSignal;
-    AbortController: typeof AbortController;
     ReadableStream: typeof ReadableStream;
     WritableStream: typeof WritableStream;
     TransformStream: typeof TransformStream;
