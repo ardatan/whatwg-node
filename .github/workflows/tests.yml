@@ -79,6 +79,35 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 5
+          command: yarn test:leaks --ci
+  
+  test_20:
+    name: Unit Test on Node 20
+    runs-on: ubuntu-latest
+    services:
+      httpbin:
+        image: kennethreitz/httpbin
+        ports:
+          - 8888:80
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v3
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: ${{ matrix.node-version }}
+      - name: Cache Jest
+        uses: actions/cache@v3
+        with:
+          path: .cache/jest
+          key: ${{ runner.os }}-20-jest-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-20-jest-
+      - name: Test
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 10
+          max_attempts: 5
           command: yarn test --ci
 
   test_esm:
