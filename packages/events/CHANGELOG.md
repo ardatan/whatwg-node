@@ -1,5 +1,13 @@
 # @whatwg-node/events
 
+## 0.1.0
+
+### Minor Changes
+
+- [#535](https://github.com/ardatan/whatwg-node/pull/535)
+  [`01051f8`](https://github.com/ardatan/whatwg-node/commit/01051f8b3408ac26612b8d8ea2702a3f7e6667af)
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop Node 14 support
+
 ## 0.0.3
 
 ### Patch Changes
