@@ -1,5 +1,30 @@
 # @whatwg-node/fetch
 
+## 0.9.0
+
+### Minor Changes
+
+- [#535](https://github.com/ardatan/whatwg-node/pull/535)
+  [`01051f8`](https://github.com/ardatan/whatwg-node/commit/01051f8b3408ac26612b8d8ea2702a3f7e6667af)
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop Node 14 support
+
+### Patch Changes
+
+- [#535](https://github.com/ardatan/whatwg-node/pull/535)
+  [`01051f8`](https://github.com/ardatan/whatwg-node/commit/01051f8b3408ac26612b8d8ea2702a3f7e6667af)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Removed dependency
+    [`@peculiar/webcrypto@^1.4.0` ↗︎](https://www.npmjs.com/package/@peculiar/webcrypto/v/1.4.0)
+    (from `dependencies`)
+  - Removed dependency [`busboy@^1.6.0` ↗︎](https://www.npmjs.com/package/busboy/v/1.6.0) (from
+    `dependencies`)
+  - Removed dependency
+    [`web-streams-polyfill@^3.2.1` ↗︎](https://www.npmjs.com/package/web-streams-polyfill/v/3.2.1)
+    (from `dependencies`)
+- Updated dependencies
+  [[`01051f8`](https://github.com/ardatan/whatwg-node/commit/01051f8b3408ac26612b8d8ea2702a3f7e6667af)]:
+  - @whatwg-node/node-fetch@0.4.0
+
 ## 0.8.8
 
 ### Patch Changes
