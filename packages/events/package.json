@@ -9,6 +9,9 @@
   },
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "main": "dist/node-ponyfill.js",
   "browser": "dist/global-ponyfill.js",
   "types": "dist/index.d.ts",
