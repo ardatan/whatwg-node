@@ -80,7 +80,7 @@ jobs:
           timeout_minutes: 10
           max_attempts: 5
           command: yarn test:leaks --ci
-  
+
   test_20:
     name: Unit Test on Node 20
     runs-on: ubuntu-latest
