@@ -1,8 +1,8 @@
 diff --git a/node_modules/@pulumi/pulumi/runtime/closure/createClosure.js b/node_modules/@pulumi/pulumi/runtime/closure/createClosure.js
-index d065424..26b7d88 100644
+index df65111..5b3eaed 100644
 --- a/node_modules/@pulumi/pulumi/runtime/closure/createClosure.js
 +++ b/node_modules/@pulumi/pulumi/runtime/closure/createClosure.js
-@@ -761,9 +761,12 @@ function getOrCreateEntryAsync(obj, capturedObjectProperties, context, serialize
+@@ -752,9 +752,12 @@ function getOrCreateEntryAsync(obj, capturedObjectProperties, context, serialize
                  // things up properly.
                  //
                  // We don't need to capture the prototype if the user is not capturing 'this' either.
@@ -18,10 +18,10 @@ index d065424..26b7d88 100644
                      }
                  }
 diff --git a/node_modules/@pulumi/pulumi/runtime/closure/serializeClosure.js b/node_modules/@pulumi/pulumi/runtime/closure/serializeClosure.js
-index 79e2b95..3286ce1 100644
+index 29526de..0369724 100644
 --- a/node_modules/@pulumi/pulumi/runtime/closure/serializeClosure.js
 +++ b/node_modules/@pulumi/pulumi/runtime/closure/serializeClosure.js
-@@ -265,11 +265,20 @@ function serializeJavaScriptText(outerClosure, exportName, isFactoryFunction) {
+@@ -274,11 +274,20 @@ function serializeJavaScriptText(outerClosure, exportName, isFactoryFunction) {
              // Then we can walk our children, creating a single assignment per child.
              // This way, if the child ends up referencing us, we'll have already emitted
              // the **initialized** variable for them to reference.
