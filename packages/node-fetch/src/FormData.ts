@@ -5,6 +5,12 @@ import { PonyfillReadableStream } from './ReadableStream.js';
 export class PonyfillFormData implements FormData {
   private map = new Map<string, FormDataEntryValue[]>();
 
+  constructor() {
+    Object.defineProperty(this.constructor, 'name', {
+      value: 'FormData',
+    })
+  }
+
   append(name: string, value: PonyfillBlob | string, fileName?: string): void {
     let values = this.map.get(name);
     if (!values) {
@@ -69,6 +75,11 @@ export class PonyfillFormData implements FormData {
     for (const [key, value] of this) {
       callback(value, key, this);
     }
+  }
+
+  // undici compat
+  stream() {
+    return getStreamFromFormData(this);
   }
 }
 

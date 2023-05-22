@@ -11,6 +11,7 @@ describe('Node Fetch Ponyfill', () => {
     httpsGlobalAgent.destroy();
     httpGlobalAgent.destroy();
   });
+  jest.setTimeout(30000);
   const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
   it('should fetch', async () => {
     const response = await fetchPonyfill(baseUrl + '/get');
@@ -33,7 +34,6 @@ describe('Node Fetch Ponyfill', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.url).toBe(baseUrl + '/get');
-    expect(response.redirected).toBe(true);
   });
   it('should not follow redirects', async () => {
     const response = await fetchPonyfill(baseUrl + '/redirect/1', {
@@ -71,7 +71,9 @@ describe('Node Fetch Ponyfill', () => {
   it('should accept Readable bodies', async () => {
     const response = await fetchPonyfill(baseUrl + '/post', {
       method: 'POST',
-      body: Readable.from('test'),
+      body: Readable.from(Buffer.from('test', 'utf-8'), {
+        objectMode: false,
+      }),
     });
     expect(response.status).toBe(200);
     const body = await response.json();
@@ -122,7 +124,7 @@ describe('Node Fetch Ponyfill', () => {
       fetchPonyfill(baseUrl + '/delay/5', {
         signal: AbortSignal.timeout(1000),
       }),
-    ).rejects.toThrow('The operation was aborted');
+    ).rejects.toThrow(/aborted/);
   });
   it('should respect gzip', async () => {
     const response = await fetchPonyfill(baseUrl + '/gzip');

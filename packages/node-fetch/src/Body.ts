@@ -376,17 +376,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if ('stream' in bodyInit) {
-    return {
-      contentType: bodyInit.type,
-      contentLength: bodyInit.size,
-      bodyFactory() {
-        const bodyStream = bodyInit.stream();
-        const body = new PonyfillReadableStream<Uint8Array>(bodyStream);
-        return body;
-      },
-    };
-  }
   if ('sort' in bodyInit) {
     const contentType = 'application/x-www-form-urlencoded;charset=UTF-8';
     return {
@@ -407,6 +396,17 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: null,
       bodyFactory() {
         return getStreamFromFormData(bodyInit, boundary);
+      },
+    };
+  }
+  if ('stream' in bodyInit) {
+    return {
+      contentType: bodyInit.type,
+      contentLength: bodyInit.size,
+      bodyFactory() {
+        const bodyStream = bodyInit.stream();
+        const body = new PonyfillReadableStream<Uint8Array>(bodyStream);
+        return body;
       },
     };
   }

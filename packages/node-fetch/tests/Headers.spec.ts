@@ -1,6 +1,6 @@
-import https from 'https';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
+import undici from 'undici';
 
 describe('Headers', () => {
   it('be case-insensitive', () => {
@@ -27,7 +27,7 @@ describe('Headers', () => {
   });
   jest.setTimeout(60000);
   it('should respect custom header serializer', async () => {
-    jest.spyOn(https, 'request');
+    jest.spyOn(undici, 'request');
     const res = await fetchPonyfill(`https://httpbin.org/headers`, {
       headersSerializer() {
         return {
@@ -36,7 +36,7 @@ describe('Headers', () => {
         };
       },
     });
-    expect(https.request).toHaveBeenCalledWith(
+    expect(undici.request).toHaveBeenCalledWith(
       'https://httpbin.org/headers',
       expect.objectContaining({
         headers: {

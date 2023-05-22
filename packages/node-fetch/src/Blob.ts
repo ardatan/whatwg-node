@@ -123,6 +123,8 @@ export class PonyfillBlob implements Blob {
   slice(): any {
     throw new Error('Not implemented');
   }
+
+  [Symbol.toStringTag] = 'Blob';
 }
 
 export interface PonyfillBlob {

@@ -1,10 +1,8 @@
 import { createReadStream } from 'fs';
-import { request as httpRequest } from 'http';
-import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { fileURLToPath } from 'url';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
-import { PonyfillAbortError } from './AbortError.js';
+import { request } from 'undici';
 import { PonyfillBlob } from './Blob.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -38,19 +36,9 @@ function getResponseForDataUri(url: URL) {
   });
 }
 
-function getRequestFnForProtocol(protocol: string) {
-  switch (protocol) {
-    case 'http:':
-      return httpRequest;
-    case 'https:':
-      return httpsRequest;
-  }
-  throw new Error(`Unsupported protocol: ${protocol}`);
-}
-
 const BASE64_SUFFIX = ';base64';
 
-export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
+export async function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
   init?: RequestPonyfillInit,
 ): Promise<PonyfillResponse<TResponseJSON>> {
@@ -61,105 +49,63 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
   const fetchRequest = info;
 
-  return new Promise((resolve, reject) => {
-    try {
-      const url = new PonyfillURL(fetchRequest.url, 'http://localhost');
+  const url = new PonyfillURL(fetchRequest.url, 'http://localhost');
 
-      if (url.protocol === 'data:') {
-        const response = getResponseForDataUri(url);
-        resolve(response);
-        return;
-      }
+  if (url.protocol === 'data:') {
+    const response = getResponseForDataUri(url);
+    return response;
+  }
 
-      if (url.protocol === 'file:') {
-        const response = getResponseForFile(fetchRequest.url);
-        resolve(response);
-        return;
-      }
+  if (url.protocol === 'file:') {
+    const response = getResponseForFile(fetchRequest.url);
+    return response;
+  }
 
-      const requestFn = getRequestFnForProtocol(url.protocol);
+  const requestBody = (
+    fetchRequest['bodyInit'] != null
+      ? fetchRequest['bodyInit'] :
+    fetchRequest.body != null
+      ? 'pipe' in fetchRequest.body
+        ? fetchRequest.body
+        : Readable.from(fetchRequest.body)
+      : null
+  ) as Readable | null;
 
-      const nodeReadable = (
-        fetchRequest.body != null
-          ? 'pipe' in fetchRequest.body
-            ? fetchRequest.body
-            : Readable.from(fetchRequest.body)
-          : null
-      ) as Readable | null;
-      const headersSerializer = fetchRequest.headersSerializer || getHeadersObj;
-      const nodeHeaders = headersSerializer(fetchRequest.headers);
-
-      const nodeRequest = requestFn(fetchRequest.url, {
-        method: fetchRequest.method,
-        headers: nodeHeaders,
-        signal: fetchRequest.signal,
-      });
-
-      // TODO: will be removed after v16 reaches EOL
-      fetchRequest.signal?.addEventListener('abort', () => {
-        if (!nodeRequest.aborted) {
-          nodeRequest.abort();
-        }
-      });
-      // TODO: will be removed after v16 reaches EOL
-      nodeRequest.once('abort', (reason: any) => {
-        reject(new PonyfillAbortError(reason));
-      });
-
-      nodeRequest.once('response', nodeResponse => {
-        let responseBody: Readable = nodeResponse;
-        const contentEncoding = nodeResponse.headers['content-encoding'];
-        switch (contentEncoding) {
-          case 'x-gzip':
-          case 'gzip':
-            responseBody = nodeResponse.pipe(createGunzip());
-            break;
-          case 'x-deflate':
-          case 'deflate':
-            responseBody = nodeResponse.pipe(createInflate());
-            break;
-          case 'br':
-            responseBody = nodeResponse.pipe(createBrotliDecompress());
-            break;
-        }
-        if (nodeResponse.headers.location) {
-          if (fetchRequest.redirect === 'error') {
-            const redirectError = new Error('Redirects are not allowed');
-            reject(redirectError);
-            nodeResponse.resume();
-            return;
-          }
-          if (fetchRequest.redirect === 'follow') {
-            const redirectedUrl = new PonyfillURL(nodeResponse.headers.location, url);
-            const redirectResponse$ = fetchPonyfill(redirectedUrl, info);
-            resolve(
-              redirectResponse$.then(redirectResponse => {
-                redirectResponse.redirected = true;
-                return redirectResponse;
-              }),
-            );
-            nodeResponse.resume();
-            return;
-          }
-        }
-        const responseHeaders: Record<string, string | string[] | undefined> = nodeResponse.headers;
-        const ponyfillResponse = new PonyfillResponse(responseBody, {
-          status: nodeResponse.statusCode,
-          statusText: nodeResponse.statusMessage,
-          headers: responseHeaders,
-          url: info.url,
-        });
-        resolve(ponyfillResponse);
-      });
-      nodeRequest.once('error', reject);
-
-      if (nodeReadable) {
-        nodeReadable.pipe(nodeRequest);
-      } else {
-        nodeRequest.end();
-      }
-    } catch (e) {
-      reject(e);
-    }
+  const headersSerializer = fetchRequest.headersSerializer || getHeadersObj;
+  const nodeHeaders = headersSerializer(fetchRequest.headers);
+  const undiciData = await request(fetchRequest.url, {
+    method: fetchRequest.method as any,
+    headers: nodeHeaders,
+    body: requestBody,
+    signal: fetchRequest.signal,
+    maxRedirections: fetchRequest.redirect === 'follow' ? 20 : 0,
   });
+
+  if (fetchRequest.redirect === 'error' && undiciData.headers.location) {
+    const redirectError = new Error('Redirects are not allowed');
+    throw redirectError;
+  }
+
+  let responseBody: Readable = undiciData.body;
+  const contentEncoding = undiciData.headers['content-encoding'];
+  switch (contentEncoding) {
+    case 'x-gzip':
+    case 'gzip':
+      responseBody = responseBody.pipe(createGunzip());
+      break;
+    case 'x-deflate':
+    case 'deflate':
+      responseBody = responseBody.pipe(createInflate());
+      break;
+    case 'br':
+      responseBody = responseBody.pipe(createBrotliDecompress());
+      break;
+  }
+  const ponyfillResponse = new PonyfillResponse(responseBody, {
+    status: undiciData.statusCode,
+    headers: undiciData.headers,
+    url: fetchRequest.url,
+  });
+
+  return ponyfillResponse;
 }
