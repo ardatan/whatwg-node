@@ -63,8 +63,8 @@ export async function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
   const requestBody = (
     fetchRequest['bodyInit'] != null
-      ? fetchRequest['bodyInit'] :
-    fetchRequest.body != null
+      ? fetchRequest['bodyInit']
+      : fetchRequest.body != null
       ? 'pipe' in fetchRequest.body
         ? fetchRequest.body
         : Readable.from(fetchRequest.body)
@@ -73,6 +73,9 @@ export async function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
   const headersSerializer = fetchRequest.headersSerializer || getHeadersObj;
   const nodeHeaders = headersSerializer(fetchRequest.headers);
+  if ((requestBody as any)?.[Symbol.toStringTag] === 'FormData') {
+    delete nodeHeaders['content-type'];
+  }
   const undiciData = await request(fetchRequest.url, {
     method: fetchRequest.method as any,
     headers: nodeHeaders,

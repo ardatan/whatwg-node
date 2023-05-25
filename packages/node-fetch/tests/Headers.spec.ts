@@ -1,6 +1,6 @@
+import undici from 'undici';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
-import undici from 'undici';
 
 describe('Headers', () => {
   it('be case-insensitive', () => {

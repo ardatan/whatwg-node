@@ -11,7 +11,6 @@ describe('Node Fetch Ponyfill', () => {
     httpsGlobalAgent.destroy();
     httpGlobalAgent.destroy();
   });
-  jest.setTimeout(30000);
   const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
   it('should fetch', async () => {
     const response = await fetchPonyfill(baseUrl + '/get');

@@ -8,7 +8,7 @@ export class PonyfillFormData implements FormData {
   constructor() {
     Object.defineProperty(this.constructor, 'name', {
       value: 'FormData',
-    })
+    });
   }
 
   append(name: string, value: PonyfillBlob | string, fileName?: string): void {
@@ -77,10 +77,7 @@ export class PonyfillFormData implements FormData {
     }
   }
 
-  // undici compat
-  stream() {
-    return getStreamFromFormData(this);
-  }
+  [Symbol.toStringTag] = 'FormData';
 }
 
 export function getStreamFromFormData(
