@@ -3,7 +3,7 @@ if (!module.exports.CustomEvent) {
   module.exports.CustomEvent = class CustomEvent extends Event {
     constructor(type, options) {
       super(type, options);
-      this.detail = options && options.detail;
+      this.detail = options?.detail ?? null;
     }
   }
 }
