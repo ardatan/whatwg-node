@@ -7,7 +7,6 @@ import {
   fsPromises,
 } from '@e2e/shared-scripts';
 import * as pulumi from '@pulumi/pulumi';
-import { fetch } from '@whatwg-node/fetch';
 
 type VercelProviderInputs = {
   name: string;

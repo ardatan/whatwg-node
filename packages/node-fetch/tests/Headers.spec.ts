@@ -25,10 +25,10 @@ describe('Headers', () => {
       expect(headers['mapIsBuilt']).toBe(false);
     });
   });
-  jest.setTimeout(60000);
+  const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
   it('should respect custom header serializer', async () => {
     jest.spyOn(undici, 'request');
-    const res = await fetchPonyfill(`https://httpbin.org/headers`, {
+    const res = await fetchPonyfill(`${baseUrl}/headers`, {
       headersSerializer() {
         return {
           'X-TesT': 'test',
@@ -37,7 +37,7 @@ describe('Headers', () => {
       },
     });
     expect(undici.request).toHaveBeenCalledWith(
-      'https://httpbin.org/headers',
+      `${baseUrl}/headers`,
       expect.objectContaining({
         headers: {
           'X-TesT': 'test',
