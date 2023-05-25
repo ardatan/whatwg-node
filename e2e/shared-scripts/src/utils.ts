@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import { promises as fsPromises } from 'fs';
 import { promisify } from 'util';
+import { fetch } from '@whatwg-node/fetch';
 
 export { fsPromises };
 export const execPromise = promisify(exec);
