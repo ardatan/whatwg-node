@@ -1,5 +1,3 @@
-import { globalAgent as httpGlobalAgent } from 'http';
-import { globalAgent as httpsGlobalAgent } from 'https';
 import { Readable } from 'stream';
 import { PonyfillBlob } from '../src/Blob.js';
 import { fetchPonyfill } from '../src/fetch.js';
