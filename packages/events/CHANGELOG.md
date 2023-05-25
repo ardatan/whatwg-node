@@ -1,5 +1,13 @@
 # @whatwg-node/events
 
+## 0.1.1
+
+### Patch Changes
+
+- [#554](https://github.com/ardatan/whatwg-node/pull/554)
+  [`dc29e24`](https://github.com/ardatan/whatwg-node/commit/dc29e24a27921a39a8a3009f9fe32f5c8e6b3b50)
+  Thanks [@n1ru4l](https://github.com/n1ru4l)! - Follow the spec and set `detail` to null by default
+
 ## 0.1.0
 
 ### Minor Changes
