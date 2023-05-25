@@ -14,5 +14,5 @@ describe('CustomEvent', () => {
     target.addEventListener('test', listener);
     target.dispatchEvent(new CustomEvent('test'));
     expect(listener).toHaveBeenCalledWith(expect.objectContaining({ detail: null }));
-  })
+  });
 });
