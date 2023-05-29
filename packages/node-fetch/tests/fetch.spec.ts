@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import { PonyfillBlob } from '../src/Blob.js';
-import { fetchPonyfill } from '../src/fetch.js';
+import { fetchPonyfill } from '../src/fetch-undici.js';
 import { PonyfillFormData } from '../src/FormData.js';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
 

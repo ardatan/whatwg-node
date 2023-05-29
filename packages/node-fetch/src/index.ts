@@ -1,4 +1,4 @@
-export { fetchPonyfill as fetch } from './fetch.js';
+export { fetchPonyfill as fetch } from './fetch-undici.js';
 export { PonyfillHeaders as Headers } from './Headers.js';
 export { PonyfillBody as Body } from './Body.js';
 export { PonyfillRequest as Request, RequestPonyfillInit as RequestInit } from './Request.js';
