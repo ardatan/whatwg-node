@@ -12,7 +12,7 @@ function getNodeMajorVersion() {
 
 export let fetchPonyfill: typeof fetchLegacy | typeof fetchViaUndici;
 
-if (getNodeMajorVersion() >= 17) {
+if (getNodeMajorVersion() >= 19) {
   fetchPonyfill = fetchViaUndici;
 } else {
   fetchPonyfill = fetchLegacy;
