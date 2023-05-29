@@ -3,10 +3,11 @@ import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { PonyfillAbortError } from './AbortError.js';
+import { getResponseForDataUri, getResponseForFile } from './non-http-fetch.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { getHeadersObj, getResponseForDataUri, getResponseForFile } from './utils.js';
+import { getHeadersObj } from './utils.js';
 
 function getRequestFnForProtocol(protocol: string) {
   switch (protocol) {

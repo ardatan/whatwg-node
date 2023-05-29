@@ -1,5 +1,5 @@
 import undici from 'undici';
-import { fetchPonyfill } from '../src/fetch-undici.js';
+import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
 
 describe('Headers', () => {

@@ -1,5 +1,5 @@
-import { fetchLegacy } from './fetch-legacy';
-import { fetchViaUndici } from './fetch-undici';
+import { fetchLegacy } from './fetch-legacy.js';
+import { fetchViaUndici } from './fetch-undici.js';
 
 function getNodeMajorVersion() {
   const version = process.version;
@@ -10,10 +10,5 @@ function getNodeMajorVersion() {
   return parseInt(match[1]);
 }
 
-export let fetchPonyfill: typeof fetchLegacy | typeof fetchViaUndici;
-
-if (getNodeMajorVersion() >= 19) {
-  fetchPonyfill = fetchViaUndici;
-} else {
-  fetchPonyfill = fetchLegacy;
-}
+export const fetchPonyfill: typeof fetchLegacy | typeof fetchViaUndici =
+  getNodeMajorVersion() >= 19 ? fetchViaUndici : fetchLegacy;

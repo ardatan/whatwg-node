@@ -1,10 +1,11 @@
 import { Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { request } from 'undici';
+import { getResponseForDataUri, getResponseForFile } from './non-http-fetch.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { getHeadersObj, getResponseForDataUri, getResponseForFile } from './utils.js';
+import { getHeadersObj } from './utils.js';
 
 export async function fetchViaUndici<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
