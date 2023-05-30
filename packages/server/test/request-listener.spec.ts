@@ -1,6 +1,7 @@
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { createNodeHttpTestServer, createUWSTestServer, TestServer } from './test-server.js';
+import { globalAgent } from 'http';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
@@ -50,6 +51,7 @@ describe('Request Listener', () => {
       });
       afterAll(async () => {
         await testServer.close();
+        globalAgent.destroy();
       });
       async function compareReadableStream(
         toBeCheckedStream: ReadableStream | null,
