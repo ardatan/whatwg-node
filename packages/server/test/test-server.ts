@@ -44,7 +44,7 @@ export function createUWSTestServer(): Promise<TestServer> {
           });
           return;
         }
-        reject('Failed to start the server');
+        reject(new Error('Failed to start the server'));
       });
   });
 }
