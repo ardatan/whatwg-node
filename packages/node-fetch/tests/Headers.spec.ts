@@ -1,4 +1,4 @@
-import https from 'https';
+import http from 'http';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
 
@@ -28,7 +28,7 @@ describe('Headers', () => {
   });
   jest.setTimeout(60000);
   it('should respect custom header serializer', async () => {
-    jest.spyOn(https, 'request');
+    jest.spyOn(http, 'request');
     const res = await fetchPonyfill(`${baseUrl}/headers`, {
       headersSerializer() {
         return {
@@ -37,7 +37,7 @@ describe('Headers', () => {
         };
       },
     });
-    expect(https.request).toHaveBeenCalledWith(
+    expect(http.request).toHaveBeenCalledWith(
       `${baseUrl}/headers`,
       expect.objectContaining({
         headers: {
