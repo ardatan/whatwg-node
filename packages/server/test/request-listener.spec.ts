@@ -1,5 +1,6 @@
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
+import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl, TestServer } from './test-server.js';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
@@ -7,87 +8,89 @@ const methodsWithoutBody = ['GET', 'DELETE'];
 const methodsWithBody = ['POST', 'PUT', 'PATCH'];
 
 describe('Request Listener', () => {
-  runTestsForEachServerImpl(testServer => {
-    [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
-      it(`should handle regular requests with ${method}`, () => {
-        const requestInit: RequestInit = {
-          method,
-          headers: {
-            accept: 'application/json',
-            'content-type': 'application/json',
-            'random-header': Date.now().toString(),
-          },
-        };
-        if (methodsWithBody.includes(method)) {
-          requestInit.body = getRegularRequestBody();
-        }
-        const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
-          status: 200,
-          headers: {
-            'content-type': 'application/json',
-            'random-header': Date.now().toString(),
-          },
+  runTestsForEachFetchImpl(() => {
+    runTestsForEachServerImpl(testServer => {
+      [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
+        it(`should handle regular requests with ${method}`, () => {
+          const requestInit: RequestInit = {
+            method,
+            headers: {
+              accept: 'application/json',
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          };
+          if (methodsWithBody.includes(method)) {
+            requestInit.body = getRegularRequestBody();
+          }
+          const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          });
+          return runTestForRequestAndResponse({
+            requestInit,
+            getRequestBody: getRegularRequestBody,
+            expectedResponse,
+            getResponseBody: getRegularResponseBody,
+            testServer,
+          });
         });
-        return runTestForRequestAndResponse({
-          requestInit,
-          getRequestBody: getRegularRequestBody,
-          expectedResponse,
-          getResponseBody: getRegularResponseBody,
-          testServer,
-        });
-      });
 
-      it(`should handle incremental responses with ${method}`, () => {
-        const requestInit: RequestInit = {
-          method,
-          headers: {
-            accept: 'application/json',
-            'random-header': Date.now().toString(),
-          },
-        };
-        if (methodsWithBody.includes(method)) {
-          requestInit.body = getRegularRequestBody();
-        }
-        const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
-          status: 200,
-          headers: {
-            'content-type': 'application/json',
-            'random-header': Date.now().toString(),
-          },
+        it(`should handle incremental responses with ${method}`, () => {
+          const requestInit: RequestInit = {
+            method,
+            headers: {
+              accept: 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          };
+          if (methodsWithBody.includes(method)) {
+            requestInit.body = getRegularRequestBody();
+          }
+          const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          });
+          return runTestForRequestAndResponse({
+            requestInit,
+            getRequestBody: getRegularRequestBody,
+            expectedResponse,
+            getResponseBody: getIncrementalResponseBody,
+            testServer,
+          });
         });
-        return runTestForRequestAndResponse({
-          requestInit,
-          getRequestBody: getRegularRequestBody,
-          expectedResponse,
-          getResponseBody: getIncrementalResponseBody,
-          testServer,
-        });
-      });
 
-      it(`should handle incremental requests with ${method}`, () => {
-        const requestInit: RequestInit = {
-          method,
-          headers: {
-            accept: 'application/json',
-            'random-header': Date.now().toString(),
-          },
-        };
-        if (methodsWithBody.includes(method)) {
-          requestInit.body = getIncrementalRequestBody();
-        }
-        const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
-          status: 200,
-          headers: {
-            'content-type': 'application/json',
-            'random-header': Date.now().toString(),
-          },
-        });
-        return runTestForRequestAndResponse({
-          requestInit,
-          getRequestBody: getIncrementalRequestBody,
-          expectedResponse,
-          getResponseBody: getRegularResponseBody,
-          testServer,
+        it(`should handle incremental requests with ${method}`, () => {
+          const requestInit: RequestInit = {
+            method,
+            headers: {
+              accept: 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          };
+          if (methodsWithBody.includes(method)) {
+            requestInit.body = getIncrementalRequestBody();
+          }
+          const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
+            status: 200,
+            headers: {
+              'content-type': 'application/json',
+              'random-header': Date.now().toString(),
+            },
+          });
+          return runTestForRequestAndResponse({
+            requestInit,
+            getRequestBody: getIncrementalRequestBody,
+            expectedResponse,
+            getResponseBody: getRegularResponseBody,
+            testServer,
+          });
         });
       });
     });
@@ -110,7 +113,6 @@ async function compareRequest(toBeChecked: Request, expected: Request) {
 }
 
 async function compareResponse(toBeChecked: Response, expected: Response) {
-  expect(toBeChecked.status).toBe(expected.status);
   expected.headers.forEach((value, key) => {
     const toBeCheckedValue = toBeChecked.headers.get(key);
     expect({
@@ -121,6 +123,7 @@ async function compareResponse(toBeChecked: Response, expected: Response) {
       value,
     });
   });
+  expect(toBeChecked.status).toBe(expected.status);
 }
 async function compareReadableStream(
   toBeCheckedStream: ReadableStream | null,

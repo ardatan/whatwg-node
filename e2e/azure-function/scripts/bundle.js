@@ -1,6 +1,7 @@
 const { build } = require('esbuild');
 const { writeFileSync } = require('fs');
 const { join } = require('path');
+const nativeNodeModulesPlugin = require('../../shared-scripts/scripts/native-node-modules.plugin');
 
 const projectRoot = join(__dirname, '..');
 
@@ -12,7 +13,8 @@ async function main() {
     minify: false,
     bundle: true,
     platform: 'node',
-    target: 'node14',
+    target: 'es2020',
+    plugins: [nativeNodeModulesPlugin],
   });
 
   writeFileSync(

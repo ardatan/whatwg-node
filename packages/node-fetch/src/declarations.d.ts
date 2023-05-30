@@ -30,3 +30,5 @@ declare module 'fast-url-parser' {
   }
   export = Url;
 }
+
+declare var libcurl: typeof import('node-libcurl');
