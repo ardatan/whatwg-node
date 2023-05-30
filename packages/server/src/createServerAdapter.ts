@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { Readable } from 'stream';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
@@ -19,6 +20,7 @@ import {
   normalizeNodeRequest,
   sendNodeResponse,
 } from './utils.js';
+import { isUWSResponse, UWSRequest, UWSResponse } from './uwebsockets.js';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
@@ -169,6 +171,81 @@ function createServerAdapter<
     }
   }
 
+  async function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
+    const waitUntilPromises: Promise<unknown>[] = [];
+    const serverContext = completeAssign(
+      {
+        res,
+        req,
+        waitUntil(promise: Promise<void> | void) {
+          if (promise != null) {
+            waitUntilPromises.push(promise);
+          }
+        },
+      },
+      ...ctx,
+    );
+    let body: (ReadableStream & { readable: Readable }) | undefined;
+    const method = req.getMethod();
+    let resAborted = false;
+    res.onAborted(function () {
+      resAborted = true;
+      body?.readable.push(null);
+    });
+    if (method !== 'get' && method !== 'head') {
+      body = new fetchAPI.ReadableStream({}) as ReadableStream & { readable: Readable };
+      res.onData(function (chunk, isLast) {
+        body?.readable.push(Buffer.from(chunk, 0, chunk.byteLength));
+        if (isLast) {
+          body?.readable.push(null);
+        }
+      });
+    }
+    const headers: Record<string, string> = {};
+    req.forEach((key, value) => {
+      headers[key] = value;
+    });
+    const url = `http://localhost${req.getUrl()}`;
+    const request = new fetchAPI.Request(url, {
+      method,
+      headers,
+      body,
+    });
+    const response = await handleRequest(request, serverContext);
+    if (resAborted) {
+      return;
+    }
+    if (!response) {
+      res.writeStatus('404 Not Found');
+      res.end();
+      return;
+    }
+    res.writeStatus(`${response.status} ${response.statusText}`);
+    response.headers.forEach((value, key) => {
+      // content-length causes an error with Node.js's fetch
+      if (key.toLowerCase() !== 'content-length') {
+        res.writeHeader(key, value);
+      }
+    });
+    if (!response.body) {
+      res.end();
+      return;
+    }
+    if ((response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array') {
+      res.end((response as any).bodyInit);
+      return;
+    }
+    for await (const chunk of (response.body as any).readable) {
+      if (resAborted) {
+        return;
+      }
+      if (!res.write(chunk)) {
+        break;
+      }
+    }
+    res.end();
+  }
+
   function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]): void {
     if (!event.respondWith || !event.request) {
       throw new TypeError(`Expected FetchEvent, got ${event}`);
@@ -213,11 +290,20 @@ function createServerAdapter<
   };
 
   const genericRequestHandler = (
-    input: Request | FetchEvent | NodeRequest | ({ request: Request } & Partial<TServerContext>),
+    input:
+      | Request
+      | FetchEvent
+      | NodeRequest
+      | ({ request: Request } & Partial<TServerContext>)
+      | UWSResponse,
     ...maybeCtx: Partial<TServerContext>[]
   ): Promise<Response> | Response | Promise<void> | void => {
     // If it is a Node request
     const [initOrCtxOrRes, ...restOfCtx] = maybeCtx;
+    if (isUWSResponse(input)) {
+      return handleUWS(input, initOrCtxOrRes as any, ...restOfCtx);
+    }
+
     if (isNodeRequest(input)) {
       if (!isServerResponse(initOrCtxOrRes)) {
         throw new TypeError(`Expected ServerResponse, got ${initOrCtxOrRes}`);
@@ -250,6 +336,7 @@ function createServerAdapter<
     handleNodeRequest,
     requestListener,
     handleEvent,
+    handleUWS,
     handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
   };
 
