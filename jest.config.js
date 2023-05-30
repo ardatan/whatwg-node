@@ -1,6 +1,5 @@
-const { resolve, join } = require('path');
+const { resolve } = require('path');
 const { pathsToModuleNameMapper } = require('ts-jest');
-const fs = require('fs');
 const CI = !!process.env.CI;
 
 const ROOT_DIR = __dirname;

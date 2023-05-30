@@ -33,7 +33,7 @@ jobs:
         with:
           nodeVersion: 18
       - name: ESLint
-        run: yarn lint
+        run: yarn ci:lint
 
   type-check:
     name: Type Check

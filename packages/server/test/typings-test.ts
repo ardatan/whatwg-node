@@ -26,4 +26,4 @@ adapter(httpReq, httpRes);
 const httpServer = createHttpServer(adapter);
 httpServer.on('request', adapter);
 
-App().any('/', adapter);
+App().any('/*', adapter);

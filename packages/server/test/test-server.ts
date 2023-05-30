@@ -1,6 +1,12 @@
 import { createServer } from 'http';
 import { AddressInfo, Socket } from 'net';
-import { App, us_listen_socket, us_listen_socket_close } from 'uWebSockets.js';
+// eslint-disable-next-line camelcase
+import {
+  App,
+  us_listen_socket,
+  us_listen_socket_close,
+  us_socket_local_port,
+} from 'uWebSockets.js';
 
 export interface TestServer {
   name: string;
@@ -9,49 +15,38 @@ export interface TestServer {
   close(): Promise<void> | void;
 }
 
-async function getPortFree() {
-  return new Promise<number>(resolve => {
-    const srv = createServer();
-    srv.listen(0, () => {
-      const port = (srv.address() as AddressInfo).port;
-      srv.close(() => resolve(port));
-    });
-  });
-}
-
 export function createUWSTestServer(): Promise<TestServer> {
   const app = App();
   let listenSocket: us_listen_socket;
   let handler: any;
-  return getPortFree().then(
-    port =>
-      new Promise((resolve, reject) => {
-        app
-          .any('/*', (...args) =>
-            handler(...args).then((res: any) => {
-              handler = undefined;
-              return res;
-            }),
-          )
-          .listen(port, newListenSocket => {
-            listenSocket = newListenSocket;
-            if (listenSocket) {
-              resolve({
-                name: 'uWebSockets.js',
-                url: `http://localhost:${port}/`,
-                close() {
-                  us_listen_socket_close(listenSocket);
-                },
-                addOnceHandler(newHandler) {
-                  handler = newHandler;
-                },
-              });
-              return;
-            }
-            reject('Failed to start the server');
+  return new Promise((resolve, reject) => {
+    app
+      .any('/*', (...args) => {
+        const res = handler(...args);
+        handler = undefined;
+        return res;
+      })
+      .listen(0, newListenSocket => {
+        listenSocket = newListenSocket;
+        if (listenSocket) {
+          // eslint-disable-next-line camelcase
+          const port = us_socket_local_port(listenSocket);
+          resolve({
+            name: 'uWebSockets.js',
+            url: `http://localhost:${port}/`,
+            close() {
+              // eslint-disable-next-line camelcase
+              us_listen_socket_close(listenSocket);
+            },
+            addOnceHandler(newHandler) {
+              handler = newHandler;
+            },
           });
-      }),
-  );
+          return;
+        }
+        reject('Failed to start the server');
+      });
+  });
 }
 
 export function createNodeHttpTestServer(): Promise<TestServer> {
@@ -77,8 +72,8 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
           connections.forEach(socket => {
             socket.destroy();
           });
-          return new Promise<any>(done => {
-            server.close(done);
+          return new Promise<any>(resolve => {
+            server.close(resolve);
           });
         },
       });
