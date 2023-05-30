@@ -220,11 +220,15 @@ function createServerAdapter<
       res.end();
       return;
     }
-    res.writeStatus(`${response.status} ${response.statusText}`);
+    res.cork(() => {
+      res.writeStatus(`${response.status} ${response.statusText}`);
+    });
     response.headers.forEach((value, key) => {
       // content-length causes an error with Node.js's fetch
       if (key.toLowerCase() !== 'content-length') {
-        res.writeHeader(key, value);
+        res.cork(() => {
+          res.writeHeader(key, value);
+        });
       }
     });
     if (!response.body) {
@@ -232,18 +236,22 @@ function createServerAdapter<
       return;
     }
     if ((response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array') {
-      res.end((response as any).bodyInit);
+      res.cork(() => {
+        res.end((response as any).bodyInit);
+      });
       return;
     }
     for await (const chunk of (response.body as any).readable) {
       if (resAborted) {
         return;
       }
-      if (!res.write(chunk)) {
-        break;
-      }
+      res.cork(() => {
+        res.write(chunk);
+      });
     }
-    res.end();
+    res.cork(() => {
+      res.end();
+    });
   }
 
   function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]): void {

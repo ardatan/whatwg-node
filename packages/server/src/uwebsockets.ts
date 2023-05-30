@@ -11,6 +11,7 @@ export interface UWSResponse {
   writeHeader(key: string, value: string): void;
   end(body?: any): void;
   write(body: any): boolean;
+  cork(callback: () => void): void;
 }
 
 export type UWSHandler = (res: UWSResponse, req: UWSRequest) => void | Promise<void>;

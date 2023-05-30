@@ -1,6 +1,6 @@
+/* eslint-disable camelcase */
 import { createServer } from 'http';
 import { AddressInfo, Socket } from 'net';
-// eslint-disable-next-line camelcase
 import {
   App,
   us_listen_socket,
