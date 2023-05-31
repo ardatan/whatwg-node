@@ -1,5 +1,5 @@
-import { globalAgent as httpGlobalAgent } from 'http';
-import { globalAgent as httpsGlobalAgent } from 'https';
+import { Agent as HttpAgent, globalAgent as httpGlobalAgent } from 'http';
+import { Agent as HttpsAgent, globalAgent as httpsGlobalAgent } from 'https';
 import { Readable } from 'stream';
 import { PonyfillBlob } from '../src/Blob.js';
 import { fetchPonyfill } from '../src/fetch.js';
@@ -11,6 +11,7 @@ describe('Node Fetch Ponyfill', () => {
     httpsGlobalAgent.destroy();
     httpGlobalAgent.destroy();
   });
+  const AgentCtor = process.env.CI ? HttpAgent : HttpsAgent;
   const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
   it('should fetch', async () => {
     const response = await fetchPonyfill(baseUrl + '/get');
@@ -141,5 +142,16 @@ describe('Node Fetch Ponyfill', () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.brotli).toBe(true);
+  });
+  it('should accept custom agents', async () => {
+    const agent = new AgentCtor() as any;
+    jest.spyOn(agent, 'createConnection');
+    const response = await fetchPonyfill(baseUrl + '/get', {
+      agent,
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.url).toBe(baseUrl + '/get');
+    expect(agent.createConnection).toHaveBeenCalledTimes(1);
   });
 });
