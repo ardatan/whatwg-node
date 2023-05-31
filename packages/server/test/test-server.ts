@@ -94,7 +94,7 @@ export function runTestsForEachServerImpl(callback: (server: TestServer) => void
     describe(serverImplName, () => {
       const server: TestServer = {} as TestServer;
       beforeAll(async () => {
-        Object.assign(server, await serverImplMap[serverImplName]());
+        Object.assign(server, await serverImplMap[serverImplName as keyof typeof serverImplMap]());
       });
       afterAll(async () => {
         await server.close();

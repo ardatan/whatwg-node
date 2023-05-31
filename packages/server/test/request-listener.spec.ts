@@ -1,4 +1,3 @@
-import { globalAgent } from 'http';
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { runTestsForEachServerImpl } from './test-server.js';
