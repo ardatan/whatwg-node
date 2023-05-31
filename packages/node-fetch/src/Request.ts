@@ -1,3 +1,4 @@
+import type { Agent } from 'http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 import { getHeadersObj } from './utils.js';
@@ -11,6 +12,7 @@ export type RequestPonyfillInit = PonyfillBodyOptions &
     body?: BodyPonyfillInit | null;
     headers?: PonyfillHeadersInit;
     headersSerializer?: HeadersSerializer;
+    agent?: Agent;
   };
 
 type HeadersSerializer = (headers: Headers) => Record<string, string>;
@@ -51,6 +53,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.referrerPolicy = requestInit?.referrerPolicy || 'no-referrer';
     this.signal = requestInit?.signal || new AbortController().signal;
     this.headersSerializer = requestInit?.headersSerializer || getHeadersObj;
+    this.agent = requestInit?.agent;
 
     this.url = url || '';
 
@@ -88,6 +91,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrerPolicy: ReferrerPolicy;
   url: string;
   signal: AbortSignal;
+  agent?: Agent;
 
   clone(): Request {
     return new Request(this);

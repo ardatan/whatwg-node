@@ -93,6 +93,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
         method: fetchRequest.method,
         headers: nodeHeaders,
         signal: fetchRequest.signal,
+        agent: fetchRequest.agent,
       });
 
       // TODO: will be removed after v16 reaches EOL
