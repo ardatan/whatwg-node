@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.8.1
+
+### Patch Changes
+
+- [`102b437`](https://github.com/ardatan/whatwg-node/commit/102b4370c9ee3784297b3dae3f05a236490c6f46)
+  Thanks [@ardatan](https://github.com/ardatan)! - Better uWebSockets.js integration
+
 ## 0.7.6
 
 ### Patch Changes
