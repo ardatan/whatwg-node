@@ -1,5 +1,12 @@
 # @whatwg-node/fetch
 
+## 0.9.1
+
+### Patch Changes
+
+- [`58b733d`](https://github.com/ardatan/whatwg-node/commit/58b733da41ca913348abd30e2253b332370aa51d)
+  Thanks [@ardatan](https://github.com/ardatan)! - Bump node-fetch package
+
 ## 0.9.0
 
 ### Minor Changes
