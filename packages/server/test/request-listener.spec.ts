@@ -1,12 +1,7 @@
 import { globalAgent } from 'http';
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
-import {
-  createNodeHttpTestServer,
-  createUWSTestServer,
-  runTestsForEachServerImpl,
-  TestServer,
-} from './test-server.js';
+import { runTestsForEachServerImpl } from './test-server.js';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
