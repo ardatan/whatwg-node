@@ -1,9 +1,11 @@
 import http from 'http';
+import https from 'https';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
 
 describe('Headers', () => {
   const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
+  const baseLib = baseUrl.startsWith('https') ? https : http;
   it('be case-insensitive', () => {
     const headers = new PonyfillHeaders();
     headers.set('X-Header', 'foo');
@@ -28,7 +30,7 @@ describe('Headers', () => {
   });
   jest.setTimeout(60000);
   it('should respect custom header serializer', async () => {
-    jest.spyOn(http, 'request');
+    jest.spyOn(baseLib, 'request');
     const res = await fetchPonyfill(`${baseUrl}/headers`, {
       headersSerializer() {
         return {
@@ -37,7 +39,7 @@ describe('Headers', () => {
         };
       },
     });
-    expect(http.request).toHaveBeenCalledWith(
+    expect(baseLib.request).toHaveBeenCalledWith(
       `${baseUrl}/headers`,
       expect.objectContaining({
         headers: {

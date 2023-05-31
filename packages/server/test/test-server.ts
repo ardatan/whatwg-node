@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { createServer } from 'http';
+import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
 import {
   App,
@@ -79,4 +79,28 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
       });
     });
   });
+}
+
+export const serverImplMap = {
+  nodeHttp: createNodeHttpTestServer,
+  uWebSockets: createUWSTestServer,
+};
+
+export function runTestsForEachServerImpl(callback: (server: TestServer) => void) {
+  for (const serverImplName in serverImplMap) {
+    if (process.env.LEAK_TEST && serverImplName === 'uWebSockets') {
+      continue;
+    }
+    describe(serverImplName, () => {
+      const server: TestServer = {} as TestServer;
+      beforeAll(async () => {
+        Object.assign(server, await serverImplMap[serverImplName]());
+      });
+      afterAll(async () => {
+        await server.close();
+        globalAgent.destroy();
+      });
+      callback(server);
+    });
+  }
 }

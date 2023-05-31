@@ -48,8 +48,8 @@ jobs:
       - name: Type Check
         run: yarn ts:check
 
-  test:
-    name: Unit Test on Node ${{matrix.node-version}}
+  test-leaks:
+    name: Leak Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest
     services:
       httpbin:
@@ -81,14 +81,18 @@ jobs:
           max_attempts: 5
           command: yarn test:leaks --ci
 
-  test_20:
-    name: Unit Test on Node 20
+  unit-tests:
+    name: Unit Test on Node ${{matrix.node-version}}
     runs-on: ubuntu-latest
     services:
       httpbin:
         image: kennethreitz/httpbin
         ports:
           - 8888:80
+    strategy:
+      matrix:
+        node-version: [16, 18]
+      fail-fast: false
     steps:
       - name: Checkout Master
         uses: actions/checkout@v3
@@ -100,9 +104,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: .cache/jest
-          key: ${{ runner.os }}-20-jest-${{ hashFiles('yarn.lock') }}
+          key: ${{ runner.os }}-${{matrix.node-version}}-jest-${{ hashFiles('yarn.lock') }}
           restore-keys: |
-            ${{ runner.os }}-20-jest-
+            ${{ runner.os }}-${{matrix.node-version}}-jest-
       - name: Test
         uses: nick-fields/retry@v2
         with:

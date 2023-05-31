@@ -11,114 +11,95 @@ import {
 import { AddressInfo } from 'net';
 import { fetch, ReadableStream, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
-import { createNodeHttpTestServer, createUWSTestServer, TestServer } from './test-server.js';
+import { runTestsForEachServerImpl } from './test-server.js';
 
 describe('Node Specific Cases', () => {
-  let testServer: TestServer;
-
-  const serverImplMap = {
-    nodeHttp: createNodeHttpTestServer,
-    uws: createUWSTestServer,
-  };
-
-  for (const [serverImpl, createTestServer] of Object.entries(serverImplMap)) {
-    describe(serverImpl, () => {
-      beforeAll(async () => {
-        testServer = await createTestServer();
+  runTestsForEachServerImpl(testServer => {
+    it('should handle empty responses', async () => {
+      const serverAdapter = createServerAdapter(() => {
+        return undefined as any;
       });
-
-      afterAll(async () => {
-        await testServer.close();
-      });
-
-      it('should handle empty responses', async () => {
-        const serverAdapter = createServerAdapter(() => {
-          return undefined as any;
-        });
-        testServer.addOnceHandler(serverAdapter);
-        const response = await fetch(testServer.url);
-        await response.text();
-        expect(response.status).toBe(404);
-      });
-
-      it('should handle waitUntil properly', async () => {
-        let flag = false;
-        const serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
-          waitUntil(
-            sleep(100).then(() => {
-              flag = true;
-            }),
-          );
-          return new Response(null, {
-            status: 204,
-          });
-        });
-        testServer.addOnceHandler(serverAdapter);
-        const response$ = fetch(testServer.url);
-        const response = await response$;
-        await response.text();
-        expect(flag).toBe(false);
-        await sleep(100);
-        expect(flag).toBe(true);
-      });
-
-      it('should forward additional context', async () => {
-        const handleRequest = jest.fn().mockImplementation(() => {
-          return new Response(null, {
-            status: 204,
-          });
-        });
-        const serverAdapter = createServerAdapter<{
-          req: IncomingMessage;
-          res: ServerResponse;
-          foo: string;
-        }>(handleRequest);
-        const additionalCtx = { foo: 'bar' };
-        testServer.addOnceHandler((...args: any[]) =>
-          (serverAdapter as any)(...args, additionalCtx),
-        );
-        const response = await fetch(testServer.url);
-        await response.text();
-        expect(handleRequest).toHaveBeenCalledWith(
-          expect.anything(),
-          expect.objectContaining(additionalCtx),
-        );
-      });
-
-      it('should handle cancellation of incremental responses', async () => {
-        const cancelFn = jest.fn();
-        const serverAdapter = createServerAdapter(
-          () =>
-            new Response(
-              new ReadableStream({
-                async pull(controller) {
-                  await sleep(100);
-                  controller.enqueue(Date.now().toString());
-                },
-                cancel: cancelFn,
-              }),
-            ),
-        );
-        testServer.addOnceHandler(serverAdapter);
-        const response = await fetch(testServer.url);
-
-        const collectedValues: string[] = [];
-
-        let i = 0;
-        for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
-          if (i > 2) {
-            break;
-          }
-          collectedValues.push(Buffer.from(chunk).toString('utf-8'));
-          i++;
-        }
-
-        expect(collectedValues).toHaveLength(3);
-        await sleep(100);
-        expect(cancelFn).toHaveBeenCalledTimes(1);
-      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      await response.text();
+      expect(response.status).toBe(404);
     });
-  }
+
+    it('should handle waitUntil properly', async () => {
+      let flag = false;
+      const serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
+        waitUntil(
+          sleep(100).then(() => {
+            flag = true;
+          }),
+        );
+        return new Response(null, {
+          status: 204,
+        });
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response$ = fetch(testServer.url);
+      const response = await response$;
+      await response.text();
+      expect(flag).toBe(false);
+      await sleep(100);
+      expect(flag).toBe(true);
+    });
+
+    it('should forward additional context', async () => {
+      const handleRequest = jest.fn().mockImplementation(() => {
+        return new Response(null, {
+          status: 204,
+        });
+      });
+      const serverAdapter = createServerAdapter<{
+        req: IncomingMessage;
+        res: ServerResponse;
+        foo: string;
+      }>(handleRequest);
+      const additionalCtx = { foo: 'bar' };
+      testServer.addOnceHandler((...args: any[]) => (serverAdapter as any)(...args, additionalCtx));
+      const response = await fetch(testServer.url);
+      await response.text();
+      expect(handleRequest).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining(additionalCtx),
+      );
+    });
+
+    it('should handle cancellation of incremental responses', async () => {
+      const cancelFn = jest.fn();
+      const serverAdapter = createServerAdapter(
+        () =>
+          new Response(
+            new ReadableStream({
+              async pull(controller) {
+                await sleep(100);
+                controller.enqueue(Date.now().toString());
+              },
+              cancel: cancelFn,
+            }),
+          ),
+      );
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+
+      const collectedValues: string[] = [];
+
+      let i = 0;
+      for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+        if (i > 2) {
+          break;
+        }
+        collectedValues.push(Buffer.from(chunk).toString('utf-8'));
+        i++;
+      }
+
+      expect(collectedValues).toHaveLength(3);
+      await sleep(100);
+      expect(cancelFn).toHaveBeenCalledTimes(1);
+    });
+  });
 });
 
 describe('http2', () => {
