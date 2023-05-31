@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.4.1
+
+### Patch Changes
+
+- [#570](https://github.com/ardatan/whatwg-node/pull/570)
+  [`b201e60`](https://github.com/ardatan/whatwg-node/commit/b201e60e4624b298ee8c3ec329d6b8cbf75ef8c4)
+  Thanks [@ardatan](https://github.com/ardatan)! - Accept custom `agent`
+
 ## 0.4.0
 
 ### Minor Changes
