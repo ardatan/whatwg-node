@@ -1,12 +1,6 @@
 /* eslint-disable camelcase */
 import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
-import {
-  App,
-  us_listen_socket,
-  us_listen_socket_close,
-  us_socket_local_port,
-} from 'uWebSockets.js';
 
 export interface TestServer {
   name: string;
@@ -15,7 +9,10 @@ export interface TestServer {
   close(): Promise<void> | void;
 }
 
-export function createUWSTestServer(): Promise<TestServer> {
+export async function createUWSTestServer(): Promise<TestServer> {
+  const { App, us_listen_socket, us_listen_socket_close, us_socket_local_port } = await import(
+    'uWebSockets.js'
+  );
   const app = App();
   let listenSocket: us_listen_socket;
   let handler: any;

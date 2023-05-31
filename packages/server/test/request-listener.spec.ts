@@ -1,6 +1,6 @@
 import * as fetchAPI from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
-import { runTestsForEachServerImpl } from './test-server.js';
+import { runTestsForEachServerImpl, TestServer } from './test-server.js';
 
 const methodsWithoutBody = ['GET', 'DELETE'];
 
