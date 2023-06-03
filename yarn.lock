@@ -3240,9 +3240,9 @@ builtins@^5.0.1:
     semver "^7.0.0"
 
 bun-types@^0.6.0:
-  version "0.6.6"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-0.6.6.tgz#d8811b175eb7dfcd792fad7789bab489d9e97983"
-  integrity sha512-/LL3zPv7d+ZvHSD6TIhVB7l8h1rrMvuGlwILTGHrJJeAaHKq+7RgIV6N8A8kzhkYMFuTq9o2P/2o8gUL7RHtzg==
+  version "0.6.7"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-0.6.7.tgz#592fe9156df9aeeb7f86c1b7637b38f51723b394"
+  integrity sha512-LZjqqhQfr+Rue3TRwF4Z8v37shty7SnovflUb9kdJfsbuLfMlS+sPMMyFz4eU8H1BxkbK4P+P+nXXDaLOpwqxg==
 
 bundle-name@^3.0.0:
   version "3.0.0"
