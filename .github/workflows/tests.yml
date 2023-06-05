@@ -1,4 +1,4 @@
-name: Tests
+name: test
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
 
 jobs:
   prettier-check:
-    name: 🧹 Prettier Check
+    name: prettier
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
@@ -23,7 +23,7 @@ jobs:
       - name: Prettier Check
         run: yarn prettier:check
   lint:
-    name: Lint
+    name: lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
@@ -36,7 +36,7 @@ jobs:
         run: yarn lint
 
   type-check:
-    name: Type Check
+    name: type check
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
@@ -49,7 +49,7 @@ jobs:
         run: yarn ts:check
 
   test-leaks:
-    name: Leak Test on Node ${{matrix.node-version}}
+    name: leak / node ${{matrix.node-version}}
     runs-on: ubuntu-latest
     services:
       httpbin:
@@ -81,8 +81,8 @@ jobs:
           max_attempts: 5
           command: yarn test:leaks --ci
 
-  unit-tests:
-    name: Unit Test on Node ${{matrix.node-version}}
+  unit:
+    name: unit / node ${{matrix.node-version}}
     runs-on: ubuntu-latest
     services:
       httpbin:
@@ -114,8 +114,8 @@ jobs:
           max_attempts: 5
           command: yarn test --ci
 
-  test_esm:
-    name: ESM Test
+  esm:
+    name: esm
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
