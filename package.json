@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "packages/*",
-    "e2e/*"
+    "e2e/*",
+    "benchmark"
   ],
   "scripts": {
     "build": "bob build",
