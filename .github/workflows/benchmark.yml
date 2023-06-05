@@ -1,4 +1,4 @@
-name: Benchmark
+name: test
 on:
   push:
     branches:
