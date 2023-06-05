@@ -1,5 +1,16 @@
 # @whatwg-node/server
 
+## 0.8.2
+
+### Patch Changes
+
+- [#583](https://github.com/ardatan/whatwg-node/pull/583)
+  [`15bf7c2`](https://github.com/ardatan/whatwg-node/commit/15bf7c2dcee1ff30d0142b9fc4f030c53fa2ab43)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Added dependency
+    [`@repeaterjs/repeater@^3.0.4` ↗︎](https://www.npmjs.com/package/@repeaterjs/repeater/v/3.0.4)
+    (to `dependencies`)
+
 ## 0.8.1
 
 ### Patch Changes
