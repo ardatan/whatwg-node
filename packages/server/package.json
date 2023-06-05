@@ -34,6 +34,7 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
+    "@repeaterjs/repeater": "^3.0.4",
     "@whatwg-node/fetch": "^0.9.0",
     "tslib": "^2.3.1"
   },

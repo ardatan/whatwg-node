@@ -1,6 +1,6 @@
 import type { Agent } from 'http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
-import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
+import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 import { getHeadersObj } from './utils.js';
 
 function isRequest(input: any): input is PonyfillRequest {
@@ -42,7 +42,10 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
     this.cache = requestInit?.cache || 'default';
     this.credentials = requestInit?.credentials || 'same-origin';
-    this.headers = new PonyfillHeaders(requestInit?.headers);
+    this.headers =
+      requestInit?.headers && isHeadersLike(requestInit.headers)
+        ? requestInit.headers
+        : new PonyfillHeaders(requestInit?.headers);
     this.integrity = requestInit?.integrity || '';
     this.keepalive = requestInit?.keepalive != null ? requestInit?.keepalive : false;
 
