@@ -3,7 +3,7 @@ export type PonyfillHeadersInit =
   | Record<string, string | string[] | undefined>
   | Headers;
 
-function isHeadersLike(headers: any): headers is Headers {
+export function isHeadersLike(headers: any): headers is Headers {
   return headers && typeof headers.get === 'function';
 }
 

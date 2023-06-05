@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Readable } from 'stream';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
@@ -20,7 +19,8 @@ import {
   normalizeNodeRequest,
   sendNodeResponse,
 } from './utils.js';
-import { isUWSResponse, UWSRequest, UWSResponse } from './uwebsockets.js';
+import { getHeadersFromUWSRequest, isUWSResponse, UWSRequest, UWSResponse } from './uwebsockets.js';
+import { Repeater } from '@repeaterjs/repeater';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
@@ -185,31 +185,29 @@ function createServerAdapter<
       },
       ...ctx,
     );
-    let body: (ReadableStream & { readable: Readable }) | undefined;
+    let body: Repeater<Buffer> | undefined;
     const method = req.getMethod();
     let resAborted = false;
     res.onAborted(function () {
       resAborted = true;
-      body?.readable.push(null);
     });
     if (method !== 'get' && method !== 'head') {
-      body = new fetchAPI.ReadableStream({}) as ReadableStream & { readable: Readable };
-      res.onData(function (chunk, isLast) {
-        body?.readable.push(Buffer.from(chunk, 0, chunk.byteLength));
-        if (isLast) {
-          body?.readable.push(null);
-        }
+      body = new Repeater(function (push, stop) {
+        res.onAborted(stop);
+        res.onData(function (chunk, isLast) {
+          push(Buffer.from(chunk));
+          if (isLast) {
+            stop();
+          }
+        });
       });
     }
-    const headers: Record<string, string> = {};
-    req.forEach((key, value) => {
-      headers[key] = value;
-    });
+    const headers = getHeadersFromUWSRequest(req);
     const url = `http://localhost${req.getUrl()}`;
     const request = new fetchAPI.Request(url, {
       method,
       headers,
-      body,
+      body: body as any,
     });
     const response = await handleRequest(request, serverContext);
     if (resAborted) {
