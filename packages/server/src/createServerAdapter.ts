@@ -22,8 +22,9 @@ import {
   sendNodeResponse,
 } from './utils.js';
 import {
-  handleUWSWithHandler,
+  getRequestFromUWSRequest,
   isUWSResponse,
+  sendResponseToUwsOpts,
   type UWSRequest,
   type UWSResponse,
 } from './uwebsockets.js';
@@ -170,12 +171,21 @@ function createServerAdapter<
       },
       ...ctx,
     );
-    return handleUWSWithHandler({
-      res,
+    const request = getRequestFromUWSRequest({
       req,
-      serverContext,
+      res,
       fetchAPI,
-      handleRequest,
+    });
+    const response = await handleRequest(request, serverContext);
+    if (!response) {
+      res.writeStatus('404 Not Found');
+      res.end();
+      return;
+    }
+
+    return sendResponseToUwsOpts({
+      response,
+      res,
     });
   }
 

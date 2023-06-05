@@ -79,27 +79,15 @@ export function getHeadersFromUWSRequest(req: UWSRequest): Headers {
   };
 }
 
-interface UWSHandlerOpts {
-  res: UWSResponse;
+interface GetRequestFromUWSOpts {
   req: UWSRequest;
-  serverContext: any;
+  res: UWSResponse;
   fetchAPI: FetchAPI;
-  handleRequest(request: Request, ctx: any): Response | void | Promise<Response | void>;
 }
 
-export async function handleUWSWithHandler({
-  res,
-  req,
-  serverContext,
-  fetchAPI,
-  handleRequest,
-}: UWSHandlerOpts) {
+export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromUWSOpts) {
   let body: Repeater<Buffer> | undefined;
   const method = req.getMethod();
-  let resAborted = false;
-  res.onAborted(function () {
-    resAborted = true;
-  });
   if (method !== 'get' && method !== 'head') {
     body = new Repeater(function (push, stop) {
       res.onAborted(stop);
@@ -113,20 +101,23 @@ export async function handleUWSWithHandler({
   }
   const headers = getHeadersFromUWSRequest(req);
   const url = `http://localhost${req.getUrl()}`;
-  const request = new fetchAPI.Request(url, {
+  return new fetchAPI.Request(url, {
     method,
     headers,
     body: body as any,
   });
-  const response = await handleRequest(request, serverContext);
-  if (resAborted) {
-    return;
-  }
-  if (!response) {
-    res.writeStatus('404 Not Found');
-    res.end();
-    return;
-  }
+}
+
+interface SendResponseToUWSOpts {
+  res: UWSResponse;
+  response: Response;
+}
+
+export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWSOpts) {
+  let resAborted = false;
+  res.onAborted(function () {
+    resAborted = true;
+  });
   res.cork(() => {
     res.writeStatus(`${response.status} ${response.statusText}`);
   });
