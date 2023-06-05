@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.8.4
+
+### Patch Changes
+
+- [`c0bef34`](https://github.com/ardatan/whatwg-node/commit/c0bef34154031ad2158f558107c168ee5c9c9084)
+  Thanks [@ardatan](https://github.com/ardatan)! - Export more uWS helpers
+
 ## 0.8.3
 
 ### Patch Changes
