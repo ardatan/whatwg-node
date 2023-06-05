@@ -3,7 +3,8 @@ import type { Http2ServerRequest, Http2ServerResponse, OutgoingHttpHeaders } fro
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
 import { URL } from '@whatwg-node/fetch';
-import { FetchEvent } from './types.js';
+import type { OnRequestHook } from './plugins/types.js';
+import type { FetchAPI, FetchEvent, ServerAdapterRequestHandler } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
@@ -296,4 +297,82 @@ export function isRequestInit(val: unknown): val is RequestInit {
       'signal' in val ||
       'window' in val)
   );
+}
+
+// from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
+export function completeAssign(target: any, ...sources: any[]) {
+  sources.forEach(source => {
+    if (source != null && typeof source === 'object') {
+      // modified Object.keys to Object.getOwnPropertyNames
+      // because Object.keys only returns enumerable properties
+      const descriptors: any = Object.getOwnPropertyNames(source).reduce(
+        (descriptors: any, key) => {
+          descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+          return descriptors;
+        },
+        {},
+      );
+
+      // By default, Object.assign copies enumerable Symbols, too
+      Object.getOwnPropertySymbols(source).forEach(sym => {
+        const descriptor = Object.getOwnPropertyDescriptor(source, sym);
+        if (descriptor!.enumerable) {
+          descriptors[sym] = descriptor;
+        }
+      });
+
+      Object.defineProperties(target, descriptors);
+    }
+  });
+  return target;
+}
+
+export interface HandleOnRequestHookOpts {
+  fetchAPI: FetchAPI;
+  request: Request;
+  givenHandleRequest: ServerAdapterRequestHandler<any>;
+  serverContext: any;
+  onRequestHooks: OnRequestHook<any>[];
+}
+
+export async function handleOnRequestHook({
+  fetchAPI,
+  request,
+  givenHandleRequest,
+  serverContext,
+  onRequestHooks,
+}: HandleOnRequestHookOpts): Promise<{
+  response?: Response;
+  requestHandler: ServerAdapterRequestHandler<any>;
+}> {
+  let url = new Proxy({} as URL, {
+    get: (_target, prop, _receiver) => {
+      url = new fetchAPI.URL(request.url, 'http://localhost');
+      return Reflect.get(url, prop, url);
+    },
+  }) as URL;
+  let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
+  let response: Response | undefined;
+  for (const onRequestHook of onRequestHooks) {
+    await onRequestHook({
+      request,
+      serverContext,
+      fetchAPI,
+      url,
+      requestHandler,
+      setRequestHandler(newRequestHandler) {
+        requestHandler = newRequestHandler;
+      },
+      endResponse(newResponse) {
+        response = newResponse;
+      },
+    });
+    if (response) {
+      break;
+    }
+  }
+  return {
+    response,
+    requestHandler,
+  };
 }

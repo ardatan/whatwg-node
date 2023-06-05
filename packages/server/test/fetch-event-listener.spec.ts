@@ -14,12 +14,12 @@ describe('FetchEvent listener', () => {
       respondWith,
       waitUntil,
     });
-    const returnValue = adapter(fetchEvent);
+    const returnValue = await adapter(fetchEvent);
     expect(returnValue).toBeUndefined();
     const returnedResponse = await respondWith.mock.calls[0][0];
     expect(returnedResponse).toBe(response);
   });
-  it('should expose FetchEvent as server context', () => {
+  it('should expose FetchEvent as server context', async () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter(handleRequest);
     const respondWith = jest.fn();
@@ -29,10 +29,10 @@ describe('FetchEvent listener', () => {
       respondWith,
       waitUntil,
     });
-    adapter(fetchEvent);
+    await adapter(fetchEvent);
     expect(handleRequest).toHaveBeenCalledWith(fetchEvent.request, fetchEvent);
   });
-  it('should accept additional parameters as server context', () => {
+  it('should accept additional parameters as server context', async () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter<{
       foo: string;
@@ -45,7 +45,7 @@ describe('FetchEvent listener', () => {
       waitUntil,
     });
     const additionalCtx = { foo: 'bar' };
-    adapter(fetchEvent, additionalCtx);
+    await adapter(fetchEvent, additionalCtx);
     expect(handleRequest).toHaveBeenCalledWith(
       fetchEvent.request,
       expect.objectContaining(additionalCtx),

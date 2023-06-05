@@ -1,3 +1,6 @@
+import { Repeater } from '@repeaterjs/repeater';
+import type { FetchAPI } from './types.js';
+
 export interface UWSRequest {
   getMethod(): string;
   forEach(callback: (key: string, value: string) => void): void;
@@ -74,4 +77,86 @@ export function getHeadersFromUWSRequest(req: UWSRequest): Headers {
       return entries[Symbol.iterator]();
     },
   };
+}
+
+interface UWSHandlerOpts {
+  res: UWSResponse;
+  req: UWSRequest;
+  serverContext: any;
+  fetchAPI: FetchAPI;
+  handleRequest(request: Request, ctx: any): Response | void | Promise<Response | void>;
+}
+
+export async function handleUWSWithHandler({
+  res,
+  req,
+  serverContext,
+  fetchAPI,
+  handleRequest,
+}: UWSHandlerOpts) {
+  let body: Repeater<Buffer> | undefined;
+  const method = req.getMethod();
+  let resAborted = false;
+  res.onAborted(function () {
+    resAborted = true;
+  });
+  if (method !== 'get' && method !== 'head') {
+    body = new Repeater(function (push, stop) {
+      res.onAborted(stop);
+      res.onData(function (chunk, isLast) {
+        push(Buffer.from(chunk));
+        if (isLast) {
+          stop();
+        }
+      });
+    });
+  }
+  const headers = getHeadersFromUWSRequest(req);
+  const url = `http://localhost${req.getUrl()}`;
+  const request = new fetchAPI.Request(url, {
+    method,
+    headers,
+    body: body as any,
+  });
+  const response = await handleRequest(request, serverContext);
+  if (resAborted) {
+    return;
+  }
+  if (!response) {
+    res.writeStatus('404 Not Found');
+    res.end();
+    return;
+  }
+  res.cork(() => {
+    res.writeStatus(`${response.status} ${response.statusText}`);
+  });
+  response.headers.forEach((value, key) => {
+    // content-length causes an error with Node.js's fetch
+    if (key.toLowerCase() !== 'content-length') {
+      res.cork(() => {
+        res.writeHeader(key, value);
+      });
+    }
+  });
+  if (!response.body) {
+    res.end();
+    return;
+  }
+  if ((response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array') {
+    res.cork(() => {
+      res.end((response as any).bodyInit);
+    });
+    return;
+  }
+  for await (const chunk of (response.body as any).readable) {
+    if (resAborted) {
+      return;
+    }
+    res.cork(() => {
+      res.write(chunk);
+    });
+  }
+  res.cork(() => {
+    res.end();
+  });
 }

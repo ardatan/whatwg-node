@@ -28,7 +28,6 @@ describe('Headers', () => {
       expect(headers['mapIsBuilt']).toBe(false);
     });
   });
-  jest.setTimeout(60000);
   it('should respect custom header serializer', async () => {
     jest.spyOn(baseLib, 'request');
     const res = await fetchPonyfill(`${baseUrl}/headers`, {

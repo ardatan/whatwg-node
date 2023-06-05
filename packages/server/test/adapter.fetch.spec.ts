@@ -1,7 +1,7 @@
 import { Request, Response, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/index.js';
 
-describe('adapter.fetch', () => {
+describe('await adapter.fetch', () => {
   // Request as first parameter
   it('should accept Request as a first argument', async () => {
     const handleRequest = jest.fn();
@@ -156,7 +156,7 @@ describe('adapter.fetch', () => {
     const waitUntil = () => {};
     // in Cloudflare Workers, waitUntil is a non-enumerable property
     Object.defineProperty(additionalCtx, 'waitUntil', { enumerable: false, value: waitUntil });
-    adapter.fetch(request, env, additionalCtx);
+    await adapter.fetch(request, env, additionalCtx);
     expect(handleRequest).toHaveBeenCalledWith(
       expect.objectContaining({ url: request.url }),
       expect.objectContaining(additionalCtx),
@@ -166,11 +166,11 @@ describe('adapter.fetch', () => {
     // test that enumerable stays false
     expect(Object.getOwnPropertyDescriptor(passedServerCtx, 'waitUntil')?.enumerable).toBe(false);
   });
-  it('should ignore falsy and non object values', () => {
+  it('should ignore falsy and non object values', async () => {
     const handleRequest = jest.fn();
     const adapter = createServerAdapter(handleRequest) as any;
     const request = new Request('http://localhost:8080/');
-    adapter.fetch(request, null, undefined, 0, false, 'abc', { foo: 'bar' });
+    await adapter.fetch(request, null, undefined, 0, false, 'abc', { foo: 'bar' });
     expect(handleRequest).toHaveBeenCalledWith(
       expect.objectContaining({ url: request.url }),
       expect.objectContaining({ foo: 'bar' }),

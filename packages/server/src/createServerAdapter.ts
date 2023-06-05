@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { Repeater } from '@repeaterjs/repeater';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
@@ -11,6 +10,8 @@ import {
   ServerAdapterRequestHandler,
 } from './types.js';
 import {
+  completeAssign,
+  handleOnRequestHook,
   isFetchEvent,
   isNodeRequest,
   isRequestInit,
@@ -20,7 +21,12 @@ import {
   normalizeNodeRequest,
   sendNodeResponse,
 } from './utils.js';
-import { getHeadersFromUWSRequest, isUWSResponse, UWSRequest, UWSResponse } from './uwebsockets.js';
+import {
+  handleUWSWithHandler,
+  isUWSResponse,
+  type UWSRequest,
+  type UWSResponse,
+} from './uwebsockets.js';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
@@ -96,35 +102,14 @@ function createServerAdapter<
   }
 
   async function handleRequest(request: Request, serverContext: TServerContext) {
-    let url = new Proxy({} as URL, {
-      get: (_target, prop, _receiver) => {
-        url = new fetchAPI.URL(request.url, 'http://localhost');
-        return Reflect.get(url, prop, url);
-      },
-    }) as URL;
-    let requestHandler: ServerAdapterRequestHandler<TServerContext> = givenHandleRequest;
-    let response: Response | undefined;
-    for (const onRequestHook of onRequestHooks) {
-      await onRequestHook({
+    const { requestHandler, response = await requestHandler(request, serverContext) } =
+      await handleOnRequestHook({
         request,
         serverContext,
+        onRequestHooks,
+        givenHandleRequest,
         fetchAPI,
-        url,
-        requestHandler,
-        setRequestHandler(newRequestHandler) {
-          requestHandler = newRequestHandler;
-        },
-        endResponse(newResponse) {
-          response = newResponse;
-        },
       });
-      if (response) {
-        break;
-      }
-    }
-    if (!response) {
-      response = await requestHandler(request, serverContext);
-    }
     for (const onResponseHook of onResponseHooks) {
       await onResponseHook({
         request,
@@ -185,70 +170,12 @@ function createServerAdapter<
       },
       ...ctx,
     );
-    let body: Repeater<Buffer> | undefined;
-    const method = req.getMethod();
-    let resAborted = false;
-    res.onAborted(function () {
-      resAborted = true;
-    });
-    if (method !== 'get' && method !== 'head') {
-      body = new Repeater(function (push, stop) {
-        res.onAborted(stop);
-        res.onData(function (chunk, isLast) {
-          push(Buffer.from(chunk));
-          if (isLast) {
-            stop();
-          }
-        });
-      });
-    }
-    const headers = getHeadersFromUWSRequest(req);
-    const url = `http://localhost${req.getUrl()}`;
-    const request = new fetchAPI.Request(url, {
-      method,
-      headers,
-      body: body as any,
-    });
-    const response = await handleRequest(request, serverContext);
-    if (resAborted) {
-      return;
-    }
-    if (!response) {
-      res.writeStatus('404 Not Found');
-      res.end();
-      return;
-    }
-    res.cork(() => {
-      res.writeStatus(`${response.status} ${response.statusText}`);
-    });
-    response.headers.forEach((value, key) => {
-      // content-length causes an error with Node.js's fetch
-      if (key.toLowerCase() !== 'content-length') {
-        res.cork(() => {
-          res.writeHeader(key, value);
-        });
-      }
-    });
-    if (!response.body) {
-      res.end();
-      return;
-    }
-    if ((response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array') {
-      res.cork(() => {
-        res.end((response as any).bodyInit);
-      });
-      return;
-    }
-    for await (const chunk of (response.body as any).readable) {
-      if (resAborted) {
-        return;
-      }
-      res.cork(() => {
-        res.write(chunk);
-      });
-    }
-    res.cork(() => {
-      res.end();
+    return handleUWSWithHandler({
+      res,
+      req,
+      serverContext,
+      fetchAPI,
+      handleRequest,
     });
   }
 
@@ -394,31 +321,3 @@ function createServerAdapter<
 }
 
 export { createServerAdapter };
-
-// from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
-function completeAssign(target: any, ...sources: any[]) {
-  sources.forEach(source => {
-    if (source != null && typeof source === 'object') {
-      // modified Object.keys to Object.getOwnPropertyNames
-      // because Object.keys only returns enumerable properties
-      const descriptors: any = Object.getOwnPropertyNames(source).reduce(
-        (descriptors: any, key) => {
-          descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
-          return descriptors;
-        },
-        {},
-      );
-
-      // By default, Object.assign copies enumerable Symbols, too
-      Object.getOwnPropertySymbols(source).forEach(sym => {
-        const descriptor = Object.getOwnPropertyDescriptor(source, sym);
-        if (descriptor!.enumerable) {
-          descriptors[sym] = descriptor;
-        }
-      });
-
-      Object.defineProperties(target, descriptors);
-    }
-  });
-  return target;
-}
