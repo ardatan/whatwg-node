@@ -57,12 +57,14 @@ export function getHeadersFromUWSRequest(req: UWSRequest): Headers {
       this.forEach((_, key) => {
         keys.push(key);
       });
+      return keys[Symbol.iterator]();
     },
     values() {
       const values: string[] = [];
       this.forEach(value => {
         values.push(value);
       });
+      return values[Symbol.iterator]();
     },
     [Symbol.iterator]() {
       const entries: [string, string][] = [];

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { Repeater } from '@repeaterjs/repeater';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
@@ -20,7 +21,6 @@ import {
   sendNodeResponse,
 } from './utils.js';
 import { getHeadersFromUWSRequest, isUWSResponse, UWSRequest, UWSResponse } from './uwebsockets.js';
-import { Repeater } from '@repeaterjs/repeater';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
   const waitUntils = await Promise.allSettled(waitUntilPromises);
