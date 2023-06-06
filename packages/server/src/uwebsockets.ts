@@ -24,61 +24,6 @@ export function isUWSResponse(res: any): res is UWSResponse {
   return typeof res === 'object' && typeof res.onData === 'function';
 }
 
-function throwReadOnlyHeadersError() {
-  throw new Error('You cannot modify headers for a read-only request');
-}
-
-export function getHeadersFromUWSRequest(req: UWSRequest): Headers {
-  return {
-    append() {
-      throwReadOnlyHeadersError();
-    },
-    delete() {
-      throwReadOnlyHeadersError();
-    },
-    get(key: string) {
-      return req.getHeader(key) || null;
-    },
-    has(key: string) {
-      return req.getHeader(key) != null;
-    },
-    set() {
-      throwReadOnlyHeadersError();
-    },
-    forEach(callback: (value: string, key: string, parent: Headers) => void) {
-      req.forEach((key, value) => callback(value, key, this));
-    },
-    entries() {
-      const entries: [string, string][] = [];
-      this.forEach((value, key) => {
-        entries.push([key, value]);
-      });
-      return entries[Symbol.iterator]();
-    },
-    keys() {
-      const keys: string[] = [];
-      this.forEach((_, key) => {
-        keys.push(key);
-      });
-      return keys[Symbol.iterator]();
-    },
-    values() {
-      const values: string[] = [];
-      this.forEach(value => {
-        values.push(value);
-      });
-      return values[Symbol.iterator]();
-    },
-    [Symbol.iterator]() {
-      const entries: [string, string][] = [];
-      this.forEach((value, key) => {
-        entries.push([key, value]);
-      });
-      return entries[Symbol.iterator]();
-    },
-  };
-}
-
 interface GetRequestFromUWSOpts {
   req: UWSRequest;
   res: UWSResponse;
@@ -92,14 +37,17 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
     body = new Repeater(function (push, stop) {
       res.onAborted(stop);
       res.onData(function (chunk, isLast) {
-        push(Buffer.from(chunk));
+        push(Buffer.from(chunk, 0, chunk.byteLength));
         if (isLast) {
           stop();
         }
       });
     });
   }
-  const headers = getHeadersFromUWSRequest(req);
+  const headers: Record<string, string> = {};
+  req.forEach((key, value) => {
+    headers[key] = value;
+  });
   const url = `http://localhost${req.getUrl()}`;
   return new fetchAPI.Request(url, {
     method,
