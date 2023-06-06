@@ -3,9 +3,9 @@ import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
 import {
   App,
-  type us_listen_socket,
   us_listen_socket_close,
   us_socket_local_port,
+  type us_listen_socket,
 } from 'uWebSockets.js';
 
 export interface TestServer {
