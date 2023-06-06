@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.8.5
+
+### Patch Changes
+
+- [#592](https://github.com/ardatan/whatwg-node/pull/592)
+  [`4cdb7c6`](https://github.com/ardatan/whatwg-node/commit/4cdb7c6851ccebec80576de584579709c8f23539)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix uWebSockets headers issue
+
 ## 0.8.4
 
 ### Patch Changes
