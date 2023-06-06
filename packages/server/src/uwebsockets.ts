@@ -1,4 +1,4 @@
-import { Repeater } from '@repeaterjs/repeater';
+import type { Readable } from 'node:stream';
 import type { FetchAPI } from './types.js';
 
 export interface UWSRequest {
@@ -6,6 +6,7 @@ export interface UWSRequest {
   forEach(callback: (key: string, value: string) => void): void;
   getUrl(): string;
   getHeader(key: string): string | undefined;
+  setYield(y: boolean): void;
 }
 
 export interface UWSResponse {
@@ -14,6 +15,7 @@ export interface UWSResponse {
   writeStatus(status: string): void;
   writeHeader(key: string, value: string): void;
   end(body?: any): void;
+  close(): void;
   write(body: any): boolean;
   cork(callback: () => void): void;
 }
@@ -31,17 +33,19 @@ interface GetRequestFromUWSOpts {
 }
 
 export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromUWSOpts) {
-  let body: Repeater<Buffer> | undefined;
+  let body: ReadableStream | undefined;
   const method = req.getMethod();
   if (method !== 'get' && method !== 'head') {
-    body = new Repeater(function (push, stop) {
-      res.onAborted(stop);
-      res.onData(function (chunk, isLast) {
-        push(Buffer.from(chunk, 0, chunk.byteLength));
-        if (isLast) {
-          stop();
-        }
-      });
+    body = new fetchAPI.ReadableStream({});
+    const readable = (body as any).readable as Readable;
+    res.onAborted(() => {
+      readable.push(null);
+    });
+    res.onData(function (chunk, isLast) {
+      readable.push(Buffer.from(chunk, 0, chunk.byteLength));
+      if (isLast) {
+        readable.push(null);
+      }
     });
   }
   const headers: Record<string, string> = {};
@@ -87,7 +91,7 @@ export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWS
     });
     return;
   }
-  for await (const chunk of (response.body as any).readable) {
+  for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
     if (resAborted) {
       return;
     }
