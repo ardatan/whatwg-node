@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.4.3
+
+### Patch Changes
+
+- [#597](https://github.com/ardatan/whatwg-node/pull/597)
+  [`d118d53`](https://github.com/ardatan/whatwg-node/commit/d118d538f3ab75f87728c4c8373b5b53fb8e1d51)
+  Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
+
 ## 0.4.2
 
 ### Patch Changes
