@@ -11,7 +11,6 @@ import {
 } from './types.js';
 import {
   completeAssign,
-  handleOnRequestHook,
   isFetchEvent,
   isNodeRequest,
   isRequestInit,
@@ -103,14 +102,35 @@ function createServerAdapter<
   }
 
   async function handleRequest(request: Request, serverContext: TServerContext) {
-    const { requestHandler, response = await requestHandler(request, serverContext) } =
-      await handleOnRequestHook({
+    let url = new Proxy({} as URL, {
+      get: (_target, prop, _receiver) => {
+        url = new fetchAPI.URL(request.url, 'http://localhost');
+        return Reflect.get(url, prop, url);
+      },
+    }) as URL;
+    let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
+    let response: Response | undefined;
+    for (const onRequestHook of onRequestHooks) {
+      await onRequestHook({
         request,
         serverContext,
-        onRequestHooks,
-        givenHandleRequest,
         fetchAPI,
+        url,
+        requestHandler,
+        setRequestHandler(newRequestHandler) {
+          requestHandler = newRequestHandler;
+        },
+        endResponse(newResponse) {
+          response = newResponse;
+        },
       });
+      if (response) {
+        break;
+      }
+    }
+    if (!response) {
+      response = await requestHandler(request, serverContext);
+    }
     for (const onResponseHook of onResponseHooks) {
       await onResponseHook({
         request,

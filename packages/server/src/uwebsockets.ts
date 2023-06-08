@@ -48,9 +48,9 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
       }
     });
   }
-  const headers: Record<string, string> = {};
+  const headers = new fetchAPI.Headers();
   req.forEach((key, value) => {
-    headers[key] = value;
+    headers.set(key, value);
   });
   const url = `http://localhost${req.getUrl()}`;
   return new fetchAPI.Request(url, {
@@ -81,14 +81,14 @@ export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWS
       });
     }
   });
-  if (!response.body) {
-    res.end();
-    return;
-  }
   if ((response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array') {
     res.cork(() => {
       res.end((response as any).bodyInit);
     });
+    return;
+  }
+  if (!response.body) {
+    res.end();
     return;
   }
   for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
