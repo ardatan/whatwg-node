@@ -1,10 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Http2ServerRequest, Http2ServerResponse, OutgoingHttpHeaders } from 'node:http2';
+import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
 import { URL } from '@whatwg-node/fetch';
-import type { OnRequestHook } from './plugins/types.js';
-import type { FetchAPI, FetchEvent, ServerAdapterRequestHandler } from './types.js';
+import type { FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
@@ -184,46 +183,14 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-export function getHeadersObj(headers: Headers): OutgoingHttpHeaders {
-  return new Proxy(
-    {},
-    {
-      get(_target, prop: string) {
-        return headers.get(prop) || undefined;
-      },
-      set(_target, prop: string, value: string) {
-        headers.set(prop, value);
-        return true;
-      },
-      has(_target, prop: string) {
-        return headers.has(prop);
-      },
-      deleteProperty(_target, prop: string) {
-        headers.delete(prop);
-        return true;
-      },
-      ownKeys() {
-        const keys: string[] = [];
-        headers.forEach((_, key) => keys.push(key));
-        return keys;
-      },
-      getOwnPropertyDescriptor() {
-        return {
-          enumerable: true,
-          configurable: true,
-        };
-      },
-    },
-  );
-}
-
 export async function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  const headersObj = getHeadersObj(fetchResponse.headers);
-  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, headersObj);
+  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, [
+    ...fetchResponse.headers,
+  ] as any);
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);
@@ -325,54 +292,4 @@ export function completeAssign(target: any, ...sources: any[]) {
     }
   });
   return target;
-}
-
-export interface HandleOnRequestHookOpts {
-  fetchAPI: FetchAPI;
-  request: Request;
-  givenHandleRequest: ServerAdapterRequestHandler<any>;
-  serverContext: any;
-  onRequestHooks: OnRequestHook<any>[];
-}
-
-export async function handleOnRequestHook({
-  fetchAPI,
-  request,
-  givenHandleRequest,
-  serverContext,
-  onRequestHooks,
-}: HandleOnRequestHookOpts): Promise<{
-  response?: Response;
-  requestHandler: ServerAdapterRequestHandler<any>;
-}> {
-  let url = new Proxy({} as URL, {
-    get: (_target, prop, _receiver) => {
-      url = new fetchAPI.URL(request.url, 'http://localhost');
-      return Reflect.get(url, prop, url);
-    },
-  }) as URL;
-  let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
-  let response: Response | undefined;
-  for (const onRequestHook of onRequestHooks) {
-    await onRequestHook({
-      request,
-      serverContext,
-      fetchAPI,
-      url,
-      requestHandler,
-      setRequestHandler(newRequestHandler) {
-        requestHandler = newRequestHandler;
-      },
-      endResponse(newResponse) {
-        response = newResponse;
-      },
-    });
-    if (response) {
-      break;
-    }
-  }
-  return {
-    response,
-    requestHandler,
-  };
 }
