@@ -99,7 +99,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   get signal() {
     // Create a new signal only if needed
     // Because the creation of signal is expensive
-    if (this._signal) {
+    if (!this._signal) {
       this._signal = new AbortController().signal;
     }
     return this._signal!;
