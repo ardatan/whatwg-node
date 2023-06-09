@@ -1,5 +1,6 @@
 import { Readable } from 'stream';
 import busboy from 'busboy';
+import simdjson from 'simdjson';
 import { PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
@@ -258,7 +259,7 @@ export class PonyfillBody<TJSON = any> implements Body {
 
   async json(): Promise<TJSON> {
     const text = await this.text();
-    return JSON.parse(text);
+    return simdjson.parse(text);
   }
 
   async text(): Promise<string> {
