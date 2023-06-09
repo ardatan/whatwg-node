@@ -259,7 +259,14 @@ export class PonyfillBody<TJSON = any> implements Body {
 
   async json(): Promise<TJSON> {
     const text = await this.text();
-    return simdjson.parse(text);
+    const fakeObj = new Proxy(simdjson.lazyParse(text), {
+      get(tape, prop: string) {
+        if (prop !== 'then') {
+          return tape.valueForKeyPath(prop);
+        }
+      },
+    });
+    return fakeObj as TJSON;
   }
 
   async text(): Promise<string> {
