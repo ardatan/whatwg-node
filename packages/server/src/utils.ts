@@ -190,7 +190,7 @@ export async function sendNodeResponse(
 ) {
   serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, [
     ...fetchResponse.headers,
-  ] as any);
+  ].flat());
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);
