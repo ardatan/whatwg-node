@@ -188,9 +188,13 @@ export async function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, [
-    ...fetchResponse.headers,
-  ].flat());
+  serverResponse.writeHead(
+    fetchResponse.status,
+    fetchResponse.statusText,
+    // `headers` may be an array where the keys and values are in the same list.
+    // @ts-expect-error @types/node does not support this yet
+    [...fetchResponse.headers].flat(),
+  );
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);
