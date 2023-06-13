@@ -183,21 +183,6 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-function getHeadersArray(headers: Headers) {
-  const headersArray: string[] = [];
-  headers.forEach((value, key) => {
-    if (key === 'set-cookie') {
-      const setCookieValues = value.split(',');
-      setCookieValues.forEach(setCookieValue => {
-        headersArray!.push('set-cookie', setCookieValue.trim());
-      });
-      return;
-    }
-    headersArray!.push(key, value);
-  });
-  return headersArray;
-}
-
 async function sendAsyncIterable(
   serverResponse: NodeResponse,
   asyncIterable: AsyncIterable<Uint8Array>,
