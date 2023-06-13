@@ -188,9 +188,23 @@ export async function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, [
-    ...fetchResponse.headers,
-  ] as any);
+  const headersForNode: string[] = [];
+  fetchResponse.headers.forEach((value, key) => {
+    if (key === 'set-cookie') {
+      const setCookieValues = value.split(';');
+      setCookieValues.forEach(setCookieValue => {
+        headersForNode.push('set-cookie', setCookieValue);
+      });
+      return;
+    }
+    headersForNode.push(key, value);
+  });
+  serverResponse.writeHead(
+    fetchResponse.status,
+    fetchResponse.statusText,
+    // @ts-expect-error Node supports arrays as headers
+    headersForNode,
+  );
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);

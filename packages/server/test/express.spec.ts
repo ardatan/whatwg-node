@@ -13,7 +13,13 @@ describe('express', () => {
       '/my-path',
       createServerAdapter(async req => {
         const data = await req.json();
-        return new Response(null, { status: data.status });
+        return new Response(null, {
+          status: data.status || 200,
+          headers: data.headers || {
+            'x-foo': 'foo',
+            'x-bar': 'bar',
+          },
+        });
       }),
     );
     server = app.listen(0);
@@ -41,5 +47,17 @@ describe('express', () => {
       expect(res.status).toBe(status);
       expect(res.statusText).toBe(STATUS_CODES[status]);
     }
+  });
+
+  it('should handle headers correctly', async () => {
+    const res = await fetch(`http://localhost:${port}/my-path`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ headers: { 'x-foo': 'foo', 'x-bar': 'bar' } }),
+    });
+    expect(res.headers.get('x-foo')).toBe('foo');
+    expect(res.headers.get('x-bar')).toBe('bar');
   });
 });
