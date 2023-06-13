@@ -284,14 +284,18 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (typeof bodyInit === 'string') {
-    const buffer = Buffer.from(bodyInit);
-    const contentLength = buffer.byteLength;
+    let contentLength: number;
     return {
       bodyType: BodyInitType.String,
       contentType: 'text/plain;charset=UTF-8',
-      contentLength,
+      get contentLength() {
+        if (contentLength == null) {
+          contentLength = Buffer.byteLength(bodyInit);
+        }
+        return contentLength;
+      },
       bodyFactory() {
-        const readable = Readable.from(buffer);
+        const readable = Readable.from(bodyInit);
         return new PonyfillReadableStream<Uint8Array>(readable);
       },
     };
