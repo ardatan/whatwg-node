@@ -1,5 +1,21 @@
 # @whatwg-node/server
 
+## 0.8.10
+
+### Patch Changes
+
+- [#614](https://github.com/ardatan/whatwg-node/pull/614)
+  [`f07d1c5`](https://github.com/ardatan/whatwg-node/commit/f07d1c5af5d17d64a45162a23a755ae8ce11ac93)
+  Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
+
+- [#614](https://github.com/ardatan/whatwg-node/pull/614)
+  [`f07d1c5`](https://github.com/ardatan/whatwg-node/commit/f07d1c5af5d17d64a45162a23a755ae8ce11ac93)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix set-cookie handling for Node
+
+- Updated dependencies
+  [[`f07d1c5`](https://github.com/ardatan/whatwg-node/commit/f07d1c5af5d17d64a45162a23a755ae8ce11ac93)]:
+  - @whatwg-node/fetch@0.9.6
+
 ## 0.8.9
 
 ### Patch Changes
