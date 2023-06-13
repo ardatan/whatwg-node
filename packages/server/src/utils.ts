@@ -227,9 +227,9 @@ export function sendNodeResponse(
   );
   // Optimizations for node-fetch
   if (
-    'bodyType' in fetchResponse &&
-    fetchResponse.bodyType != null &&
-    (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')
+    (fetchResponse as any).bodyType === 'Buffer' ||
+    (fetchResponse as any).bodyType === 'String' ||
+    (fetchResponse as any).bodyType === 'Uint8Array'
   ) {
     // @ts-expect-error http and http2 writes are actually compatible
     serverResponse.write(fetchResponse.bodyInit);
@@ -288,30 +288,25 @@ export function isRequestInit(val: unknown): val is RequestInit {
 }
 
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
-export function completeAssign(...sources: any[]): any;
-export function completeAssign(target: any, ...sources: any[]) {
+export function completeAssign(...args: any[]) {
+  const [target, ...sources] = args.filter(arg => arg != null && typeof arg === 'object');
   sources.forEach(source => {
-    if (source != null && typeof source === 'object') {
-      // modified Object.keys to Object.getOwnPropertyNames
-      // because Object.keys only returns enumerable properties
-      const descriptors: any = Object.getOwnPropertyNames(source).reduce(
-        (descriptors: any, key) => {
-          descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
-          return descriptors;
-        },
-        {},
-      );
+    // modified Object.keys to Object.getOwnPropertyNames
+    // because Object.keys only returns enumerable properties
+    const descriptors: any = Object.getOwnPropertyNames(source).reduce((descriptors: any, key) => {
+      descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      return descriptors;
+    }, {});
 
-      // By default, Object.assign copies enumerable Symbols, too
-      Object.getOwnPropertySymbols(source).forEach(sym => {
-        const descriptor = Object.getOwnPropertyDescriptor(source, sym);
-        if (descriptor!.enumerable) {
-          descriptors[sym] = descriptor;
-        }
-      });
+    // By default, Object.assign copies enumerable Symbols, too
+    Object.getOwnPropertySymbols(source).forEach(sym => {
+      const descriptor = Object.getOwnPropertyDescriptor(source, sym);
+      if (descriptor!.enumerable) {
+        descriptors[sym] = descriptor;
+      }
+    });
 
-      Object.defineProperties(target, descriptors);
-    }
+    Object.defineProperties(target, descriptors);
   });
   return target;
 }

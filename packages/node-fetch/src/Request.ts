@@ -63,22 +63,24 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.destination = 'document';
     this.priority = 'auto';
 
-    const contentTypeInHeaders = this.headers.get('content-type');
-    if (!contentTypeInHeaders) {
-      if (this.contentType) {
-        this.headers.set('content-type', this.contentType);
+    if (this.method !== 'GET' && this.method !== 'HEAD') {
+      const contentTypeInHeaders = this.headers.get('content-type');
+      if (!contentTypeInHeaders) {
+        if (this.contentType) {
+          this.headers.set('content-type', this.contentType);
+        }
+      } else {
+        this.contentType = contentTypeInHeaders;
       }
-    } else {
-      this.contentType = contentTypeInHeaders;
-    }
 
-    const contentLengthInHeaders = this.headers.get('content-length');
-    if (!contentLengthInHeaders) {
-      if (this.contentLength) {
-        this.headers.set('content-length', this.contentLength.toString());
+      const contentLengthInHeaders = this.headers.get('content-length');
+      if (!contentLengthInHeaders) {
+        if (this.contentLength) {
+          this.headers.set('content-length', this.contentLength.toString());
+        }
+      } else {
+        this.contentLength = parseInt(contentLengthInHeaders, 10);
       }
-    } else {
-      this.contentLength = parseInt(contentLengthInHeaders, 10);
     }
   }
 

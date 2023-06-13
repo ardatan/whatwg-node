@@ -1,15 +1,11 @@
-export type PonyfillHeadersInit =
-  | [string, string][]
-  | Record<string, string | string[] | undefined>
-  | Headers;
+export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;
 
 export function isHeadersLike(headers: any): headers is Headers {
   return headers?.get && headers?.forEach;
 }
 
 export class PonyfillHeaders implements Headers {
-  private map = new Map<string, string>();
-  private mapIsBuilt = false;
+  private _map: Map<string, string> | undefined;
   private objectNormalizedKeysOfHeadersInit: string[] = [];
   private objectOriginalKeysOfHeadersInit: string[] = [];
 
@@ -18,8 +14,8 @@ export class PonyfillHeaders implements Headers {
   // perf: we don't need to build `this.map` for Requests, as we can access the headers directly
   private _get(key: string) {
     // If the map is built, reuse it
-    if (this.mapIsBuilt) {
-      return this.map.get(key.toLowerCase()) || null;
+    if (this._map) {
+      return this._map.get(key.toLowerCase()) || null;
     }
 
     // If the map is not built, try to get the value from the this.headersInit
@@ -29,7 +25,7 @@ export class PonyfillHeaders implements Headers {
 
     const normalized = key.toLowerCase();
     if (Array.isArray(this.headersInit)) {
-      return this.headersInit.find(header => header[0] === normalized);
+      return this.headersInit.find(header => header[0] === normalized)?.[1] || null;
     } else if (isHeadersLike(this.headersInit)) {
       return this.headersInit.get(normalized);
     } else {
@@ -57,31 +53,31 @@ export class PonyfillHeaders implements Headers {
   // perf: Build the map of headers lazily, only when we need to access all headers or write to it.
   // I could do a getter here, but I'm too lazy to type `getter`.
   private getMap() {
-    if (this.mapIsBuilt) {
-      return this.map;
-    }
-
-    if (this.headersInit != null) {
-      if (Array.isArray(this.headersInit)) {
-        this.map = new Map(this.headersInit);
-      } else if (isHeadersLike(this.headersInit)) {
-        this.headersInit.forEach((value, key) => {
-          this.map.set(key, value);
-        });
-      } else {
-        for (const initKey in this.headersInit) {
-          const initValue = this.headersInit[initKey];
-          if (initValue != null) {
-            const normalizedValue = Array.isArray(initValue) ? initValue.join(', ') : initValue;
-            const normalizedKey = initKey.toLowerCase();
-            this.map.set(normalizedKey, normalizedValue);
+    if (!this._map) {
+      if (this.headersInit != null) {
+        if (Array.isArray(this.headersInit)) {
+          this._map = new Map(this.headersInit);
+        } else if (isHeadersLike(this.headersInit)) {
+          this._map = new Map();
+          this.headersInit.forEach((value, key) => {
+            this._map!.set(key, value);
+          });
+        } else {
+          this._map = new Map();
+          for (const initKey in this.headersInit) {
+            const initValue = this.headersInit[initKey];
+            if (initValue != null) {
+              const normalizedKey = initKey.toLowerCase();
+              this._map.set(normalizedKey, initValue);
+            }
           }
         }
+      } else {
+        this._map = new Map();
       }
     }
 
-    this.mapIsBuilt = true;
-    return this.map;
+    return this._map;
   }
 
   append(name: string, value: string): void {
@@ -92,23 +88,17 @@ export class PonyfillHeaders implements Headers {
   }
 
   get(name: string): string | null {
-    const key = name.toLowerCase();
-    const value = this._get(key);
+    const value = this._get(name);
 
     if (value == null) {
       return null;
-    }
-
-    if (Array.isArray(value)) {
-      return value.join(', ');
     }
 
     return value;
   }
 
   has(name: string): boolean {
-    const key = name.toLowerCase();
-    return !!this._get(key); // we might need to check if header exists and not just check if it's not nullable
+    return !!this._get(name); // we might need to check if header exists and not just check if it's not nullable
   }
 
   set(name: string, value: string): void {
@@ -122,7 +112,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   forEach(callback: (value: string, key: string, parent: Headers) => void): void {
-    if (!this.mapIsBuilt) {
+    if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
           this.headersInit.forEach(([key, value]) => {
@@ -136,12 +126,6 @@ export class PonyfillHeaders implements Headers {
         }
         Object.entries(this.headersInit).forEach(([key, value]) => {
           if (value != null) {
-            if (Array.isArray(value)) {
-              value.forEach(v => {
-                callback(v, key, this);
-              });
-              return;
-            }
             callback(value, key, this);
           }
         });
@@ -154,7 +138,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   keys(): IterableIterator<string> {
-    if (!this.mapIsBuilt) {
+    if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
           return this.headersInit.map(([key]) => key)[Symbol.iterator]();
@@ -169,7 +153,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   values(): IterableIterator<string> {
-    if (!this.mapIsBuilt) {
+    if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
           return this.headersInit.map(([, value]) => value)[Symbol.iterator]();
@@ -177,14 +161,14 @@ export class PonyfillHeaders implements Headers {
         if (isHeadersLike(this.headersInit)) {
           return this.headersInit.values();
         }
-        return Object.values(this.headersInit)[Symbol.iterator]() as IterableIterator<string>;
+        return Object.values(this.headersInit)[Symbol.iterator]();
       }
     }
     return this.getMap().values();
   }
 
   entries(): IterableIterator<[string, string]> {
-    if (!this.mapIsBuilt) {
+    if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
           return this.headersInit[Symbol.iterator]();
@@ -192,9 +176,7 @@ export class PonyfillHeaders implements Headers {
         if (isHeadersLike(this.headersInit)) {
           return this.headersInit.entries();
         }
-        return Object.entries(this.headersInit)[Symbol.iterator]() as IterableIterator<
-          [string, string]
-        >;
+        return Object.entries(this.headersInit)[Symbol.iterator]();
       }
     }
     return this.getMap().entries();
