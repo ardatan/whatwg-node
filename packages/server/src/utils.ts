@@ -187,9 +187,9 @@ function getHeadersArray(headers: Headers) {
   const headersArray: string[] = [];
   headers.forEach((value, key) => {
     if (key === 'set-cookie') {
-      const setCookieValues = value.split(';');
+      const setCookieValues = value.split(',');
       setCookieValues.forEach(setCookieValue => {
-        headersArray!.push('set-cookie', setCookieValue);
+        headersArray!.push('set-cookie', setCookieValue.trim());
       });
       return;
     }

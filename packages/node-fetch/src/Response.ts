@@ -81,23 +81,13 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   }
 
   static json<T = any>(data: T, init: ResponsePonyfilInit = {}) {
-    let bodyInit: BodyPonyfillInit = JSON.stringify(data);
-    if (init.headers != null) {
-      init.headers = new PonyfillHeaders(init.headers);
-      if (!init.headers.has('content-type')) {
-        init.headers.set('content-type', JSON_CONTENT_TYPE);
-      }
-      if (!init.headers.has('content-length')) {
-        bodyInit = Buffer.from(bodyInit);
-        init.headers.set('content-length', bodyInit.byteLength.toString());
-      }
-    } else {
-      bodyInit = Buffer.from(bodyInit);
-      init.headers = [
-        ['content-type', JSON_CONTENT_TYPE],
-        ['content-length', bodyInit.byteLength.toString()],
-      ];
+    init.headers =
+      init?.headers && isHeadersLike(init.headers)
+        ? init.headers
+        : new PonyfillHeaders(init?.headers);
+    if (!init.headers.has('content-type')) {
+      init.headers.set('content-type', JSON_CONTENT_TYPE);
     }
-    return new PonyfillResponse<T>(bodyInit, init);
+    return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
 }

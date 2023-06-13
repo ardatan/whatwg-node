@@ -283,8 +283,21 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: null,
     };
   }
+  if (typeof bodyInit === 'string') {
+    const buffer = Buffer.from(bodyInit);
+    const contentLength = buffer.byteLength;
+    return {
+      bodyType: BodyInitType.String,
+      contentType: 'text/plain;charset=UTF-8',
+      contentLength,
+      bodyFactory() {
+        const readable = Readable.from(buffer);
+        return new PonyfillReadableStream<Uint8Array>(readable);
+      },
+    };
+  }
   if (bodyInit instanceof Buffer) {
-    const contentLength = bodyInit.length;
+    const contentLength = bodyInit.byteLength;
     return {
       bodyType: BodyInitType.Buffer,
       contentLength,
@@ -293,17 +306,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
         const readable = Readable.from(bodyInit);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
-      },
-    };
-  }
-  if (typeof bodyInit === 'string') {
-    return {
-      bodyType: BodyInitType.String,
-      contentType: 'text/plain;charset=UTF-8',
-      contentLength: Buffer.byteLength(bodyInit),
-      bodyFactory() {
-        const readable = Readable.from(bodyInit);
-        return new PonyfillReadableStream<Uint8Array>(readable);
       },
     };
   }
