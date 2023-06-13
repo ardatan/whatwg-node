@@ -60,41 +60,46 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
     this.url = url || '';
 
-    const contentTypeInHeaders = this.headers.get('content-type');
-    if (!contentTypeInHeaders) {
-      if (this.contentType) {
-        this.headers.set('content-type', this.contentType);
-      }
-    } else {
-      this.contentType = contentTypeInHeaders;
-    }
+    this.destination = 'document';
+    this.priority = 'auto';
 
-    const contentLengthInHeaders = this.headers.get('content-length');
-    if (!contentLengthInHeaders) {
-      if (this.contentLength) {
-        this.headers.set('content-length', this.contentLength.toString());
+    if (this.method !== 'GET' && this.method !== 'HEAD') {
+      const contentTypeInHeaders = this.headers.get('content-type');
+      if (!contentTypeInHeaders) {
+        if (this.contentType) {
+          this.headers.set('content-type', this.contentType);
+        }
+      } else {
+        this.contentType = contentTypeInHeaders;
       }
-    } else {
-      this.contentLength = parseInt(contentLengthInHeaders, 10);
+
+      const contentLengthInHeaders = this.headers.get('content-length');
+      if (!contentLengthInHeaders) {
+        if (this.contentLength) {
+          this.headers.set('content-length', this.contentLength.toString());
+        }
+      } else {
+        this.contentLength = parseInt(contentLengthInHeaders, 10);
+      }
     }
   }
 
   headersSerializer: HeadersSerializer;
   cache: RequestCache;
   credentials: RequestCredentials;
-  destination: RequestDestination = '';
+  destination: RequestDestination;
   headers: Headers;
   integrity: string;
   keepalive: boolean;
   method: string;
   mode: RequestMode;
-  priority = 'auto';
+  priority: string;
   redirect: RequestRedirect;
   referrer: string;
   referrerPolicy: ReferrerPolicy;
   url: string;
 
-  _signal: AbortSignal | undefined | null;
+  private _signal: AbortSignal | undefined | null;
 
   get signal() {
     // Create a new signal only if needed
@@ -107,7 +112,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
   agent?: Agent;
 
-  clone(): Request {
-    return new Request(this);
+  clone(): PonyfillRequest {
+    return new PonyfillRequest(this);
   }
 }

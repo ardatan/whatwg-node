@@ -121,7 +121,7 @@ export function normalizeNodeRequest(
       headers: nodeRequest.headers,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
-      request.headers.set('content-type', 'application/json');
+      request.headers.set('content-type', 'application/json; charset=utf-8');
     }
     return new Proxy(request, {
       get: (target, prop: keyof Request, receiver) => {
@@ -183,81 +183,88 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-export async function sendNodeResponse(
+function getHeadersArray(headers: Headers) {
+  const headersArray: string[] = [];
+  headers.forEach((value, key) => {
+    if (key === 'set-cookie') {
+      const setCookieValues = value.split(';');
+      setCookieValues.forEach(setCookieValue => {
+        headersArray!.push('set-cookie', setCookieValue);
+      });
+      return;
+    }
+    headersArray!.push(key, value);
+  });
+  return headersArray;
+}
+
+async function sendAsyncIterable(
+  serverResponse: NodeResponse,
+  asyncIterable: AsyncIterable<Uint8Array>,
+) {
+  for await (const chunk of asyncIterable) {
+    if (
+      !serverResponse
+        // @ts-expect-error http and http2 writes are actually compatible
+        .write(chunk)
+    ) {
+      break;
+    }
+  }
+  endResponse(serverResponse);
+}
+
+export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  const headersForNode: string[] = [];
-  fetchResponse.headers.forEach((value, key) => {
-    if (key === 'set-cookie') {
-      const setCookieValues = value.split(';');
-      setCookieValues.forEach(setCookieValue => {
-        headersForNode.push('set-cookie', setCookieValue);
-      });
-      return;
-    }
-    headersForNode.push(key, value);
-  });
   serverResponse.writeHead(
     fetchResponse.status,
     fetchResponse.statusText,
     // @ts-expect-error Node supports arrays as headers
-    headersForNode,
+    getHeadersArray(fetchResponse.headers),
   );
-  // eslint-disable-next-line no-async-promise-executor
-  return new Promise<void>(async resolve => {
-    serverResponse.once('close', resolve);
-    // Our Node-fetch enhancements
-    if (
-      'bodyType' in fetchResponse &&
-      fetchResponse.bodyType != null &&
-      (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')
-    ) {
+  // Optimizations for node-fetch
+  if (
+    (fetchResponse as any).bodyType === 'Buffer' ||
+    (fetchResponse as any).bodyType === 'String' ||
+    (fetchResponse as any).bodyType === 'Uint8Array'
+  ) {
+    // @ts-expect-error http and http2 writes are actually compatible
+    serverResponse.write(fetchResponse.bodyInit);
+    endResponse(serverResponse);
+    return;
+  }
+
+  // Other fetch implementations
+  const fetchBody = fetchResponse.body;
+  if (fetchBody == null) {
+    endResponse(serverResponse);
+    return;
+  }
+
+  if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
+    serverResponse
       // @ts-expect-error http and http2 writes are actually compatible
-      serverResponse.write(fetchResponse.bodyInit);
-      endResponse(serverResponse);
-      return;
-    }
+      .write(fetchBody);
+    endResponse(serverResponse);
+    return;
+  }
 
-    // Other fetch implementations
-    const fetchBody = fetchResponse.body;
-    if (fetchBody == null) {
-      endResponse(serverResponse);
-      return;
-    }
+  configureSocket(nodeRequest);
 
-    if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
-      serverResponse
-        // @ts-expect-error http and http2 writes are actually compatible
-        .write(fetchBody);
-      endResponse(serverResponse);
-      return;
-    }
+  if (isReadable(fetchBody)) {
+    serverResponse.once('close', () => {
+      fetchBody.destroy();
+    });
+    fetchBody.pipe(serverResponse);
+    return;
+  }
 
-    configureSocket(nodeRequest);
-
-    if (isReadable(fetchBody)) {
-      serverResponse.once('close', () => {
-        fetchBody.destroy();
-      });
-      fetchBody.pipe(serverResponse);
-      return;
-    }
-
-    if (isAsyncIterable(fetchBody)) {
-      for await (const chunk of fetchBody as AsyncIterable<Uint8Array>) {
-        if (
-          !serverResponse
-            // @ts-expect-error http and http2 writes are actually compatible
-            .write(chunk)
-        ) {
-          break;
-        }
-      }
-      endResponse(serverResponse);
-    }
-  });
+  if (isAsyncIterable(fetchBody)) {
+    return sendAsyncIterable(serverResponse, fetchBody);
+  }
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {
@@ -281,29 +288,25 @@ export function isRequestInit(val: unknown): val is RequestInit {
 }
 
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
-export function completeAssign(target: any, ...sources: any[]) {
+export function completeAssign(...args: any[]) {
+  const [target, ...sources] = args.filter(arg => arg != null && typeof arg === 'object');
   sources.forEach(source => {
-    if (source != null && typeof source === 'object') {
-      // modified Object.keys to Object.getOwnPropertyNames
-      // because Object.keys only returns enumerable properties
-      const descriptors: any = Object.getOwnPropertyNames(source).reduce(
-        (descriptors: any, key) => {
-          descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
-          return descriptors;
-        },
-        {},
-      );
+    // modified Object.keys to Object.getOwnPropertyNames
+    // because Object.keys only returns enumerable properties
+    const descriptors: any = Object.getOwnPropertyNames(source).reduce((descriptors: any, key) => {
+      descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      return descriptors;
+    }, {});
 
-      // By default, Object.assign copies enumerable Symbols, too
-      Object.getOwnPropertySymbols(source).forEach(sym => {
-        const descriptor = Object.getOwnPropertyDescriptor(source, sym);
-        if (descriptor!.enumerable) {
-          descriptors[sym] = descriptor;
-        }
-      });
+    // By default, Object.assign copies enumerable Symbols, too
+    Object.getOwnPropertySymbols(source).forEach(sym => {
+      const descriptor = Object.getOwnPropertyDescriptor(source, sym);
+      if (descriptor!.enumerable) {
+        descriptors[sym] = descriptor;
+      }
+    });
 
-      Object.defineProperties(target, descriptors);
-    }
+    Object.defineProperties(target, descriptors);
   });
   return target;
 }

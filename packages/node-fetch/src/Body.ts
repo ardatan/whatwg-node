@@ -283,6 +283,19 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: null,
     };
   }
+  if (bodyInit instanceof Buffer) {
+    const contentLength = bodyInit.length;
+    return {
+      bodyType: BodyInitType.Buffer,
+      contentLength,
+      contentType: null,
+      bodyFactory() {
+        const readable = Readable.from(bodyInit);
+        const body = new PonyfillReadableStream<Uint8Array>(readable);
+        return body;
+      },
+    };
+  }
   if (typeof bodyInit === 'string') {
     return {
       bodyType: BodyInitType.String,
@@ -309,19 +322,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: bodyInit.size,
       bodyFactory() {
         return bodyInit.stream();
-      },
-    };
-  }
-  if (bodyInit instanceof Buffer) {
-    const contentLength = bodyInit.length;
-    return {
-      bodyType: BodyInitType.Buffer,
-      contentLength,
-      contentType: null,
-      bodyFactory() {
-        const readable = Readable.from(bodyInit);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
       },
     };
   }

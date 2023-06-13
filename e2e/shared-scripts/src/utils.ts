@@ -81,7 +81,7 @@ export async function assertGET(endpoint: string) {
   const contentType = response.headers.get('Content-Type');
   if (contentType == null || !contentType.startsWith('application/json')) {
     throw new Error(
-      `⚠️ Expected 'application/json', but received ${contentType} for ${response.url}`,
+      `⚠️ Expected Response's Content-Type to be 'application/json', but received ${contentType} for ${response.url}`,
     );
   }
 
@@ -96,9 +96,12 @@ export async function assertGET(endpoint: string) {
     throw new Error(`⚠️ Expected 'GET', but received ${json.method} for ${response.url}`);
   }
 
-  if (json.headers.accept !== 'application/json') {
+  const headers = new Headers(json.headers);
+  const acceptValue = headers.get('accept');
+
+  if (!acceptValue?.startsWith('application/json')) {
     throw new Error(
-      `⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`,
+      `⚠️ Expected Sent Request's 'accept' to be 'application/json', but received ${acceptValue} for ${response.url}`,
     );
   }
 
@@ -139,9 +142,12 @@ export async function assertPOST(endpoint: string) {
     throw new Error(`⚠️ Expected 'POST', but received ${json.method} for ${response.url}`);
   }
 
-  if (json.headers.accept !== 'application/json') {
+  const headers = new Headers(json.headers);
+  const acceptValue = headers.get('accept');
+
+  if (!acceptValue?.startsWith('application/json')) {
     throw new Error(
-      `⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`,
+      `⚠️ Expected Sent Request's 'accept' to be 'application/json', but received ${acceptValue} for ${response.url}`,
     );
   }
 

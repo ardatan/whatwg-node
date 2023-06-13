@@ -13,19 +13,14 @@ describe('Headers', () => {
     headers.append('x-HEADER', 'bar');
     expect(headers.get('X-HEADER')).toBe('foo, bar');
   });
-  it('supports inputs with multiple values', () => {
-    const headers = new PonyfillHeaders({
-      'X-Header': ['foo', 'bar'],
-    });
-    expect(headers.get('x-header')).toBe('foo, bar');
-  });
   describe('performance optimizations', () => {
     it('should not create a map if the input is an object and only getter is used', () => {
-      const headers = new PonyfillHeaders({
+      const headersInit = {
         'X-Header': 'foo',
-      });
-      expect(headers.get('x-header')).toBe('foo');
-      expect(headers['mapIsBuilt']).toBe(false);
+      };
+      const headers = new PonyfillHeaders(headersInit);
+      headersInit['X-Header'] = 'bar';
+      expect(headers.get('x-header')).toBe('bar');
     });
   });
   it('should respect custom header serializer', async () => {

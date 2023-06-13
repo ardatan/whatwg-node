@@ -48,10 +48,20 @@ function isRequestAccessible(serverContext: any): serverContext is RequestContai
   }
 }
 
+function addWaitUntil(serverContext: any, waitUntilPromises: Promise<unknown>[]): void {
+  serverContext['waitUntil'] = function (promise: Promise<void> | void) {
+    if (promise != null) {
+      waitUntilPromises.push(promise);
+    }
+  };
+}
+
 export interface ServerAdapterOptions<TServerContext> {
   plugins?: ServerAdapterPlugin<TServerContext>[];
   fetchAPI?: Partial<FetchAPI>;
 }
+
+const EMPTY_OBJECT = {};
 
 function createServerAdapter<
   TServerContext = {},
@@ -102,8 +112,8 @@ function createServerAdapter<
   }
 
   async function handleRequest(request: Request, serverContext: TServerContext) {
-    let url = new Proxy({} as URL, {
-      get: (_target, prop, _receiver) => {
+    let url = new Proxy(EMPTY_OBJECT as URL, {
+      get(_target, prop, _receiver) {
         url = new fetchAPI.URL(request.url, 'http://localhost');
         return Reflect.get(url, prop, url);
       },
@@ -142,7 +152,7 @@ function createServerAdapter<
   }
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0];
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
     return handleRequest(request, serverContext);
   }
@@ -156,12 +166,8 @@ function createServerAdapter<
     const defaultServerContext = {
       req: nodeRequest,
       res: serverResponse,
-      waitUntil(promise: Promise<void> | void) {
-        if (promise != null) {
-          waitUntilPromises.push(promise);
-        }
-      },
     };
+    addWaitUntil(defaultServerContext, waitUntilPromises);
     const response = await handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
     if (response) {
       await sendNodeResponse(response, serverResponse, nodeRequest);
@@ -179,18 +185,13 @@ function createServerAdapter<
 
   async function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
     const waitUntilPromises: Promise<unknown>[] = [];
-    const serverContext = completeAssign(
-      {
-        res,
-        req,
-        waitUntil(promise: Promise<void> | void) {
-          if (promise != null) {
-            waitUntilPromises.push(promise);
-          }
-        },
-      },
-      ...ctx,
-    );
+    const defaultServerContext = {
+      res,
+      req,
+    };
+    addWaitUntil(defaultServerContext, waitUntilPromises);
+    const serverContext =
+      ctx.length > 0 ? completeAssign(defaultServerContext, ...ctx) : defaultServerContext;
     const request = getRequestFromUWSRequest({
       req,
       res,
@@ -219,17 +220,11 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
-    if (!('waitUntil' in serverContext)) {
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
+    if (serverContext.waitUntil == null) {
       const waitUntilPromises: Promise<void>[] = [];
-      const response$ = handleRequest(request, {
-        ...serverContext,
-        waitUntil(promise: Promise<void> | void) {
-          if (promise != null) {
-            waitUntilPromises.push(promise);
-          }
-        },
-      });
+      addWaitUntil(serverContext, waitUntilPromises);
+      const response$ = handleRequest(request, serverContext);
       if (waitUntilPromises.length > 0) {
         return handleWaitUntils(waitUntilPromises).then(() => response$);
       }
@@ -263,15 +258,16 @@ function createServerAdapter<
   ): Promise<Response> | Response | Promise<void> | void => {
     // If it is a Node request
     const [initOrCtxOrRes, ...restOfCtx] = maybeCtx;
-    if (isUWSResponse(input)) {
-      return handleUWS(input, initOrCtxOrRes as any, ...restOfCtx);
-    }
 
     if (isNodeRequest(input)) {
       if (!isServerResponse(initOrCtxOrRes)) {
         throw new TypeError(`Expected ServerResponse, got ${initOrCtxOrRes}`);
       }
       return requestListener(input, initOrCtxOrRes, ...restOfCtx);
+    }
+
+    if (isUWSResponse(input)) {
+      return handleUWS(input, initOrCtxOrRes as any, ...restOfCtx);
     }
 
     if (isServerResponse(initOrCtxOrRes)) {

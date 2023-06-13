@@ -143,11 +143,10 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
         }
-        const responseHeaders: Record<string, string | string[] | undefined> = nodeResponse.headers;
         const ponyfillResponse = new PonyfillResponse(responseBody, {
           status: nodeResponse.statusCode,
           statusText: nodeResponse.statusMessage,
-          headers: responseHeaders,
+          headers: nodeResponse.headers as Record<string, string>,
           url: info.url,
         });
         resolve(ponyfillResponse);
