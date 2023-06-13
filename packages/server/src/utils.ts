@@ -204,6 +204,22 @@ function getHeadersArray(headers: Headers) {
   return headersArray;
 }
 
+async function sendAsyncIterable(
+  serverResponse: NodeResponse,
+  asyncIterable: AsyncIterable<Uint8Array>,
+) {
+  for await (const chunk of asyncIterable) {
+    if (
+      !serverResponse
+        // @ts-expect-error http and http2 writes are actually compatible
+        .write(chunk)
+    ) {
+      break;
+    }
+  }
+  endResponse(serverResponse);
+}
+
 export async function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
@@ -218,7 +234,7 @@ export async function sendNodeResponse(
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
     serverResponse.once('close', resolve);
-    // Our Node-fetch enhancements
+    // Optimizations for node-fetch
     if (
       'bodyType' in fetchResponse &&
       fetchResponse.bodyType != null &&
@@ -256,16 +272,7 @@ export async function sendNodeResponse(
     }
 
     if (isAsyncIterable(fetchBody)) {
-      for await (const chunk of fetchBody as AsyncIterable<Uint8Array>) {
-        if (
-          !serverResponse
-            // @ts-expect-error http and http2 writes are actually compatible
-            .write(chunk)
-        ) {
-          break;
-        }
-      }
-      endResponse(serverResponse);
+      return sendAsyncIterable(serverResponse, fetchBody);
     }
   });
 }

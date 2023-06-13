@@ -48,6 +48,14 @@ function isRequestAccessible(serverContext: any): serverContext is RequestContai
   }
 }
 
+function addWaitUntil(serverContext: any, waitUntilPromises: Promise<unknown>[]): void {
+  serverContext['waitUntil'] = function (promise: Promise<void> | void) {
+    if (promise != null) {
+      waitUntilPromises.push(promise);
+    }
+  };
+}
+
 export interface ServerAdapterOptions<TServerContext> {
   plugins?: ServerAdapterPlugin<TServerContext>[];
   fetchAPI?: Partial<FetchAPI>;
@@ -220,16 +228,10 @@ function createServerAdapter<
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
-    if (!('waitUntil' in serverContext)) {
+    if (serverContext.waitUntil == null) {
       const waitUntilPromises: Promise<void>[] = [];
-      const response$ = handleRequest(request, {
-        ...serverContext,
-        waitUntil(promise: Promise<void> | void) {
-          if (promise != null) {
-            waitUntilPromises.push(promise);
-          }
-        },
-      });
+      addWaitUntil(serverContext, waitUntilPromises);
+      const response$ = handleRequest(request, serverContext);
       if (waitUntilPromises.length > 0) {
         return handleWaitUntils(waitUntilPromises).then(() => response$);
       }
@@ -263,15 +265,16 @@ function createServerAdapter<
   ): Promise<Response> | Response | Promise<void> | void => {
     // If it is a Node request
     const [initOrCtxOrRes, ...restOfCtx] = maybeCtx;
-    if (isUWSResponse(input)) {
-      return handleUWS(input, initOrCtxOrRes as any, ...restOfCtx);
-    }
 
     if (isNodeRequest(input)) {
       if (!isServerResponse(initOrCtxOrRes)) {
         throw new TypeError(`Expected ServerResponse, got ${initOrCtxOrRes}`);
       }
       return requestListener(input, initOrCtxOrRes, ...restOfCtx);
+    }
+
+    if (isUWSResponse(input)) {
+      return handleUWS(input, initOrCtxOrRes as any, ...restOfCtx);
     }
 
     if (isServerResponse(initOrCtxOrRes)) {

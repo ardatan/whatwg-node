@@ -23,7 +23,7 @@ export interface UWSResponse {
 export type UWSHandler = (res: UWSResponse, req: UWSRequest) => void | Promise<void>;
 
 export function isUWSResponse(res: any): res is UWSResponse {
-  return typeof res === 'object' && typeof res.onData === 'function';
+  return !!res.onData;
 }
 
 interface GetRequestFromUWSOpts {
