@@ -219,16 +219,20 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  serverResponse.writeHead(
-    fetchResponse.status,
-    fetchResponse.statusText,
-    // @ts-expect-error Node supports arrays as headers
-    getHeadersArray(fetchResponse.headers),
-  );
+  fetchResponse.headers.forEach((value, key) => {
+    if (key === 'set-cookie') {
+      const setCookieValues = value.split(',');
+      serverResponse.setHeader('set-cookie', setCookieValues);
+      return;
+    }
+    serverResponse.setHeader(key, value);
+  });
+  serverResponse.statusCode = fetchResponse.status;
+  serverResponse.statusMessage = fetchResponse.statusText;
   // Optimizations for node-fetch
   if (
-    (fetchResponse as any).bodyType === 'Buffer' ||
     (fetchResponse as any).bodyType === 'String' ||
+    (fetchResponse as any).bodyType === 'Buffer' ||
     (fetchResponse as any).bodyType === 'Uint8Array'
   ) {
     // @ts-expect-error http and http2 writes are actually compatible
