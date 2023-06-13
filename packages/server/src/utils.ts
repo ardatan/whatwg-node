@@ -288,6 +288,7 @@ export function isRequestInit(val: unknown): val is RequestInit {
 }
 
 // from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign#copying_accessors
+export function completeAssign(...sources: any[]): any;
 export function completeAssign(target: any, ...sources: any[]) {
   sources.forEach(source => {
     if (source != null && typeof source === 'object') {

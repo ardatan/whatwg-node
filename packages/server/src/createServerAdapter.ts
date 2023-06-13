@@ -152,7 +152,7 @@ function createServerAdapter<
   }
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0];
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
     return handleRequest(request, serverContext);
   }
@@ -166,12 +166,8 @@ function createServerAdapter<
     const defaultServerContext = {
       req: nodeRequest,
       res: serverResponse,
-      waitUntil(promise: Promise<void> | void) {
-        if (promise != null) {
-          waitUntilPromises.push(promise);
-        }
-      },
     };
+    addWaitUntil(defaultServerContext, waitUntilPromises);
     const response = await handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
     if (response) {
       await sendNodeResponse(response, serverResponse, nodeRequest);
@@ -189,18 +185,13 @@ function createServerAdapter<
 
   async function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
     const waitUntilPromises: Promise<unknown>[] = [];
-    const serverContext = completeAssign(
-      {
-        res,
-        req,
-        waitUntil(promise: Promise<void> | void) {
-          if (promise != null) {
-            waitUntilPromises.push(promise);
-          }
-        },
-      },
-      ...ctx,
-    );
+    const defaultServerContext = {
+      res,
+      req,
+    };
+    addWaitUntil(defaultServerContext, waitUntilPromises);
+    const serverContext =
+      ctx.length > 0 ? completeAssign(defaultServerContext, ...ctx) : defaultServerContext;
     const request = getRequestFromUWSRequest({
       req,
       res,
@@ -229,7 +220,7 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign({}, ...ctx) : ctx[0] || {};
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     if (serverContext.waitUntil == null) {
       const waitUntilPromises: Promise<void>[] = [];
       addWaitUntil(serverContext, waitUntilPromises);

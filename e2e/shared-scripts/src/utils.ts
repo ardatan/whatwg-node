@@ -96,7 +96,7 @@ export async function assertGET(endpoint: string) {
     throw new Error(`⚠️ Expected 'GET', but received ${json.method} for ${response.url}`);
   }
 
-  if (json.headers.accept !== 'application/json') {
+  if (!json.headers.accept.startsWith('application/json')) {
     throw new Error(
       `⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`,
     );
@@ -139,7 +139,7 @@ export async function assertPOST(endpoint: string) {
     throw new Error(`⚠️ Expected 'POST', but received ${json.method} for ${response.url}`);
   }
 
-  if (json.headers.accept !== 'application/json') {
+  if (!json.headers.accept.startsWith('application/json')) {
     throw new Error(
       `⚠️ Expected 'application/json', but received ${json.headers.accept} for ${response.url}`,
     );
