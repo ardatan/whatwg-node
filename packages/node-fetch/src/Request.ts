@@ -60,6 +60,9 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
     this.url = url || '';
 
+    this.destination = 'document';
+    this.priority = 'auto';
+
     const contentTypeInHeaders = this.headers.get('content-type');
     if (!contentTypeInHeaders) {
       if (this.contentType) {
@@ -82,13 +85,13 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   headersSerializer: HeadersSerializer;
   cache: RequestCache;
   credentials: RequestCredentials;
-  destination: RequestDestination = '';
+  destination: RequestDestination;
   headers: Headers;
   integrity: string;
   keepalive: boolean;
   method: string;
   mode: RequestMode;
-  priority = 'auto';
+  priority: string;
   redirect: RequestRedirect;
   referrer: string;
   referrerPolicy: ReferrerPolicy;

@@ -11,25 +11,21 @@ export type ResponsePonyfilInit = PonyfillBodyOptions &
   };
 
 const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
-const DEFAULT_JSON_HEADERS_INIT = {
-  'content-type': JSON_CONTENT_TYPE,
-};
-const DEFAULT_JSON_HEADERS = new PonyfillHeaders(DEFAULT_JSON_HEADERS_INIT);
-const DEFAULT_JSON_INIT: ResponseInit = {
-  headers: DEFAULT_JSON_HEADERS_INIT,
-};
 
 export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implements Response {
+  headers: Headers;
+
   constructor(body?: BodyPonyfillInit | null, init?: ResponsePonyfilInit) {
     super(body || null, init);
-    if (init) {
-      this.headers = isHeadersLike(init.headers) ? init.headers : new PonyfillHeaders(init.headers);
-      this.status = init.status || 200;
-      this.statusText = init.statusText || STATUS_CODES[this.status] || 'OK';
-      this.url = init.url || '';
-      this.redirected = init.redirected || false;
-      this.type = init.type || 'default';
-    }
+    this.headers =
+      init?.headers && isHeadersLike(init.headers)
+        ? init.headers
+        : new PonyfillHeaders(init?.headers);
+    this.status = init?.status || 200;
+    this.statusText = init?.statusText || STATUS_CODES[this.status] || 'OK';
+    this.url = init?.url || '';
+    this.redirected = init?.redirected || false;
+    this.type = init?.type || 'default';
 
     const contentTypeInHeaders = this.headers.get('content-type');
     if (!contentTypeInHeaders) {
@@ -50,18 +46,16 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     }
   }
 
-  headers: Headers = new PonyfillHeaders();
-
   get ok() {
     return this.status >= 200 && this.status < 300;
   }
 
-  status = 200;
-  statusText = 'OK';
-  url = '';
-  redirected = false;
+  status: number;
+  statusText: string;
+  url: string;
+  redirected: boolean;
 
-  type: ResponseType = 'default';
+  type: ResponseType;
 
   clone() {
     return new PonyfillResponse(this.body, this);
@@ -87,16 +81,23 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   }
 
   static json<T = any>(data: T, init?: RequestInit) {
+    const jsonStr = JSON.stringify(data);
     if (init != null) {
       if (init.headers != null) {
         init.headers = new PonyfillHeaders(init.headers);
         if (!init.headers.has('content-type')) {
           init.headers.set('content-type', JSON_CONTENT_TYPE);
         }
+        if (!init.headers.has('content-length')) {
+          init.headers.set('content-length', Buffer.byteLength(jsonStr).toString());
+        }
       } else {
-        init.headers = DEFAULT_JSON_HEADERS;
+        init.headers = [
+          ['content-type', JSON_CONTENT_TYPE],
+          ['content-length', Buffer.byteLength(jsonStr).toString()],
+        ];
       }
     }
-    return new PonyfillResponse<T>(JSON.stringify(data), init || DEFAULT_JSON_INIT);
+    return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
 }

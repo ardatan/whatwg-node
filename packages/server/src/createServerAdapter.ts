@@ -61,6 +61,8 @@ export interface ServerAdapterOptions<TServerContext> {
   fetchAPI?: Partial<FetchAPI>;
 }
 
+const EMPTY_OBJECT = {};
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
@@ -110,8 +112,8 @@ function createServerAdapter<
   }
 
   async function handleRequest(request: Request, serverContext: TServerContext) {
-    let url = new Proxy({} as URL, {
-      get: (_target, prop, _receiver) => {
+    let url = new Proxy(EMPTY_OBJECT as URL, {
+      get(_target, prop, _receiver) {
         url = new fetchAPI.URL(request.url, 'http://localhost');
         return Reflect.get(url, prop, url);
       },

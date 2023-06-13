@@ -183,24 +183,18 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-// Optimization trick for DEFAULT_JSON_HEADERS in node-fetch
-const headersArrayMap = new WeakMap<Headers, string[]>();
-
 function getHeadersArray(headers: Headers) {
-  let headersArray = headersArrayMap.get(headers);
-  if (headersArray == null) {
-    headersArray = [];
-    headers.forEach((value, key) => {
-      if (key === 'set-cookie') {
-        const setCookieValues = value.split(';');
-        setCookieValues.forEach(setCookieValue => {
-          headersArray!.push('set-cookie', setCookieValue);
-        });
-        return;
-      }
-      headersArray!.push(key, value);
-    });
-  }
+  const headersArray: string[] = [];
+  headers.forEach((value, key) => {
+    if (key === 'set-cookie') {
+      const setCookieValues = value.split(';');
+      setCookieValues.forEach(setCookieValue => {
+        headersArray!.push('set-cookie', setCookieValue);
+      });
+      return;
+    }
+    headersArray!.push(key, value);
+  });
   return headersArray;
 }
 
@@ -220,7 +214,7 @@ async function sendAsyncIterable(
   endResponse(serverResponse);
 }
 
-export async function sendNodeResponse(
+export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
@@ -231,50 +225,46 @@ export async function sendNodeResponse(
     // @ts-expect-error Node supports arrays as headers
     getHeadersArray(fetchResponse.headers),
   );
-  // eslint-disable-next-line no-async-promise-executor
-  return new Promise<void>(async resolve => {
-    serverResponse.once('close', resolve);
-    // Optimizations for node-fetch
-    if (
-      'bodyType' in fetchResponse &&
-      fetchResponse.bodyType != null &&
-      (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')
-    ) {
+  // Optimizations for node-fetch
+  if (
+    'bodyType' in fetchResponse &&
+    fetchResponse.bodyType != null &&
+    (fetchResponse.bodyType === 'String' || fetchResponse.bodyType === 'Uint8Array')
+  ) {
+    // @ts-expect-error http and http2 writes are actually compatible
+    serverResponse.write(fetchResponse.bodyInit);
+    endResponse(serverResponse);
+    return;
+  }
+
+  // Other fetch implementations
+  const fetchBody = fetchResponse.body;
+  if (fetchBody == null) {
+    endResponse(serverResponse);
+    return;
+  }
+
+  if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
+    serverResponse
       // @ts-expect-error http and http2 writes are actually compatible
-      serverResponse.write(fetchResponse.bodyInit);
-      endResponse(serverResponse);
-      return;
-    }
+      .write(fetchBody);
+    endResponse(serverResponse);
+    return;
+  }
 
-    // Other fetch implementations
-    const fetchBody = fetchResponse.body;
-    if (fetchBody == null) {
-      endResponse(serverResponse);
-      return;
-    }
+  configureSocket(nodeRequest);
 
-    if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
-      serverResponse
-        // @ts-expect-error http and http2 writes are actually compatible
-        .write(fetchBody);
-      endResponse(serverResponse);
-      return;
-    }
+  if (isReadable(fetchBody)) {
+    serverResponse.once('close', () => {
+      fetchBody.destroy();
+    });
+    fetchBody.pipe(serverResponse);
+    return;
+  }
 
-    configureSocket(nodeRequest);
-
-    if (isReadable(fetchBody)) {
-      serverResponse.once('close', () => {
-        fetchBody.destroy();
-      });
-      fetchBody.pipe(serverResponse);
-      return;
-    }
-
-    if (isAsyncIterable(fetchBody)) {
-      return sendAsyncIterable(serverResponse, fetchBody);
-    }
-  });
+  if (isAsyncIterable(fetchBody)) {
+    return sendAsyncIterable(serverResponse, fetchBody);
+  }
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {

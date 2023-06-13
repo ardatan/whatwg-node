@@ -122,24 +122,85 @@ export class PonyfillHeaders implements Headers {
   }
 
   forEach(callback: (value: string, key: string, parent: Headers) => void): void {
+    if (!this.mapIsBuilt) {
+      if (this.headersInit) {
+        if (Array.isArray(this.headersInit)) {
+          this.headersInit.forEach(([key, value]) => {
+            callback(value, key, this);
+          });
+          return;
+        }
+        if (isHeadersLike(this.headersInit)) {
+          this.headersInit.forEach(callback);
+          return;
+        }
+        Object.entries(this.headersInit).forEach(([key, value]) => {
+          if (value != null) {
+            if (Array.isArray(value)) {
+              value.forEach(v => {
+                callback(v, key, this);
+              });
+              return;
+            }
+            callback(value, key, this);
+          }
+        });
+      }
+      return;
+    }
     this.getMap().forEach((value, key) => {
       callback(value, key, this);
     });
   }
 
   keys(): IterableIterator<string> {
+    if (!this.mapIsBuilt) {
+      if (this.headersInit) {
+        if (Array.isArray(this.headersInit)) {
+          return this.headersInit.map(([key]) => key)[Symbol.iterator]();
+        }
+        if (isHeadersLike(this.headersInit)) {
+          return this.headersInit.keys();
+        }
+        return Object.keys(this.headersInit)[Symbol.iterator]();
+      }
+    }
     return this.getMap().keys();
   }
 
   values(): IterableIterator<string> {
+    if (!this.mapIsBuilt) {
+      if (this.headersInit) {
+        if (Array.isArray(this.headersInit)) {
+          return this.headersInit.map(([, value]) => value)[Symbol.iterator]();
+        }
+        if (isHeadersLike(this.headersInit)) {
+          return this.headersInit.values();
+        }
+        return Object.values(this.headersInit)[Symbol.iterator]() as IterableIterator<string>;
+      }
+    }
     return this.getMap().values();
   }
 
   entries(): IterableIterator<[string, string]> {
+    if (!this.mapIsBuilt) {
+      if (this.headersInit) {
+        if (Array.isArray(this.headersInit)) {
+          return this.headersInit[Symbol.iterator]();
+        }
+        if (isHeadersLike(this.headersInit)) {
+          return this.headersInit.entries();
+        }
+        return Object.entries(this.headersInit)[Symbol.iterator]() as IterableIterator<
+          [string, string]
+        >;
+      }
+    }
     return this.getMap().entries();
   }
 
   [Symbol.iterator](): IterableIterator<[string, string]> {
-    return this.getMap().entries();
+    return this.entries();
   }
 }
