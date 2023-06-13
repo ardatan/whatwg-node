@@ -36,10 +36,10 @@ function isBlob(obj: any): obj is Blob {
 // Needed because v14 doesn't have .stream() implemented
 export class PonyfillBlob implements Blob {
   type: string;
-  private encoding: string;
+  #encoding: BufferEncoding;
   constructor(private blobParts: BlobPart[], options?: BlobOptions) {
     this.type = options?.type || 'application/octet-stream';
-    this.encoding = options?.encoding || 'utf8';
+    this.#encoding = options?.encoding || 'utf8';
   }
 
   async buffer() {
@@ -71,7 +71,7 @@ export class PonyfillBlob implements Blob {
         text += await blobPart.text();
       } else {
         const buf = getBlobPartAsBuffer(blobPart);
-        text += buf.toString(this.encoding as BufferEncoding);
+        text += buf.toString(this.#encoding);
       }
     }
     return text;

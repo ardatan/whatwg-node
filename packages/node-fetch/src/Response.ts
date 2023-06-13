@@ -78,12 +78,8 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   }
 
   static json<T = any>(data: T, init: RequestInit = {}) {
-    return new PonyfillResponse<T>(JSON.stringify(data), {
-      ...init,
-      headers: {
-        'Content-Type': 'application/json',
-        ...init?.headers,
-      },
-    });
+    init.headers = new PonyfillHeaders(init.headers);
+    init.headers.set('content-type', 'application/json; charset=utf-8');
+    return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
 }

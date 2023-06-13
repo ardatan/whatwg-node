@@ -54,7 +54,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.redirect = requestInit?.redirect || 'follow';
     this.referrer = requestInit?.referrer || 'about:client';
     this.referrerPolicy = requestInit?.referrerPolicy || 'no-referrer';
-    this._signal = requestInit?.signal;
+    this.#signal = requestInit?.signal;
     this.headersSerializer = requestInit?.headersSerializer || getHeadersObj;
     this.agent = requestInit?.agent;
 
@@ -94,20 +94,20 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrerPolicy: ReferrerPolicy;
   url: string;
 
-  _signal: AbortSignal | undefined | null;
+  #signal: AbortSignal | undefined | null;
 
   get signal() {
     // Create a new signal only if needed
     // Because the creation of signal is expensive
-    if (!this._signal) {
-      this._signal = new AbortController().signal;
+    if (!this.#signal) {
+      this.#signal = new AbortController().signal;
     }
-    return this._signal!;
+    return this.#signal!;
   }
 
   agent?: Agent;
 
-  clone(): Request {
-    return new Request(this);
+  clone(): PonyfillRequest {
+    return new PonyfillRequest(this);
   }
 }

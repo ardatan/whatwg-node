@@ -121,7 +121,7 @@ export function normalizeNodeRequest(
       headers: nodeRequest.headers,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
-      request.headers.set('content-type', 'application/json');
+      request.headers.set('content-type', 'application/json; charset=utf-8');
     }
     return new Proxy(request, {
       get: (target, prop: keyof Request, receiver) => {
