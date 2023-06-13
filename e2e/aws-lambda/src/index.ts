@@ -40,9 +40,15 @@ export async function handler(
     serverContext,
   );
 
+  const responseHeaders: Record<string, string> = {};
+
+  response.headers.forEach((value, name) => {
+    responseHeaders[name] = value;
+  });
+
   return {
     statusCode: response.status,
-    headers: Object.fromEntries(response.headers),
+    headers: responseHeaders,
     body: await response.text(),
     isBase64Encoded: false,
   };
