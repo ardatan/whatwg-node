@@ -1,5 +1,15 @@
 # @whatwg-node/server
 
+## 0.8.8
+
+### Patch Changes
+
+- [`11cb454`](https://github.com/ardatan/whatwg-node/commit/11cb45441fb81fb9caeaeb286c5cef57aad64ee9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle multiple cookies correctly
+
+- [`11cb454`](https://github.com/ardatan/whatwg-node/commit/11cb45441fb81fb9caeaeb286c5cef57aad64ee9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle headers in Node correctly
+
 ## 0.8.7
 
 ### Patch Changes
