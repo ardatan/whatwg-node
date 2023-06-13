@@ -75,7 +75,7 @@ export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWS
   });
   response.headers.forEach((value, key) => {
     // content-length causes an error with Node.js's fetch
-    if (key.toLowerCase() !== 'content-length') {
+    if (key !== 'content-length') {
       res.cork(() => {
         res.writeHeader(key, value);
       });
