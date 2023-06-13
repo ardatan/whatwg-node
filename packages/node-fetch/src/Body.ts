@@ -294,6 +294,9 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
         }
         return contentLength;
       },
+      set contentLength(value) {
+        contentLength = value;
+      },
       bodyFactory() {
         const readable = Readable.from(bodyInit);
         return new PonyfillReadableStream<Uint8Array>(readable);
