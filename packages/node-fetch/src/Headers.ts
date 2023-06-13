@@ -12,14 +12,8 @@ export class PonyfillHeaders implements Headers {
   private mapIsBuilt = false;
   private objectNormalizedKeysOfHeadersInit: string[] = [];
   private objectOriginalKeysOfHeadersInit: string[] = [];
-  private headersInit?: PonyfillHeadersInit;
 
-  constructor(headersInit?: PonyfillHeadersInit) {
-    if (isHeadersLike(headersInit)) {
-      return headersInit as PonyfillHeaders;
-    }
-    this.headersInit = headersInit;
-  }
+  constructor(private headersInit?: PonyfillHeadersInit) {}
 
   // perf: we don't need to build `this.map` for Requests, as we can access the headers directly
   private _get(key: string) {

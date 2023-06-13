@@ -1,6 +1,6 @@
 import { STATUS_CODES } from 'http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
-import { PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
+import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 
 export type ResponsePonyfilInit = PonyfillBodyOptions &
   Omit<ResponseInit, 'headers'> & {
@@ -10,11 +10,20 @@ export type ResponsePonyfilInit = PonyfillBodyOptions &
     type?: ResponseType;
   };
 
+const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
+const DEFAULT_JSON_HEADERS_INIT = {
+  'content-type': JSON_CONTENT_TYPE,
+};
+const DEFAULT_JSON_HEADERS = new PonyfillHeaders(DEFAULT_JSON_HEADERS_INIT);
+const DEFAULT_JSON_INIT: ResponseInit = {
+  headers: DEFAULT_JSON_HEADERS_INIT,
+};
+
 export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implements Response {
   constructor(body?: BodyPonyfillInit | null, init?: ResponsePonyfilInit) {
     super(body || null, init);
     if (init) {
-      this.headers = new PonyfillHeaders(init.headers);
+      this.headers = isHeadersLike(init.headers) ? init.headers : new PonyfillHeaders(init.headers);
       this.status = init.status || 200;
       this.statusText = init.statusText || STATUS_CODES[this.status] || 'OK';
       this.url = init.url || '';
@@ -77,9 +86,15 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     });
   }
 
-  static json<T = any>(data: T, init: RequestInit = {}) {
-    init.headers = new PonyfillHeaders(init.headers);
-    init.headers.set('content-type', 'application/json; charset=utf-8');
+  static json<T = any>(data: T, init: RequestInit = DEFAULT_JSON_INIT) {
+    if (init.headers != null) {
+      init.headers = new PonyfillHeaders(init.headers);
+      if (!init.headers.has('content-type')) {
+        init.headers.set('content-type', JSON_CONTENT_TYPE);
+      }
+    } else {
+      init.headers = DEFAULT_JSON_HEADERS;
+    }
     return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
 }

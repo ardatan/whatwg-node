@@ -183,27 +183,37 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
+// Optimization trick for DEFAULT_JSON_HEADERS in node-fetch
+const headersArrayMap = new WeakMap<Headers, string[]>();
+
+function getHeadersArray(headers: Headers) {
+  let headersArray = headersArrayMap.get(headers);
+  if (headersArray == null) {
+    headersArray = [];
+    headers.forEach((value, key) => {
+      if (key === 'set-cookie') {
+        const setCookieValues = value.split(';');
+        setCookieValues.forEach(setCookieValue => {
+          headersArray!.push('set-cookie', setCookieValue);
+        });
+        return;
+      }
+      headersArray!.push(key, value);
+    });
+  }
+  return headersArray;
+}
+
 export async function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  const headersForNode: string[] = [];
-  fetchResponse.headers.forEach((value, key) => {
-    if (key === 'set-cookie') {
-      const setCookieValues = value.split(';');
-      setCookieValues.forEach(setCookieValue => {
-        headersForNode.push('set-cookie', setCookieValue);
-      });
-      return;
-    }
-    headersForNode.push(key, value);
-  });
   serverResponse.writeHead(
     fetchResponse.status,
     fetchResponse.statusText,
     // @ts-expect-error Node supports arrays as headers
-    headersForNode,
+    getHeadersArray(fetchResponse.headers),
   );
   // eslint-disable-next-line no-async-promise-executor
   return new Promise<void>(async resolve => {
