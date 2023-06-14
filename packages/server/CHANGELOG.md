@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.8.11
+
+### Patch Changes
+
+- [`9920800`](https://github.com/ardatan/whatwg-node/commit/992080051bf91af76471984f546a5eb8d9116024)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle empty server contexts
+
 ## 0.8.10
 
 ### Patch Changes
