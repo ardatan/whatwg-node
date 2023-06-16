@@ -165,6 +165,8 @@ export class CookieStore extends EventTarget {
           cookieString += '; SameSite=None';
           break;
       }
+
+      cookieStrings.push(cookieString);
     }
 
     return cookieStrings;
