@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.8.12
+
+### Patch Changes
+
+- [`025613a`](https://github.com/ardatan/whatwg-node/commit/025613af57695c2158189156479129a461d758ce)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix cookie handling
+
 ## 0.8.11
 
 ### Patch Changes

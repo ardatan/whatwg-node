@@ -1,5 +1,12 @@
 # @whatwg-node/cookie-store
 
+## 0.2.0
+
+### Minor Changes
+
+- [`025613a`](https://github.com/ardatan/whatwg-node/commit/025613af57695c2158189156479129a461d758ce)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix cookie handling
+
 ## 0.1.0
 
 ### Minor Changes
