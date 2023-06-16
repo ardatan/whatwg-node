@@ -1,5 +1,17 @@
 # @whatwg-node/server-plugin-cookies
 
+## 0.0.8
+
+### Patch Changes
+
+- [#624](https://github.com/ardatan/whatwg-node/pull/624)
+  [`cb80fbf`](https://github.com/ardatan/whatwg-node/commit/cb80fbf7167a7daca04ba84e03573b7318530e55)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix cookie handling
+
+- Updated dependencies
+  [[`cb80fbf`](https://github.com/ardatan/whatwg-node/commit/cb80fbf7167a7daca04ba84e03573b7318530e55)]:
+  - @whatwg-node/cookie-store@0.1.1
+
 ## 0.0.7
 
 ### Patch Changes
