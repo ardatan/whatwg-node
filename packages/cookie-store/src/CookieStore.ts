@@ -131,7 +131,7 @@ export class CookieStore extends EventTarget {
     await this.set(item);
   }
 
-  get cookieString(): string {
+  get cookieStrings(): string[] {
     const cookieStrings: string[] = [];
     for (const [, item] of this.cookieMap) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -165,11 +165,13 @@ export class CookieStore extends EventTarget {
           cookieString += '; SameSite=None';
           break;
       }
-
-      cookieStrings.push(cookieString);
     }
 
-    return cookieStrings.join('; ');
+    return cookieStrings;
+  }
+
+  get cookieString(): string {
+    return this.cookieStrings.join('; ');
   }
 
   set cookieString(cookieString: string) {

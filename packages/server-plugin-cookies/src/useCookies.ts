@@ -13,8 +13,10 @@ export function useCookies<TServerContext>(): ServerAdapterPlugin<TServerContext
       request.cookieStore = new CookieStore(request.headers.get('cookie') || '');
     },
     onResponse({ request, response }) {
-      if (request.cookieStore?.cookieString) {
-        response.headers.set('set-cookie', request.cookieStore.cookieString);
+      if (request.cookieStore) {
+        for (const cookieString of request.cookieStore.cookieStrings) {
+          response.headers.append('set-cookie', cookieString);
+        }
       }
     },
   };
