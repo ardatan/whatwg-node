@@ -78,8 +78,7 @@ export class CookieStore extends EventTarget {
     if (item.name && item.name.startsWith('__Host')) {
       item.secure = true;
     }
-
-    const previousCookie = await this.get(item);
+    const previousCookie = await this.get(item.name);
     this.cookieMap.set(item.name || '', item as Cookie);
 
     if (this.onchange) {
@@ -129,50 +128,5 @@ export class CookieStore extends EventTarget {
     item.expires = 0;
 
     await this.set(item);
-  }
-
-  get cookieString(): string {
-    const cookieStrings: string[] = [];
-    for (const [, item] of this.cookieMap) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      let cookieString = `${item.name}=${encodeURIComponent(item.value!)}`;
-
-      if (item.domain) {
-        cookieString += '; Domain=' + item.domain;
-      }
-
-      if (item.path) {
-        cookieString += '; Path=' + item.path;
-      }
-
-      if (typeof item.expires === 'number') {
-        cookieString += '; Expires=' + new Date(item.expires).toUTCString();
-      }
-
-      if ((item.name && item.name.startsWith('__Secure')) || item.secure) {
-        item.sameSite = 'lax';
-        cookieString += '; Secure';
-      }
-
-      switch (item.sameSite) {
-        case 'lax':
-          cookieString += '; SameSite=Lax';
-          break;
-        case 'strict':
-          cookieString += '; SameSite=Strict';
-          break;
-        case 'none':
-          cookieString += '; SameSite=None';
-          break;
-      }
-
-      cookieStrings.push(cookieString);
-    }
-
-    return cookieStrings.join('; ');
-  }
-
-  set cookieString(cookieString: string) {
-    this.cookieMap = parse(cookieString);
   }
 }

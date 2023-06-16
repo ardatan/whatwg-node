@@ -183,11 +183,40 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
+export function splitSetCookieHeader(setCookieHeader: string) {
+  const setCookieHeaders: string[] = [];
+  let currentStr = '';
+  let ignoreComma = false;
+  for (const ch of setCookieHeader) {
+    if (currentStr.endsWith('Expires=')) {
+      ignoreComma = true;
+    }
+    if (ignoreComma) {
+      if (ch === ';') {
+        ignoreComma = false;
+      }
+      if (ch === ',' && currentStr.split('Expires=')[1].length > 3) {
+        ignoreComma = false;
+      }
+    }
+    if (ch === ',' && !ignoreComma) {
+      setCookieHeaders.push(currentStr.trim());
+      currentStr = '';
+    } else {
+      currentStr += ch;
+    }
+  }
+  if (currentStr) {
+    setCookieHeaders.push(currentStr.trim());
+  }
+  return setCookieHeaders;
+}
+
 function getHeadersArray(headers: Headers) {
   const headersArray: string[] = [];
   headers.forEach((value, key) => {
     if (key === 'set-cookie') {
-      const setCookieValues = value.split(',');
+      const setCookieValues = splitSetCookieHeader(value);
       setCookieValues.forEach(setCookieValue => {
         headersArray!.push('set-cookie', setCookieValue.trim());
       });
