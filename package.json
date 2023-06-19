@@ -33,7 +33,7 @@
     "@theguild/prettier-config": "1.2.0",
     "@types/jest": "29.5.2",
     "@types/node": "18.16.18",
-    "@types/react-dom": "18.2.5",
+    "@types/react-dom": "18.2.6",
     "@typescript-eslint/eslint-plugin": "5.59.11",
     "@typescript-eslint/parser": "5.59.11",
     "babel-jest": "29.5.0",
