@@ -1,6 +1,5 @@
 import type { Readable } from 'node:stream';
 import type { FetchAPI } from './types.js';
-import { splitSetCookieHeader } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -78,13 +77,15 @@ export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWS
     // content-length causes an error with Node.js's fetch
     if (key !== 'content-length') {
       if (key === 'set-cookie') {
-        const setCookieHeaders = splitSetCookieHeader(value);
-        setCookieHeaders.forEach(setCookieHeader => {
-          res.cork(() => {
-            res.writeHeader(key, setCookieHeader);
+        const setCookies = response.headers.getSetCookie?.();
+        if (setCookies) {
+          setCookies.forEach(setCookie => {
+            res.cork(() => {
+              res.writeHeader(key, setCookie);
+            });
           });
-        });
-        return;
+          return;
+        }
       }
       res.cork(() => {
         res.writeHeader(key, value);

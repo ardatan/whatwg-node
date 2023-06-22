@@ -1,5 +1,6 @@
 import http from 'http';
 import https from 'https';
+import { inspect } from 'util';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
 
@@ -44,5 +45,10 @@ describe('Headers', () => {
     );
     expect(res.status).toBe(200);
     await res.text();
+  });
+  it('should work with node.util.inspect', () => {
+    const headers = new PonyfillHeaders();
+    headers.set('X-Header', 'foo');
+    expect(inspect(headers)).toBe("Headers { 'x-header': 'foo' }");
   });
 });

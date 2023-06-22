@@ -33,7 +33,11 @@ describe('Cookie Management', () => {
     );
     const response = await serverAdapter.fetch('/');
     await response.text();
-    expect(response.headers.get('set-cookie')).toContain('foo=bar');
+    expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
+      [
+        "foo=bar; Path=/; SameSite=Strict",
+      ]
+    `);
   });
   it('should set a cookie with options', async () => {
     const serverAdapter = createServerAdapter(
@@ -55,9 +59,11 @@ describe('Cookie Management', () => {
     );
     const response = await serverAdapter.fetch('/');
     await response.text();
-    expect(response.headers.get('set-cookie')).toContain(
-      'Domain=foo.com; Path=/foo; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure; SameSite=Lax',
-    );
+    expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
+      [
+        "foo=bar; Domain=foo.com; Path=/foo; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Secure; SameSite=Lax",
+      ]
+    `);
   });
   it('should delete a cookie', async () => {
     const serverAdapter = createServerAdapter(
@@ -71,9 +77,11 @@ describe('Cookie Management', () => {
     );
     const response = await serverAdapter.fetch('/');
     await response.text();
-    expect(response.headers.get('set-cookie')).toContain(
-      'foo=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT',
-    );
+    expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
+      [
+        "foo=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict",
+      ]
+    `);
   });
   it('should change a cookie', async () => {
     const serverAdapter = createServerAdapter(
@@ -91,7 +99,11 @@ describe('Cookie Management', () => {
       },
     });
     await response.text();
-    expect(response.headers.get('set-cookie')).toContain('foo=baz');
+    expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
+      [
+        "foo=baz; Path=/; SameSite=Strict",
+      ]
+    `);
   });
   it('should set multiple cookies', async () => {
     const serverAdapter = createServerAdapter(
@@ -106,9 +118,12 @@ describe('Cookie Management', () => {
     );
     const response = await serverAdapter.fetch('/');
     await response.text();
-    const setCookies = response.headers.get('set-cookie');
-    expect(setCookies).toContain('foo=bar');
-    expect(setCookies).toContain('baz=qux');
+    expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
+      [
+        "foo=bar; Path=/; SameSite=Strict",
+        "baz=qux; Path=/; SameSite=Strict",
+      ]
+    `);
   });
   it('should not set set-cookie header if no cookie is set', async () => {
     const serverAdapter = createServerAdapter(() => {
@@ -116,6 +131,6 @@ describe('Cookie Management', () => {
     });
     const response = await serverAdapter.fetch('/');
     await response.text();
-    expect(response.headers.get('set-cookie')).toBeNull();
+    expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`[]`);
   });
 });

@@ -1,3 +1,5 @@
+import { inspect } from 'node:util';
+
 export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;
 
 export function isHeadersLike(headers: any): headers is Headers {
@@ -182,7 +184,56 @@ export class PonyfillHeaders implements Headers {
     return this.getMap().entries();
   }
 
+  getSetCookie() {
+    const setCookieHeader = this.get('set-cookie');
+    if (!setCookieHeader) {
+      return [];
+    }
+    return splitSetCookieHeader(setCookieHeader);
+  }
+
   [Symbol.iterator](): IterableIterator<[string, string]> {
     return this.entries();
   }
+
+  [Symbol.for('nodejs.util.inspect.custom')]() {
+    const record: Record<string, string[] | string> = {};
+    this.forEach((value, key) => {
+      if (key === 'set-cookie') {
+        record['set-cookie'] = this.getSetCookie();
+      } else {
+        record[key] = value.includes(',') ? value.split(',').map(el => el.trim()) : value;
+      }
+    });
+    return `Headers ${inspect(record)}`;
+  }
+}
+
+export function splitSetCookieHeader(setCookieHeader: string) {
+  const setCookieHeaders: string[] = [];
+  let currentStr = '';
+  let ignoreComma = false;
+  for (const ch of setCookieHeader) {
+    if (currentStr.endsWith('Expires=')) {
+      ignoreComma = true;
+    }
+    if (ignoreComma) {
+      if (ch === ';') {
+        ignoreComma = false;
+      }
+      if (ch === ',' && currentStr.split('Expires=')[1].length > 3) {
+        ignoreComma = false;
+      }
+    }
+    if (ch === ',' && !ignoreComma) {
+      setCookieHeaders.push(currentStr.trim());
+      currentStr = '';
+    } else {
+      currentStr += ch;
+    }
+  }
+  if (currentStr) {
+    setCookieHeaders.push(currentStr.trim());
+  }
+  return setCookieHeaders;
 }
