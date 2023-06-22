@@ -79,7 +79,7 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 5
-          command: yarn test:leaks --ci
+          command: yarn test --ci
 
   unit:
     name: unit / node ${{matrix.node-version}}

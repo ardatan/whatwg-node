@@ -1,12 +1,6 @@
 /* eslint-disable camelcase */
 import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
-import {
-  App,
-  us_listen_socket_close,
-  us_socket_local_port,
-  type us_listen_socket,
-} from 'uWebSockets.js';
 
 export interface TestServer {
   name: string;
@@ -16,37 +10,17 @@ export interface TestServer {
 }
 
 export async function createUWSTestServer(): Promise<TestServer> {
-  const app = App();
-  let listenSocket: us_listen_socket;
-  let handler: any;
-  return new Promise((resolve, reject) => {
-    app
-      .any('/*', (...args) => {
-        const res = handler(...args);
-        handler = undefined;
-        return res;
-      })
-      .listen(0, newListenSocket => {
-        listenSocket = newListenSocket;
-        if (listenSocket) {
-          // eslint-disable-next-line camelcase
-          const port = us_socket_local_port(listenSocket);
-          resolve({
-            name: 'uWebSockets.js',
-            url: `http://localhost:${port}/`,
-            close() {
-              // eslint-disable-next-line camelcase
-              us_listen_socket_close(listenSocket);
-            },
-            addOnceHandler(newHandler) {
-              handler = newHandler;
-            },
-          });
-          return;
-        }
-        reject(new Error('Failed to start the server'));
-      });
-  });
+  await uwsUtils.start();
+  return {
+    name: 'uWebSockets.js',
+    url: `http://localhost:${uwsUtils.port}/`,
+    close() {
+      uwsUtils.stop();
+    },
+    addOnceHandler(newHandler) {
+      uwsUtils.addOnceHandler(newHandler);
+    },
+  };
 }
 
 export function createNodeHttpTestServer(): Promise<TestServer> {
@@ -88,9 +62,6 @@ export const serverImplMap = {
 
 export function runTestsForEachServerImpl(callback: (server: TestServer) => void) {
   for (const serverImplName in serverImplMap) {
-    if (process.env.LEAK_TEST && serverImplName === 'uWebSockets') {
-      continue;
-    }
     describe(serverImplName, () => {
       const server: TestServer = {} as TestServer;
       beforeAll(async () => {

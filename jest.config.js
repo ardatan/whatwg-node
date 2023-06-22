@@ -7,6 +7,8 @@ const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = [];
 
+const uwsUtils = require('./uwsUtils');
+
 module.exports = {
   testEnvironment: 'node',
   rootDir: ROOT_DIR,
@@ -23,6 +25,9 @@ module.exports = {
     '^.+\\.js$': 'babel-jest',
   },
   collectCoverage: false,
+  globals: {
+    uwsUtils,
+  },
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
   resolver: 'bob-the-bundler/jest-resolver',
 };
