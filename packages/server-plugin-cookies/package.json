@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/server-plugin-cookies",
-  "version": "0.0.8",
+  "version": "1.0.0",
   "type": "module",
   "description": "Cookies Plugin",
   "repository": {
@@ -34,7 +34,7 @@
   },
   "typings": "dist/typings/index.d.ts",
   "peerDependencies": {
-    "@whatwg-node/server": "^0.8.12"
+    "@whatwg-node/server": "^0.9.0"
   },
   "dependencies": {
     "@whatwg-node/cookie-store": "0.2.0",
