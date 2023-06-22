@@ -19,8 +19,7 @@
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
-    "test": "jest",
-    "test:leaks": "cross-env \"LEAK_TEST=1\" jest --detectOpenHandles --detectLeaks --logHeapUsage",
+    "test": "jest --detectOpenHandles --detectLeaks --logHeapUsage",
     "ts:check": "tsc --noEmit"
   },
   "devDependencies": {
