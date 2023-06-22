@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.4.6
+
+### Patch Changes
+
+- [`124bbe5`](https://github.com/ardatan/whatwg-node/commit/124bbe55f125dc9248fdde9c7e86637d905739fe)
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement Headers.getSetCookie and a custom
+  serializer for node.inspect
+
 ## 0.4.5
 
 ### Patch Changes
