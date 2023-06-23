@@ -14,6 +14,8 @@ export function getCookieString(item: CookieListItem | Cookie) {
 
   if (typeof item.expires === 'number') {
     cookieString += '; Expires=' + new Date(item.expires).toUTCString();
+  } else if (item.expires) {
+    cookieString += '; Expires=' + item.expires.toUTCString();
   }
 
   if ((item.name && item.name.startsWith('__Secure')) || item.secure) {
