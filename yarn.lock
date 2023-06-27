@@ -3257,9 +3257,9 @@ builtins@^5.0.1:
     semver "^7.0.0"
 
 bun-types@^0.6.0:
-  version "0.6.10"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-0.6.10.tgz#b51695cffa2b2365056a2d4e76056f0f708c0f53"
-  integrity sha512-YltOg7yX/tcq5fZH/VjGZNM5+DPRj1nXc51n8ftACJgVTO+L/2v2EZ3FI6TezaO/mTCd6GGT3nVulMdPxyI4AA==
+  version "0.6.11"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-0.6.11.tgz#6db70e77f3614964f3a8388c3325d77232a87f6a"
+  integrity sha512-RghUk5N0VPhZrwFiatcZyBDalLc6LCNb+ZjY3RLoIvse7pLlzPjlLL2RinP6UPNfxedwhjmgXlucJJNjk5EB3w==
 
 bundle-name@^3.0.0:
   version "3.0.0"
