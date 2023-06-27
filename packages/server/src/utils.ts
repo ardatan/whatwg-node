@@ -183,22 +183,27 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-function getHeadersObject(headers: Headers) {
-  const headersObject: Record<string, string> = {};
+function getHeaderPairs(headers: Headers) {
+  const headerPairs = new Map<string, Array<string>>();
   headers.forEach((value, key) => {
+    let headerValues = headerPairs.get(key);
+    if (headerValues === undefined) {
+      headerValues = [];
+      headerPairs.set(key, headerValues);
+    }
     if (key === 'set-cookie') {
       const setCookies = headers.getSetCookie?.();
       if (setCookies) {
         setCookies.forEach(setCookie => {
-          headersObject['set-cookie'] = setCookie;
+          headerValues!.push(setCookie);
         });
         return;
       }
     }
-    headersObject[key] = value;
+    headerValues.push(value);
   });
 
-  return headersObject;
+  return headerPairs;
 }
 
 async function sendAsyncIterable(
@@ -222,11 +227,14 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  serverResponse.writeHead(
-    fetchResponse.status,
-    fetchResponse.statusText,
-    getHeadersObject(fetchResponse.headers),
-  );
+  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
+
+  const headerPairs = getHeaderPairs(fetchResponse.headers);
+
+  for (const [key, value] of headerPairs) {
+    serverResponse.setHeader(key, value);
+  }
+
   // Optimizations for node-fetch
   if (
     (fetchResponse as any).bodyType === 'Buffer' ||
