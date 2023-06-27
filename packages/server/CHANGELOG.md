@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.1
+
+### Patch Changes
+
+- [#646](https://github.com/ardatan/whatwg-node/pull/646)
+  [`2f25027`](https://github.com/ardatan/whatwg-node/commit/2f250274b9b4d895e1120dbeb185e820269ca7a6)
+  Thanks [@n1ru4l](https://github.com/n1ru4l)! - Internal adjustments for fixing Next.js support.
+
 ## 0.9.0
 
 ### Minor Changes
