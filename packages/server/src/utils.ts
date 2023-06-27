@@ -183,21 +183,27 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-function getHeadersArray(headers: Headers) {
-  const headersArray: string[] = [];
+function getHeaderPairs(headers: Headers) {
+  const headerPairs = new Map<string, Array<string>>();
   headers.forEach((value, key) => {
+    let headerValues = headerPairs.get(key);
+    if (headerValues === undefined) {
+      headerValues = [];
+      headerPairs.set(key, headerValues);
+    }
     if (key === 'set-cookie') {
       const setCookies = headers.getSetCookie?.();
       if (setCookies) {
         setCookies.forEach(setCookie => {
-          headersArray.push('set-cookie', setCookie);
+          headerValues!.push(setCookie);
         });
         return;
       }
     }
-    headersArray!.push(key, value);
+    headerValues.push(value);
   });
-  return headersArray;
+
+  return headerPairs;
 }
 
 async function sendAsyncIterable(
@@ -221,12 +227,14 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
+  const headerPairs = getHeaderPairs(fetchResponse.headers);
+
   serverResponse.writeHead(
     fetchResponse.status,
     fetchResponse.statusText,
-    // @ts-expect-error Node supports arrays as headers
-    getHeadersArray(fetchResponse.headers),
+    Object.fromEntries(headerPairs.entries()),
   );
+
   // Optimizations for node-fetch
   if (
     (fetchResponse as any).bodyType === 'Buffer' ||
