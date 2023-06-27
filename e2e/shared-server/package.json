@@ -1,9 +1,9 @@
 {
   "name": "@e2e/shared-server",
-  "version": "0.0.51",
+  "version": "0.0.52",
   "private": true,
   "dependencies": {
     "@whatwg-node/fetch": "0.9.7",
-    "@whatwg-node/server": "0.9.0"
+    "@whatwg-node/server": "0.9.1"
   }
 }
