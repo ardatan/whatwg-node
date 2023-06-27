@@ -227,13 +227,13 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
-
   const headerPairs = getHeaderPairs(fetchResponse.headers);
 
-  for (const [key, value] of headerPairs) {
-    serverResponse.setHeader(key, value);
-  }
+  serverResponse.writeHead(
+    fetchResponse.status,
+    fetchResponse.statusText,
+    Object.fromEntries(headerPairs.entries()),
+  );
 
   // Optimizations for node-fetch
   if (
