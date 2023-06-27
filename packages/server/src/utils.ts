@@ -183,21 +183,22 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-function getHeadersArray(headers: Headers) {
-  const headersArray: string[] = [];
+function getHeadersObject(headers: Headers) {
+  const headersObject: Record<string, string> = {};
   headers.forEach((value, key) => {
     if (key === 'set-cookie') {
       const setCookies = headers.getSetCookie?.();
       if (setCookies) {
         setCookies.forEach(setCookie => {
-          headersArray.push('set-cookie', setCookie);
+          headersObject['set-cookie'] = setCookie;
         });
         return;
       }
     }
-    headersArray!.push(key, value);
+    headersObject[key] = value;
   });
-  return headersArray;
+
+  return headersObject;
 }
 
 async function sendAsyncIterable(
@@ -224,8 +225,7 @@ export function sendNodeResponse(
   serverResponse.writeHead(
     fetchResponse.status,
     fetchResponse.statusText,
-    // @ts-expect-error Node supports arrays as headers
-    getHeadersArray(fetchResponse.headers),
+    getHeadersObject(fetchResponse.headers),
   );
   // Optimizations for node-fetch
   if (
