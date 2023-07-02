@@ -1,6 +1,6 @@
-import { ServerAdapterPlugin } from '../plugins/types';
-import { FetchEvent } from '../types';
-import { completeAssign } from '../utils';
+import type { ServerAdapterPlugin } from '../plugins/types.js';
+import type { FetchEvent } from '../types.js';
+import { completeAssign } from '../utils.js';
 
 type RequestContainer = { request: Request };
 

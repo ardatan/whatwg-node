@@ -3,8 +3,8 @@ import { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
 import { URL } from '@whatwg-node/fetch';
-import { ServerAdapterPlugin } from '../plugins/types';
-import { completeAssign, isAsyncIterable } from '../utils';
+import type { ServerAdapterPlugin } from '../plugins/types.js';
+import { completeAssign, isAsyncIterable } from '../utils.js';
 
 interface NodeServerContext {
   req: NodeRequest;
