@@ -150,21 +150,18 @@ function createServerAdapter<
     if (typeof input === 'string' || 'href' in input) {
       const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
-        const serverContext =
-          restOfCtx.length > 0 ? completeAssign(...restOfCtx) : ({} as TServerContext);
+        const serverContext = restOfCtx.length > 0 ? completeAssign(...restOfCtx) : {};
         return handleRequest(new fetchAPI.Request(input, initOrCtx), serverContext);
       }
-      const serverContext =
-        maybeCtx.length > 0 ? completeAssign(...maybeCtx) : ({} as TServerContext);
+      const serverContext = maybeCtx.length > 0 ? completeAssign(...maybeCtx) : {};
       return handleRequest(new fetchAPI.Request(input), serverContext);
     }
-    const serverContext =
-      maybeCtx.length > 0 ? completeAssign(...maybeCtx) : ({} as TServerContext);
+    const serverContext = maybeCtx.length > 0 ? completeAssign(...maybeCtx) : {};
     return handleRequest(input, serverContext);
   };
 
   const genericRequestHandler = (
-    ...args: any[]
+    ...args: [any, ...any[]]
   ): Promise<Response> | Response | Promise<void> | void => {
     let request: Request | undefined;
     let serverContext: TServerContext | undefined;
@@ -189,9 +186,7 @@ function createServerAdapter<
       return handleRequest(request, serverContext);
     }
 
-    // Or is it Request itself?
-    // Then ctx is present and it is the context
-    return fetchFn(...(args as any[]));
+    return fetchFn(...args);
   };
 
   const adapterObj: ServerAdapterObject<TServerContext> = {
