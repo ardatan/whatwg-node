@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.2
+
+### Patch Changes
+
+- [`bc955e0`](https://github.com/ardatan/whatwg-node/commit/bc955e09cca71d93b8bf59c2dab9fd440d1a0193)
+  Thanks [@ardatan](https://github.com/ardatan)! - Optimizations for setting headers to
+  `ServerResponse`
+
 ## 0.9.1
 
 ### Patch Changes
