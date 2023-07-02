@@ -32,7 +32,7 @@ export function useUWSAdapter(): ServerAdapterPlugin<UWSServerContext> {
     onResponse({ request, response }) {
       const res = uwsResponseMap.get(request);
       if (res) {
-        sendResponseToUwsOpts({
+        return sendResponseToUwsOpts({
           res,
           response,
         });
