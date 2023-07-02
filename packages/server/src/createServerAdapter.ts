@@ -65,7 +65,7 @@ function createServerAdapter<
 
   const plugins = options?.plugins ?? [];
 
-  plugins.push(useUWSAdapter(), useNodeAdapter(), useFetchEvent());
+  (plugins as any).push(useUWSAdapter(), useNodeAdapter(), useFetchEvent());
 
   for (const plugin of plugins) {
     if (plugin.onRequestAdapt) {
