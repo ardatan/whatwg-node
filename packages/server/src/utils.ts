@@ -183,29 +183,6 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-function getHeaderPairs(headers: Headers) {
-  const headerPairs = new Map<string, Array<string>>();
-  headers.forEach((value, key) => {
-    let headerValues = headerPairs.get(key);
-    if (headerValues === undefined) {
-      headerValues = [];
-      headerPairs.set(key, headerValues);
-    }
-    if (key === 'set-cookie') {
-      const setCookies = headers.getSetCookie?.();
-      if (setCookies) {
-        setCookies.forEach(setCookie => {
-          headerValues!.push(setCookie);
-        });
-        return;
-      }
-    }
-    headerValues.push(value);
-  });
-
-  return headerPairs;
-}
-
 async function sendAsyncIterable(
   serverResponse: NodeResponse,
   asyncIterable: AsyncIterable<Uint8Array>,
@@ -227,13 +204,19 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  const headerPairs = getHeaderPairs(fetchResponse.headers);
+  serverResponse.statusCode = fetchResponse.status;
+  serverResponse.statusMessage = fetchResponse.statusText;
 
-  serverResponse.writeHead(
-    fetchResponse.status,
-    fetchResponse.statusText,
-    Object.fromEntries(headerPairs.entries()),
-  );
+  fetchResponse.headers.forEach((value, key) => {
+    if (key === 'set-cookie') {
+      const setCookies = fetchResponse.headers.getSetCookie?.();
+      if (setCookies) {
+        serverResponse.setHeader('set-cookie', setCookies);
+        return;
+      }
+    }
+    serverResponse.setHeader(key, value);
+  });
 
   // Optimizations for node-fetch
   if (
