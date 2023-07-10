@@ -122,15 +122,23 @@ export class PonyfillBody<TJSON = any> implements Body {
     return blob.arrayBuffer();
   }
 
-  async _collectChunksFromReadable() {
-    const chunks: Uint8Array[] = [];
-    const _body = this.generateBody();
-    if (_body) {
-      for await (const chunk of _body.readable) {
-        chunks.push(chunk);
+  _collectChunksFromReadable() {
+    return new Promise<Uint8Array[]>((resolve, reject) => {
+      const chunks: Uint8Array[] = [];
+      const _body = this.generateBody();
+      if (_body) {
+        _body.readable.on('data', chunk => {
+          chunks.push(chunk);
+        });
+        _body.readable.on('end', () => {
+          resolve(chunks);
+        });
+        _body.readable.on('error', e => {
+          reject(e);
+        });
       }
-    }
-    return chunks;
+      return chunks;
+    });
   }
 
   async blob(): Promise<PonyfillBlob> {
