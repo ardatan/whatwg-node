@@ -41,6 +41,7 @@ export class CookieStore extends EventTarget {
       sameSite: 'strict',
       expires: null,
       domain: null,
+      httpOnly: false,
     };
     if (typeof init === 'string') {
       item.name = init as string;
@@ -118,6 +119,7 @@ export class CookieStore extends EventTarget {
       sameSite: 'strict',
       expires: null,
       domain: null,
+      httpOnly: false,
     };
     if (typeof init === 'string') {
       item.name = init as string;

@@ -6,6 +6,7 @@ export interface Cookie {
   secure?: boolean;
   sameSite?: CookieSameSite;
   value: string;
+  httpOnly?: boolean;
 }
 
 export interface CookieStoreDeleteOptions {
@@ -29,6 +30,7 @@ export interface CookieListItem {
   expires: Date | number | null;
   secure?: boolean;
   sameSite?: CookieSameSite;
+  httpOnly?: boolean;
 }
 
 export type CookieList = CookieListItem[];
