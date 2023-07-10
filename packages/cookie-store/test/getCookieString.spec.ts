@@ -55,4 +55,13 @@ describe('getCookieString helper', () => {
       }),
     ).toBe(`foo=bar; Secure; SameSite=Lax`);
   });
+
+  it('should work with HttpOnly', () => {
+    expect(
+      getCookieString({
+        ...baseOptions,
+        httpOnly: true,
+      }),
+    ).toBe(`foo=bar; HttpOnly`);
+  });
 });

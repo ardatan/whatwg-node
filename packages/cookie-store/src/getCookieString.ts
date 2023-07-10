@@ -35,5 +35,9 @@ export function getCookieString(item: CookieListItem | Cookie) {
       break;
   }
 
+  if (item.httpOnly) {
+    cookieString += '; HttpOnly';
+  }
+
   return cookieString;
 }
