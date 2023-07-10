@@ -1,5 +1,13 @@
 # @whatwg-node/cookie-store
 
+## 0.2.1
+
+### Patch Changes
+
+- [#671](https://github.com/ardatan/whatwg-node/pull/671)
+  [`08a9ae5`](https://github.com/ardatan/whatwg-node/commit/08a9ae5f675c7860b6a38ef02ea41390a4c75608)
+  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - add HttpOnly attribute
+
 ## 0.2.0
 
 ### Minor Changes
