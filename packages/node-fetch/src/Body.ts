@@ -123,7 +123,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   _collectChunksFromReadable() {
-    return new Promise((resolve, reject) => {
+    return new Promise<Uint8Array[]>((resolve, reject) => {
       const chunks: Uint8Array[] = [];
       const _body = this.generateBody();
       if (_body) {
