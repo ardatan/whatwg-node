@@ -1,5 +1,5 @@
 ---
-'@whatwg-node/cookie-store': minor
+'@whatwg-node/cookie-store': patch
 ---
 
 add HttpOnly attribute
