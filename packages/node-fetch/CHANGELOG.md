@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.4.7
+
+### Patch Changes
+
+- [`a1c2140`](https://github.com/ardatan/whatwg-node/commit/a1c2140240388ca11a6f4c7bcec2682c47bdc24d)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not use async iterators to consume incoming
+  Readable stream
+
 ## 0.4.6
 
 ### Patch Changes
