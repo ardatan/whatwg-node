@@ -56,7 +56,7 @@ describe('getCookieString helper', () => {
     ).toBe(`foo=bar; Secure; SameSite=Lax`);
   });
 
-  it('Should preserve samesite', () => {
+  it('Should preserve samesite when secure = true', () => {
     expect(
       getCookieString({
         ...baseOptions,
@@ -64,6 +64,15 @@ describe('getCookieString helper', () => {
         sameSite: 'none',
       }),
     ).toBe(`foo=bar; Secure; SameSite=None`);
+  });
+
+  it('Should preserve samesite when secure = false', () => {
+    expect(
+      getCookieString({
+        ...baseOptions,
+        sameSite: 'none',
+      }),
+    ).toBe(`foo=bar; SameSite=None`);
   });
 
   it('should work with HttpOnly', () => {
