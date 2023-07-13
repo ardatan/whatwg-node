@@ -18,7 +18,10 @@ export class PonyfillTextEncoder implements TextEncoder {
 export class PonyfillTextDecoder implements TextDecoder {
   fatal = false;
   ignoreBOM = false;
-  constructor(public encoding: BufferEncoding = 'utf-8', options: TextDecoderOptions) {
+  constructor(
+    public encoding: BufferEncoding = 'utf-8',
+    options: TextDecoderOptions,
+  ) {
     if (options) {
       this.fatal = options.fatal || false;
       this.ignoreBOM = options.ignoreBOM || false;

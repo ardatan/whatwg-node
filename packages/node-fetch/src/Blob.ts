@@ -37,7 +37,10 @@ function isBlob(obj: any): obj is Blob {
 export class PonyfillBlob implements Blob {
   type: string;
   private encoding: BufferEncoding;
-  constructor(private blobParts: BlobPart[], options?: BlobOptions) {
+  constructor(
+    private blobParts: BlobPart[],
+    options?: BlobOptions,
+  ) {
     this.type = options?.type || 'application/octet-stream';
     this.encoding = options?.encoding || 'utf8';
   }

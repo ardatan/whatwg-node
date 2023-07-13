@@ -65,7 +65,8 @@ const EMPTY_OBJECT = {};
 
 function createServerAdapter<
   TServerContext = {},
-  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
+  THandleRequest extends
+    ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
 >(
   serverAdapterRequestHandler: THandleRequest,
   options?: ServerAdapterOptions<TServerContext>,
@@ -79,7 +80,8 @@ function createServerAdapter<
 ): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
   TServerContext = {},
-  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
+  THandleRequest extends
+    ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
   TBaseObject extends ServerAdapterBaseObject<
     TServerContext,
     THandleRequest
