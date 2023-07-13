@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.3
+
+### Patch Changes
+
+- [`6082626`](https://github.com/ardatan/whatwg-node/commit/608262642f9b2a1b0936ff223efb3cf982134bd3)
+  Thanks [@ardatan](https://github.com/ardatan)! - Make sure we copy the buffer from uWS
+
 ## 0.9.2
 
 ### Patch Changes
@@ -259,8 +266,8 @@
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
 
   - Updated dependency
-    [`@whatwg-node/fetch@^0.6.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.6.8) (from
-    `0.6.8`, in `dependencies`)
+    [`@whatwg-node/fetch@^0.6.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.6.8)
+    (from `0.6.8`, in `dependencies`)
 
 - [#314](https://github.com/ardatan/whatwg-node/pull/314)
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
