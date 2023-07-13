@@ -19,7 +19,7 @@ export function getCookieString(item: CookieListItem | Cookie) {
   }
 
   if ((item.name && item.name.startsWith('__Secure')) || item.secure) {
-    item.sameSite = 'lax';
+    item.sameSite = item.sameSite || 'lax';
     cookieString += '; Secure';
   }
 
