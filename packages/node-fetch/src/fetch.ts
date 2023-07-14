@@ -15,7 +15,7 @@ function getResponseForFile(url: string) {
 }
 
 function getResponseForDataUri(url: string) {
-  const [mimeType = 'text/plain', ...datas] = url.split(',');
+  const [mimeType = 'text/plain', ...datas] = url.substring(5).split(',');
   const data = decodeURIComponent(datas.join(','));
   if (mimeType.endsWith(BASE64_SUFFIX)) {
     const buffer = Buffer.from(data, 'base64url');
