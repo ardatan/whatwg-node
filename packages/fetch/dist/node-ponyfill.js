@@ -2,6 +2,11 @@
 const createNodePonyfill = require('./create-node-ponyfill');
 const ponyfills = createNodePonyfill();
 
+try {
+    const nodelibcurlName = 'node-libcurl'
+    globalThis.libcurl = globalThis.libcurl || require(nodelibcurlName);
+} catch(e) {}
+
 module.exports.fetch = ponyfills.fetch;
 module.exports.Headers = ponyfills.Headers;
 module.exports.Request = ponyfills.Request;

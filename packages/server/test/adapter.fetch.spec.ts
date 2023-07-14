@@ -1,7 +1,7 @@
 import { Request, Response, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/index.js';
 
-describe('await adapter.fetch', () => {
+describe('adapter.fetch', () => {
   // Request as first parameter
   it('should accept Request as a first argument', async () => {
     const handleRequest = jest.fn();

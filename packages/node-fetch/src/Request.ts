@@ -1,7 +1,6 @@
-import type { Agent } from 'http';
+import { Agent } from 'http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
-import { getHeadersObj } from './utils.js';
 
 function isRequest(input: any): input is PonyfillRequest {
   return input[Symbol.toStringTag] === 'Request';
@@ -15,7 +14,10 @@ export type RequestPonyfillInit = PonyfillBodyOptions &
     agent?: Agent;
   };
 
-type HeadersSerializer = (headers: Headers) => Record<string, string>;
+type HeadersSerializer = (
+  headers: Headers,
+  onContentLength?: (contentLength: string) => void,
+) => string[];
 
 export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements Request {
   constructor(input: RequestInfo | URL, options?: RequestPonyfillInit) {
@@ -55,8 +57,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.referrer = requestInit?.referrer || 'about:client';
     this.referrerPolicy = requestInit?.referrerPolicy || 'no-referrer';
     this._signal = requestInit?.signal;
-    this.headersSerializer = requestInit?.headersSerializer || getHeadersObj;
-    this.agent = requestInit?.agent;
+    this.headersSerializer = requestInit?.headersSerializer;
 
     this.url = url || '';
 
@@ -84,7 +85,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     }
   }
 
-  headersSerializer: HeadersSerializer;
+  headersSerializer?: HeadersSerializer;
   cache: RequestCache;
   credentials: RequestCredentials;
   destination: RequestDestination;
@@ -98,6 +99,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrer: string;
   referrerPolicy: ReferrerPolicy;
   url: string;
+  agent?: Agent;
 
   private _signal: AbortSignal | undefined | null;
 
@@ -110,9 +112,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     return this._signal!;
   }
 
-  agent?: Agent;
-
-  clone(): PonyfillRequest {
+  clone(): PonyfillRequest<TJSON> {
     return new PonyfillRequest(this);
   }
 }
