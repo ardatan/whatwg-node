@@ -1,5 +1,4 @@
 const { build } = require('esbuild');
-const nativeNodeModulesPlugin = require('../../shared-scripts/scripts/native-node-modules.plugin');
 
 async function main() {
   await build({
@@ -10,7 +9,6 @@ async function main() {
     bundle: true,
     platform: 'node',
     target: 'es2020',
-    plugins: [nativeNodeModulesPlugin],
   });
 
   console.info(`AWS Lambda build done!`);

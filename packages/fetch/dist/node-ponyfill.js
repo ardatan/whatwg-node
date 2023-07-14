@@ -3,7 +3,8 @@ const createNodePonyfill = require('./create-node-ponyfill');
 const ponyfills = createNodePonyfill();
 
 try {
-    globalThis.libcurl = globalThis.libcurl || require('node-libcurl');
+    const nodelibcurlName = 'node-libcurl'
+    globalThis.libcurl = globalThis.libcurl || require(nodelibcurlName);
 } catch(e) {}
 
 module.exports.fetch = ponyfills.fetch;
