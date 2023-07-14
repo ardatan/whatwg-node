@@ -37,6 +37,15 @@ way.
     `Buffer` is faster than the native one unfortunately.
 - `Body.formData()` is not implemented by Node.js, so we implement it with `busboy` internally. So
   you can consume incoming multipart(file uploads) requests with `.formData` in Node.js.
+- `fetch` implementation of Node.js uses `undici` and it doesn't support HTTP 2, our implementation
+  supports it natively thanks to `node-libcurl`.
+
+### Faster HTTP Client in Node.js with HTTP/2 support
+
+If you install `node-libcurl` seperately, `@whatwg-node/fetch` will select `libcurl` instead of
+`node:http` which is faster.
+
+[See benchmarks](https://github.com/JCMais/node-libcurl/tree/develop/benchmark#ubuntu-1910-i7-5500u-24ghz---linux-530-42---node-v12162)
 
 ### Handling file uploads with Fetch API
 
