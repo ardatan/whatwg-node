@@ -1,5 +1,23 @@
 # @whatwg-node/fetch
 
+## 0.9.9
+
+### Patch Changes
+
+- [#567](https://github.com/ardatan/whatwg-node/pull/567)
+  [`f8715cd`](https://github.com/ardatan/whatwg-node/commit/f8715cd15175e348169a11fd5531b901fec47e62)
+  Thanks [@ardatan](https://github.com/ardatan)! - ### Faster HTTP Client experience in Node.js with
+  HTTP/2 support
+
+  If you install `node-libcurl` seperately, `@whatwg-node/fetch` will select `libcurl` instead of
+  `node:http` which is faster.
+
+  [See benchmarks](https://github.com/JCMais/node-libcurl/tree/develop/benchmark#ubuntu-1910-i7-5500u-24ghz---linux-530-42---node-v12162)
+
+- Updated dependencies
+  [[`f8715cd`](https://github.com/ardatan/whatwg-node/commit/f8715cd15175e348169a11fd5531b901fec47e62)]:
+  - @whatwg-node/node-fetch@0.4.8
+
 ## 0.9.8
 
 ### Patch Changes
@@ -369,8 +387,8 @@
   [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
   - Added dependency
-    [`urlpattern-polyfill@^6.0.2` ↗︎](https://www.npmjs.com/package/urlpattern-polyfill/v/6.0.2) (to
-    `dependencies`)
+    [`urlpattern-polyfill@^6.0.2` ↗︎](https://www.npmjs.com/package/urlpattern-polyfill/v/6.0.2)
+    (to `dependencies`)
 
 ## 0.5.4
 
