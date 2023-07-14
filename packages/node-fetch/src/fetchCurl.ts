@@ -29,6 +29,7 @@ export async function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   let easyNativeBinding: EasyNativeBinding | undefined;
 
   const curlyOptions: CurlyOptions = {
+    sslVerifyPeer: false,
     // we want the unparsed binary response to be returned as a stream to us
     curlyStreamResponse: true,
     curlyResponseBodyParser: false,
