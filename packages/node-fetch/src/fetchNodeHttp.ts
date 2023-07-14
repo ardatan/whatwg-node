@@ -37,12 +37,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       const nodeRequest = requestFn(fetchRequest.url, {
         method: fetchRequest.method,
         headers: nodeHeaders,
-        signal: fetchRequest.signal,
+        signal: fetchRequest['_signal'] ?? undefined,
         agent: fetchRequest.agent,
       });
 
       // TODO: will be removed after v16 reaches EOL
-      fetchRequest.signal?.addEventListener('abort', () => {
+      fetchRequest['_signal']?.addEventListener('abort', () => {
         if (!nodeRequest.aborted) {
           nodeRequest.abort();
         }

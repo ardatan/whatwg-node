@@ -36,7 +36,7 @@ export async function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       if (easyNativeBinding == null) {
         easyNativeBinding = this;
       }
-      return fetchRequest.signal.aborted ? 1 : 0;
+      return fetchRequest['_signal']?.aborted ? 1 : 0;
     },
     upload: nodeReadable != null,
     transferEncoding: false,
@@ -60,11 +60,13 @@ export async function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     'libcurl'
   ];
 
-  fetchRequest.signal.onabort = () => {
-    if (easyNativeBinding != null) {
-      easyNativeBinding.pause(CurlPause.Recv);
-    }
-  };
+  if (fetchRequest['_signal']) {
+    fetchRequest['_signal'].onabort = () => {
+      if (easyNativeBinding != null) {
+        easyNativeBinding.pause(CurlPause.Recv);
+      }
+    };
+  }
 
   const curlyResult = await curly(fetchRequest.url, curlyOptions);
 

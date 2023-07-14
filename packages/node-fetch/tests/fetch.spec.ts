@@ -1,5 +1,5 @@
 import { Readable } from 'stream';
-import { runTestsForEachFetchImpl } from 'packages/server/test/test-fetch.js';
+import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
 import { PonyfillBlob } from '../src/Blob.js';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillFormData } from '../src/FormData.js';
