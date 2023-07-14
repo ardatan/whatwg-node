@@ -1,5 +1,19 @@
 # @whatwg-node/node-fetch
 
+## 0.4.8
+
+### Patch Changes
+
+- [#567](https://github.com/ardatan/whatwg-node/pull/567)
+  [`f8715cd`](https://github.com/ardatan/whatwg-node/commit/f8715cd15175e348169a11fd5531b901fec47e62)
+  Thanks [@ardatan](https://github.com/ardatan)! - ### Faster HTTP Client experience in Node.js with
+  HTTP/2 support
+
+  If you install `node-libcurl` seperately, `@whatwg-node/fetch` will select `libcurl` instead of
+  `node:http` which is faster.
+
+  [See benchmarks](https://github.com/JCMais/node-libcurl/tree/develop/benchmark#ubuntu-1910-i7-5500u-24ghz---linux-530-42---node-v12162)
+
 ## 0.4.7
 
 ### Patch Changes
