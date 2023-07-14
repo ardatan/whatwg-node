@@ -1,5 +1,6 @@
 ---
-'@whatwg-node/node-fetch': minor
+'@whatwg-node/node-fetch': patch
 ---
 
-Use node-libcurl
+You can use LibCURL instead of node:http by installing `node-libcurl` seperately.
+
