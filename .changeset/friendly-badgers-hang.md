@@ -1,4 +1,5 @@
 ---
+'@whatwg-node/fetch': patch
 '@whatwg-node/node-fetch': patch
 ---
 
