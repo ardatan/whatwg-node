@@ -303,3 +303,7 @@ export function completeAssign(...args: any[]) {
   });
   return target;
 }
+
+export function isPromise(val: unknown): val is Promise<unknown> {
+  return val != null && typeof val === 'object' && typeof (val as any).then === 'function';
+}

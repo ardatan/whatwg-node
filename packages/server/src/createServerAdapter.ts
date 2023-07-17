@@ -185,7 +185,7 @@ function createServerAdapter<
     }
   }
 
-  async function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
+  function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
     const waitUntilPromises: Promise<unknown>[] = [];
     const defaultServerContext = {
       res,
@@ -199,16 +199,17 @@ function createServerAdapter<
       res,
       fetchAPI,
     });
-    const response = await handleRequest(request, serverContext);
-    if (!response) {
-      res.writeStatus('404 Not Found');
-      res.end();
-      return;
-    }
+    return handleRequest(request, serverContext).then(response => {
+      if (!response) {
+        res.writeStatus('404 Not Found');
+        res.end();
+        return;
+      }
 
-    return sendResponseToUwsOpts({
-      response,
-      res,
+      return sendResponseToUwsOpts({
+        response,
+        res,
+      });
     });
   }
 
