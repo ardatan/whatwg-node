@@ -111,32 +111,30 @@ export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWS
   res.onAborted(function () {
     resAborted = true;
   });
+  const isStringOrBuffer =
+    (response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array';
   res.cork(() => {
     res.writeStatus(`${response.status} ${response.statusText}`);
-  });
-  response.headers.forEach((value, key) => {
-    // content-length causes an error with Node.js's fetch
-    if (key !== 'content-length') {
-      if (key === 'set-cookie') {
-        const setCookies = response.headers.getSetCookie?.();
-        if (setCookies) {
-          setCookies.forEach(setCookie => {
-            res.cork(() => {
+    for (const [key, value] of response.headers) {
+      // content-length causes an error with Node.js's fetch
+      if (key !== 'content-length') {
+        if (key === 'set-cookie') {
+          const setCookies = response.headers.getSetCookie?.();
+          if (setCookies) {
+            for (const setCookie of setCookies) {
               res.writeHeader(key, setCookie);
-            });
-          });
-          return;
+            }
+            continue;
+          }
         }
-      }
-      res.cork(() => {
         res.writeHeader(key, value);
-      });
+      }
+    }
+    if (isStringOrBuffer) {
+      res.end((response as any).bodyInit);
     }
   });
-  if ((response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array') {
-    res.cork(() => {
-      res.end((response as any).bodyInit);
-    });
+  if (isStringOrBuffer) {
     return;
   }
   if (!response.body) {
