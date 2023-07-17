@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.5
+
+### Patch Changes
+
+- [`633655d`](https://github.com/ardatan/whatwg-node/commit/633655d00b00992a3195c1a8aa0bdf27e07381b2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Cork the response once for status codes and
+  headers with the static response in uWS handler
+
 ## 0.9.4
 
 ### Patch Changes
