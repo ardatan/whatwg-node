@@ -159,7 +159,7 @@ function createServerAdapter<
     return handleRequest(request, serverContext);
   }
 
-  async function requestListener(
+  function requestListener(
     nodeRequest: NodeRequest,
     serverResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
@@ -170,19 +170,22 @@ function createServerAdapter<
       res: serverResponse,
     };
     addWaitUntil(defaultServerContext, waitUntilPromises);
-    const response = await handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
-    if (response) {
-      await sendNodeResponse(response, serverResponse, nodeRequest);
-    } else {
-      await new Promise<void>(resolve => {
-        serverResponse.statusCode = 404;
-        serverResponse.once('end', resolve);
-        serverResponse.end();
+    return handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx)
+      .then(response => {
+        if (response) {
+          return sendNodeResponse(response, serverResponse, nodeRequest);
+        }
+        return new Promise<void>(resolve => {
+          serverResponse.statusCode = 404;
+          serverResponse.once('end', resolve);
+          serverResponse.end();
+        });
+      })
+      .finally(() => {
+        if (waitUntilPromises.length > 0) {
+          return handleWaitUntils(waitUntilPromises);
+        }
       });
-    }
-    if (waitUntilPromises.length > 0) {
-      await handleWaitUntils(waitUntilPromises);
-    }
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
