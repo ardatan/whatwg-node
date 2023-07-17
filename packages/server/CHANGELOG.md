@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.4
+
+### Patch Changes
+
+- [#694](https://github.com/ardatan/whatwg-node/pull/694)
+  [`96ee8ce`](https://github.com/ardatan/whatwg-node/commit/96ee8ceb15307d5fed99190d9a2c95fd0f0a0449)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle uWS onAbort in a better way
+
 ## 0.9.3
 
 ### Patch Changes
