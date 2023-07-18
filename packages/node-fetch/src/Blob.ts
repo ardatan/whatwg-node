@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 import { PonyfillReadableStream } from './ReadableStream.js';
 import { uint8ArrayToArrayBuffer } from './utils.js';
 
