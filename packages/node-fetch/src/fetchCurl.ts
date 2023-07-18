@@ -1,15 +1,37 @@
-/* eslint-disable @typescript-eslint/no-this-alias */
-import { Readable } from 'stream';
-import type { CurlyOptions } from 'node-libcurl/dist/curly.js';
-import type { EasyNativeBinding } from 'node-libcurl/dist/types/index.js';
-import { PonyfillHeaders } from './Headers.js';
+import { Readable } from 'node:stream';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer } from './utils.js';
 
-export async function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
+export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
 ): Promise<PonyfillResponse<TResponseJSON>> {
+  const { Curl, CurlCode, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
+
+  const curlHandle = new Curl();
+
+  if (fetchRequest['_signal']) {
+    fetchRequest['_signal'].onabort = () => {
+      curlHandle.pause(CurlPause.Recv);
+    };
+  }
+
+  curlHandle.enable(CurlFeature.NoDataParsing);
+
+  curlHandle.setOpt('URL', fetchRequest.url);
+
+  curlHandle.setOpt('SSL_VERIFYPEER', false);
+
+  curlHandle.enable(CurlFeature.StreamResponse);
+
+  curlHandle.setStreamProgressCallback(function () {
+    return fetchRequest['_signal']?.aborted
+      ? process.env.DEBUG
+        ? CurlProgressFunc.Continue
+        : 1
+      : 0;
+  });
+
   const nodeReadable = (
     fetchRequest.body != null
       ? 'pipe' in fetchRequest.body
@@ -17,6 +39,22 @@ export async function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         : Readable.from(fetchRequest.body)
       : null
   ) as Readable | null;
+
+  if (nodeReadable) {
+    curlHandle.setOpt('UPLOAD', true);
+    curlHandle.setUploadStream(nodeReadable);
+  }
+
+  if (process.env.DEBUG) {
+    curlHandle.setOpt('VERBOSE', true);
+  }
+
+  curlHandle.setOpt('TRANSFER_ENCODING', false);
+  curlHandle.setOpt('HTTP_TRANSFER_DECODING', true);
+  curlHandle.setOpt('FOLLOWLOCATION', fetchRequest.redirect === 'follow');
+  curlHandle.setOpt('MAXREDIRS', 20);
+  curlHandle.setOpt('ACCEPT_ENCODING', '');
+  curlHandle.setOpt('CUSTOMREQUEST', fetchRequest.method);
 
   const headersSerializer = fetchRequest.headersSerializer || defaultHeadersSerializer;
 
@@ -26,73 +64,54 @@ export async function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     size = Number(value);
   });
 
-  let easyNativeBinding: EasyNativeBinding | undefined;
-
-  const curlyOptions: CurlyOptions = {
-    sslVerifyPeer: false,
-    // we want the unparsed binary response to be returned as a stream to us
-    curlyStreamResponse: true,
-    curlyResponseBodyParser: false,
-    curlyProgressCallback() {
-      if (easyNativeBinding == null) {
-        easyNativeBinding = this;
-      }
-      return fetchRequest['_signal']?.aborted ? 1 : 0;
-    },
-    upload: nodeReadable != null,
-    transferEncoding: false,
-    httpTransferDecoding: true,
-    followLocation: fetchRequest.redirect === 'follow',
-    maxRedirs: 20,
-    acceptEncoding: '',
-    curlyStreamUpload: nodeReadable,
-    // this will just make libcurl use their own progress function (which is pretty neat)
-    // curlyProgressCallback() { return CurlProgressFunc.Continue },
-    // verbose: true,
-    httpHeader: curlyHeaders,
-    customRequest: fetchRequest.method,
-  };
-
   if (size != null) {
-    curlyOptions.inFileSize = size;
+    curlHandle.setOpt('INFILESIZE', size);
   }
 
-  const { curly, CurlCode, CurlPause }: typeof import('node-libcurl') = (globalThis as any)[
-    'libcurl'
-  ];
+  curlHandle.setOpt('HTTPHEADER', curlyHeaders);
 
-  if (fetchRequest['_signal']) {
-    fetchRequest['_signal'].onabort = () => {
-      if (easyNativeBinding != null) {
-        easyNativeBinding.pause(CurlPause.Recv);
+  curlHandle.enable(CurlFeature.NoHeaderParsing);
+
+  return new Promise(function promiseResolver(resolve, reject) {
+    curlHandle.once('end', function endListener() {
+      curlHandle.close();
+    });
+    curlHandle.once('error', function errorListener(error) {
+      if (error.isCurlError && error.code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
+        // this is expected
+      } else {
+        // this is unexpected
+        reject(error);
       }
-    };
-  }
-
-  const curlyResult = await curly(fetchRequest.url, curlyOptions);
-
-  const responseHeaders = new PonyfillHeaders();
-  curlyResult.headers.forEach(headerInfo => {
-    for (const key in headerInfo) {
-      if (key === 'location' || (key === 'Location' && fetchRequest.redirect === 'error')) {
-        throw new Error('redirects are not allowed');
-      }
-      if (key !== 'result') {
-        responseHeaders.append(key, headerInfo[key]);
-      }
-    }
-  });
-  curlyResult.data.on('error', (err: any) => {
-    if (err.isCurlError && err.code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-      // this is expected
-    } else {
-      throw err;
-    }
-  });
-
-  return new PonyfillResponse(curlyResult.data, {
-    status: curlyResult.statusCode,
-    headers: responseHeaders,
-    url: fetchRequest.url,
+      curlHandle.close();
+    });
+    curlHandle.once('stream', function streamListener(stream, status, headersBuf: Buffer) {
+      const headersFlat = headersBuf
+        .toString('utf8')
+        .split(/\r?\n|\r/g)
+        .filter(headerFilter => {
+          if (headerFilter && !headerFilter.startsWith('HTTP/')) {
+            if (
+              fetchRequest.redirect === 'error' &&
+              (headerFilter.includes('location') || headerFilter.includes('Location'))
+            ) {
+              reject(new Error('redirect is not allowed'));
+            }
+            return true;
+          }
+          return false;
+        });
+      const headersInit = headersFlat.map(
+        headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
+      );
+      resolve(
+        new PonyfillResponse(stream, {
+          status,
+          headers: headersInit,
+          url: fetchRequest.url,
+        }),
+      );
+    });
+    curlHandle.perform();
   });
 }
