@@ -29,7 +29,6 @@ describe('Headers', () => {
     });
     expect(res.status).toBe(200);
     const body = await res.json();
-    console.log(body);
     expect(body.headers['X-TesT']).toBe('test');
     expect(body.headers['Accept']).toBe('application/json');
   });
