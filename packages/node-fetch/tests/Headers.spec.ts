@@ -29,8 +29,12 @@ describe('Headers', () => {
     });
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.headers['X-TesT']).toBe('test');
-    expect(body.headers['Accept']).toBe('application/json');
+    expect(body).toMatchObject({
+      headers: {
+        'X-TesT': 'test',
+        Accept: 'application/json',
+      },
+    });
   });
   it('should work with node.util.inspect', () => {
     const headers = new PonyfillHeaders();
