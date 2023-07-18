@@ -27,7 +27,7 @@ export class PonyfillHeaders implements Headers {
 
     const normalized = key.toLowerCase();
     if (Array.isArray(this.headersInit)) {
-      return this.headersInit.find(header => header[0] === normalized)?.[1] || null;
+      return this.headersInit.find(header => header[0].toLowerCase() === normalized)?.[1] || null;
     } else if (isHeadersLike(this.headersInit)) {
       return this.headersInit.get(normalized);
     } else {
