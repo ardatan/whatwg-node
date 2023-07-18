@@ -60,7 +60,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   let size: number | undefined;
 
-  const curlyHeaders: string[] = headersSerializer(fetchRequest.headers, value => {
+  const curlHeaders: string[] = headersSerializer(fetchRequest.headers, value => {
     size = Number(value);
   });
 
@@ -68,7 +68,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.setOpt('INFILESIZE', size);
   }
 
-  curlHandle.setOpt('HTTPHEADER', curlyHeaders);
+  curlHandle.setOpt('HTTPHEADER', curlHeaders);
 
   curlHandle.enable(CurlFeature.NoHeaderParsing);
 

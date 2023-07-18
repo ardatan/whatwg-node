@@ -24,14 +24,15 @@ describe('Headers', () => {
   it('should respect custom header serializer', async () => {
     const res = await fetchPonyfill(`${baseUrl}/headers`, {
       headersSerializer() {
-        return ['X-TesT', 'test', 'Accept', 'application/json'];
+        return ['X-Test: test', 'Accept: application/json'];
       },
     });
     expect(res.status).toBe(200);
     const body = await res.json();
+    console.log(body);
     expect(body).toMatchObject({
       headers: {
-        'X-TesT': 'test',
+        'X-Test': 'test',
         Accept: 'application/json',
       },
     });
