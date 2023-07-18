@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.4.9
+
+### Patch Changes
+
+- [`1c29ff7`](https://github.com/ardatan/whatwg-node/commit/1c29ff7ac8964b98b2093189f332c341d6cd62a1)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use `Curl` instead of `curly` to get better
+  performance without any extra logic in JS side
+
 ## 0.4.8
 
 ### Patch Changes
