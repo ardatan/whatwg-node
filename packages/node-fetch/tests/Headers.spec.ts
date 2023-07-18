@@ -22,20 +22,15 @@ describe('Headers', () => {
     });
   });
   it('should respect custom header serializer', async () => {
-    jest.spyOn((globalThis as any)['libcurl'], 'curly');
     const res = await fetchPonyfill(`${baseUrl}/headers`, {
       headersSerializer() {
         return ['X-TesT', 'test', 'Accept', 'application/json'];
       },
     });
-    expect((globalThis as any)['libcurl'].curly).toHaveBeenCalledWith(
-      `${baseUrl}/headers`,
-      expect.objectContaining({
-        httpHeader: ['X-TesT', 'test', 'Accept', 'application/json'],
-      }),
-    );
     expect(res.status).toBe(200);
-    await res.text();
+    const body = await res.json();
+    expect(body.headers['X-Test']).toBe('test');
+    expect(body.headers['Accept']).toBe('application/json');
   });
   it('should work with node.util.inspect', () => {
     const headers = new PonyfillHeaders();
