@@ -32,17 +32,21 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       : 0;
   });
 
-  const nodeReadable = (
-    fetchRequest.body != null
-      ? 'pipe' in fetchRequest.body
-        ? fetchRequest.body
-        : Readable.from(fetchRequest.body)
-      : null
-  ) as Readable | null;
+  if (fetchRequest['bodyType'] === 'String') {
+    curlHandle.setOpt('POSTFIELDS', fetchRequest['bodyInit'] as string);
+  } else {
+    const nodeReadable = (
+      fetchRequest.body != null
+        ? 'pipe' in fetchRequest.body
+          ? fetchRequest.body
+          : Readable.from(fetchRequest.body)
+        : null
+    ) as Readable | null;
 
-  if (nodeReadable) {
-    curlHandle.setOpt('UPLOAD', true);
-    curlHandle.setUploadStream(nodeReadable);
+    if (nodeReadable) {
+      curlHandle.setOpt('UPLOAD', true);
+      curlHandle.setUploadStream(nodeReadable);
+    }
   }
 
   if (process.env.DEBUG) {
