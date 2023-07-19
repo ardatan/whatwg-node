@@ -32,12 +32,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       : 0;
   });
 
-  if (
-    fetchRequest.bodyType === 'String' ||
-    fetchRequest.bodyType === 'Buffer' ||
-    fetchRequest.bodyType === 'Uint8Array'
-  ) {
-    curlHandle.setOpt('POSTFIELDS', fetchRequest.bodyInit);
+  if (fetchRequest['bodyType'] === 'String') {
+    curlHandle.setOpt('POSTFIELDS', fetchRequest['bodyInit'] as string);
   } else {
     const nodeReadable = (
       fetchRequest.body != null
