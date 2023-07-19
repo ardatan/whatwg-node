@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.4.10
+
+### Patch Changes
+
+- [#702](https://github.com/ardatan/whatwg-node/pull/702)
+  [`9d90ef1`](https://github.com/ardatan/whatwg-node/commit/9d90ef193b244a3bd26099d501defd6034fc86eb)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use `POSTFIELDS` for static results in
+  `fetchCurl` to avoid using Node life-cycle whenever possible (Performance optimization)
+
 ## 0.4.9
 
 ### Patch Changes
