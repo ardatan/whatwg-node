@@ -50,4 +50,9 @@ describe('Body', () => {
       expect(body.blob).not.toHaveBeenCalled();
     });
   });
+  it('works with empty responses', async () => {
+    const body = new PonyfillBody(null);
+    const result = await body.text();
+    expect(result).toBe('');
+  });
 });
