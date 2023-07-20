@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.4.11
+
+### Patch Changes
+
+- [#706](https://github.com/ardatan/whatwg-node/pull/706)
+  [`e6d9f02`](https://github.com/ardatan/whatwg-node/commit/e6d9f029c2846dfeb40c0ad4a0afd2fa2d2d55d1)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug causing the stream hang when the
+  response body is empty. Related https://github.com/ardatan/whatwg-node/issues/703
+
 ## 0.4.10
 
 ### Patch Changes
