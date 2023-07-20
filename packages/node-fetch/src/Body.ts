@@ -136,8 +136,9 @@ export class PonyfillBody<TJSON = any> implements Body {
         _body.readable.on('error', e => {
           reject(e);
         });
+      } else {
+        resolve(chunks);
       }
-      return chunks;
     });
   }
 
