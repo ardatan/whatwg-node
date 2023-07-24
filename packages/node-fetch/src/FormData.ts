@@ -5,6 +5,8 @@ import { PonyfillReadableStream } from './ReadableStream.js';
 export class PonyfillFormData implements FormData {
   private map = new Map<string, FormDataEntryValue[]>();
 
+  append(name: string, value: string): void;
+  append(name: string, value: PonyfillBlob, fileName?: string): void;
   append(name: string, value: PonyfillBlob | string, fileName?: string): void {
     let values = this.map.get(name);
     if (!values) {
@@ -34,6 +36,8 @@ export class PonyfillFormData implements FormData {
     return this.map.has(name);
   }
 
+  set(name: string, value: string): void;
+  set(name: string, value: PonyfillBlob, fileName?: string): void;
   set(name: string, value: PonyfillBlob | string, fileName?: string): void {
     const entry: FormDataEntryValue = isBlob(value)
       ? getNormalizedFile(name, value, fileName)
