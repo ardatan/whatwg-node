@@ -35,9 +35,6 @@ describe('Fastify', () => {
       url: '/mypath',
       method: ['GET', 'POST', 'OPTIONS'],
       handler: async (req, reply) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore Types of property 'req' are incompatible.
-        // Type 'IncomingMessage' is missing the following properties from type 'Http2ServerRequest': authority, scheme, streamts(2345)
         const response = await serverAdapter.handleNodeRequest(req, {
           req,
           reply,
@@ -75,9 +72,6 @@ describe('Fastify', () => {
       url: '/mypath',
       method: ['GET', 'POST', 'OPTIONS'],
       handler: async (req, reply) => {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore Types of property 'req' are incompatible.
-        // Type 'IncomingMessage' is missing the following properties from type 'Http2ServerRequest': authority, scheme, streamts(2345)
         const response = await serverAdapter.handleNodeRequest(req, {
           req,
           reply,

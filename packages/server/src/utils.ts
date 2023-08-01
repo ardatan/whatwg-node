@@ -1,4 +1,4 @@
-import type { ServerResponse } from 'node:http';
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
@@ -19,15 +19,15 @@ export interface NodeRequest {
   originalUrl?: string | undefined;
   method: string;
   headers?: any;
-  req?: Http2ServerRequest | undefined;
-  raw?: Http2ServerRequest | undefined;
+  req?: IncomingMessage | Http2ServerRequest | undefined;
+  raw?: IncomingMessage | Http2ServerRequest | undefined;
   socket?: Socket | undefined;
   query?: any;
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
-function getPort(nodeRequest: NodeRequest | Http2ServerRequest) {
+function getPort(nodeRequest: NodeRequest | Http2ServerRequest | IncomingMessage) {
   if (nodeRequest.socket?.localPort) {
     return nodeRequest.socket?.localPort;
   }
@@ -40,7 +40,7 @@ function getPort(nodeRequest: NodeRequest | Http2ServerRequest) {
   return 80;
 }
 
-function getHostnameWithPort(nodeRequest: NodeRequest | Http2ServerRequest) {
+function getHostnameWithPort(nodeRequest: NodeRequest | Http2ServerRequest | IncomingMessage) {
   if (nodeRequest.headers?.[':authority']) {
     return nodeRequest.headers?.[':authority'];
   }
@@ -60,15 +60,15 @@ function getHostnameWithPort(nodeRequest: NodeRequest | Http2ServerRequest) {
   return 'localhost';
 }
 
-function buildFullUrl(nodeRequest: NodeRequest | Http2ServerRequest) {
+function buildFullUrl(nodeRequest: NodeRequest | Http2ServerRequest | IncomingMessage) {
   const hostnameWithPort = getHostnameWithPort(nodeRequest);
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Property 'protocol' does not exist on type 'NodeRequest | Http2ServerRequest'.
-  // Property 'protocol' does not exist on type 'Http2ServerRequest'.ts(2339)
+  // Property 'protocol' does not exist on type 'Http2ServerRequest' | 'IncomingMessage' .ts(2339)
   const protocol = nodeRequest.protocol || 'http';
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore Property 'originalUrl' does not exist on type 'NodeRequest | Http2ServerRequest'.
-  // Property 'originalUrl' does not exist on type 'Http2ServerRequest'.ts(2339)
+  // Property 'originalUrl' does not exist on type 'Http2ServerRequest' | 'IncomingMessage' .ts(2339)
   const endpoint = nodeRequest.originalUrl || nodeRequest.url || '/graphql';
 
   return `${protocol}://${hostnameWithPort}${endpoint}`;
@@ -93,10 +93,12 @@ export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   RequestCtor: typeof Request,
 ): Request {
-  // rawRequest: NodeRequest | Http2ServerRequest
+  // TODO: this is a main issue!
+  // const rawRequest: NodeRequest | IncomingMessage | Http2ServerRequest
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
 
   let fullUrl = buildFullUrl(rawRequest);
+  //                         ^
   if (nodeRequest.query) {
     const url = new URL(fullUrl);
     for (const key in nodeRequest.query) {

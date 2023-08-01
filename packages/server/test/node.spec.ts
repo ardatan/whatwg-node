@@ -1,4 +1,4 @@
-import { ServerResponse } from 'http';
+import { IncomingMessage, ServerResponse } from 'http';
 import {
   ClientHttp2Session,
   connect as connectHttp2,
@@ -10,7 +10,7 @@ import {
 } from 'http2';
 import { AddressInfo } from 'net';
 import { fetch, ReadableStream, Response } from '@whatwg-node/fetch';
-import { createServerAdapter, NodeRequest } from '@whatwg-node/server';
+import { createServerAdapter } from '@whatwg-node/server';
 import { runTestsForEachServerImpl } from './test-server.js';
 
 describe('Node Specific Cases', () => {
@@ -53,7 +53,7 @@ describe('Node Specific Cases', () => {
         });
       });
       const serverAdapter = createServerAdapter<{
-        req: NodeRequest;
+        req: IncomingMessage;
         res: ServerResponse;
         foo: string;
       }>(handleRequest);
