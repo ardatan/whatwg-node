@@ -21,8 +21,8 @@ const httpReq = null as unknown as NodeRequest;
 const httpRes = null as unknown as ServerResponse;
 
 adapter.handleNodeRequest(httpReq);
-adapter.handle(httpReq as NodeRequest, httpRes);
-adapter(httpReq as NodeRequest, httpRes);
+adapter.handle(httpReq, httpRes);
+adapter(httpReq, httpRes);
 
 //  Types of parameters 'req' and 'req' are incompatible.
 // Type 'IncomingMessage' is not assignable to type 'NodeRequest'.
