@@ -66,10 +66,10 @@ function buildFullUrl(nodeRequest: NodeRequest | Http2ServerRequest) {
   // @ts-ignore Property 'protocol' does not exist on type 'NodeRequest | Http2ServerRequest'.
   // Property 'protocol' does not exist on type 'Http2ServerRequest'.ts(2339)
   const protocol = nodeRequest.protocol || 'http';
-  const endpoint =
-    nodeRequest && 'originalUrl' in nodeRequest
-      ? nodeRequest?.originalUrl
-      : nodeRequest?.url || '/graphql';
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Property 'originalUrl' does not exist on type 'NodeRequest | Http2ServerRequest'.
+  // Property 'originalUrl' does not exist on type 'Http2ServerRequest'.ts(2339)
+  const endpoint = nodeRequest.originalUrl || nodeRequest.url || '/graphql';
 
   return `${protocol}://${hostnameWithPort}${endpoint}`;
 }
