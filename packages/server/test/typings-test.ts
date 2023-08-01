@@ -1,4 +1,4 @@
-import { createServer as createHttpServer, IncomingMessage, ServerResponse } from 'http';
+import { createServer as createHttpServer, ServerResponse } from 'http';
 import { createServer as createHttp2Server, Http2ServerRequest, Http2ServerResponse } from 'http2';
 import { App } from 'uWebSockets.js';
 import { NodeRequest } from '../src';
@@ -17,19 +17,18 @@ adapter(http2Req, http2Res);
 const http2Server = createHttp2Server(adapter);
 http2Server.on('request', adapter);
 
-const httpReq = null as unknown as IncomingMessage;
+const httpReq = null as unknown as NodeRequest;
 const httpRes = null as unknown as ServerResponse;
 
-adapter.handleNodeRequest(httpReq as NodeRequest);
+adapter.handleNodeRequest(httpReq);
 adapter.handle(httpReq as NodeRequest, httpRes);
 adapter(httpReq as NodeRequest, httpRes);
 
-// Type 'ServerAdapter<{}, ServerAdapterBaseObject<{}, () => any>>' is not assignable to type 'RequestListener<typeof IncomingMessage, typeof ServerResponse>'.
-// Types of parameters 'req' and 'req' are incompatible.
+//  Types of parameters 'req' and 'req' are incompatible.
 // Type 'IncomingMessage' is not assignable to type 'NodeRequest'.
-//   Types of property 'method' are incompatible.
-//     Type 'string | undefined' is not assignable to type 'string'.
-//       Type 'undefined' is not assignable to type 'string'.
+// Types of property 'method' are incompatible.
+//   Type 'string | undefined' is not assignable to type 'string'.
+//     Type 'undefined' is not assignable to type 'string'.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const httpServer = createHttpServer(adapter);

@@ -1,6 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { IncomingMessage } from 'node:http';
-import { Http2ServerRequest } from 'node:http2';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
@@ -155,17 +153,14 @@ function createServerAdapter<
     return response;
   }
 
-  function handleNodeRequest(
-    nodeRequest: NodeRequest | IncomingMessage | Http2ServerRequest,
-    ...ctx: Partial<TServerContext>[]
-  ) {
+  function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
     return handleRequest(request, serverContext);
   }
 
   function requestListener(
-    nodeRequest: NodeRequest | IncomingMessage | Http2ServerRequest,
+    nodeRequest: NodeRequest,
     serverResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ) {
@@ -300,14 +295,14 @@ function createServerAdapter<
     return fetchFn(input, ...maybeCtx);
   };
 
-  const adapterObj: ServerAdapterObject<TServerContext> = {
+  const adapterObj = {
     handleRequest,
     fetch: fetchFn,
     handleNodeRequest,
     requestListener,
     handleEvent,
     handleUWS,
-    handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
+    handle: genericRequestHandler,
   };
 
   const serverAdapter = new Proxy(genericRequestHandler, {
@@ -321,6 +316,7 @@ function createServerAdapter<
     },
     get: (_, prop) => {
       const adapterProp = (adapterObj as any)[prop];
+
       if (adapterProp) {
         if (adapterProp.bind) {
           return adapterProp.bind(adapterObj);
