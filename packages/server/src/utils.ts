@@ -118,7 +118,7 @@ export function normalizeNodeRequest(
    * because the presence of body means the request stream is already consumed and,
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
-  const maybeParsedBody = nodeRequest.body || null;
+  const maybeParsedBody = nodeRequest.body;
 
   if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
     if (isRequestBody(maybeParsedBody)) {
