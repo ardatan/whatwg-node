@@ -62,7 +62,10 @@ function getHostnameWithPort(nodeRequest: NodeRequest | Http2ServerRequest) {
 
 function buildFullUrl(nodeRequest: NodeRequest | Http2ServerRequest) {
   const hostnameWithPort = getHostnameWithPort(nodeRequest);
-  const protocol = nodeRequest && 'protocol' in nodeRequest ? nodeRequest.protocol : 'http';
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Property 'protocol' does not exist on type 'NodeRequest | Http2ServerRequest'.
+  // Property 'protocol' does not exist on type 'Http2ServerRequest'.ts(2339)
+  const protocol = nodeRequest.protocol || 'http';
   const endpoint =
     nodeRequest && 'originalUrl' in nodeRequest
       ? nodeRequest?.originalUrl
