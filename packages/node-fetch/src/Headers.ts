@@ -11,7 +11,7 @@ export class PonyfillHeaders implements Headers {
   private objectNormalizedKeysOfHeadersInit: string[] = [];
   private objectOriginalKeysOfHeadersInit: string[] = [];
 
-  constructor(private headersInit?: PonyfillHeadersInit) {}
+  constructor(private headersInit?: PonyfillHeadersInit | undefined) {}
 
   // perf: we don't need to build `this.map` for Requests, as we can access the headers directly
   private _get(key: string) {

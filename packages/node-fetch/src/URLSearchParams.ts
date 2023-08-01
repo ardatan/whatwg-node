@@ -2,7 +2,7 @@ import FastQuerystring from 'fast-querystring';
 
 export class PonyfillURLSearchParams implements URLSearchParams {
   private params: Record<string, string>;
-  constructor(init?: string | string[][] | Record<string, string> | URLSearchParams) {
+  constructor(init?: string | string[][] | Record<string, string> | URLSearchParams | undefined) {
     if (init) {
       if (typeof init === 'string') {
         this.params = FastQuerystring.parse(init);

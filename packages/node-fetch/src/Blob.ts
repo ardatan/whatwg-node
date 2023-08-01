@@ -40,7 +40,7 @@ export class PonyfillBlob implements Blob {
   private encoding: BufferEncoding;
   constructor(
     private blobParts: BlobPart[],
-    options?: BlobOptions,
+    options?: BlobOptions | undefined,
   ) {
     this.type = options?.type || 'application/octet-stream';
     this.encoding = options?.encoding || 'utf8';
@@ -131,5 +131,5 @@ export class PonyfillBlob implements Blob {
 
 export interface PonyfillBlob {
   prototype: Blob;
-  new (blobParts?: BlobPart[], options?: BlobPropertyBag): Blob;
+  new (blobParts?: BlobPart[] | undefined, options?: BlobPropertyBag | undefined): Blob;
 }

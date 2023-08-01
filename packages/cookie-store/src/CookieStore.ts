@@ -8,7 +8,7 @@ import {
 } from './types.js';
 
 export class CookieStore extends EventTarget {
-  onchange?: (event: CookieChangeEvent) => void;
+  onchange?: ((event: CookieChangeEvent) => void) | undefined;
 
   private cookieMap = new Map<string, Cookie>();
 
@@ -22,7 +22,7 @@ export class CookieStore extends EventTarget {
   }
 
   async get(
-    init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions,
+    init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions | undefined,
   ): Promise<Cookie | undefined> {
     if (init == null) {
       throw new TypeError('CookieStoreGetOptions must not be empty');
@@ -32,7 +32,7 @@ export class CookieStore extends EventTarget {
     return (await this.getAll(init))[0];
   }
 
-  async set(init: CookieListItem | string, possibleValue?: string): Promise<void> {
+  async set(init: CookieListItem | string, possibleValue?: string | undefined): Promise<void> {
     const item: CookieListItem = {
       name: '',
       value: '',
@@ -96,7 +96,9 @@ export class CookieStore extends EventTarget {
     }
   }
 
-  async getAll(init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions): Promise<Cookie[]> {
+  async getAll(
+    init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions | undefined,
+  ): Promise<Cookie[]> {
     const cookies = Array.from(this.cookieMap.values());
     if (init == null || Object.keys(init).length === 0) {
       return cookies;

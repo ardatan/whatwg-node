@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { IncomingMessage } from 'node:http';
+import { Http2ServerRequest } from 'node:http2';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
@@ -57,8 +59,8 @@ function addWaitUntil(serverContext: any, waitUntilPromises: Promise<unknown>[])
 }
 
 export interface ServerAdapterOptions<TServerContext> {
-  plugins?: ServerAdapterPlugin<TServerContext>[];
-  fetchAPI?: Partial<FetchAPI>;
+  plugins?: ServerAdapterPlugin<TServerContext>[] | undefined;
+  fetchAPI?: Partial<FetchAPI> | undefined;
 }
 
 const EMPTY_OBJECT = {};
@@ -69,14 +71,14 @@ function createServerAdapter<
     ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
 >(
   serverAdapterRequestHandler: THandleRequest,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext> | undefined,
 ): ServerAdapter<TServerContext, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
 function createServerAdapter<
   TServerContext,
   TBaseObject extends ServerAdapterBaseObject<TServerContext>,
 >(
   serverAdapterBaseObject: TBaseObject,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext> | undefined,
 ): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
   TServerContext = {},
@@ -88,7 +90,7 @@ function createServerAdapter<
   > = ServerAdapterBaseObject<TServerContext, THandleRequest>,
 >(
   serverAdapterBaseObject: TBaseObject | THandleRequest,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext> | undefined,
 ): ServerAdapter<TServerContext, TBaseObject> {
   const fetchAPI = {
     ...DefaultFetchAPI,
@@ -153,14 +155,17 @@ function createServerAdapter<
     return response;
   }
 
-  function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
+  function handleNodeRequest(
+    nodeRequest: NodeRequest | IncomingMessage | Http2ServerRequest,
+    ...ctx: Partial<TServerContext>[]
+  ) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
     return handleRequest(request, serverContext);
   }
 
   function requestListener(
-    nodeRequest: NodeRequest,
+    nodeRequest: NodeRequest | IncomingMessage | Http2ServerRequest,
     serverResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ) {

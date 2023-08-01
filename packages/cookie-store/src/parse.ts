@@ -1,7 +1,7 @@
 import { Cookie } from './types.js';
 
 export interface ParseOptions {
-  decode?: boolean;
+  decode?: boolean | undefined;
 }
 
 const decode = decodeURIComponent;

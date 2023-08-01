@@ -37,7 +37,7 @@ function getResponseForDataUri(url: string) {
 
 export async function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
-  init?: RequestPonyfillInit,
+  init?: RequestPonyfillInit | undefined,
 ): Promise<PonyfillResponse<TResponseJSON>> {
   if (typeof info === 'string' || 'href' in info) {
     const ponyfillRequest = new PonyfillRequest(info, init);

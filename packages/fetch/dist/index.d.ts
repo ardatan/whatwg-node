@@ -12,7 +12,7 @@ declare module '@whatwg-node/fetch' {
   export const fetch: typeof globalThis.fetch;
   export const Request: typeof globalThis.Request;
   export const Response: typeof globalThis.Response & {
-    json(data: any, init?: ResponseInit): globalThis.Response;
+    json(data: any, init?: ResponseInit | undefined): globalThis.Response;
   };
   export const Headers: typeof globalThis.Headers;
   export const FormData: typeof globalThis.FormData;
@@ -30,24 +30,24 @@ declare module '@whatwg-node/fetch' {
   export const URLPattern: _URLPattern;
   export interface FormDataLimits {
     /* Max field name size (in bytes). Default: 100. */
-    fieldNameSize?: number;
+    fieldNameSize?: number | undefined;
     /* Max field value size (in bytes). Default: 1MB. */
-    fieldSize?: number;
+    fieldSize?: number | undefined;
     /* Max number of fields. Default: Infinity. */
-    fields?: number;
+    fields?: number | undefined;
     /* For multipart forms, the max file size (in bytes). Default: Infinity. */
-    fileSize?: number;
+    fileSize?: number | undefined;
     /* For multipart forms, the max number of file fields. Default: Infinity. */
-    files?: number;
+    files?: number | undefined;
     /* For multipart forms, the max number of parts (fields + files). Default: Infinity. */
-    parts?: number;
+    parts?: number | undefined;
     /* For multipart forms, the max number of header key-value pairs to parse. Default: 2000. */
-    headerSize?: number;
+    headerSize?: number | undefined;
   }
   export const createFetch: (opts?: {
-    useNodeFetch?: boolean;
-    formDataLimits?: FormDataLimits;
-  }) => {
+    useNodeFetch?: boolean | undefined;
+    formDataLimits?: FormDataLimits | undefined;
+  } | undefined) => {
     fetch: typeof fetch;
     Request: typeof Request;
     Response: typeof Response;

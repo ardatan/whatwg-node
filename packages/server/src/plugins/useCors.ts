@@ -2,12 +2,12 @@ import { ServerAdapterPlugin } from './types.js';
 
 export type CORSOptions =
   | {
-      origin?: string[] | string;
-      methods?: string[];
-      allowedHeaders?: string[];
-      exposedHeaders?: string[];
-      credentials?: boolean;
-      maxAge?: number;
+      origin?: string[] | string | undefined;
+      methods?: string[] | undefined;
+      allowedHeaders?: string[] | undefined;
+      exposedHeaders?: string[] | undefined;
+      credentials?: boolean | undefined;
+      maxAge?: number | undefined;
     }
   | false;
 
@@ -112,7 +112,7 @@ async function getCORSResponseHeaders<TServerContext>(
 }
 
 export function useCORS<TServerContext>(
-  options?: CORSPluginOptions<TServerContext>,
+  options?: CORSPluginOptions<TServerContext> | undefined,
   // eslint-disable-next-line @typescript-eslint/ban-types
 ): ServerAdapterPlugin<TServerContext> {
   let corsOptionsFactory: CORSOptionsFactory<TServerContext> = () => ({});

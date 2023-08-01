@@ -1,36 +1,36 @@
 export interface Cookie {
-  domain?: string;
-  expires?: number;
+  domain?: string | undefined;
+  expires?: number | undefined;
   name: string;
-  path?: string;
-  secure?: boolean;
-  sameSite?: CookieSameSite;
+  path?: string | undefined;
+  secure?: boolean | undefined;
+  sameSite?: CookieSameSite | undefined;
   value: string;
-  httpOnly?: boolean;
+  httpOnly?: boolean | undefined;
 }
 
 export interface CookieStoreDeleteOptions {
   name: string;
-  domain?: string;
-  path?: string;
+  domain?: string | undefined;
+  path?: string | undefined;
 }
 
 export interface CookieStoreGetOptions {
-  name?: string;
-  url?: string;
+  name?: string | undefined;
+  url?: string | undefined;
 }
 
 export type CookieSameSite = 'strict' | 'lax' | 'none';
 
 export interface CookieListItem {
-  name?: string;
-  value?: string;
+  name?: string | undefined;
+  value?: string | undefined;
   domain: string | null;
-  path?: string;
+  path?: string | undefined;
   expires: Date | number | null;
-  secure?: boolean;
-  sameSite?: CookieSameSite;
-  httpOnly?: boolean;
+  secure?: boolean | undefined;
+  sameSite?: CookieSameSite | undefined;
+  httpOnly?: boolean | undefined;
 }
 
 export type CookieList = CookieListItem[];

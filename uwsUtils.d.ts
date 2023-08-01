@@ -5,6 +5,6 @@ declare global {
     start(): Promise<void>;
     stop(): void;
     addOnceHandler(handler: Parameters<uws.TemplatedApp['any']>[1]): void;
-    port?: number;
+    port?: number | undefined;
   };
 }

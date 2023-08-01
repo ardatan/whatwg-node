@@ -8,19 +8,19 @@ function isRequest(input: any): input is PonyfillRequest {
 
 export type RequestPonyfillInit = PonyfillBodyOptions &
   Omit<RequestInit, 'body' | 'headers'> & {
-    body?: BodyPonyfillInit | null;
-    headers?: PonyfillHeadersInit;
-    headersSerializer?: HeadersSerializer;
-    agent?: Agent;
+    body?: BodyPonyfillInit | null | undefined;
+    headers?: PonyfillHeadersInit | undefined;
+    headersSerializer?: HeadersSerializer | undefined;
+    agent?: Agent | undefined;
   };
 
 type HeadersSerializer = (
   headers: Headers,
-  onContentLength?: (contentLength: string) => void,
+  onContentLength?: ((contentLength: string) => void) | undefined,
 ) => string[];
 
 export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements Request {
-  constructor(input: RequestInfo | URL, options?: RequestPonyfillInit) {
+  constructor(input: RequestInfo | URL, options?: RequestPonyfillInit | undefined) {
     let url: string | undefined;
     let bodyInit: BodyPonyfillInit | null = null;
     let requestInit: RequestPonyfillInit | undefined;
@@ -85,7 +85,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     }
   }
 
-  headersSerializer?: HeadersSerializer;
+  headersSerializer?: HeadersSerializer | undefined;
   cache: RequestCache;
   credentials: RequestCredentials;
   destination: RequestDestination;
@@ -99,7 +99,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrer: string;
   referrerPolicy: ReferrerPolicy;
   url: string;
-  agent?: Agent;
+  agent?: Agent | undefined;
 
   private _signal: AbortSignal | undefined | null;
 

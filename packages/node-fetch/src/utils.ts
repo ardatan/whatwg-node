@@ -18,7 +18,7 @@ export function uint8ArrayToArrayBuffer(uint8array: Uint8Array): ArrayBuffer {
 
 export function defaultHeadersSerializer(
   headers: Headers,
-  onContentLength?: (value: string) => void,
+  onContentLength?: ((value: string) => void) | undefined,
 ): string[] {
   const headerArray: string[] = [];
   headers.forEach((value, key) => {

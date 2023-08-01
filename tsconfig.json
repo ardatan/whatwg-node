@@ -23,6 +23,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": false,
+    "exactOptionalPropertyTypes": true,
     "paths": {
       "@whatwg-node/cookie-store": ["packages/cookie-store/src/index.ts"],
       "@whatwg-node/server": ["packages/server/src/index.ts"],
