@@ -1,4 +1,4 @@
-import { Cookie, CookieListItem } from './types';
+import type { Cookie, CookieListItem } from './types.js';
 
 export function getCookieString(item: CookieListItem | Cookie) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
