@@ -106,13 +106,30 @@ interface SendResponseToUWSOpts {
   response: Response;
 }
 
-export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWSOpts) {
+async function forwardResponseBodyToUWSResponse({ res, response }: SendResponseToUWSOpts) {
   let resAborted = false;
   res.onAborted(function () {
     resAborted = true;
   });
+
+  for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+    if (resAborted) {
+      return;
+    }
+    res.cork(() => {
+      res.write(chunk);
+    });
+  }
+  res.cork(() => {
+    res.end();
+  });
+}
+
+export function sendResponseToUwsOpts({ res, response }: SendResponseToUWSOpts) {
   const isStringOrBuffer =
-    (response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array';
+    (response as any).bodyType === 'Buffer' ||
+    (response as any).bodyType === 'String' ||
+    (response as any).bodyType === 'Uint8Array';
   res.cork(() => {
     res.writeStatus(`${response.status} ${response.statusText}`);
     for (const [key, value] of response.headers) {
@@ -141,15 +158,5 @@ export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWS
     res.end();
     return;
   }
-  for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
-    if (resAborted) {
-      return;
-    }
-    res.cork(() => {
-      res.write(chunk);
-    });
-  }
-  res.cork(() => {
-    res.end();
-  });
+  return forwardResponseBodyToUWSResponse({ res, response });
 }
