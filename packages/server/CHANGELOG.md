@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.7
+
+### Patch Changes
+
+- [#732](https://github.com/ardatan/whatwg-node/pull/732)
+  [`0794ee5`](https://github.com/ardatan/whatwg-node/commit/0794ee52568bf15a1e1313a0121d324d4c510f80)
+  Thanks [@ardatan](https://github.com/ardatan)! - If the environment is not able to send the
+  response, do not terminate the server and handle internal errors in a better way
+
 ## 0.9.6
 
 ### Patch Changes
