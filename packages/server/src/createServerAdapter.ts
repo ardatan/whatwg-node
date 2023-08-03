@@ -172,14 +172,18 @@ function createServerAdapter<
     addWaitUntil(defaultServerContext, waitUntilPromises);
     return handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx)
       .then(response => {
-        if (response) {
-          return sendNodeResponse(response, serverResponse, nodeRequest);
-        }
-        return new Promise<void>(resolve => {
+        try {
+          if (serverResponse.closed || serverResponse.destroyed) {
+            return;
+          }
+          if (response) {
+            return sendNodeResponse(response, serverResponse, nodeRequest);
+          }
           serverResponse.statusCode = 404;
-          serverResponse.once('end', resolve);
           serverResponse.end();
-        });
+        } catch (e: any) {
+          console.error(`Unexpected error: ${e.message || e}`);
+        }
       })
       .finally(() => {
         if (waitUntilPromises.length > 0) {
@@ -202,17 +206,27 @@ function createServerAdapter<
       res,
       fetchAPI,
     });
+    let resAborted = false;
+    res.onAborted(() => {
+      resAborted = true;
+    });
     return handleRequest(request, serverContext).then(response => {
-      if (!response) {
-        res.writeStatus('404 Not Found');
-        res.end();
+      if (resAborted) {
         return;
       }
-
-      return sendResponseToUwsOpts({
-        response,
-        res,
-      });
+      try {
+        if (!response) {
+          res.writeStatus('404 Not Found');
+          res.end();
+          return;
+        }
+        return sendResponseToUwsOpts({
+          response,
+          res,
+        });
+      } catch (e: any) {
+        console.error(`Unexpected error: ${e.message || e}`);
+      }
     });
   }
 

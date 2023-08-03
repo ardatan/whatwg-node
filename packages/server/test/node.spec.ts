@@ -9,6 +9,7 @@ import {
   Http2ServerResponse,
 } from 'http2';
 import { AddressInfo } from 'net';
+import { HttpResponse } from 'uWebSockets.js';
 import { fetch, ReadableStream, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { runTestsForEachServerImpl } from './test-server.js';
@@ -98,6 +99,21 @@ describe('Node Specific Cases', () => {
       expect(collectedValues).toHaveLength(3);
       await sleep(100);
       expect(cancelFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not kill the server if response is ended on low level', async () => {
+      const serverAdapter = createServerAdapter<{
+        res: HttpResponse | ServerResponse;
+      }>((_req, { res }) => {
+        res.end('This should reach the client.');
+        return new Response('This should never reach the client.', {
+          status: 200,
+        });
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      const resText = await response.text();
+      expect(resText).toBe('This should reach the client.');
     });
   });
 });
