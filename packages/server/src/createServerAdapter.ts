@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/ban-types */
-import { isPromise } from 'util/types';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import {
   OnRequestHook,
@@ -19,6 +18,7 @@ import {
   completeAssign,
   isFetchEvent,
   isNodeRequest,
+  isPromise,
   isRequestInit,
   isServerResponse,
   iterateAsyncVoid,
