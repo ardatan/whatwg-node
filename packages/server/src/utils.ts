@@ -304,6 +304,37 @@ export function completeAssign(...args: any[]) {
   return target;
 }
 
-export function isPromise(val: unknown): val is Promise<unknown> {
-  return val != null && typeof val === 'object' && typeof (val as any).then === 'function';
+export function isPromise<T>(val: T | Promise<T>): val is Promise<T> {
+  return (val as any)?.then != null;
+}
+
+export function iterateAsyncVoid<TInput>(
+  iterable: Iterable<TInput>,
+  callback: (input: TInput, stopEarly: () => void) => Promise<void> | void,
+): Promise<void> | void {
+  const iterator = iterable[Symbol.iterator]();
+  let stopEarlyFlag = false;
+  function stopEarlyFn() {
+    stopEarlyFlag = true;
+  }
+  function iterate(): Promise<void> | void {
+    const { done: endOfIterator, value } = iterator.next();
+    if (endOfIterator) {
+      return;
+    }
+    const result$ = callback(value, stopEarlyFn);
+    if (isPromise(result$)) {
+      return result$.then(() => {
+        if (stopEarlyFlag) {
+          return;
+        }
+        return iterate();
+      });
+    }
+    if (stopEarlyFlag) {
+      return;
+    }
+    return iterate();
+  }
+  return iterate();
 }
