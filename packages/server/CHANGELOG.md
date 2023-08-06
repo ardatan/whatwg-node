@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.8
+
+### Patch Changes
+
+- [#741](https://github.com/ardatan/whatwg-node/pull/741)
+  [`427b829`](https://github.com/ardatan/whatwg-node/commit/427b829356ddd9a0d009a37e066db658dad77ff2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid promise usages while handling hooks for
+  performance optimizations
+
 ## 0.9.7
 
 ### Patch Changes
