@@ -5,6 +5,7 @@ import { fetchCurl } from './fetchCurl.js';
 import { fetchNodeHttp } from './fetchNodeHttp.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
+import { fakePromise } from './utils.js';
 
 const BASE64_SUFFIX = ';base64';
 
@@ -35,7 +36,7 @@ function getResponseForDataUri(url: string) {
   });
 }
 
-export async function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
+export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
   init?: RequestPonyfillInit,
 ): Promise<PonyfillResponse<TResponseJSON>> {
@@ -46,12 +47,12 @@ export async function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   const fetchRequest = info;
   if (fetchRequest.url.startsWith('data:')) {
     const response = getResponseForDataUri(fetchRequest.url);
-    return Promise.resolve(response);
+    return fakePromise(response);
   }
 
   if (fetchRequest.url.startsWith('file:')) {
     const response = getResponseForFile(fetchRequest.url);
-    return Promise.resolve(response);
+    return fakePromise(response);
   }
   if (globalThis.libcurl) {
     return fetchCurl(fetchRequest);
