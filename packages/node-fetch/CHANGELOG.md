@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.4.12
+
+### Patch Changes
+
+- [#746](https://github.com/ardatan/whatwg-node/pull/746)
+  [`4c0b59e`](https://github.com/ardatan/whatwg-node/commit/4c0b59e2a59e4564ff7afd7334ca2ae4f51c020e)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fake promises instead of real ones for
+  performance optimizations
+
 ## 0.4.11
 
 ### Patch Changes
