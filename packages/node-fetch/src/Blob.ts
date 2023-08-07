@@ -61,9 +61,8 @@ export class PonyfillBlob implements Blob {
     return Buffer.concat(bufferChunks);
   }
 
-  async arrayBuffer() {
-    const buffer = await this.buffer();
-    return uint8ArrayToArrayBuffer(buffer);
+  arrayBuffer() {
+    return this.buffer().then(uint8ArrayToArrayBuffer);
   }
 
   async text() {
@@ -106,13 +105,14 @@ export class PonyfillBlob implements Blob {
           controller.close();
         }
       },
-      pull: async controller => {
+      pull: controller => {
         const blobPart = partQueue.pop();
         if (blobPart) {
           if (isBlob(blobPart)) {
-            const arrayBuffer = await blobPart.arrayBuffer();
-            const buf = Buffer.from(arrayBuffer, undefined, blobPart.size);
-            controller.enqueue(buf);
+            return blobPart.arrayBuffer().then(arrayBuffer => {
+              const buf = Buffer.from(arrayBuffer, undefined, blobPart.size);
+              controller.enqueue(buf);
+            });
           } else {
             const buf = getBlobPartAsBuffer(blobPart);
             controller.enqueue(buf);
