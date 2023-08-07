@@ -101,62 +101,62 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
   });
 }
 
-interface SendResponseToUWSOpts {
-  res: UWSResponse;
-  response: Response;
-}
-
-async function forwardResponseBodyToUWSResponse({ res, response }: SendResponseToUWSOpts) {
+async function forwardResponseBodyToUWSResponse(uwsResponse: UWSResponse, fetchResponse: Response) {
   let resAborted = false;
-  res.onAborted(function () {
+  uwsResponse.onAborted(function () {
     resAborted = true;
   });
 
-  for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+  for await (const chunk of fetchResponse.body as any as AsyncIterable<Uint8Array>) {
     if (resAborted) {
       return;
     }
-    res.cork(() => {
-      res.write(chunk);
+    uwsResponse.cork(() => {
+      uwsResponse.write(chunk);
     });
   }
-  res.cork(() => {
-    res.end();
+  uwsResponse.cork(() => {
+    uwsResponse.end();
   });
 }
 
-export function sendResponseToUwsOpts({ res, response }: SendResponseToUWSOpts) {
+export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: Response) {
+  if (!fetchResponse) {
+    uwsResponse.writeStatus('404 Not Found');
+    uwsResponse.end();
+    return;
+  }
   const isStringOrBuffer =
-    (response as any).bodyType === 'Buffer' ||
-    (response as any).bodyType === 'String' ||
-    (response as any).bodyType === 'Uint8Array';
-  res.cork(() => {
-    res.writeStatus(`${response.status} ${response.statusText}`);
-    for (const [key, value] of response.headers) {
+    (fetchResponse as any).bodyType === 'Buffer' ||
+    (fetchResponse as any).bodyType === 'String' ||
+    (fetchResponse as any).bodyType === 'Uint8Array';
+  uwsResponse.cork(() => {
+    uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
+    for (const [key, value] of fetchResponse.headers) {
       // content-length causes an error with Node.js's fetch
       if (key !== 'content-length') {
         if (key === 'set-cookie') {
-          const setCookies = response.headers.getSetCookie?.();
+          const setCookies = fetchResponse.headers.getSetCookie?.();
           if (setCookies) {
             for (const setCookie of setCookies) {
-              res.writeHeader(key, setCookie);
+              uwsResponse.writeHeader(key, setCookie);
             }
             continue;
           }
         }
-        res.writeHeader(key, value);
+        uwsResponse.writeHeader(key, value);
       }
     }
     if (isStringOrBuffer) {
-      res.end((response as any).bodyInit);
+      uwsResponse.end((fetchResponse as any).bodyInit);
     }
   });
   if (isStringOrBuffer) {
     return;
   }
-  if (!response.body) {
-    res.end();
+  if (!fetchResponse.body) {
+    uwsResponse.end();
     return;
   }
-  return forwardResponseBodyToUWSResponse({ res, response });
+  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse);
 }

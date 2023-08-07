@@ -206,24 +206,18 @@ function createServerAdapter<
     };
     addWaitUntil(defaultServerContext, waitUntilPromises);
     const response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
-    function handleFetchResponse(response: Response) {
-      try {
-        if (serverResponse.closed || serverResponse.destroyed) {
-          return;
-        }
-        if (response) {
-          return sendNodeResponse(response, serverResponse, nodeRequest);
-        }
-        serverResponse.statusCode = 404;
-        serverResponse.end();
-      } catch (e: any) {
-        console.error(`Unexpected error: ${e.message || e}`);
-      }
-    }
     if (isPromise(response$)) {
-      return response$.then(handleFetchResponse);
+      return response$
+        .then(response => sendNodeResponse(response, serverResponse, nodeRequest))
+        .catch(err => {
+          console.error(`Unexpected error while handling request: ${err.message || err}`);
+        });
     }
-    return handleFetchResponse(response$);
+    try {
+      return sendNodeResponse(response$, serverResponse, nodeRequest);
+    } catch (err: any) {
+      console.error(`Unexpected error while handling request: ${err.message || err}`);
+    }
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
@@ -245,28 +239,18 @@ function createServerAdapter<
       resAborted = true;
     });
     const response$ = handleRequest(request, serverContext);
-    function handleFetchResponse(response: Response) {
-      if (resAborted) {
-        return;
-      }
-      try {
-        if (!response) {
-          res.writeStatus('404 Not Found');
-          res.end();
-          return;
-        }
-        return sendResponseToUwsOpts({
-          response,
-          res,
-        });
-      } catch (e: any) {
-        console.error(`Unexpected error: ${e.message || e}`);
-      }
-    }
     if (isPromise(response$)) {
-      return response$.then(handleFetchResponse);
+      return response$
+        .then(response => sendResponseToUwsOpts(res, response))
+        .catch(err => {
+          console.error(`Unexpected error while handling request: ${err.message || err}`);
+        });
     }
-    return handleFetchResponse(response$);
+    try {
+      return sendResponseToUwsOpts(res, response$);
+    } catch (err: any) {
+      console.error(`Unexpected error while handling request: ${err.message || err}`);
+    }
   }
 
   function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]): void {

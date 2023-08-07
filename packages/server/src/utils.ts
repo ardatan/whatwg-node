@@ -204,6 +204,14 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
+  if (serverResponse.closed || serverResponse.destroyed) {
+    return;
+  }
+  if (!fetchResponse) {
+    serverResponse.statusCode = 404;
+    serverResponse.end();
+    return;
+  }
   serverResponse.statusCode = fetchResponse.status;
   serverResponse.statusMessage = fetchResponse.statusText;
 
