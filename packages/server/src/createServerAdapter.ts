@@ -120,62 +120,73 @@ function createServerAdapter<
     }
   }
 
-  function handleRequest(request: Request, serverContext: TServerContext) {
-    let url = new Proxy(EMPTY_OBJECT as URL, {
-      get(_target, prop, _receiver) {
-        url = new fetchAPI.URL(request.url, 'http://localhost');
-        return Reflect.get(url, prop, url);
-      },
-    }) as URL;
-    let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
-    let response: Response | undefined;
-    const onRequestHooksIteration$ = iterateAsyncVoid(onRequestHooks, (onRequestHook, stopEarly) =>
-      onRequestHook({
-        request,
-        serverContext,
-        fetchAPI,
-        url,
-        requestHandler,
-        setRequestHandler(newRequestHandler) {
-          requestHandler = newRequestHandler;
-        },
-        endResponse(newResponse) {
-          response = newResponse;
-          if (newResponse) {
-            stopEarly();
+  const handleRequest: ServerAdapterRequestHandler<TServerContext> =
+    onRequestHooks.length > 0 || onResponseHooks.length > 0
+      ? function handleRequest(request: Request, serverContext: TServerContext) {
+          let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
+          let response: Response | undefined;
+          if (onRequestHooks.length === 0) {
+            return handleEarlyResponse();
           }
-        },
-      }),
-    );
-    function handleResponse(response: Response) {
-      const onResponseHookPayload: OnResponseEventPayload<TServerContext> = {
-        request,
-        response,
-        serverContext,
-      };
-      const onResponseHooksIteration$ = iterateAsyncVoid(onResponseHooks, onResponseHook =>
-        onResponseHook(onResponseHookPayload),
-      );
-      if (isPromise(onResponseHooksIteration$)) {
-        return onResponseHooksIteration$.then(() => response);
-      }
-      return response;
-    }
-    function handleEarlyResponse() {
-      if (!response) {
-        const response$ = requestHandler(request, serverContext);
-        if (isPromise(response$)) {
-          return response$.then(handleResponse);
+          let url = new Proxy(EMPTY_OBJECT as URL, {
+            get(_target, prop, _receiver) {
+              url = new fetchAPI.URL(request.url, 'http://localhost');
+              return Reflect.get(url, prop, url);
+            },
+          }) as URL;
+          const onRequestHooksIteration$ = iterateAsyncVoid(
+            onRequestHooks,
+            (onRequestHook, stopEarly) =>
+              onRequestHook({
+                request,
+                serverContext,
+                fetchAPI,
+                url,
+                requestHandler,
+                setRequestHandler(newRequestHandler) {
+                  requestHandler = newRequestHandler;
+                },
+                endResponse(newResponse) {
+                  response = newResponse;
+                  if (newResponse) {
+                    stopEarly();
+                  }
+                },
+              }),
+          );
+          function handleResponse(response: Response) {
+            if (onRequestHooks.length === 0) {
+              return response;
+            }
+            const onResponseHookPayload: OnResponseEventPayload<TServerContext> = {
+              request,
+              response,
+              serverContext,
+            };
+            const onResponseHooksIteration$ = iterateAsyncVoid(onResponseHooks, onResponseHook =>
+              onResponseHook(onResponseHookPayload),
+            );
+            if (isPromise(onResponseHooksIteration$)) {
+              return onResponseHooksIteration$.then(() => response);
+            }
+            return response;
+          }
+          function handleEarlyResponse() {
+            if (!response) {
+              const response$ = requestHandler(request, serverContext);
+              if (isPromise(response$)) {
+                return response$.then(handleResponse);
+              }
+              return handleResponse(response$);
+            }
+            return handleResponse(response);
+          }
+          if (isPromise(onRequestHooksIteration$)) {
+            return onRequestHooksIteration$.then(handleEarlyResponse);
+          }
+          return handleEarlyResponse();
         }
-        return handleResponse(response$);
-      }
-      return handleResponse(response);
-    }
-    if (isPromise(onRequestHooksIteration$)) {
-      return onRequestHooksIteration$.then(handleEarlyResponse);
-    }
-    return handleEarlyResponse();
-  }
+      : givenHandleRequest;
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
