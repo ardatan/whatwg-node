@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.9
+
+### Patch Changes
+
+- [`11fb356`](https://github.com/ardatan/whatwg-node/commit/11fb3568885a60d2f63a8e599fa599a7fd1a4622)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid wrapping handleRequest if there is no hook
+
 ## 0.9.8
 
 ### Patch Changes
