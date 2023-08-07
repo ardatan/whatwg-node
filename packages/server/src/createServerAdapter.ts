@@ -241,7 +241,11 @@ function createServerAdapter<
     const response$ = handleRequest(request, serverContext);
     if (isPromise(response$)) {
       return response$
-        .then(response => sendResponseToUwsOpts(res, response))
+        .then(response => {
+          if (!resAborted) {
+            return sendResponseToUwsOpts(res, response);
+          }
+        })
         .catch(err => {
           console.error(`Unexpected error while handling request: ${err.message || err}`);
         });
