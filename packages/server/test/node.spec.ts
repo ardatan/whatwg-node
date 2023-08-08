@@ -115,6 +115,37 @@ describe('Node Specific Cases', () => {
       const resText = await response.text();
       expect(resText).toBe('This should reach the client.');
     });
+
+    it('should handle sync errors', async () => {
+      const serverAdapter = createServerAdapter(() => {
+        throw new Error('This is an error.');
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain('This is an error.');
+    });
+
+    it('should handle async errors', async () => {
+      const serverAdapter = createServerAdapter(async () => {
+        throw new Error('This is an error.');
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain('This is an error.');
+    });
+
+    it('should respect the status code', async () => {
+      const serverAdapter = createServerAdapter(() => {
+        const error = new Error('This is an error.');
+        (error as any).status = 418;
+        throw error;
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      expect(response.status).toBe(418);
+    });
   });
 });
 

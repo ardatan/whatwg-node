@@ -16,6 +16,7 @@ import {
 } from './types.js';
 import {
   completeAssign,
+  handleErrorFromRequestHandler,
   isFetchEvent,
   isNodeRequest,
   isPromise,
@@ -205,9 +206,15 @@ function createServerAdapter<
       res: serverResponse,
     };
     addWaitUntil(defaultServerContext, waitUntilPromises);
-    const response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
+    let response$: Response | Promise<Response> | undefined;
+    try {
+      response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
+    } catch (err: any) {
+      response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
+    }
     if (isPromise(response$)) {
       return response$
+        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => sendNodeResponse(response, serverResponse, nodeRequest))
         .catch(err => {
           console.error(`Unexpected error while handling request: ${err.message || err}`);
@@ -238,9 +245,15 @@ function createServerAdapter<
     res.onAborted(() => {
       resAborted = true;
     });
-    const response$ = handleRequest(request, serverContext);
+    let response$: Response | Promise<Response> | undefined;
+    try {
+      response$ = handleRequest(request, serverContext);
+    } catch (err: any) {
+      response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
+    }
     if (isPromise(response$)) {
       return response$
+        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => {
           if (!resAborted) {
             return sendResponseToUwsOpts(res, response);

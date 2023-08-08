@@ -346,3 +346,9 @@ export function iterateAsyncVoid<TInput>(
   }
   return iterate();
 }
+
+export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof Response) {
+  return new ResponseCtor(error.stack || error.message || error.toString(), {
+    status: error.status || 500,
+  });
+}
