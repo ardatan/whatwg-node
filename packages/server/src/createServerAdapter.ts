@@ -253,6 +253,7 @@ function createServerAdapter<
     }
     if (isPromise(response$)) {
       return response$
+        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => {
           if (!resAborted) {
             return sendResponseToUwsOpts(res, response);

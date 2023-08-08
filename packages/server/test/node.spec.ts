@@ -127,7 +127,7 @@ describe('Node Specific Cases', () => {
     });
 
     it('should handle async errors', async () => {
-      const serverAdapter = createServerAdapter(() => {
+      const serverAdapter = createServerAdapter(async () => {
         throw new Error('This is an error.');
       });
       testServer.addOnceHandler(serverAdapter);
