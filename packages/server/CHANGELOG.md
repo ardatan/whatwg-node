@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.10
+
+### Patch Changes
+
+- [#753](https://github.com/ardatan/whatwg-node/pull/753)
+  [`10db17b`](https://github.com/ardatan/whatwg-node/commit/10db17bb041edbd5b5fe80120956d97f073e1bf2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle errors thrown in the request handlers as
+  Internal Server Error
+
 ## 0.9.9
 
 ### Patch Changes
