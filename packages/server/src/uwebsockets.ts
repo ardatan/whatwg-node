@@ -1,5 +1,6 @@
 import type { Readable } from 'node:stream';
 import type { FetchAPI } from './types.js';
+import { ServerAdapterRequestAbortSignal } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -30,39 +31,6 @@ interface GetRequestFromUWSOpts {
   req: UWSRequest;
   res: UWSResponse;
   fetchAPI: FetchAPI;
-}
-
-class UWSAbortSignal extends EventTarget implements AbortSignal {
-  aborted = false;
-  _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason: any;
-
-  throwIfAborted(): void {
-    if (this.aborted) {
-      throw new DOMException('Aborted', 'AbortError');
-    }
-  }
-
-  constructor(res: UWSResponse) {
-    super();
-    res.onAborted(() => {
-      this.aborted = true;
-      this.dispatchEvent(new Event('request aborted'));
-    });
-  }
-
-  get onabort() {
-    return this._onabort;
-  }
-
-  set onabort(value) {
-    this._onabort = value;
-    if (value) {
-      this.addEventListener('request aborted', value);
-    } else {
-      this.removeEventListener('request aborted', value);
-    }
-  }
 }
 
 export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromUWSOpts) {
@@ -97,7 +65,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
     method,
     headers,
     body: body as any,
-    signal: new UWSAbortSignal(res),
+    signal: new ServerAdapterRequestAbortSignal(),
   });
 }
 

@@ -23,6 +23,7 @@ export interface NodeRequest {
   raw?: IncomingMessage | Http2ServerRequest;
   socket?: Socket;
   query?: any;
+  once?(event: string, listener: (...args: any[]) => void): void;
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
@@ -80,6 +81,36 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
+export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
+  aborted = false;
+  _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
+  reason: any;
+
+  throwIfAborted(): void {
+    if (this.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
+  }
+
+  sendAbort() {
+    this.aborted = true;
+    this.dispatchEvent(new Event('abort'));
+  }
+
+  get onabort() {
+    return this._onabort;
+  }
+
+  set onabort(value) {
+    this._onabort = value;
+    if (value) {
+      this.addEventListener('abort', value);
+    } else {
+      this.removeEventListener('abort', value);
+    }
+  }
+}
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   RequestCtor: typeof Request,
@@ -94,10 +125,18 @@ export function normalizeNodeRequest(
     fullUrl = url.toString();
   }
 
+  const signal = new ServerAdapterRequestAbortSignal();
+
+  if (rawRequest.once) {
+    rawRequest.once('end', () => signal.sendAbort());
+    rawRequest.once('close', () => signal.sendAbort());
+  }
+
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
       headers: nodeRequest.headers,
+      signal,
     });
   }
 
@@ -114,11 +153,13 @@ export function normalizeNodeRequest(
         method: nodeRequest.method,
         headers: nodeRequest.headers,
         body: maybeParsedBody,
+        signal,
       });
     }
     const request = new RequestCtor(fullUrl, {
       method: nodeRequest.method,
       headers: nodeRequest.headers,
+      signal,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
       request.headers.set('content-type', 'application/json; charset=utf-8');
@@ -142,6 +183,7 @@ export function normalizeNodeRequest(
     method: nodeRequest.method,
     headers: nodeRequest.headers,
     body: rawRequest as any,
+    signal,
   });
 }
 

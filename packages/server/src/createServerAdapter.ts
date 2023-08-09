@@ -27,6 +27,7 @@ import {
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
+  ServerAdapterRequestAbortSignal,
 } from './utils.js';
 import {
   getRequestFromUWSRequest,
@@ -244,6 +245,7 @@ function createServerAdapter<
     let resAborted = false;
     res.onAborted(() => {
       resAborted = true;
+      (request.signal as ServerAdapterRequestAbortSignal).sendAbort();
     });
     let response$: Response | Promise<Response> | undefined;
     try {

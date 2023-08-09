@@ -146,6 +146,27 @@ describe('Node Specific Cases', () => {
       const response = await fetch(testServer.url);
       expect(response.status).toBe(418);
     });
+
+    it('handles AbortSignal correctly', async () => {
+      const abortListener = jest.fn();
+      const serverAdapter = createServerAdapter(
+        req =>
+          new Promise(resolve => {
+            req.signal.onabort = () => {
+              abortListener();
+              resolve(new Response('Hello World', { status: 200 }));
+            };
+          }),
+      );
+      testServer.addOnceHandler(serverAdapter);
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 1000);
+      await expect(() => fetch(testServer.url, { signal: controller.signal })).rejects.toEqual(
+        new Error('The operation was aborted'),
+      );
+      await new Promise(resolve => setTimeout(resolve, 300));
+      expect(abortListener).toHaveBeenCalledTimes(1);
+    });
   });
 });
 
