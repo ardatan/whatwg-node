@@ -1,5 +1,6 @@
 import type { Readable } from 'node:stream';
 import type { FetchAPI } from './types.js';
+import { ServerAdapterRequestAbortSignal } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -30,39 +31,6 @@ interface GetRequestFromUWSOpts {
   req: UWSRequest;
   res: UWSResponse;
   fetchAPI: FetchAPI;
-}
-
-class UWSAbortSignal extends EventTarget implements AbortSignal {
-  aborted = false;
-  _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason: any;
-
-  throwIfAborted(): void {
-    if (this.aborted) {
-      throw new DOMException('Aborted', 'AbortError');
-    }
-  }
-
-  constructor(res: UWSResponse) {
-    super();
-    res.onAborted(() => {
-      this.aborted = true;
-      this.dispatchEvent(new Event('request aborted'));
-    });
-  }
-
-  get onabort() {
-    return this._onabort;
-  }
-
-  set onabort(value) {
-    this._onabort = value;
-    if (value) {
-      this.addEventListener('request aborted', value);
-    } else {
-      this.removeEventListener('request aborted', value);
-    }
-  }
 }
 
 export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromUWSOpts) {
@@ -97,59 +65,66 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
     method,
     headers,
     body: body as any,
-    signal: new UWSAbortSignal(res),
+    signal: new ServerAdapterRequestAbortSignal(),
   });
 }
 
-interface SendResponseToUWSOpts {
-  res: UWSResponse;
-  response: Response;
-}
-
-export async function sendResponseToUwsOpts({ res, response }: SendResponseToUWSOpts) {
+async function forwardResponseBodyToUWSResponse(uwsResponse: UWSResponse, fetchResponse: Response) {
   let resAborted = false;
-  res.onAborted(function () {
+  uwsResponse.onAborted(function () {
     resAborted = true;
   });
+
+  for await (const chunk of fetchResponse.body as any as AsyncIterable<Uint8Array>) {
+    if (resAborted) {
+      return;
+    }
+    uwsResponse.cork(() => {
+      uwsResponse.write(chunk);
+    });
+  }
+  uwsResponse.cork(() => {
+    uwsResponse.end();
+  });
+}
+
+export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: Response) {
+  if (!fetchResponse) {
+    uwsResponse.writeStatus('404 Not Found');
+    uwsResponse.end();
+    return;
+  }
   const isStringOrBuffer =
-    (response as any).bodyType === 'String' || (response as any).bodyType === 'Uint8Array';
-  res.cork(() => {
-    res.writeStatus(`${response.status} ${response.statusText}`);
-    for (const [key, value] of response.headers) {
+    (fetchResponse as any).bodyType === 'Buffer' ||
+    (fetchResponse as any).bodyType === 'String' ||
+    (fetchResponse as any).bodyType === 'Uint8Array';
+  uwsResponse.cork(() => {
+    uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
+    for (const [key, value] of fetchResponse.headers) {
       // content-length causes an error with Node.js's fetch
       if (key !== 'content-length') {
         if (key === 'set-cookie') {
-          const setCookies = response.headers.getSetCookie?.();
+          const setCookies = fetchResponse.headers.getSetCookie?.();
           if (setCookies) {
             for (const setCookie of setCookies) {
-              res.writeHeader(key, setCookie);
+              uwsResponse.writeHeader(key, setCookie);
             }
             continue;
           }
         }
-        res.writeHeader(key, value);
+        uwsResponse.writeHeader(key, value);
       }
     }
     if (isStringOrBuffer) {
-      res.end((response as any).bodyInit);
+      uwsResponse.end((fetchResponse as any).bodyInit);
     }
   });
   if (isStringOrBuffer) {
     return;
   }
-  if (!response.body) {
-    res.end();
+  if (!fetchResponse.body) {
+    uwsResponse.end();
     return;
   }
-  for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
-    if (resAborted) {
-      return;
-    }
-    res.cork(() => {
-      res.write(chunk);
-    });
-  }
-  res.cork(() => {
-    res.end();
-  });
+  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse);
 }

@@ -1,5 +1,13 @@
 # @whatwg-node/cookie-store
 
+## 0.2.2
+
+### Patch Changes
+
+- [#727](https://github.com/ardatan/whatwg-node/pull/727)
+  [`265aab1`](https://github.com/ardatan/whatwg-node/commit/265aab1ac3a1726d8e655060e6cbd22b8ff7d76d)
+  Thanks [@GauBen](https://github.com/GauBen)! - Added missing .js extension to import (#726)
+
 ## 0.2.1
 
 ### Patch Changes

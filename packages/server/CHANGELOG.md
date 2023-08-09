@@ -1,5 +1,54 @@
 # @whatwg-node/server
 
+## 0.9.11
+
+### Patch Changes
+
+- [`4b67036`](https://github.com/ardatan/whatwg-node/commit/4b67036b1e84e43e103e7fe9b69d240a72be6e6d)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle AbortSignal
+
+## 0.9.10
+
+### Patch Changes
+
+- [#753](https://github.com/ardatan/whatwg-node/pull/753)
+  [`10db17b`](https://github.com/ardatan/whatwg-node/commit/10db17bb041edbd5b5fe80120956d97f073e1bf2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle errors thrown in the request handlers as
+  Internal Server Error
+
+## 0.9.9
+
+### Patch Changes
+
+- [`11fb356`](https://github.com/ardatan/whatwg-node/commit/11fb3568885a60d2f63a8e599fa599a7fd1a4622)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid wrapping handleRequest if there is no hook
+
+## 0.9.8
+
+### Patch Changes
+
+- [#741](https://github.com/ardatan/whatwg-node/pull/741)
+  [`427b829`](https://github.com/ardatan/whatwg-node/commit/427b829356ddd9a0d009a37e066db658dad77ff2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid promise usages while handling hooks for
+  performance optimizations
+
+## 0.9.7
+
+### Patch Changes
+
+- [#732](https://github.com/ardatan/whatwg-node/pull/732)
+  [`0794ee5`](https://github.com/ardatan/whatwg-node/commit/0794ee52568bf15a1e1313a0121d324d4c510f80)
+  Thanks [@ardatan](https://github.com/ardatan)! - If the environment is not able to send the
+  response, do not terminate the server and handle internal errors in a better way
+
+## 0.9.6
+
+### Patch Changes
+
+- [`5136050`](https://github.com/ardatan/whatwg-node/commit/5136050a48800e7cb2f41ba7df79945ff6f24ff6)
+  Thanks [@ardatan](https://github.com/ardatan)! - For uWebSockets, call res.onAborted only if
+  response is a stream
+
 ## 0.9.5
 
 ### Patch Changes

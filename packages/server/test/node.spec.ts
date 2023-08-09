@@ -9,6 +9,7 @@ import {
   Http2ServerResponse,
 } from 'http2';
 import { AddressInfo } from 'net';
+import { HttpResponse } from 'uWebSockets.js';
 import { fetch, ReadableStream, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { runTestsForEachServerImpl } from './test-server.js';
@@ -98,6 +99,73 @@ describe('Node Specific Cases', () => {
       expect(collectedValues).toHaveLength(3);
       await sleep(100);
       expect(cancelFn).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not kill the server if response is ended on low level', async () => {
+      const serverAdapter = createServerAdapter<{
+        res: HttpResponse | ServerResponse;
+      }>((_req, { res }) => {
+        res.end('This should reach the client.');
+        return new Response('This should never reach the client.', {
+          status: 200,
+        });
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      const resText = await response.text();
+      expect(resText).toBe('This should reach the client.');
+    });
+
+    it('should handle sync errors', async () => {
+      const serverAdapter = createServerAdapter(() => {
+        throw new Error('This is an error.');
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain('This is an error.');
+    });
+
+    it('should handle async errors', async () => {
+      const serverAdapter = createServerAdapter(async () => {
+        throw new Error('This is an error.');
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      expect(response.status).toBe(500);
+      expect(await response.text()).toContain('This is an error.');
+    });
+
+    it('should respect the status code', async () => {
+      const serverAdapter = createServerAdapter(() => {
+        const error = new Error('This is an error.');
+        (error as any).status = 418;
+        throw error;
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(testServer.url);
+      expect(response.status).toBe(418);
+    });
+
+    it('handles AbortSignal correctly', async () => {
+      const abortListener = jest.fn();
+      const serverAdapter = createServerAdapter(
+        req =>
+          new Promise(resolve => {
+            req.signal.onabort = () => {
+              abortListener();
+              resolve(new Response('Hello World', { status: 200 }));
+            };
+          }),
+      );
+      testServer.addOnceHandler(serverAdapter);
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 1000);
+      await expect(() => fetch(testServer.url, { signal: controller.signal })).rejects.toEqual(
+        new Error('The operation was aborted'),
+      );
+      await new Promise(resolve => setTimeout(resolve, 300));
+      expect(abortListener).toHaveBeenCalledTimes(1);
     });
   });
 });

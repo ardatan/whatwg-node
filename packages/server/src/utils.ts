@@ -23,6 +23,7 @@ export interface NodeRequest {
   raw?: IncomingMessage | Http2ServerRequest | undefined;
   socket?: Socket | undefined;
   query?: any;
+  once?(event: string, listener: (...args: any[]) => void): void;
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
@@ -89,6 +90,36 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
+export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
+  aborted = false;
+  _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
+  reason: any;
+
+  throwIfAborted(): void {
+    if (this.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
+  }
+
+  sendAbort() {
+    this.aborted = true;
+    this.dispatchEvent(new Event('abort'));
+  }
+
+  get onabort() {
+    return this._onabort;
+  }
+
+  set onabort(value) {
+    this._onabort = value;
+    if (value) {
+      this.addEventListener('abort', value);
+    } else {
+      this.removeEventListener('abort', value);
+    }
+  }
+}
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   RequestCtor: typeof Request,
@@ -107,10 +138,18 @@ export function normalizeNodeRequest(
     fullUrl = url.toString();
   }
 
+  const signal = new ServerAdapterRequestAbortSignal();
+
+  if (rawRequest.once) {
+    rawRequest.once('end', () => signal.sendAbort());
+    rawRequest.once('close', () => signal.sendAbort());
+  }
+
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
       headers: nodeRequest.headers,
+      signal,
     });
   }
 
@@ -128,7 +167,8 @@ export function normalizeNodeRequest(
         method: nodeRequest.method || 'GET',
         headers: nodeRequest.headers,
         body: maybeParsedBody,
-      };
+        signal,
+      });
 
       return new RequestCtor(fullUrl, init1);
     }
@@ -136,12 +176,15 @@ export function normalizeNodeRequest(
     const init2: RequestInit = {
       method: nodeRequest.method || 'GET',
       headers: nodeRequest.headers,
-    };
+      signal,
+    });
 
     const request = new RequestCtor(fullUrl, init2);
+
     if (!request.headers.get('content-type')?.includes('json')) {
       request.headers.set('content-type', 'application/json; charset=utf-8');
     }
+
     return new Proxy(request, {
       get: (target, prop: keyof Request, receiver) => {
         switch (prop) {
@@ -160,7 +203,8 @@ export function normalizeNodeRequest(
     method: nodeRequest.method || 'GET',
     headers: nodeRequest.headers,
     body: rawRequest as any,
-  };
+    signal,
+  });
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new RequestCtor(fullUrl, init3);
@@ -225,6 +269,14 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest | Http2ServerRequest,
 ) {
+  if (serverResponse.closed || serverResponse.destroyed) {
+    return;
+  }
+  if (!fetchResponse) {
+    serverResponse.statusCode = 404;
+    serverResponse.end();
+    return;
+  }
   serverResponse.statusCode = fetchResponse.status;
   serverResponse.statusMessage = fetchResponse.statusText;
 
@@ -325,6 +377,43 @@ export function completeAssign(...args: any[]) {
   return target;
 }
 
-export function isPromise(val: unknown): val is Promise<unknown> {
-  return val != null && typeof val === 'object' && typeof (val as any).then === 'function';
+export function isPromise<T>(val: T | Promise<T>): val is Promise<T> {
+  return (val as any)?.then != null;
+}
+
+export function iterateAsyncVoid<TInput>(
+  iterable: Iterable<TInput>,
+  callback: (input: TInput, stopEarly: () => void) => Promise<void> | void,
+): Promise<void> | void {
+  const iterator = iterable[Symbol.iterator]();
+  let stopEarlyFlag = false;
+  function stopEarlyFn() {
+    stopEarlyFlag = true;
+  }
+  function iterate(): Promise<void> | void {
+    const { done: endOfIterator, value } = iterator.next();
+    if (endOfIterator) {
+      return;
+    }
+    const result$ = callback(value, stopEarlyFn);
+    if (isPromise(result$)) {
+      return result$.then(() => {
+        if (stopEarlyFlag) {
+          return;
+        }
+        return iterate();
+      });
+    }
+    if (stopEarlyFlag) {
+      return;
+    }
+    return iterate();
+  }
+  return iterate();
+}
+
+export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof Response) {
+  return new ResponseCtor(error.stack || error.message || error.toString(), {
+    status: error.status || 500,
+  });
 }

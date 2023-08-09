@@ -1,4 +1,5 @@
 import { Readable } from 'node:stream';
+import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer } from './utils.js';
@@ -9,12 +10,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   const { Curl, CurlCode, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
-
-  if (fetchRequest['_signal']) {
-    fetchRequest['_signal'].onabort = () => {
-      curlHandle.pause(CurlPause.Recv);
-    };
-  }
 
   curlHandle.enable(CurlFeature.NoDataParsing);
 
@@ -77,6 +72,17 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.enable(CurlFeature.NoHeaderParsing);
 
   return new Promise(function promiseResolver(resolve, reject) {
+    let streamResolved = false;
+    if (fetchRequest['_signal']) {
+      fetchRequest['_signal'].onabort = () => {
+        if (streamResolved) {
+          curlHandle.pause(CurlPause.Recv);
+        } else {
+          reject(new PonyfillAbortError());
+          curlHandle.close();
+        }
+      };
+    }
     curlHandle.once('end', function endListener() {
       curlHandle.close();
     });
@@ -115,6 +121,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
           url: fetchRequest.url,
         }),
       );
+      streamResolved = true;
     });
     curlHandle.perform();
   });

@@ -1,16 +1,7 @@
 import { createServer } from 'http';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 
-const serverAdapter = createServerAdapter(async req => {
-  let name = 'World';
-  if (req.method === 'POST') {
-    const { name: bodyName } = await req.json();
-    if (bodyName) {
-      name = bodyName;
-    }
-  }
-  return Response.json({ message: `Hello, ${name}!` });
-});
+const serverAdapter = createServerAdapter(() => Response.json({ message: `Hello, World!` }));
 
 // @ts-ignore Type 'ServerAdapter<{}, ServerAdapterBaseObject<{}, (req: Request) => Promise<Response>>>' is not assignable to type 'RequestListener<typeof IncomingMessage, typeof ServerResponse>'.
 // Types of parameters 'req' and 'req' are incompatible.

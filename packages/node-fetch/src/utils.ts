@@ -29,3 +29,38 @@ export function defaultHeadersSerializer(
   });
   return headerArray;
 }
+
+function isPromise<T>(val: T | Promise<T>): val is Promise<T> {
+  return (val as any)?.then != null;
+}
+
+export function fakePromise<T>(value: T): Promise<T> {
+  if (isPromise(value)) {
+    return value;
+  }
+  // Write a fake promise to avoid the promise constructor
+  // being called with `new Promise` in the browser.
+  return {
+    then: (resolve: (value: T) => any) => {
+      const callbackResult = resolve(value);
+      if (isPromise(callbackResult)) {
+        return callbackResult;
+      }
+      return fakePromise(callbackResult);
+    },
+    catch() {
+      return this;
+    },
+    finally(cb) {
+      if (cb) {
+        const callbackResult = cb();
+        if (isPromise(callbackResult)) {
+          return callbackResult.then(() => value);
+        }
+        return fakePromise(value);
+      }
+      return this;
+    },
+    [Symbol.toStringTag]: 'Promise',
+  };
+}

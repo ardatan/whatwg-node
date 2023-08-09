@@ -24,7 +24,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
    */
-  handleRequest: (request: Request, ctx: TServerContext) => Promise<Response>;
+  handleRequest: (request: Request, ctx: TServerContext) => Promise<Response> | Response;
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */

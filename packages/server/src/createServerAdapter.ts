@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
+import {
+  OnRequestHook,
+  OnResponseEventPayload,
+  OnResponseHook,
+  ServerAdapterPlugin,
+} from './plugins/types.js';
 import {
   FetchAPI,
   FetchEvent,
@@ -11,14 +16,18 @@ import {
 } from './types.js';
 import {
   completeAssign,
+  handleErrorFromRequestHandler,
   isFetchEvent,
   isNodeRequest,
+  isPromise,
   isRequestInit,
   isServerResponse,
+  iterateAsyncVoid,
   NodeRequest,
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
+  ServerAdapterRequestAbortSignal,
 } from './utils.js';
 import {
   getRequestFromUWSRequest,
@@ -113,45 +122,73 @@ function createServerAdapter<
     }
   }
 
-  async function handleRequest(request: Request, serverContext: TServerContext) {
-    let url = new Proxy(EMPTY_OBJECT as URL, {
-      get(_target, prop, _receiver) {
-        url = new fetchAPI.URL(request.url, 'http://localhost');
-        return Reflect.get(url, prop, url);
-      },
-    }) as URL;
-    let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
-    let response: Response | undefined;
-    for (const onRequestHook of onRequestHooks) {
-      await onRequestHook({
-        request,
-        serverContext,
-        fetchAPI,
-        url,
-        requestHandler,
-        setRequestHandler(newRequestHandler) {
-          requestHandler = newRequestHandler;
-        },
-        endResponse(newResponse) {
-          response = newResponse;
-        },
-      });
-      if (response) {
-        break;
-      }
-    }
-    if (!response) {
-      response = await requestHandler(request, serverContext);
-    }
-    for (const onResponseHook of onResponseHooks) {
-      await onResponseHook({
-        request,
-        response,
-        serverContext,
-      });
-    }
-    return response;
-  }
+  const handleRequest: ServerAdapterRequestHandler<TServerContext> =
+    onRequestHooks.length > 0 || onResponseHooks.length > 0
+      ? function handleRequest(request: Request, serverContext: TServerContext) {
+          let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
+          let response: Response | undefined;
+          if (onRequestHooks.length === 0) {
+            return handleEarlyResponse();
+          }
+          let url = new Proxy(EMPTY_OBJECT as URL, {
+            get(_target, prop, _receiver) {
+              url = new fetchAPI.URL(request.url, 'http://localhost');
+              return Reflect.get(url, prop, url);
+            },
+          }) as URL;
+          const onRequestHooksIteration$ = iterateAsyncVoid(
+            onRequestHooks,
+            (onRequestHook, stopEarly) =>
+              onRequestHook({
+                request,
+                serverContext,
+                fetchAPI,
+                url,
+                requestHandler,
+                setRequestHandler(newRequestHandler) {
+                  requestHandler = newRequestHandler;
+                },
+                endResponse(newResponse) {
+                  response = newResponse;
+                  if (newResponse) {
+                    stopEarly();
+                  }
+                },
+              }),
+          );
+          function handleResponse(response: Response) {
+            if (onRequestHooks.length === 0) {
+              return response;
+            }
+            const onResponseHookPayload: OnResponseEventPayload<TServerContext> = {
+              request,
+              response,
+              serverContext,
+            };
+            const onResponseHooksIteration$ = iterateAsyncVoid(onResponseHooks, onResponseHook =>
+              onResponseHook(onResponseHookPayload),
+            );
+            if (isPromise(onResponseHooksIteration$)) {
+              return onResponseHooksIteration$.then(() => response);
+            }
+            return response;
+          }
+          function handleEarlyResponse() {
+            if (!response) {
+              const response$ = requestHandler(request, serverContext);
+              if (isPromise(response$)) {
+                return response$.then(handleResponse);
+              }
+              return handleResponse(response$);
+            }
+            return handleResponse(response);
+          }
+          if (isPromise(onRequestHooksIteration$)) {
+            return onRequestHooksIteration$.then(handleEarlyResponse);
+          }
+          return handleEarlyResponse();
+        }
+      : givenHandleRequest;
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
@@ -170,22 +207,25 @@ function createServerAdapter<
       res: serverResponse,
     };
     addWaitUntil(defaultServerContext, waitUntilPromises);
-    return handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx)
-      .then(response => {
-        if (response) {
-          return sendNodeResponse(response, serverResponse, nodeRequest);
-        }
-        return new Promise<void>(resolve => {
-          serverResponse.statusCode = 404;
-          serverResponse.once('end', resolve);
-          serverResponse.end();
+    let response$: Response | Promise<Response> | undefined;
+    try {
+      response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
+    } catch (err: any) {
+      response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
+    }
+    if (isPromise(response$)) {
+      return response$
+        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
+        .then(response => sendNodeResponse(response, serverResponse, nodeRequest))
+        .catch(err => {
+          console.error(`Unexpected error while handling request: ${err.message || err}`);
         });
-      })
-      .finally(() => {
-        if (waitUntilPromises.length > 0) {
-          return handleWaitUntils(waitUntilPromises);
-        }
-      });
+    }
+    try {
+      return sendNodeResponse(response$, serverResponse, nodeRequest);
+    } catch (err: any) {
+      console.error(`Unexpected error while handling request: ${err.message || err}`);
+    }
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
@@ -202,18 +242,34 @@ function createServerAdapter<
       res,
       fetchAPI,
     });
-    return handleRequest(request, serverContext).then(response => {
-      if (!response) {
-        res.writeStatus('404 Not Found');
-        res.end();
-        return;
-      }
-
-      return sendResponseToUwsOpts({
-        response,
-        res,
-      });
+    let resAborted = false;
+    res.onAborted(() => {
+      resAborted = true;
+      (request.signal as ServerAdapterRequestAbortSignal).sendAbort();
     });
+    let response$: Response | Promise<Response> | undefined;
+    try {
+      response$ = handleRequest(request, serverContext);
+    } catch (err: any) {
+      response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
+    }
+    if (isPromise(response$)) {
+      return response$
+        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
+        .then(response => {
+          if (!resAborted) {
+            return sendResponseToUwsOpts(res, response);
+          }
+        })
+        .catch(err => {
+          console.error(`Unexpected error while handling request: ${err.message || err}`);
+        });
+    }
+    try {
+      return sendResponseToUwsOpts(res, response$);
+    } catch (err: any) {
+      console.error(`Unexpected error while handling request: ${err.message || err}`);
+    }
   }
 
   function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]): void {
