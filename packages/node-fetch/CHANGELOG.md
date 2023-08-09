@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.4.13
+
+### Patch Changes
+
+- [`4b67036`](https://github.com/ardatan/whatwg-node/commit/4b67036b1e84e43e103e7fe9b69d240a72be6e6d)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle AbortSignal
+
 ## 0.4.12
 
 ### Patch Changes
