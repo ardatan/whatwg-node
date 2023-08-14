@@ -21,7 +21,7 @@
   "devDependencies": {
     "@pulumi/pulumi": "3.78.1",
     "@types/react": "18.2.20",
-    "esbuild": "0.19.1",
+    "esbuild": "0.19.2",
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.13",
     "ts-node": "10.9.1",
