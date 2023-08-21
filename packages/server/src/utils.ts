@@ -269,13 +269,10 @@ export function sendNodeResponse(
   });
 
   // Optimizations for node-fetch
-  if (
-    (fetchResponse as any).bodyType === 'Buffer' ||
-    (fetchResponse as any).bodyType === 'String' ||
-    (fetchResponse as any).bodyType === 'Uint8Array'
-  ) {
+  const bufOfRes = (fetchResponse as any)._buffer;
+  if (bufOfRes) {
     // @ts-expect-error http and http2 writes are actually compatible
-    serverResponse.write(fetchResponse.bodyInit);
+    serverResponse.write(bufOfRes);
     endResponse(serverResponse);
     return;
   }

@@ -29,7 +29,6 @@ describe('Headers', () => {
     });
     expect(res.status).toBe(200);
     const body = await res.json();
-    console.log(body);
     expect(body).toMatchObject({
       headers: {
         'X-Test': 'test',

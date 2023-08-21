@@ -36,11 +36,15 @@ function getResponseForDataUri(url: string) {
   });
 }
 
+function isURL(obj: any): obj is URL {
+  return obj != null && obj.href != null;
+}
+
 export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
   init?: RequestPonyfillInit,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  if (typeof info === 'string' || 'href' in info) {
+  if (typeof info === 'string' || isURL(info)) {
     const ponyfillRequest = new PonyfillRequest(info, init);
     return fetchPonyfill(ponyfillRequest);
   }

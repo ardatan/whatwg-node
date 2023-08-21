@@ -4,7 +4,7 @@ import { PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
-import { fakePromise, uint8ArrayToArrayBuffer } from './utils.js';
+import { fakePromise, isArrayBufferView } from './utils.js';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -53,17 +53,19 @@ export class PonyfillBody<TJSON = any> implements Body {
     private bodyInit: BodyPonyfillInit | null,
     private options: PonyfillBodyOptions = {},
   ) {
-    const { bodyFactory, contentType, contentLength, bodyType } = processBodyInit(bodyInit);
+    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(bodyInit);
     this._bodyFactory = bodyFactory;
     this.contentType = contentType;
     this.contentLength = contentLength;
     this.bodyType = bodyType;
+    this._buffer = buffer;
   }
 
   private bodyType?: BodyInitType;
 
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
+  private _buffer?: Uint8Array;
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody) {
@@ -105,13 +107,8 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this.bodyType === BodyInitType.ArrayBuffer) {
       return fakePromise(this.bodyInit as ArrayBuffer);
     }
-    if (this.bodyType === BodyInitType.Uint8Array || this.bodyType === BodyInitType.Buffer) {
-      const typedBodyInit = this.bodyInit as Uint8Array;
-      return fakePromise(uint8ArrayToArrayBuffer(typedBodyInit));
-    }
-    if (this.bodyType === BodyInitType.String) {
-      const buffer = Buffer.from(this.bodyInit as string);
-      return fakePromise(buffer.buffer);
+    if (this._buffer) {
+      return fakePromise(this._buffer.buffer);
     }
     if (this.bodyType === BodyInitType.Blob) {
       const blob = this.bodyInit as PonyfillBlob;
@@ -144,21 +141,8 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this.bodyType === BodyInitType.Blob) {
       return fakePromise(this.bodyInit as PonyfillBlob);
     }
-    if (
-      this.bodyType === BodyInitType.String ||
-      this.bodyType === BodyInitType.Buffer ||
-      this.bodyType === BodyInitType.Uint8Array
-    ) {
-      const bodyInitTyped = this.bodyInit as string | Buffer | Uint8Array;
-      const blob = new PonyfillBlob([bodyInitTyped], {
-        type: this.contentType || '',
-      });
-      return fakePromise(blob);
-    }
-    if (this.bodyType === BodyInitType.ArrayBuffer) {
-      const bodyInitTyped = this.bodyInit as ArrayBuffer;
-      const buf = Buffer.from(bodyInitTyped, undefined, bodyInitTyped.byteLength);
-      const blob = new PonyfillBlob([buf], {
+    if (this._buffer) {
+      const blob = new PonyfillBlob([this._buffer], {
         type: this.contentType || '',
       });
       return fakePromise(blob);
@@ -211,7 +195,7 @@ export class PonyfillBody<TJSON = any> implements Body {
             reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
           });
           fileStream.on('data', chunk => {
-            chunks.push(Buffer.from(chunk));
+            chunks.push(chunk);
           });
           fileStream.on('close', () => {
             if (fileStream.truncated) {
@@ -239,20 +223,10 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   buffer(): Promise<Buffer> {
-    if (this.bodyType === BodyInitType.Buffer) {
-      return fakePromise(this.bodyInit as Buffer);
-    }
-    if (this.bodyType === BodyInitType.String) {
-      return fakePromise(Buffer.from(this.bodyInit as string));
-    }
-    if (this.bodyType === BodyInitType.Uint8Array || this.bodyType === BodyInitType.ArrayBuffer) {
-      const bodyInitTyped = this.bodyInit as Uint8Array | ArrayBuffer;
-      const buffer = Buffer.from(
-        bodyInitTyped,
-        'byteOffset' in bodyInitTyped ? bodyInitTyped.byteOffset : undefined,
-        bodyInitTyped.byteLength,
+    if (this._buffer) {
+      return fakePromise(
+        Buffer.from(this._buffer.buffer, this._buffer.byteOffset, this._buffer.byteLength),
       );
-      return fakePromise(buffer);
     }
     if (this.bodyType === BodyInitType.Blob) {
       if (this.bodyInit instanceof PonyfillBlob) {
@@ -282,6 +256,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   bodyType?: BodyInitType;
   contentType: string | null;
   contentLength: number | null;
+  buffer?: Uint8Array;
   bodyFactory(): PonyfillReadableStream<Uint8Array> | null;
 } {
   if (bodyInit == null) {
@@ -298,6 +273,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       bodyType: BodyInitType.String,
       contentType: 'text/plain;charset=UTF-8',
       contentLength,
+      buffer,
       bodyFactory() {
         const readable = Readable.from(buffer);
         return new PonyfillReadableStream<Uint8Array>(readable);
@@ -310,6 +286,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       bodyType: BodyInitType.Buffer,
       contentLength,
       contentType: null,
+      buffer: bodyInit,
       bodyFactory() {
         const readable = Readable.from(bodyInit);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
@@ -335,26 +312,15 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (bodyInit instanceof Uint8Array) {
+  if (isArrayBufferView(bodyInit)) {
     const contentLength = bodyInit.byteLength;
+    const buffer = Buffer.from(bodyInit.buffer, bodyInit.byteOffset, bodyInit.byteLength);
     return {
       bodyType: BodyInitType.Uint8Array,
+      buffer,
       contentLength,
       contentType: null,
       bodyFactory() {
-        const readable = Readable.from(bodyInit);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
-      },
-    };
-  }
-  if ('buffer' in bodyInit) {
-    const contentLength = bodyInit.byteLength;
-    return {
-      contentLength,
-      contentType: null,
-      bodyFactory() {
-        const buffer = Buffer.from(bodyInit as Buffer);
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
@@ -363,12 +329,13 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   }
   if (bodyInit instanceof ArrayBuffer) {
     const contentLength = bodyInit.byteLength;
+    const buffer = Buffer.from(bodyInit, undefined, bodyInit.byteLength);
     return {
       bodyType: BodyInitType.ArrayBuffer,
       contentType: null,
       contentLength,
+      buffer,
       bodyFactory() {
-        const buffer = Buffer.from(bodyInit, undefined, bodyInit.byteLength);
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
@@ -386,8 +353,9 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if ('stream' in bodyInit) {
+  if (isBlob(bodyInit)) {
     return {
+      bodyType: BodyInitType.Blob,
       contentType: bodyInit.type,
       contentLength: bodyInit.size,
       bodyFactory() {
@@ -397,7 +365,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if ('sort' in bodyInit) {
+  if (isURLSearchParams(bodyInit)) {
     const contentType = 'application/x-www-form-urlencoded;charset=UTF-8';
     return {
       bodyType: BodyInitType.String,
@@ -409,10 +377,11 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if ('forEach' in bodyInit) {
+  if (isFormData(bodyInit)) {
     const boundary = Math.random().toString(36).substr(2);
     const contentType = `multipart/form-data; boundary=${boundary}`;
     return {
+      bodyType: BodyInitType.FormData,
       contentType,
       contentLength: null,
       bodyFactory() {
@@ -433,4 +402,16 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   }
 
   throw new Error('Unknown body type');
+}
+
+function isFormData(value: any): value is FormData {
+  return value?.forEach != null;
+}
+
+function isBlob(value: any): value is Blob {
+  return value?.stream != null;
+}
+
+function isURLSearchParams(value: any): value is URLSearchParams {
+  return value?.sort != null;
 }

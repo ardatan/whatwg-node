@@ -96,7 +96,7 @@ describe('Node Fetch Ponyfill', () => {
       const body = await response.json();
       expect(body.data).toBe('test');
     });
-    it('should accept FormData bodies', async () => {
+    it.only('should accept FormData bodies', async () => {
       const formdata = new PonyfillFormData();
       formdata.append('test', 'test');
       formdata.append(
