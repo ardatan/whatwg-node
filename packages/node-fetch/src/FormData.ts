@@ -139,5 +139,5 @@ function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) 
 }
 
 function isBlob(value: any): value is PonyfillBlob {
-  return value != null && typeof value === 'object' && typeof value.arrayBuffer === 'function';
+  return value?.arrayBuffer != null;
 }
