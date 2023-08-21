@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.4.14
+
+### Patch Changes
+
+- [#777](https://github.com/ardatan/whatwg-node/pull/777)
+  [`e3ae0a3`](https://github.com/ardatan/whatwg-node/commit/e3ae0a37c6aae11b249ea3134feb4a55a0cd288c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not create a new Buffer to uWS and node-http,
+  and use the existing Buffer instead for better performance in Node.js.
+
 ## 0.4.13
 
 ### Patch Changes
