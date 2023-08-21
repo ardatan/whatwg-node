@@ -195,7 +195,7 @@ export class PonyfillBody<TJSON = any> implements Body {
             reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
           });
           fileStream.on('data', chunk => {
-            chunks.push(Buffer.from(chunk));
+            chunks.push(chunk);
           });
           fileStream.on('close', () => {
             if (fileStream.truncated) {
@@ -355,6 +355,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   }
   if (isBlob(bodyInit)) {
     return {
+      bodyType: BodyInitType.Blob,
       contentType: bodyInit.type,
       contentLength: bodyInit.size,
       bodyFactory() {
@@ -380,6 +381,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     const boundary = Math.random().toString(36).substr(2);
     const contentType = `multipart/form-data; boundary=${boundary}`;
     return {
+      bodyType: BodyInitType.FormData,
       contentType,
       contentLength: null,
       bodyFactory() {
