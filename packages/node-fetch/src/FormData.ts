@@ -134,16 +134,8 @@ export function getStreamFromFormData(
 }
 
 function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) {
-  if (blob instanceof PonyfillFile) {
-    if (fileName != null) {
-      return new PonyfillFile([blob], fileName, {
-        type: blob.type,
-        lastModified: blob.lastModified,
-      });
-    }
-    return blob;
-  }
-  return new PonyfillFile([blob], fileName || name, { type: blob.type });
+  (blob as PonyfillFile).name = fileName || blob.name || name;
+  return blob as PonyfillFile;
 }
 
 function isBlob(value: any): value is PonyfillBlob {
