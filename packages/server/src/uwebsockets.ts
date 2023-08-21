@@ -94,10 +94,7 @@ export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: R
     uwsResponse.end();
     return;
   }
-  const isStringOrBuffer =
-    (fetchResponse as any).bodyType === 'Buffer' ||
-    (fetchResponse as any).bodyType === 'String' ||
-    (fetchResponse as any).bodyType === 'Uint8Array';
+  const bufferOfRes: Uint8Array = (fetchResponse as any)._buffer;
   uwsResponse.cork(() => {
     uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
     for (const [key, value] of fetchResponse.headers) {
@@ -115,11 +112,11 @@ export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: R
         uwsResponse.writeHeader(key, value);
       }
     }
-    if (isStringOrBuffer) {
-      uwsResponse.end((fetchResponse as any).bodyInit);
+    if (bufferOfRes) {
+      uwsResponse.end(bufferOfRes);
     }
   });
-  if (isStringOrBuffer) {
+  if (bufferOfRes) {
     return;
   }
   if (!fetchResponse.body) {
