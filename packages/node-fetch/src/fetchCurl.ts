@@ -2,7 +2,7 @@ import { Readable } from 'node:stream';
 import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import { defaultHeadersSerializer } from './utils.js';
+import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
@@ -32,7 +32,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   } else {
     const nodeReadable = (
       fetchRequest.body != null
-        ? 'pipe' in fetchRequest.body
+        ? isNodeReadable(fetchRequest.body)
           ? fetchRequest.body
           : Readable.from(fetchRequest.body)
         : null

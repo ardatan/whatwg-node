@@ -1,5 +1,9 @@
 import FastQuerystring from 'fast-querystring';
 
+function isURLSearchParams(value: any): value is URLSearchParams {
+  return value?.entries != null;
+}
+
 export class PonyfillURLSearchParams implements URLSearchParams {
   private params: Record<string, string>;
   constructor(init?: string | string[][] | Record<string, string> | URLSearchParams) {
@@ -11,7 +15,7 @@ export class PonyfillURLSearchParams implements URLSearchParams {
         for (const [key, value] of init) {
           this.params[key] = value;
         }
-      } else if ('entries' in init) {
+      } else if (isURLSearchParams(init)) {
         this.params = {};
         for (const [key, value] of (init as URLSearchParams).entries()) {
           this.params[key] = value;

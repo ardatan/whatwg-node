@@ -19,6 +19,10 @@ type HeadersSerializer = (
   onContentLength?: (contentLength: string) => void,
 ) => string[];
 
+function isURL(obj: any): obj is URL {
+  return obj?.href != null;
+}
+
 export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements Request {
   constructor(input: RequestInfo | URL, options?: RequestPonyfillInit) {
     let url: string | undefined;
@@ -27,7 +31,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
     if (typeof input === 'string') {
       url = input;
-    } else if ('href' in input) {
+    } else if (isURL(input)) {
       url = input.toString();
     } else if (isRequest(input)) {
       url = input.url;

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 import { PonyfillReadableStream } from './ReadableStream.js';
+import { isArrayBufferView } from './utils.js';
 
 interface BlobOptions {
   /**
@@ -19,9 +20,7 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
     return Buffer.from(blobPart);
   } else if (Buffer.isBuffer(blobPart)) {
     return blobPart;
-  } else if (blobPart instanceof Uint8Array) {
-    return Buffer.from(blobPart);
-  } else if ('buffer' in blobPart) {
+  } else if (isArrayBufferView(blobPart)) {
     return Buffer.from(blobPart.buffer, blobPart.byteOffset, blobPart.byteLength);
   } else {
     return Buffer.from(blobPart);
@@ -29,7 +28,7 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
 }
 
 function isBlob(obj: any): obj is Blob {
-  return obj != null && typeof obj === 'object' && obj.arrayBuffer != null;
+  return obj != null && obj.arrayBuffer != null;
 }
 
 // Will be removed after v14 reaches EOL
@@ -69,7 +68,7 @@ export class PonyfillBlob implements Blob {
     for (const blobPart of this.blobParts) {
       if (typeof blobPart === 'string') {
         text += blobPart;
-      } else if ('text' in blobPart) {
+      } else if (isBlob(blobPart)) {
         text += await blobPart.text();
       } else {
         const buf = getBlobPartAsBuffer(blobPart);
@@ -86,9 +85,7 @@ export class PonyfillBlob implements Blob {
         size += Buffer.byteLength(blobPart);
       } else if (isBlob(blobPart)) {
         size += blobPart.size;
-      } else if ('length' in blobPart) {
-        size += (blobPart as Buffer).length;
-      } else if ('byteLength' in blobPart) {
+      } else if (isArrayBufferView(blobPart)) {
         size += blobPart.byteLength;
       }
     }
