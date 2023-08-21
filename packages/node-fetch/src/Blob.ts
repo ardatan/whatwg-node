@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
 import { PonyfillReadableStream } from './ReadableStream.js';
-import { uint8ArrayToArrayBuffer } from './utils.js';
 
 interface BlobOptions {
   /**
@@ -62,7 +61,7 @@ export class PonyfillBlob implements Blob {
   }
 
   arrayBuffer() {
-    return this.buffer().then(uint8ArrayToArrayBuffer);
+    return this.buffer().then(buf => buf.buffer);
   }
 
   async text() {
