@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.13
+
+### Patch Changes
+
+- [#786](https://github.com/ardatan/whatwg-node/pull/786)
+  [`a254e88`](https://github.com/ardatan/whatwg-node/commit/a254e887d2102d29ff31df121c5f7ae5806c99c9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle query parameters correctly in uWS
+
 ## 0.9.12
 
 ### Patch Changes
