@@ -194,7 +194,7 @@ function createServerAdapter<
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     let request: Request = new Proxy(EMPTY_OBJECT as Request, {
       get(_target, prop, _receiver) {
-        request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
+        request = request ?? normalizeNodeRequest(nodeRequest, fetchAPI.Request);
         return Reflect.get(request, prop, request);
       },
     });
