@@ -6,6 +6,7 @@ export interface UWSRequest {
   getMethod(): string;
   forEach(callback: (key: string, value: string) => void): void;
   getUrl(): string;
+  getQuery(): string;
   getHeader(key: string): string | undefined;
   setYield(y: boolean): void;
 }
@@ -60,7 +61,11 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
   req.forEach((key, value) => {
     headers.set(key, value);
   });
-  const url = `http://localhost${req.getUrl()}`;
+  let url = `http://localhost${req.getUrl()}`;
+  const query = req.getQuery();
+  if (query) {
+    url += `?${query}`;
+  }
   return new fetchAPI.Request(url, {
     method,
     headers,
