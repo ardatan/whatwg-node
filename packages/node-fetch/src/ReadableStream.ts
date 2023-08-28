@@ -44,6 +44,14 @@ function createController<T>(
   };
 }
 
+function isNodeReadable(obj: any): obj is Readable {
+  return obj?.read != null;
+}
+
+function isReadableStream(obj: any): obj is ReadableStream {
+  return obj?.getReader != null;
+}
+
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readable: Readable;
   constructor(
@@ -55,9 +63,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   ) {
     if (underlyingSource instanceof PonyfillReadableStream) {
       this.readable = underlyingSource.readable;
-    } else if (underlyingSource && 'read' in underlyingSource) {
+    } else if (isNodeReadable(underlyingSource)) {
       this.readable = underlyingSource as Readable;
-    } else if (underlyingSource && 'getReader' in underlyingSource) {
+    } else if (isReadableStream(underlyingSource)) {
       let reader: ReadableStreamDefaultReader<T>;
       let started = false;
       this.readable = new Readable({
@@ -181,6 +189,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   static [Symbol.hasInstance](instance: unknown): instance is PonyfillReadableStream<unknown> {
-    return instance != null && typeof instance === 'object' && 'getReader' in instance;
+    return isReadableStream(instance);
   }
 }

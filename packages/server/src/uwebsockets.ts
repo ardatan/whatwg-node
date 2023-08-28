@@ -6,6 +6,7 @@ export interface UWSRequest {
   getMethod(): string;
   forEach(callback: (key: string, value: string) => void): void;
   getUrl(): string;
+  getQuery(): string;
   getHeader(key: string): string | undefined;
   setYield(y: boolean): void;
 }
@@ -60,7 +61,11 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
   req.forEach((key, value) => {
     headers.set(key, value);
   });
-  const url = `http://localhost${req.getUrl()}`;
+  let url = `http://localhost${req.getUrl()}`;
+  const query = req.getQuery();
+  if (query) {
+    url += `?${query}`;
+  }
   return new fetchAPI.Request(url, {
     method,
     headers,
@@ -94,10 +99,7 @@ export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: R
     uwsResponse.end();
     return;
   }
-  const isStringOrBuffer =
-    (fetchResponse as any).bodyType === 'Buffer' ||
-    (fetchResponse as any).bodyType === 'String' ||
-    (fetchResponse as any).bodyType === 'Uint8Array';
+  const bufferOfRes: Uint8Array = (fetchResponse as any)._buffer;
   uwsResponse.cork(() => {
     uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
     for (const [key, value] of fetchResponse.headers) {
@@ -115,11 +117,11 @@ export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: R
         uwsResponse.writeHeader(key, value);
       }
     }
-    if (isStringOrBuffer) {
-      uwsResponse.end((fetchResponse as any).bodyInit);
+    if (bufferOfRes) {
+      uwsResponse.end(bufferOfRes);
     }
   });
-  if (isStringOrBuffer) {
+  if (bufferOfRes) {
     return;
   }
   if (!fetchResponse.body) {

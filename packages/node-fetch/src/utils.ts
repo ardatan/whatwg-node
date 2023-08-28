@@ -1,5 +1,11 @@
+import { Readable } from 'node:stream';
+
+function isHeadersInstance(obj: any): obj is Headers {
+  return obj?.forEach != null;
+}
+
 export function getHeadersObj(headers: Headers): Record<string, string> {
-  if (headers == null || !('forEach' in headers)) {
+  if (headers == null || !isHeadersInstance(headers)) {
     return headers as any;
   }
   const obj: Record<string, string> = {};
@@ -7,13 +13,6 @@ export function getHeadersObj(headers: Headers): Record<string, string> {
     obj[key] = value;
   });
   return obj;
-}
-
-export function uint8ArrayToArrayBuffer(uint8array: Uint8Array): ArrayBuffer {
-  return uint8array.buffer.slice(
-    uint8array.byteOffset,
-    uint8array.byteOffset + uint8array.byteLength,
-  );
 }
 
 export function defaultHeadersSerializer(
@@ -63,4 +62,18 @@ export function fakePromise<T>(value: T): Promise<T> {
     },
     [Symbol.toStringTag]: 'Promise',
   };
+}
+
+export function isArrayBufferView(obj: any): obj is ArrayBufferView {
+  return (
+    obj != null &&
+    typeof obj === 'object' &&
+    obj.buffer != null &&
+    obj.byteLength != null &&
+    obj.byteOffset != null
+  );
+}
+
+export function isNodeReadable(obj: any): obj is Readable {
+  return obj != null && obj.pipe != null;
 }

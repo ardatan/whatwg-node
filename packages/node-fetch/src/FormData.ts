@@ -133,19 +133,11 @@ export function getStreamFromFormData(
   });
 }
 
-function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string | undefined) {
-  if (blob instanceof PonyfillFile) {
-    if (fileName != null) {
-      return new PonyfillFile([blob], fileName, {
-        type: blob.type,
-        lastModified: blob.lastModified,
-      });
-    }
-    return blob;
-  }
-  return new PonyfillFile([blob], fileName || name, { type: blob.type });
+function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) {
+  (blob as PonyfillFile).name = fileName || blob.name || name;
+  return blob as PonyfillFile;
 }
 
 function isBlob(value: any): value is PonyfillBlob {
-  return value != null && typeof value === 'object' && typeof value.arrayBuffer === 'function';
+  return value?.arrayBuffer != null;
 }

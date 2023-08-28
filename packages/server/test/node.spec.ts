@@ -10,7 +10,7 @@ import {
 } from 'http2';
 import { AddressInfo } from 'net';
 import { HttpResponse } from 'uWebSockets.js';
-import { fetch, ReadableStream, Response } from '@whatwg-node/fetch';
+import { fetch, ReadableStream, Response, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { runTestsForEachServerImpl } from './test-server.js';
 
@@ -166,6 +166,17 @@ describe('Node Specific Cases', () => {
       );
       await new Promise(resolve => setTimeout(resolve, 300));
       expect(abortListener).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles query parameters correctly', async () => {
+      const serverAdapter = createServerAdapter(req => {
+        const urlObj = new URL(req.url);
+        return new Response(urlObj.search, { status: 200 });
+      });
+      testServer.addOnceHandler(serverAdapter);
+      const response = await fetch(`${testServer.url}?foo=bar`);
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe('?foo=bar');
     });
   });
 });

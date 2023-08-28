@@ -1,5 +1,22 @@
 # @whatwg-node/server
 
+## 0.9.13
+
+### Patch Changes
+
+- [#786](https://github.com/ardatan/whatwg-node/pull/786)
+  [`a254e88`](https://github.com/ardatan/whatwg-node/commit/a254e887d2102d29ff31df121c5f7ae5806c99c9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle query parameters correctly in uWS
+
+## 0.9.12
+
+### Patch Changes
+
+- [#777](https://github.com/ardatan/whatwg-node/pull/777)
+  [`e3ae0a3`](https://github.com/ardatan/whatwg-node/commit/e3ae0a37c6aae11b249ea3134feb4a55a0cd288c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not create a new Buffer to uWS and node-http,
+  and use the existing Buffer instead for better performance in Node.js.
+
 ## 0.9.11
 
 ### Patch Changes

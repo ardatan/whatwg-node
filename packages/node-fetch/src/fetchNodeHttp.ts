@@ -6,7 +6,7 @@ import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { getHeadersObj } from './utils.js';
+import { getHeadersObj, isNodeReadable } from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
   if (url.startsWith('http:')) {
@@ -26,7 +26,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       const nodeReadable = (
         fetchRequest.body != null
-          ? 'pipe' in fetchRequest.body
+          ? isNodeReadable(fetchRequest.body)
             ? fetchRequest.body
             : Readable.from(fetchRequest.body)
           : null
