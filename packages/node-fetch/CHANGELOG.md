@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.4.15
+
+### Patch Changes
+
+- [#806](https://github.com/ardatan/whatwg-node/pull/806)
+  [`9b6911a`](https://github.com/ardatan/whatwg-node/commit/9b6911a8fca0fc046278a8b490e14eb4412da98f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Return `Buffer` instead of `ArrayBuffer` in
+  `.arrayBuffer` due to a bug in Node.js that returns a bigger ArrayBuffer causing memory overflow
+
 ## 0.4.14
 
 ### Patch Changes
