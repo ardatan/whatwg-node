@@ -1,6 +1,5 @@
 import { createReadStream } from 'fs';
 import { fileURLToPath } from 'url';
-import { PonyfillBlob } from './Blob.js';
 import { fetchCurl } from './fetchCurl.js';
 import { fetchNodeHttp } from './fetchNodeHttp.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
@@ -21,10 +20,12 @@ function getResponseForDataUri(url: string) {
   if (mimeType.endsWith(BASE64_SUFFIX)) {
     const buffer = Buffer.from(data, 'base64url');
     const realMimeType = mimeType.slice(0, -BASE64_SUFFIX.length);
-    const file = new PonyfillBlob([buffer], { type: realMimeType });
-    return new PonyfillResponse(file, {
+    return new PonyfillResponse(buffer, {
       status: 200,
       statusText: 'OK',
+      headers: {
+        'content-type': realMimeType,
+      },
     });
   }
   return new PonyfillResponse(data, {

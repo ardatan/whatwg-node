@@ -65,13 +65,7 @@ export function fakePromise<T>(value: T): Promise<T> {
 }
 
 export function isArrayBufferView(obj: any): obj is ArrayBufferView {
-  return (
-    obj != null &&
-    typeof obj === 'object' &&
-    obj.buffer != null &&
-    obj.byteLength != null &&
-    obj.byteOffset != null
-  );
+  return obj != null && obj.buffer != null && obj.byteLength != null && obj.byteOffset != null;
 }
 
 export function isNodeReadable(obj: any): obj is Readable {
