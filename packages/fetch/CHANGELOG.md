@@ -1,5 +1,17 @@
 # @whatwg-node/fetch
 
+## 0.9.11
+
+### Patch Changes
+
+- [`96efb10`](https://github.com/ardatan/whatwg-node/commit/96efb10a4508fa1b86482f5238d63ec6015e0d74)
+  Thanks [@ardatan](https://github.com/ardatan)! - Ignore content-length while reading the request
+  body
+
+- Updated dependencies
+  [[`96efb10`](https://github.com/ardatan/whatwg-node/commit/96efb10a4508fa1b86482f5238d63ec6015e0d74)]:
+  - @whatwg-node/node-fetch@0.4.16
+
 ## 0.9.10
 
 ### Patch Changes
