@@ -40,12 +40,15 @@ export function fakePromise<T>(value: T): Promise<T> {
   // Write a fake promise to avoid the promise constructor
   // being called with `new Promise` in the browser.
   return {
-    then: (resolve: (value: T) => any) => {
-      const callbackResult = resolve(value);
-      if (isPromise(callbackResult)) {
-        return callbackResult;
+    then(resolve: (value: T) => any) {
+      if (resolve) {
+        const callbackResult = resolve(value);
+        if (isPromise(callbackResult)) {
+          return callbackResult;
+        }
+        return fakePromise(callbackResult);
       }
-      return fakePromise(callbackResult);
+      return this;
     },
     catch() {
       return this;
