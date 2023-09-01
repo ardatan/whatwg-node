@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.4.17
+
+### Patch Changes
+
+- [`a8467ab`](https://github.com/ardatan/whatwg-node/commit/a8467ab9e3e4701eb0d3101ff904597cd9adc438)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fake promise's then method may not take a
+  callback function
+
 ## 0.4.16
 
 ### Patch Changes
