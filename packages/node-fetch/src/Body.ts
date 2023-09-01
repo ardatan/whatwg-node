@@ -225,7 +225,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       if (chunks.length === 1) {
         return chunks[0] as Buffer;
       }
-      return Buffer.concat(chunks, this.contentLength || undefined);
+      return Buffer.concat(chunks);
     });
   }
 

@@ -96,7 +96,7 @@ describe('Node Fetch Ponyfill', () => {
       const body = await response.json();
       expect(body.data).toBe('test');
     });
-    it.only('should accept FormData bodies', async () => {
+    it('should accept FormData bodies', async () => {
       const formdata = new PonyfillFormData();
       formdata.append('test', 'test');
       formdata.append(
@@ -137,6 +137,14 @@ describe('Node Fetch Ponyfill', () => {
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.brotli).toBe(true);
+    });
+    it('should load correctly', async () => {
+      const response = await fetchPonyfill(
+        'https://api.apis.guru/v2/specs/mashape.com/geodb/1.0.0/swagger.json',
+      );
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body.swagger).toBe('2.0');
     });
   });
 });
