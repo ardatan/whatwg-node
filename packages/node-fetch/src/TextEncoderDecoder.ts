@@ -1,4 +1,4 @@
-import { isArrayBufferView } from './utils';
+import { isArrayBufferView } from './utils.js';
 
 export class PonyfillTextEncoder implements TextEncoder {
   constructor(public encoding: BufferEncoding = 'utf-8') {}
