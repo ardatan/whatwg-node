@@ -49,7 +49,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
       if (!multipleChunks && isLast) {
         readable.push(chunk);
       } else {
-        readable.push(Buffer.concat([chunk]));
+        readable.push(Buffer.from(chunk));
       }
       if (isLast) {
         readable.push(null);

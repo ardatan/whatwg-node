@@ -1,6 +1,7 @@
 import { Readable } from 'stream';
 import { PonyfillBlob } from '../src/Blob.js';
 import { PonyfillBody } from '../src/Body.js';
+import { PonyfillTextDecoder } from '../src/TextEncoderDecoder.js';
 
 const exampleData = {
   data: {
@@ -54,5 +55,12 @@ describe('Body', () => {
     const body = new PonyfillBody(null);
     const result = await body.text();
     expect(result).toBe('');
+  });
+  it('works with custom decoding', async () => {
+    const body = new PonyfillBody('hello world');
+    const buf = await body.arrayBuffer();
+    const decoder = new PonyfillTextDecoder('utf-8');
+    const result = decoder.decode(buf);
+    expect(result).toBe('hello world');
   });
 });

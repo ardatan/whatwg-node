@@ -36,7 +36,7 @@ function createController<T>(
     _flush() {
       flushed = true;
       if (chunks.length > 0) {
-        const concatenated = Buffer.concat(chunks);
+        const concatenated = chunks.length > 1 ? Buffer.concat(chunks) : chunks[0];
         readable.push(concatenated);
         chunks = [];
       }

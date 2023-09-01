@@ -1,3 +1,5 @@
+import { isArrayBufferView } from './utils';
+
 export class PonyfillTextEncoder implements TextEncoder {
   constructor(public encoding: BufferEncoding = 'utf-8') {}
 
@@ -20,7 +22,7 @@ export class PonyfillTextDecoder implements TextDecoder {
   ignoreBOM = false;
   constructor(
     public encoding: BufferEncoding = 'utf-8',
-    options: TextDecoderOptions,
+    options?: TextDecoderOptions,
   ) {
     if (options) {
       this.fatal = options.fatal || false;
@@ -28,7 +30,13 @@ export class PonyfillTextDecoder implements TextDecoder {
     }
   }
 
-  decode(input: Uint8Array): string {
+  decode(input: BufferSource): string {
+    if (Buffer.isBuffer(input)) {
+      return input.toString(this.encoding);
+    }
+    if (isArrayBufferView(input)) {
+      return Buffer.from(input.buffer, input.byteOffset, input.byteLength).toString(this.encoding);
+    }
     return Buffer.from(input).toString(this.encoding);
   }
 }
