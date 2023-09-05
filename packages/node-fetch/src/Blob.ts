@@ -125,16 +125,21 @@ export class PonyfillBlob implements Blob {
         },
       });
     }
-    let partQueue: BlobPart[] = [];
+    let blobPartIterator: Iterator<BlobPart> | undefined;
     return new PonyfillReadableStream({
       start: controller => {
-        partQueue = [...this.blobParts];
-        if (partQueue.length === 0) {
+        if (this.blobParts.length === 0) {
           controller.close();
+          return;
         }
+        blobPartIterator = this.blobParts[Symbol.iterator]();
       },
       pull: controller => {
-        const blobPart = partQueue.pop();
+        const { value: blobPart, done } = blobPartIterator!.next();
+        if (done) {
+          controller.close();
+          return;
+        }
         if (blobPart) {
           if (isBlob(blobPart)) {
             return blobPart.arrayBuffer().then(arrayBuffer => {
@@ -145,8 +150,6 @@ export class PonyfillBlob implements Blob {
             const buf = getBlobPartAsBuffer(blobPart);
             controller.enqueue(buf);
           }
-        } else {
-          controller.close();
         }
       },
     });
