@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.4.18
+
+### Patch Changes
+
+- [`67ed782`](https://github.com/ardatan/whatwg-node/commit/67ed782c878288e4aeeba9619e916cf6eb456709)
+  Thanks [@ardatan](https://github.com/ardatan)! - Iterate over blob parts correctly
+
 ## 0.4.17
 
 ### Patch Changes
