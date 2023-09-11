@@ -1,5 +1,12 @@
 # @whatwg-node/fetch
 
+## 0.9.13
+
+### Patch Changes
+
+- [`854b778`](https://github.com/ardatan/whatwg-node/commit/854b7786f4ef134a00a4f8f4df02721a7a4c77bb)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not try to import node-libcurl in Deno and Bun
+
 ## 0.9.12
 
 ### Patch Changes
