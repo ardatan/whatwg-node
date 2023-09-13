@@ -192,10 +192,11 @@ function createServerAdapter<
 
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    let request: Request = new Proxy(EMPTY_OBJECT as Request, {
+    let _request: Request | undefined;
+    const request: Request = new Proxy(EMPTY_OBJECT as Request, {
       get(_target, prop, _receiver) {
-        request = request ?? normalizeNodeRequest(nodeRequest, fetchAPI.Request);
-        return Reflect.get(request, prop, request);
+        _request = _request ?? normalizeNodeRequest(nodeRequest, fetchAPI.Request);
+        return Reflect.get(_request, prop, request);
       },
     });
     return handleRequest(request, serverContext);
