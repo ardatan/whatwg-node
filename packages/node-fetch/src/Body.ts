@@ -102,22 +102,21 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   _collectChunksFromReadable() {
+    const _body = this.generateBody();
+    if (!_body) {
+      return fakePromise([]);
+    }
+    const chunks: Uint8Array[] = [];
+    _body.readable.on('data', chunk => {
+      chunks.push(chunk);
+    });
     return new Promise<Uint8Array[]>((resolve, reject) => {
-      const chunks: Uint8Array[] = [];
-      const _body = this.generateBody();
-      if (_body) {
-        _body.readable.on('data', chunk => {
-          chunks.push(chunk);
-        });
-        _body.readable.on('end', () => {
-          resolve(chunks);
-        });
-        _body.readable.on('error', e => {
-          reject(e);
-        });
-      } else {
+      _body.readable.once('end', () => {
         resolve(chunks);
-      }
+      });
+      _body.readable.once('error', e => {
+        reject(e);
+      });
     });
   }
 
@@ -147,7 +146,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     const formData = new PonyfillFormData();
     const _body = this.generateBody();
     if (_body == null) {
-      return Promise.resolve(formData);
+      return fakePromise(formData);
     }
     const formDataLimits = {
       ...this.options.formDataLimits,

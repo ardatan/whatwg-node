@@ -146,10 +146,9 @@ export class PonyfillBlob implements Blob {
               const buf = Buffer.from(arrayBuffer, undefined, blobPart.size);
               controller.enqueue(buf);
             });
-          } else {
-            const buf = getBlobPartAsBuffer(blobPart);
-            controller.enqueue(buf);
           }
+          const buf = getBlobPartAsBuffer(blobPart);
+          controller.enqueue(buf);
         }
       },
     });
