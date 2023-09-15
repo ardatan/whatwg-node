@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.4.19
+
+### Patch Changes
+
+- [`c0a448f`](https://github.com/ardatan/whatwg-node/commit/c0a448f59cb91036afeae12cf074a046532817d3)
+  Thanks [@ardatan](https://github.com/ardatan)! - Small improvements for less promise usage
+
 ## 0.4.18
 
 ### Patch Changes
