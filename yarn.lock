@@ -2492,9 +2492,9 @@
   integrity sha512-Gj7cI7z+98M282Tqmp2K5EIsoouUEzbBJhQQzDE3jSIRk6r9gsz0oUokqIUR4u1R3dMHo0pDHM7sNOHyhulypw==
 
 "@types/pem@^1.14.0":
-  version "1.14.0"
-  resolved "https://registry.yarnpkg.com/@types/pem/-/pem-1.14.0.tgz#33239f60196206c49a9a47c810fad03d2e5cc43f"
-  integrity sha512-Jaq0lQWgz2jVmQ+smGDbPnLye6DOLojykwmnGgveoYb3sjZfrxO+2ssbccbekKKCTFxoLSEGCP/48z9FPjAbJg==
+  version "1.14.1"
+  resolved "https://registry.yarnpkg.com/@types/pem/-/pem-1.14.1.tgz#b51f03399ef3510b505666482b496d0058d21640"
+  integrity sha512-blRIGpofJKMV7v6UnS/R75AUAqLfla212lN/7TXYtTcGSqvMv84Aiwl/xg8MirahHTvDABRV8PdnCT1fVZW09g==
   dependencies:
     "@types/node" "*"
 
