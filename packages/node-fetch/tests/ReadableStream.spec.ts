@@ -16,7 +16,9 @@ describe('ReadableStream', () => {
         if (cnt > 3) {
           controller.close();
         }
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await new Promise(resolve => {
+          setTimeout(resolve, 300);
+        });
       },
     });
     const reader = readableStream.getReader();
