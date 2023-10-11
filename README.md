@@ -1,5 +1,3 @@
-[![GraphQL Conf 2023](/GraphQLConf-2023-Banner.png)](https://graphql.org/conf/)
-
 # WhatWG Node
 
 This repository contains a set of environment(Browser, Node.js, Deno, Cloudflare Workers, Bun, etc.)
