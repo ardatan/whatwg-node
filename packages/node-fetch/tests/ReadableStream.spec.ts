@@ -33,8 +33,8 @@ describe('ReadableStream', () => {
     expect(chunksStr).toMatchInlineSnapshot(`"{"cnt":0}{"cnt":1}{"cnt":2}{"cnt":3}"`);
   });
   it('should send data from start and push lazily', async () => {
-    let interval: NodeJS.Timer;
-    let timeout: NodeJS.Timer;
+    let interval: any;
+    let timeout: any;
     let pullCount = 0;
     let active: boolean;
     const rs = new PonyfillReadableStream({
@@ -97,8 +97,8 @@ describe('ReadableStream', () => {
     `);
   });
   it('should send data from start without pull lazily', async () => {
-    let interval: NodeJS.Timer;
-    let timeout: NodeJS.Timer;
+    let interval: any;
+    let timeout: any;
     const rs = new PonyfillReadableStream({
       start(controller) {
         let startCount = 0;
