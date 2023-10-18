@@ -15,6 +15,6 @@ describe('useErrorHandling', () => {
     expect(response.status).toBe(500);
     expect(response.statusText).toBe('Internal Server Error');
     const text = await response.text();
-    expect(text).toContain('Error: Unexpected error');
+    expect(text).toHaveLength(0);
   });
 });

@@ -16,7 +16,7 @@ export function createDefaultErrorHandler<TServerContext = {}>(
       );
     }
     console.error(e);
-    return Response.error();
+    return ResponseCtor.error();
   };
 }
 
