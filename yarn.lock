@@ -2163,10 +2163,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@6.5.0":
-  version "6.5.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.5.0.tgz#11afe5b033be24d317b0db9918bf2e9012289515"
-  integrity sha512-oBoL+ZwQaBbnq7NiR/lrRexylj3GAu4dvg1s6AGi1fACbpvruIJgjtOecNnPaEJfiOpyoqPYuTURrBCk90R3rA==
+"@pulumi/aws@6.6.0":
+  version "6.6.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.6.0.tgz#6c5207c1d9eae404be050d4c33415f1a334301fa"
+  integrity sha512-3DID+B7CbMYmIUaCcK3A9anZmRsXgHQQN3X7Q4cSZM7qzf7AXG9GWl0Zu2hZYw4IYy8IsqcUZ2eEVDxf2bNuCA==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     builtin-modules "3.0.0"
@@ -2516,10 +2516,10 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.5.tgz#38bd1733ae299620771bd414837ade2e57757498"
   integrity sha512-xrO9OoVPqFuYyR/loIHjnbvvyRZREYKLjxV4+dY6v3FQR3stQ9ZxIGkaclF7YhI9hfjpuTbu14hZEy94qKLtOA==
 
-"@types/react-dom@18.2.13":
-  version "18.2.13"
-  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.2.13.tgz#89cd7f9ec8b28c8b6f0392b9591671fb4a9e96b7"
-  integrity sha512-eJIUv7rPP+EC45uNYp/ThhSpE16k22VJUknt5OLoH9tbXoi8bMhwLf5xRuWMywamNbWzhrSmU7IBJfPup1+3fw==
+"@types/react-dom@18.2.14":
+  version "18.2.14"
+  resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-18.2.14.tgz#c01ba40e5bb57fc1dc41569bb3ccdb19eab1c539"
+  integrity sha512-V835xgdSVmyQmI1KLV2BEIUgqEuinxp9O4G6g3FqO/SqLac049E53aysv0oEFD2kHfejeKU+ZqL2bcFWj9gLAQ==
   dependencies:
     "@types/react" "*"
 
