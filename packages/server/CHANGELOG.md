@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.15
+
+### Patch Changes
+
+- [`a808346`](https://github.com/ardatan/whatwg-node/commit/a8083469003458bd33a5afe77ea766c5ffaab6b6)
+  Thanks [@ardatan](https://github.com/ardatan)! - Improve error handling plugin
+
 ## 0.9.14
 
 ### Patch Changes
