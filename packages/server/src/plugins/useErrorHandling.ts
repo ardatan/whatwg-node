@@ -1,25 +1,29 @@
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
+import { isPromise } from '../utils.js';
 import { ServerAdapterPlugin } from './types.js';
 
 export function createDefaultErrorHandler<TServerContext = {}>(
   ResponseCtor: typeof Response = DefaultResponseCtor,
 ): ErrorHandler<TServerContext> {
   return function defaultErrorHandler(e: any): Response | Promise<Response> {
-    return new ResponseCtor(
-      typeof e.details === 'object'
-        ? JSON.stringify(e.details)
-        : e.stack || e.message || e.toString(),
-      {
-        status: e.statusCode || e.status || 500,
-        headers: e.headers || {},
-      },
-    );
+    if (e.details || e.status || e.headers || e.name === 'HTTPError') {
+      return new ResponseCtor(
+        typeof e.details === 'object' ? JSON.stringify(e.details) : e.message,
+        {
+          status: e.status,
+          headers: e.headers || {},
+        },
+      );
+    }
+    console.error(e);
+    return Response.error();
   };
 }
 
 export class HTTPError extends Error {
+  name = 'HTTPError';
   constructor(
-    public status: number,
+    public status: number = 500,
     public message: string,
     public headers: HeadersInit = {},
     public details?: any,
@@ -41,16 +45,18 @@ export function useErrorHandling<TServerContext>(
   return {
     onRequest({ requestHandler, setRequestHandler, fetchAPI }) {
       const errorHandler = onError || createDefaultErrorHandler<TServerContext>(fetchAPI.Response);
-      setRequestHandler(async function handlerWithErrorHandling(
+      setRequestHandler(function handlerWithErrorHandling(
         request: Request,
         serverContext: TServerContext,
-      ): Promise<Response> {
+      ): Promise<Response> | Response {
         try {
-          const response = await requestHandler(request, serverContext);
-          return response;
+          const response$ = requestHandler(request, serverContext);
+          if (isPromise(response$)) {
+            return response$.catch(e => errorHandler(e, request, serverContext));
+          }
+          return response$;
         } catch (e) {
-          const response = await errorHandler(e, request, serverContext);
-          return response;
+          return errorHandler(e, request, serverContext);
         }
       });
     },
