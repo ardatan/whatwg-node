@@ -16,7 +16,10 @@ export function createDefaultErrorHandler<TServerContext = {}>(
       );
     }
     console.error(e);
-    return ResponseCtor.error();
+    if (ResponseCtor.error) {
+      return ResponseCtor.error();
+    }
+    return new ResponseCtor(null, { status: 500 });
   };
 }
 
