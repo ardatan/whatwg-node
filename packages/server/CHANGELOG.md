@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.16
+
+### Patch Changes
+
+- [`e4061de`](https://github.com/ardatan/whatwg-node/commit/e4061de6296d70da853eca9729092a43aeab7884)
+  Thanks [@ardatan](https://github.com/ardatan)! - If Response.error is not implemented, use
+  Response ctor directly
+
 ## 0.9.15
 
 ### Patch Changes
