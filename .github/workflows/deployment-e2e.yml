@@ -19,11 +19,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Use Node 18
+      - name: Use Node 20
         uses: actions/setup-node@master
         with:
-          node-version: 18
+          node-version: 20
           cache: 'yarn'
+
+      - name: Install Required Libraries
+        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
 
       - uses: denoland/setup-deno@v1
         with:
