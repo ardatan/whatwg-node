@@ -10,12 +10,15 @@ const ESM_PACKAGES = [];
 let globals = {};
 
 try {
-  globals = {
-    uwsUtils: require('./uwsUtils'),
-    libcurl: require('node-libcurl'),
-  };
+  global.uwsUtils = require('./uwsUtils');
+} catch (e) {
+  console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`);
+}
+
+try {
+  globals.libcurl = require('node-libcurl');
 } catch (err) {
-  console.warn(err);
+  console.log('Failed to load node-libcurl. Skipping tests that require it.');
 }
 
 module.exports = {
