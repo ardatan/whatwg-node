@@ -4,7 +4,7 @@ import { CertificateCreationResult, createCertificate } from 'pem';
 import { fetchPonyfill } from '../src/fetch';
 
 describe('http2', () => {
-  if (process.env.LEAK_TEST) {
+  if (!globalThis.libcurl) {
     it('noop', () => {});
     return;
   }
