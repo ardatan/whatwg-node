@@ -115,7 +115,7 @@ jobs:
           cache: 'yarn'
       - if: matrix.node-version > 20
         name: Remove node-libcurl and uWS
-        run: node scripts/remove-node-libcurl-uws.js
+        run: node scripts/remove-node-libcurl-uws.cjs
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
