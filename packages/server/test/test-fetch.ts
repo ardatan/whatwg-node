@@ -1,3 +1,6 @@
+import { globalAgent as httpGlobalAgent } from 'node:http';
+import { globalAgent as httpsGlobalAgent } from 'node:https';
+
 const libcurl = globalThis.libcurl;
 export function runTestsForEachFetchImpl(callback: () => void) {
   if (!libcurl) {
@@ -11,6 +14,8 @@ export function runTestsForEachFetchImpl(callback: () => void) {
     });
     afterAll(() => {
       globalThis.libcurl = libcurl;
+      httpGlobalAgent.destroy();
+      httpsGlobalAgent.destroy();
     });
     callback();
   });

@@ -7,6 +7,20 @@ const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = [];
 
+let globals = {};
+
+try {
+  global.uwsUtils = require('./uwsUtils');
+} catch (e) {
+  console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`);
+}
+
+try {
+  globals.libcurl = require('node-libcurl');
+} catch (err) {
+  console.log('Failed to load node-libcurl. Skipping tests that require it.');
+}
+
 module.exports = {
   testEnvironment: 'node',
   rootDir: ROOT_DIR,
@@ -23,10 +37,7 @@ module.exports = {
     '^.+\\.js$': 'babel-jest',
   },
   collectCoverage: false,
-  globals: {
-    uwsUtils: require('./uwsUtils'),
-    libcurl: require('node-libcurl'),
-  },
+  globals,
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
   resolver: 'bob-the-bundler/jest-resolver',
 };
