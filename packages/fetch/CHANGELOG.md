@@ -1,5 +1,16 @@
 # @whatwg-node/fetch
 
+## 0.9.14
+
+### Patch Changes
+
+- [`68ac24c`](https://github.com/ardatan/whatwg-node/commit/68ac24c342bf2215450bb910c2132f6db0b62993)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support TypeScript 5.2.2
+
+- Updated dependencies
+  [[`f7e507f`](https://github.com/ardatan/whatwg-node/commit/f7e507f6565a1f9cd50fc8c01594ce21205a05dd)]:
+  - @whatwg-node/node-fetch@0.5.0
+
 ## 0.9.13
 
 ### Patch Changes

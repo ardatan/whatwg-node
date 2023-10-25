@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.5.0
+
+### Minor Changes
+
+- [#904](https://github.com/ardatan/whatwg-node/pull/904)
+  [`f7e507f`](https://github.com/ardatan/whatwg-node/commit/f7e507f6565a1f9cd50fc8c01594ce21205a05dd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop Node 16 support
+
 ## 0.4.19
 
 ### Patch Changes
