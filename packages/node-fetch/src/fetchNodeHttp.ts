@@ -2,7 +2,6 @@ import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
-import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
