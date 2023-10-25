@@ -113,7 +113,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      - if: matrix.node-version > 21
+      - if: matrix.node-version > 20
         name: Remove node-libcurl and uWS
         run: node scripts/remove-node-libcurl-uws.js
       - name: Setup env
