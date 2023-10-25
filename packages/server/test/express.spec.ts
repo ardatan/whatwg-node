@@ -3,6 +3,7 @@ import { AddressInfo } from 'net';
 import express from 'express';
 import { fetch, Response } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
+import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('express', () => {
   let server: Server;
@@ -33,31 +34,33 @@ describe('express', () => {
     });
   });
 
-  it('should respond with relevant status code', async () => {
-    for (const statusCodeStr in STATUS_CODES) {
-      const status = Number(statusCodeStr);
-      if (status < 200) continue;
+  runTestsForEachFetchImpl(() => {
+    it('should respond with relevant status code', async () => {
+      for (const statusCodeStr in STATUS_CODES) {
+        const status = Number(statusCodeStr);
+        if (status < 200) continue;
+        const res = await fetch(`http://localhost:${port}/my-path`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+          },
+          body: JSON.stringify({ status }),
+        });
+        expect(res.status).toBe(status);
+        expect(res.statusText).toBe(STATUS_CODES[status]);
+      }
+    });
+
+    it('should handle headers correctly', async () => {
       const res = await fetch(`http://localhost:${port}/my-path`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
         },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ headers: { 'x-foo': 'foo', 'x-bar': 'bar' } }),
       });
-      expect(res.status).toBe(status);
-      expect(res.statusText).toBe(STATUS_CODES[status]);
-    }
-  });
-
-  it('should handle headers correctly', async () => {
-    const res = await fetch(`http://localhost:${port}/my-path`, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({ headers: { 'x-foo': 'foo', 'x-bar': 'bar' } }),
+      expect(res.headers.get('x-foo')).toBe('foo');
+      expect(res.headers.get('x-bar')).toBe('bar');
     });
-    expect(res.headers.get('x-foo')).toBe('foo');
-    expect(res.headers.get('x-bar')).toBe('bar');
   });
 });

@@ -1,15 +1,49 @@
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import { ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
+import { ServerAdapter, ServerAdapterBaseObject } from '../src/types.js';
+
+interface FastifyServerContext {
+  req: FastifyRequest;
+  reply: FastifyReply;
+}
 
 describe('Fastify', () => {
+  if (process.env.LEAK_TEST) {
+    it('noop', () => {});
+    return;
+  }
+  let serverAdapter: ServerAdapter<
+    FastifyServerContext,
+    ServerAdapterBaseObject<FastifyServerContext>
+  >;
+  const fastifyServer = fastify();
+  fastifyServer.route({
+    url: '/mypath',
+    method: ['GET', 'POST', 'OPTIONS'],
+    handler: async (req, reply) => {
+      const response = await serverAdapter.handleNodeRequest(req, {
+        req,
+        reply,
+      });
+      response.headers.forEach((value, key) => {
+        reply.header(key, value);
+      });
+
+      reply.status(response.status);
+
+      reply.send(response.body);
+
+      return reply;
+    },
+  });
+  afterAll(async () => {
+    await fastifyServer.close();
+  });
   it('should handle streams', async () => {
     let cnt = 0;
     const encoder = new TextEncoder();
-    const serverAdapter = createServerAdapter<{
-      req: FastifyRequest;
-      reply: FastifyReply;
-    }>(
+    serverAdapter = createServerAdapter<FastifyServerContext>(
       () =>
         new Response(
           new ReadableStream({
@@ -30,26 +64,6 @@ describe('Fastify', () => {
           }),
         ),
     );
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/mypath',
-      method: ['GET', 'POST', 'OPTIONS'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
-    });
     const res = await fastifyServer.inject({
       url: '/mypath',
     });

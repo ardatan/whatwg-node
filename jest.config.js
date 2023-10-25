@@ -25,7 +25,7 @@ module.exports = {
   collectCoverage: false,
   globals: {
     uwsUtils: require('./uwsUtils'),
-    libcurl: require('node-libcurl'),
+    libcurl: process.env.LEAK_TEST ? undefined : require('node-libcurl'),
   },
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
   resolver: 'bob-the-bundler/jest-resolver',

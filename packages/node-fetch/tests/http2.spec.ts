@@ -4,6 +4,10 @@ import { CertificateCreationResult, createCertificate } from 'pem';
 import { fetchPonyfill } from '../src/fetch';
 
 describe('http2', () => {
+  if (process.env.LEAK_TEST) {
+    it('noop', () => {});
+    return;
+  }
   let server: Http2SecureServer;
   beforeAll(async () => {
     const keys = await new Promise<CertificateCreationResult>((resolve, reject) => {

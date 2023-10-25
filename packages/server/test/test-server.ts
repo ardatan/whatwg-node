@@ -15,7 +15,7 @@ export async function createUWSTestServer(): Promise<TestServer> {
     name: 'uWebSockets.js',
     url: `http://localhost:${uwsUtils.port}/`,
     close() {
-      uwsUtils.stop();
+      return uwsUtils.stop();
     },
     addOnceHandler(newHandler) {
       uwsUtils.addOnceHandler(newHandler);
