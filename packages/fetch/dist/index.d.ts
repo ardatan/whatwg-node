@@ -4,10 +4,6 @@
 
 declare type _URLPattern = typeof URLPattern
 
-interface Headers {
-  getSetCookie?(): string[];
-}
-
 declare module '@whatwg-node/fetch' {
   export const fetch: typeof globalThis.fetch;
   export const Request: typeof globalThis.Request;
