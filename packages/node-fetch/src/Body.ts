@@ -220,16 +220,20 @@ export class PonyfillBody<TJSON = any> implements Body {
         .arrayBuffer()
         .then(arrayBuffer => Buffer.from(arrayBuffer, undefined, bodyInitTyped.size));
     }
-    return this._collectChunksFromReadable().then(chunks => {
-      if (chunks.length === 1) {
-        return chunks[0] as Buffer;
-      }
-      return Buffer.concat(chunks);
-    });
+    return this._collectChunksFromReadable().then(
+      function concatCollectedChunksFromReadable(chunks) {
+        if (chunks.length === 1) {
+          return chunks[0] as Buffer;
+        }
+        return Buffer.concat(chunks);
+      },
+    );
   }
 
   json(): Promise<TJSON> {
-    return this.text().then(text => JSON.parse(text));
+    return this.text().then(function parseTextAsJson(text) {
+      return JSON.parse(text);
+    });
   }
 
   text(): Promise<string> {

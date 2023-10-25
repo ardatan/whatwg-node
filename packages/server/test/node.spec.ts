@@ -161,9 +161,8 @@ describe('Node Specific Cases', () => {
       testServer.addOnceHandler(serverAdapter);
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 1000);
-      await expect(() => fetch(testServer.url, { signal: controller.signal })).rejects.toEqual(
-        new Error('The operation was aborted'),
-      );
+      const error = await fetch(testServer.url, { signal: controller.signal }).catch(e => e);
+      expect(error.toString().toLowerCase()).toContain('abort');
       await new Promise(resolve => setTimeout(resolve, 300));
       expect(abortListener).toHaveBeenCalledTimes(1);
     });

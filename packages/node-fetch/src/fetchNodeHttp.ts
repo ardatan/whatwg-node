@@ -41,17 +41,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         agent: fetchRequest.agent,
       });
 
-      // TODO: will be removed after v16 reaches EOL
-      fetchRequest['_signal']?.addEventListener('abort', () => {
-        if (!nodeRequest.aborted) {
-          nodeRequest.abort();
-        }
-      });
-      // TODO: will be removed after v16 reaches EOL
-      nodeRequest.once('abort', (reason: any) => {
-        reject(new PonyfillAbortError(reason));
-      });
-
       nodeRequest.once('response', nodeResponse => {
         let responseBody: Readable = nodeResponse;
         const contentEncoding = nodeResponse.headers['content-encoding'];
