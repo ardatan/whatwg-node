@@ -1,6 +1,6 @@
 const libcurl = globalThis.libcurl;
 export function runTestsForEachFetchImpl(callback: () => void) {
-  if (!process.env.LEAK_TEST) {
+  if (!libcurl) {
     describe('libcurl', () => {
       callback();
     });

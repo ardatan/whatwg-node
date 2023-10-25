@@ -55,10 +55,13 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
   });
 }
 
-export const serverImplMap = {
+export const serverImplMap: Record<string, () => Promise<TestServer>> = {
   nodeHttp: createNodeHttpTestServer,
-  uWebSockets: createUWSTestServer,
 };
+
+if ((globalThis as any)['uwsUtils']) {
+  serverImplMap.uWebSockets = createUWSTestServer;
+}
 
 export function runTestsForEachServerImpl(callback: (server: TestServer) => void) {
   for (const serverImplName in serverImplMap) {
