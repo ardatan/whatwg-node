@@ -2,7 +2,6 @@ import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
-import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -39,17 +38,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         headers: nodeHeaders,
         signal: fetchRequest['_signal'] ?? undefined,
         agent: fetchRequest.agent,
-      });
-
-      // TODO: will be removed after v16 reaches EOL
-      fetchRequest['_signal']?.addEventListener('abort', () => {
-        if (!nodeRequest.aborted) {
-          nodeRequest.abort();
-        }
-      });
-      // TODO: will be removed after v16 reaches EOL
-      nodeRequest.once('abort', (reason: any) => {
-        reject(new PonyfillAbortError(reason));
       });
 
       nodeRequest.once('response', nodeResponse => {

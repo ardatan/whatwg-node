@@ -7,10 +7,6 @@ const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = [];
 
-const uwsUtils = require('./uwsUtils');
-
-const libcurl = require('node-libcurl');
-
 module.exports = {
   testEnvironment: 'node',
   rootDir: ROOT_DIR,
@@ -28,8 +24,8 @@ module.exports = {
   },
   collectCoverage: false,
   globals: {
-    uwsUtils,
-    libcurl,
+    uwsUtils: require('./uwsUtils'),
+    libcurl: require('node-libcurl'),
   },
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
   resolver: 'bob-the-bundler/jest-resolver',

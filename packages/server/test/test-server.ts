@@ -15,7 +15,7 @@ export async function createUWSTestServer(): Promise<TestServer> {
     name: 'uWebSockets.js',
     url: `http://localhost:${uwsUtils.port}/`,
     close() {
-      uwsUtils.stop();
+      return uwsUtils.stop();
     },
     addOnceHandler(newHandler) {
       uwsUtils.addOnceHandler(newHandler);
@@ -55,10 +55,13 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
   });
 }
 
-export const serverImplMap = {
+export const serverImplMap: Record<string, () => Promise<TestServer>> = {
   nodeHttp: createNodeHttpTestServer,
-  uWebSockets: createUWSTestServer,
 };
+
+if ((globalThis as any)['uwsUtils']) {
+  serverImplMap.uWebSockets = createUWSTestServer;
+}
 
 export function runTestsForEachServerImpl(callback: (server: TestServer) => void) {
   for (const serverImplName in serverImplMap) {
