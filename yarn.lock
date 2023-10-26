@@ -2163,10 +2163,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@6.6.0":
-  version "6.6.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.6.0.tgz#6c5207c1d9eae404be050d4c33415f1a334301fa"
-  integrity sha512-3DID+B7CbMYmIUaCcK3A9anZmRsXgHQQN3X7Q4cSZM7qzf7AXG9GWl0Zu2hZYw4IYy8IsqcUZ2eEVDxf2bNuCA==
+"@pulumi/aws@6.6.1":
+  version "6.6.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.6.1.tgz#f911104bcebba62e49839956b1d8d7a751031581"
+  integrity sha512-fpjiZ1BwTBbGdI+FiNlSN6//nXBDgLSUhl2+QMMYbB68reJUaVIRe/h73F1SxCwRm12fL9rFrsG2qEf5HYk6wA==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     builtin-modules "3.0.0"
@@ -2183,10 +2183,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@2.13.0":
-  version "2.13.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-2.13.0.tgz#a81a7abe569293170aa86035c4d559b3a66d67cc"
-  integrity sha512-ENBBXc4tlHd1JBY49BwzgW5v3SoyrpVyIxFRlaePkFRlwc//tIDgTd2xirkGmBBdCBm998QWRJh0MXwRPWy4zQ==
+"@pulumi/azure-native@2.14.0":
+  version "2.14.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-2.14.0.tgz#e4807e087ecd63bcc656da6051fd3eacc8b8d092"
+  integrity sha512-MYtd5EVgvfPGyUzk0nQEemNt0ehsOmn8fGxPX8lELuONU0UYwpsNeQYO4TSqA4qN9hsMipLKBVCkVh4DYo4INA==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -2205,10 +2205,10 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.90.1", "@pulumi/pulumi@^3.0.0":
-  version "3.90.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.90.1.tgz#dc1c8c2703f25b3a7a2408603b183d2569af39b7"
-  integrity sha512-+uRb3urpCj4wcyRL7AJ6tll6ix4giXreObrwf1Qdlgq8ErKfNvK+UZMt9GhX9yI+8dgAt2hpf066x1F92Ik3xg==
+"@pulumi/pulumi@3.91.0", "@pulumi/pulumi@^3.0.0":
+  version "3.91.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.91.0.tgz#9a077eb7b121184316d8e7234d989dd139485cf9"
+  integrity sha512-xtCsfDyWK/tJXI/TrqgOUDdykYfcSBW2DLMBw3wZ4cCYG25OMg5e4uSo/0BJ2HAS4xr0cGeFL7FpADCPIWgFEQ==
   dependencies:
     "@grpc/grpc-js" "^1.8.16"
     "@logdna/tail-file" "^2.0.6"
@@ -2525,10 +2525,10 @@
   dependencies:
     "@types/react" "*"
 
-"@types/react@*", "@types/react@18.2.32":
-  version "18.2.32"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.32.tgz#7ec787730c45ee9a3c0ed150b19e95c31fe4608a"
-  integrity sha512-F0FVIZQ1x5Gxy/VYJb7XcWvCcHR28Sjwt1dXLspdIatfPq1MVACfnBDwKe6ANLxQ64riIJooXClpUR6oxTiepg==
+"@types/react@*", "@types/react@18.2.33":
+  version "18.2.33"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-18.2.33.tgz#055356243dc4350a9ee6c6a2c07c5cae12e38877"
+  integrity sha512-v+I7S+hu3PIBoVkKGpSYYpiBT1ijqEzWpzQD62/jm4K74hPpSP7FF9BnKG6+fg2+62weJYkkBWDJlZt5JO/9hg==
   dependencies:
     "@types/prop-types" "*"
     "@types/scheduler" "*"
