@@ -1559,10 +1559,10 @@
   resolved "https://registry.yarnpkg.com/@gar/promisify/-/promisify-1.1.3.tgz#555193ab2e3bb3b6adc3d551c9c030d9e860daf6"
   integrity sha512-k2Ty1JcVojjJFwrg/ThKi2ujJ7XNLYaFGNB/bWT9wGR+oSMJHMa5w+CUq6p/pVrKeNNgA7pCqEcjSnHVoqJQFw==
 
-"@grpc/grpc-js@^1.8.16":
-  version "1.9.8"
-  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.9.8.tgz#92dc0eca37d701b3d3b7b898e55ce20e0507176b"
-  integrity sha512-FFPzDS333Vw8hvf+1FaEsaCYVPBdNdUCw7zArTiF7+6gOzln967b4GBCBekKGqoKEgna8d3Ayxv8t+IvazXG3g==
+"@grpc/grpc-js@1.9.6":
+  version "1.9.6"
+  resolved "https://registry.yarnpkg.com/@grpc/grpc-js/-/grpc-js-1.9.6.tgz#c64a2db3cb1c73939d3d666fb1339775813c1cd8"
+  integrity sha512-yq3qTy23u++8zdvf+h4mz4ohDFi681JAkMZZPTKh8zmUVh0AKLisFlgxcn22FMNowXz15oJ6pqgwT7DJ+PdJvg==
   dependencies:
     "@grpc/proto-loader" "^0.7.8"
     "@types/node" ">=12.12.47"
@@ -2183,10 +2183,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@2.14.1":
-  version "2.14.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-2.14.1.tgz#ac34b3936d6554ca6b130480565c66860417fe3a"
-  integrity sha512-GrZ0QuvHzgqtUF58J8BpzcRNsIQQJ3bp6QNVcQLOmPhi8t5YuNe+CfEYCNDW/F2xypXe8nNV613EekGO65qhVg==
+"@pulumi/azure-native@2.15.0":
+  version "2.15.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-2.15.0.tgz#7552e894d4a8fb5ffcc10cf21d118b8a9a889965"
+  integrity sha512-RIxbhBEyqAShKGX1ZHp2uZzcHqmVfuvl5JExSQO3glgyqvqsr5tNPzp3TahBK4W2HqAsLHExWG61n6anbq2urw==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
@@ -2205,12 +2205,12 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.91.1", "@pulumi/pulumi@^3.0.0":
-  version "3.91.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.91.1.tgz#fea7720178f87388146692df371d9285a43093d7"
-  integrity sha512-ZKX9twt1+EDSb/Sg3d9fffA74f3Ikx90Xc8k7C++qdaOkcwKd2RTycciZdzvM/ri7KW4B6CYU2qCgKy33li6tQ==
+"@pulumi/pulumi@3.92.0", "@pulumi/pulumi@^3.0.0":
+  version "3.92.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.92.0.tgz#91a55091c4077b7471d3d88d63f1bd7d9344693a"
+  integrity sha512-G0LqldpT+IMjIySUP0GJ5NAxU9dY9cCQrVnTeXoeuZk6YWyo/xMNOyZFodUpgVl3Xbmf2jVVoAnD+5FT3vaeAQ==
   dependencies:
-    "@grpc/grpc-js" "^1.8.16"
+    "@grpc/grpc-js" "1.9.6"
     "@logdna/tail-file" "^2.0.6"
     "@opentelemetry/api" "^1.2.0"
     "@opentelemetry/exporter-zipkin" "^1.6.0"
