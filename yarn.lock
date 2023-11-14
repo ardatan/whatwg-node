@@ -15,10 +15,10 @@
     "@jridgewell/gen-mapping" "^0.3.0"
     "@jridgewell/trace-mapping" "^0.3.9"
 
-"@azure/functions@4.0.1":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.0.1.tgz#b72930b445760aef508f2bb122e2c6edeba8e9e7"
-  integrity sha512-Ol38b4XOlu6IDkLnO91HaYeo2utMixG0LIA1NR9Qehu17U/cGjNx+bAcOEdNlSJWNYh5ChhzjxA/uFB5dQJtmg==
+"@azure/functions@4.1.0":
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.1.0.tgz#f8a1996fce2b464fb69b0f6506a85ee064e19075"
+  integrity sha512-45WDaJZiTmvaIOPSdWWKL5NgzgUWsNzXDNlF7oCMLS43lE602qG7XE6Hdg9ewPWBj55URHRU7UWTHk4uDVqBGg==
   dependencies:
     long "^4.0.0"
     undici "^5.13.0"
@@ -2191,10 +2191,10 @@
     "@types/aws-lambda" "8.10.93"
     mime "^2.0.0"
 
-"@pulumi/azure-native@2.16.0":
-  version "2.16.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-2.16.0.tgz#6fedbe51d19a28b8fa9b649da1520b4a117638bf"
-  integrity sha512-LHYBSwo3j7iiuSpQxL8bO/Z5vTi/omF7bOBxUGbD9CwPPs+znAUwsDWSH98Wpmn9Zm3k2tivAFl45quRYfpDzg==
+"@pulumi/azure-native@2.17.0":
+  version "2.17.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/azure-native/-/azure-native-2.17.0.tgz#5acc5b8f43770d35c4491f63dbe3de94fe9a8571"
+  integrity sha512-6HzszvkZxa4vInY6Sbnjr7RrYiaIfkuY18mGj2put2nz/GAHEEFRHt0JuAO5sCJYmHLcbqi6amHDZuP+n2WzrA==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
