@@ -2331,10 +2331,10 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
   integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
 
-"@types/aws-lambda@8.10.128":
-  version "8.10.128"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.128.tgz#1c26e3e062e33961b250355cb4c9b6b3544b74a9"
-  integrity sha512-bw4+ORfyywsj9Tq3WJA9j6HG4EbYy+dz+k8LN73ApmwjTdf82ZCSELz3b7BJQzeG5HE8IaTy9SXTHmruIK5ZlQ==
+"@types/aws-lambda@8.10.129":
+  version "8.10.129"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.129.tgz#c4e040778a13b70a9cdf8ad54c1b853c94e2a44d"
+  integrity sha512-0Rl7CpTPVws5cp0Ui1gZh4Q+TXC65bXVwTOGoI2RKW45dxWzyZGbjIX0uFjFYdIJ8vnD45y584rIIqvD2vBBfQ==
 
 "@types/aws-lambda@8.10.93":
   version "8.10.93"
@@ -3337,9 +3337,9 @@ builtins@^5.0.1:
     semver "^7.0.0"
 
 bun-types@^1.0.0:
-  version "1.0.13"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.13.tgz#2e468b604721192c00ea50da77ec98a46ca1f189"
-  integrity sha512-QQH6NLAOU+2tWgQuDSAYBFy+kQwVhPJLB0Q38QLjCmFUZJEYCiiq7tzvU784LAIX2onzO6gr+gIGXt8yCt0cJw==
+  version "1.0.14"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.14.tgz#b3e0dca2e18aeaa3585a3551af7b467be52c4566"
+  integrity sha512-hLVfM2fk8xSJeobfuPGilfvxM5gLtEy1bn7RJhrtw3u4OaC0kieXKYFFTVHU8jZ3hj8YyPLIFClIUodkFSrMBQ==
 
 busboy@1.6.0, busboy@^1.6.0:
   version "1.6.0"
@@ -9014,10 +9014,10 @@ workerd@1.20231030.0:
     "@cloudflare/workerd-linux-arm64" "1.20231030.0"
     "@cloudflare/workerd-windows-64" "1.20231030.0"
 
-wrangler@3.17.0:
-  version "3.17.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.17.0.tgz#4c96564ad7b5993f75670a173511313362bd5217"
-  integrity sha512-xMPB7mmGzAzeel5bFAKOIO7O+rIG1TT7+iRiu4RAjxPkCAWRAL79++zi7KJVFnyHzGh+PBF91ramBWH2m8VDUw==
+wrangler@3.17.1:
+  version "3.17.1"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.17.1.tgz#1fc439b8a083795366dd17108c41fc3ab4cae190"
+  integrity sha512-Pr9+/tjFkthzG63uoVm1NtVvgokT6p92fy1UsOgrntHyTu0pZMC1VJzG0NC8Vhs+z/+yTT8AqVV6AiJb3w8ZOQ==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.2.3"
