@@ -42,4 +42,17 @@ describe('Headers', () => {
     headers.set('X-Header', 'foo');
     expect(inspect(headers)).toBe("Headers { 'x-header': 'foo' }");
   });
+  it('should iterate each set-cookie individually', () => {
+    const headers = new PonyfillHeaders();
+    headers.append('set-cookie', 'foo');
+    headers.append('set-cookie', 'bar');
+    const headerEntries: [string, string][] = [];
+    headers.forEach((value, key) => {
+      headerEntries.push([key, value]);
+    });
+    expect(headerEntries).toEqual([
+      ['set-cookie', 'foo'],
+      ['set-cookie', 'bar'],
+    ]);
+  });
 });

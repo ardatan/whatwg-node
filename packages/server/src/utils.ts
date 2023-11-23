@@ -257,8 +257,13 @@ export function sendNodeResponse(
   serverResponse.statusCode = fetchResponse.status;
   serverResponse.statusMessage = fetchResponse.statusText;
 
+  let setCookiesSet = false;
   fetchResponse.headers.forEach((value, key) => {
     if (key === 'set-cookie') {
+      if (setCookiesSet) {
+        return;
+      }
+      setCookiesSet = true;
       const setCookies = fetchResponse.headers.getSetCookie?.();
       if (setCookies) {
         serverResponse.setHeader('set-cookie', setCookies);
