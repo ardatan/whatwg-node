@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.17
+
+### Patch Changes
+
+- [`ea508c5`](https://github.com/ardatan/whatwg-node/commit/ea508c5db519651d9ad4c39141e319f9a3c89fdb)
+  Thanks [@ardatan](https://github.com/ardatan)! - Iterate set-cookie headers correctly
+
 ## 0.9.16
 
 ### Patch Changes
