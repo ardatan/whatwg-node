@@ -3,7 +3,7 @@
   "version": "0.0.74",
   "private": true,
   "scripts": {
-    "e2e": "bun wiptest",
+    "e2e": "bun test",
     "start": "bun src/index.ts"
   },
   "dependencies": {

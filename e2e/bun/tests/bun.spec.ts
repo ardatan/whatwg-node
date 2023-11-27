@@ -1,7 +1,7 @@
 import { Server } from 'bun';
 import { describe, it } from 'bun:test';
-import { assertDeployedEndpoint } from '@e2e/shared-scripts';
-import { createTestServerAdapter } from '@e2e/shared-server';
+import { assertDeployedEndpoint } from '../../shared-scripts/src/index';
+import { createTestServerAdapter } from '../../shared-server/src/index';
 
 let server: Server;
 let url: string;
