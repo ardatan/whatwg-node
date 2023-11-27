@@ -111,6 +111,8 @@ export class ServerAdapterRequestAbortSignal extends EventTarget implements Abor
   }
 }
 
+let bunNodeCompatModeWarned = false;
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   RequestCtor: typeof Request,
@@ -193,6 +195,13 @@ export function normalizeNodeRequest(
 
   // Temporary workaround for a bug in Bun Node compat mode
   if (globalThis.process?.versions?.bun && isReadable(rawRequest)) {
+    if (!bunNodeCompatModeWarned) {
+      bunNodeCompatModeWarned = true;
+      console.warn(
+        `You use Bun Node compatibility mode, which is not recommended!
+It will affect your performance. Please check our Bun integration recipe, and avoid using 'node:http' for your server implementation.`,
+      );
+    }
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
       headers: nodeRequest.headers,
