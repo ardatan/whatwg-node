@@ -66,8 +66,8 @@ function addWaitUntil(serverContext: any, waitUntilPromises: Promise<unknown>[])
 }
 
 export interface ServerAdapterOptions<TServerContext> {
-  plugins?: ServerAdapterPlugin<TServerContext>[];
-  fetchAPI?: Partial<FetchAPI>;
+  plugins?: ServerAdapterPlugin<TServerContext>[] | undefined;
+  fetchAPI?: Partial<FetchAPI> | undefined;
 }
 
 const EMPTY_OBJECT = {};
@@ -78,14 +78,14 @@ function createServerAdapter<
     ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
 >(
   serverAdapterRequestHandler: THandleRequest,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext> | undefined,
 ): ServerAdapter<TServerContext, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
 function createServerAdapter<
   TServerContext,
   TBaseObject extends ServerAdapterBaseObject<TServerContext>,
 >(
   serverAdapterBaseObject: TBaseObject,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext> | undefined,
 ): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
   TServerContext = {},
@@ -97,7 +97,7 @@ function createServerAdapter<
   > = ServerAdapterBaseObject<TServerContext, THandleRequest>,
 >(
   serverAdapterBaseObject: TBaseObject | THandleRequest,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext> | undefined,
 ): ServerAdapter<TServerContext, TBaseObject> {
   const fetchAPI = {
     ...DefaultFetchAPI,
@@ -351,14 +351,14 @@ function createServerAdapter<
     return fetchFn(input, ...maybeCtx);
   };
 
-  const adapterObj: ServerAdapterObject<TServerContext> = {
+  const adapterObj = {
     handleRequest,
     fetch: fetchFn,
     handleNodeRequest,
     requestListener,
     handleEvent,
     handleUWS,
-    handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
+    handle: genericRequestHandler,
   };
 
   const serverAdapter = new Proxy(genericRequestHandler, {
@@ -372,6 +372,7 @@ function createServerAdapter<
     },
     get: (_, prop) => {
       const adapterProp = (adapterObj as any)[prop];
+
       if (adapterProp) {
         if (adapterProp.bind) {
           return adapterProp.bind(adapterObj);

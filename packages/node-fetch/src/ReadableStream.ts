@@ -137,7 +137,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   getReader(options: { mode: 'byob' }): ReadableStreamBYOBReader;
   getReader(): ReadableStreamDefaultReader<T>;
-  getReader(_options?: ReadableStreamGetReaderOptions): ReadableStreamReader<T> {
+  getReader(_options?: ReadableStreamGetReaderOptions | undefined): ReadableStreamReader<T> {
     const iterator = this.readable[Symbol.asyncIterator]();
     this.locked = true;
     return {

@@ -12,26 +12,27 @@ export function isAsyncIterable(body: any): body is AsyncIterable<any> {
 }
 
 export interface NodeRequest {
-  protocol?: string;
-  hostname?: string;
+  protocol?: string | undefined;
+  hostname?: string | undefined;
   body?: any;
-  url?: string;
-  originalUrl?: string;
-  method?: string;
+  url?: string | undefined;
+  originalUrl?: string | undefined;
+  method: string;
   headers?: any;
-  req?: IncomingMessage | Http2ServerRequest;
-  raw?: IncomingMessage | Http2ServerRequest;
-  socket?: Socket;
+  req?: IncomingMessage | Http2ServerRequest | undefined;
+  raw?: IncomingMessage | Http2ServerRequest | undefined;
+  socket?: Socket | undefined;
   query?: any;
   once?(event: string, listener: (...args: any[]) => void): void;
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
-function getPort(nodeRequest: NodeRequest) {
+function getPort(nodeRequest: NodeRequest | Http2ServerRequest | IncomingMessage) {
   if (nodeRequest.socket?.localPort) {
     return nodeRequest.socket?.localPort;
   }
+
   const hostInHeader = nodeRequest.headers?.[':authority'] || nodeRequest.headers?.host;
   const portInHeader = hostInHeader?.split(':')?.[1];
   if (portInHeader) {
@@ -40,7 +41,7 @@ function getPort(nodeRequest: NodeRequest) {
   return 80;
 }
 
-function getHostnameWithPort(nodeRequest: NodeRequest) {
+function getHostnameWithPort(nodeRequest: NodeRequest | Http2ServerRequest | IncomingMessage) {
   if (nodeRequest.headers?.[':authority']) {
     return nodeRequest.headers?.[':authority'];
   }
@@ -48,9 +49,11 @@ function getHostnameWithPort(nodeRequest: NodeRequest) {
     return nodeRequest.headers?.host;
   }
   const port = getPort(nodeRequest);
-  if (nodeRequest.hostname) {
+
+  if ('hostname' in nodeRequest && nodeRequest.hostname) {
     return nodeRequest.hostname + ':' + port;
   }
+
   const localIp = nodeRequest.socket?.localAddress;
   if (localIp && !localIp?.includes('::') && !localIp?.includes('ffff')) {
     return `${localIp}:${port}`;
@@ -58,9 +61,15 @@ function getHostnameWithPort(nodeRequest: NodeRequest) {
   return 'localhost';
 }
 
-function buildFullUrl(nodeRequest: NodeRequest) {
+function buildFullUrl(nodeRequest: NodeRequest | Http2ServerRequest | IncomingMessage) {
   const hostnameWithPort = getHostnameWithPort(nodeRequest);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Property 'protocol' does not exist on type 'NodeRequest | Http2ServerRequest'.
+  // Property 'protocol' does not exist on type 'Http2ServerRequest' | 'IncomingMessage' .ts(2339)
   const protocol = nodeRequest.protocol || 'http';
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore Property 'originalUrl' does not exist on type 'NodeRequest | Http2ServerRequest'.
+  // Property 'originalUrl' does not exist on type 'Http2ServerRequest' | 'IncomingMessage' .ts(2339)
   const endpoint = nodeRequest.originalUrl || nodeRequest.url || '/graphql';
 
   return `${protocol}://${hostnameWithPort}${endpoint}`;
@@ -115,8 +124,12 @@ export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   RequestCtor: typeof Request,
 ): Request {
+  // TODO: this is a main issue!
+  // const rawRequest: NodeRequest | IncomingMessage | Http2ServerRequest
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
+
   let fullUrl = buildFullUrl(rawRequest);
+  //                         ^
   if (nodeRequest.query) {
     const url = new URL(fullUrl);
     for (const key in nodeRequest.query) {
@@ -147,23 +160,31 @@ export function normalizeNodeRequest(
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
   const maybeParsedBody = nodeRequest.body;
+
   if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
     if (isRequestBody(maybeParsedBody)) {
-      return new RequestCtor(fullUrl, {
-        method: nodeRequest.method,
+      const init1: RequestInit = {
+        method: nodeRequest.method || 'GET',
         headers: nodeRequest.headers,
         body: maybeParsedBody,
         signal,
       });
+
+      return new RequestCtor(fullUrl, init1);
     }
-    const request = new RequestCtor(fullUrl, {
-      method: nodeRequest.method,
+
+    const init2: RequestInit = {
+      method: nodeRequest.method || 'GET',
       headers: nodeRequest.headers,
       signal,
     });
+
+    const request = new RequestCtor(fullUrl, init2);
+
     if (!request.headers.get('content-type')?.includes('json')) {
       request.headers.set('content-type', 'application/json; charset=utf-8');
     }
+
     return new Proxy(request, {
       get: (target, prop: keyof Request, receiver) => {
         switch (prop) {
@@ -178,13 +199,15 @@ export function normalizeNodeRequest(
     });
   }
 
-  // perf: instead of spreading the object, we can just pass it as is and it performs better
-  return new RequestCtor(fullUrl, {
-    method: nodeRequest.method,
+  const init3: RequestInit = {
+    method: nodeRequest.method || 'GET',
     headers: nodeRequest.headers,
     body: rawRequest as any,
     signal,
   });
+
+  // perf: instead of spreading the object, we can just pass it as is and it performs better
+  return new RequestCtor(fullUrl, init3);
 }
 
 export function isReadable(stream: any): stream is Readable {
@@ -214,7 +237,7 @@ export function isFetchEvent(event: any): event is FetchEvent {
   return event != null && event.request != null && event.respondWith != null;
 }
 
-function configureSocket(rawRequest: NodeRequest) {
+function configureSocket(rawRequest: NodeRequest | Http2ServerRequest) {
   rawRequest?.socket?.setTimeout?.(0);
   rawRequest?.socket?.setNoDelay?.(true);
   rawRequest?.socket?.setKeepAlive?.(true);
@@ -244,7 +267,7 @@ async function sendAsyncIterable(
 export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
-  nodeRequest: NodeRequest,
+  nodeRequest: NodeRequest | Http2ServerRequest,
 ) {
   if (serverResponse.closed || serverResponse.destroyed) {
     return;

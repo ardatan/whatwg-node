@@ -5,7 +5,7 @@ export class PonyfillFile extends PonyfillBlob implements File {
   constructor(
     fileBits: BlobPart[],
     public name: string,
-    options?: FilePropertyBag,
+    options?: FilePropertyBag | undefined,
   ) {
     super(fileBits, options);
     this.lastModified = options?.lastModified || Date.now();

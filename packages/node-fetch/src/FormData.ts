@@ -6,8 +6,8 @@ export class PonyfillFormData implements FormData {
   private map = new Map<string, FormDataEntryValue[]>();
 
   append(name: string, value: string): void;
-  append(name: string, value: PonyfillBlob, fileName?: string): void;
-  append(name: string, value: PonyfillBlob | string, fileName?: string): void {
+  append(name: string, value: PonyfillBlob, fileName?: string | undefined): void;
+  append(name: string, value: PonyfillBlob | string, fileName?: string | undefined): void {
     let values = this.map.get(name);
     if (!values) {
       values = [];
@@ -37,8 +37,8 @@ export class PonyfillFormData implements FormData {
   }
 
   set(name: string, value: string): void;
-  set(name: string, value: PonyfillBlob, fileName?: string): void;
-  set(name: string, value: PonyfillBlob | string, fileName?: string): void {
+  set(name: string, value: PonyfillBlob, fileName?: string | undefined): void;
+  set(name: string, value: PonyfillBlob | string, fileName?: string | undefined): void {
     const entry: FormDataEntryValue = isBlob(value)
       ? getNormalizedFile(name, value, fileName)
       : value;

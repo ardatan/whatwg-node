@@ -43,7 +43,7 @@ export type ErrorHandler<TServerContext> = (
 ) => Response | Promise<Response>;
 
 export function useErrorHandling<TServerContext>(
-  onError?: ErrorHandler<TServerContext>,
+  onError?: ErrorHandler<TServerContext> | undefined,
 ): ServerAdapterPlugin<TServerContext> {
   return {
     onRequest({ requestHandler, setRequestHandler, fetchAPI }) {

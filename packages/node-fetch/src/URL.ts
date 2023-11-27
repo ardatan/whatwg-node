@@ -5,7 +5,7 @@ import { PonyfillURLSearchParams } from './URLSearchParams.js';
 FastUrl.queryString = FastQuerystring;
 
 export class PonyfillURL extends FastUrl implements URL {
-  constructor(url: string, base?: string | URL) {
+  constructor(url: string, base?: string | URL | undefined) {
     super();
     if (url.startsWith('data:')) {
       this.protocol = 'data:';
@@ -25,7 +25,7 @@ export class PonyfillURL extends FastUrl implements URL {
     return `${this.protocol}//${this.host}`;
   }
 
-  private _searchParams?: PonyfillURLSearchParams;
+  private _searchParams?: PonyfillURLSearchParams | undefined;
 
   get searchParams(): PonyfillURLSearchParams {
     if (!this._searchParams) {

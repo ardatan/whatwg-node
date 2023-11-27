@@ -10,10 +10,14 @@ declare module 'fast-url-parser' {
     parse(
       urlString: string,
       parseQueryString: false | undefined,
-      slashesDenoteHost?: boolean,
+      slashesDenoteHost?: boolean | undefined,
     ): void;
-    parse(urlString: string, parseQueryString: true, slashesDenoteHost?: boolean): void;
-    parse(urlString: string, parseQueryString: boolean, slashesDenoteHost?: boolean): void;
+    parse(urlString: string, parseQueryString: true, slashesDenoteHost?: boolean | undefined): void;
+    parse(
+      urlString: string,
+      parseQueryString: boolean,
+      slashesDenoteHost?: boolean | undefined,
+    ): void;
     format(): string;
     auth: string;
     hash: string;

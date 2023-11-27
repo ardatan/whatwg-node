@@ -79,8 +79,8 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
         const ponyfillResponse = new PonyfillResponse(responseBody, {
-          status: nodeResponse.statusCode,
-          statusText: nodeResponse.statusMessage,
+          status: nodeResponse.statusCode || 200,
+          statusText: nodeResponse.statusMessage || 'OK',
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
         });

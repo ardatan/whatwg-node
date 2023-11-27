@@ -3,7 +3,7 @@ import { ServerAdapterPlugin } from '@whatwg-node/server';
 
 declare global {
   interface Request {
-    cookieStore?: CookieStore;
+    cookieStore?: CookieStore | undefined;
   }
 }
 

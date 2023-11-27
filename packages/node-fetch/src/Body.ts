@@ -23,23 +23,23 @@ export type BodyPonyfillInit =
 
 export interface FormDataLimits {
   /* Max field name size (in bytes). Default: 100. */
-  fieldNameSize?: number;
+  fieldNameSize?: number | undefined;
   /* Max field value size (in bytes). Default: 1MB. */
-  fieldSize?: number;
+  fieldSize?: number | undefined;
   /* Max number of fields. Default: Infinity. */
-  fields?: number;
+  fields?: number | undefined;
   /* For multipart forms, the max file size (in bytes). Default: Infinity. */
-  fileSize?: number;
+  fileSize?: number | undefined;
   /* For multipart forms, the max number of file fields. Default: Infinity. */
-  files?: number;
+  files?: number | undefined;
   /* For multipart forms, the max number of parts (fields + files). Default: Infinity. */
-  parts?: number;
+  parts?: number | undefined;
   /* For multipart forms, the max number of header key-value pairs to parse. Default: 2000. */
-  headerSize?: number;
+  headerSize?: number | undefined;
 }
 
 export interface PonyfillBodyOptions {
-  formDataLimits?: FormDataLimits;
+  formDataLimits?: FormDataLimits | undefined;
 }
 
 export class PonyfillBody<TJSON = any> implements Body {
@@ -59,7 +59,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     this._buffer = buffer;
   }
 
-  private bodyType?: BodyInitType;
+  private bodyType?: BodyInitType | undefined;
 
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
@@ -139,7 +139,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     });
   }
 
-  formData(opts?: { formDataLimits: FormDataLimits }): Promise<PonyfillFormData> {
+  formData(opts?: { formDataLimits: FormDataLimits } | undefined): Promise<PonyfillFormData> {
     if (this.bodyType === BodyInitType.FormData) {
       return fakePromise(this.bodyInit as PonyfillFormData);
     }
@@ -245,7 +245,7 @@ export class PonyfillBody<TJSON = any> implements Body {
 }
 
 function processBodyInit(bodyInit: BodyPonyfillInit | null): {
-  bodyType?: BodyInitType;
+  bodyType?: BodyInitType | undefined;
   contentType: string | null;
   contentLength: number | null;
   buffer?: Buffer;

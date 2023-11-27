@@ -43,7 +43,7 @@ function isURL(obj: any): obj is URL {
 
 export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   info: string | PonyfillRequest<TRequestJSON> | URL,
-  init?: RequestPonyfillInit,
+  init?: RequestPonyfillInit | undefined,
 ): Promise<PonyfillResponse<TResponseJSON>> {
   if (typeof info === 'string' || isURL(info)) {
     const ponyfillRequest = new PonyfillRequest(info, init);
