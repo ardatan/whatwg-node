@@ -125,11 +125,24 @@ export function normalizeNodeRequest(
     fullUrl = url.toString();
   }
 
-  const signal = new ServerAdapterRequestAbortSignal();
+  let signal: AbortSignal;
 
-  if (rawRequest.once) {
-    rawRequest.once('end', () => signal.sendAbort());
-    rawRequest.once('close', () => signal.sendAbort());
+  // If ponyfilled
+  if (RequestCtor !== globalThis.Request) {
+    signal = new ServerAdapterRequestAbortSignal();
+
+    if (rawRequest.once) {
+      rawRequest.once('end', () => (signal as ServerAdapterRequestAbortSignal).sendAbort());
+      rawRequest.once('close', () => (signal as ServerAdapterRequestAbortSignal).sendAbort());
+    }
+  } else {
+    const controller = new AbortController();
+    signal = controller.signal;
+
+    if (rawRequest.once) {
+      rawRequest.once('end', () => controller.abort());
+      rawRequest.once('close', () => controller.abort());
+    }
   }
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
@@ -175,6 +188,31 @@ export function normalizeNodeRequest(
             return Reflect.get(target, prop, receiver);
         }
       },
+    });
+  }
+
+  // Temporary workaround for a bug in Bun Node compat mode
+  if (globalThis.process?.versions?.bun && isReadable(rawRequest)) {
+    return new RequestCtor(fullUrl, {
+      method: nodeRequest.method,
+      headers: nodeRequest.headers,
+      body: new ReadableStream({
+        start(controller) {
+          rawRequest.on('data', chunk => {
+            controller.enqueue(chunk);
+          });
+          rawRequest.on('error', e => {
+            controller.error(e);
+          });
+          rawRequest.on('end', () => {
+            controller.close();
+          });
+        },
+        cancel(e) {
+          rawRequest.destroy(e);
+        },
+      }),
+      signal,
     });
   }
 
