@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.18
+
+### Patch Changes
+
+- [`3fefa17`](https://github.com/ardatan/whatwg-node/commit/3fefa178d6215a92570a4765b84321873ec44db6)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support Bun's Node compat mode
+
 ## 0.9.17
 
 ### Patch Changes
