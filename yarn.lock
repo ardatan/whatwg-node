@@ -2170,10 +2170,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@6.12.0":
-  version "6.12.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.12.0.tgz#92bbcc89dec89ec192293f7f98c66a5393ed6d76"
-  integrity sha512-BetnMRmjuC2Os9DFU4DRGZSJfWvSCkU6Lsyg8l7YNm+0B0rqs/WajqV/PIHZHdU7mxCkvSbDT0c+GaWty8hXmw==
+"@pulumi/aws@6.12.1":
+  version "6.12.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.12.1.tgz#feaa3ad82d8b64bc796b1810a447001ebf2e4dce"
+  integrity sha512-HvfLRm+7EYNc7qr+S6xvED/Utzwx140dDr5TbOrMbGpQs8JBgGm2nraMuRvaD0LB2XzZFVynk8ryU16QJwlSrQ==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     builtin-modules "3.0.0"
@@ -2330,10 +2330,10 @@
   resolved "https://registry.yarnpkg.com/@tsconfig/node16/-/node16-1.0.4.tgz#0b92dcc0cc1c81f6f306a381f28e31b1a56536e9"
   integrity sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==
 
-"@types/aws-lambda@8.10.129":
-  version "8.10.129"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.129.tgz#c4e040778a13b70a9cdf8ad54c1b853c94e2a44d"
-  integrity sha512-0Rl7CpTPVws5cp0Ui1gZh4Q+TXC65bXVwTOGoI2RKW45dxWzyZGbjIX0uFjFYdIJ8vnD45y584rIIqvD2vBBfQ==
+"@types/aws-lambda@8.10.130":
+  version "8.10.130"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.130.tgz#d4a44201f0e47c8320a5868d845ad654f3b4adc2"
+  integrity sha512-HxTfLeGvD1wTJqIGwcBCpNmHKenja+We1e0cuzeIDFfbEj3ixnlTInyPR/81zAe0Ss/Ip12rFK6XNeMLVucOSg==
 
 "@types/aws-lambda@8.10.93":
   version "8.10.93"
@@ -2486,10 +2486,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@20.10.0", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
-  version "20.10.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.10.0.tgz#16ddf9c0a72b832ec4fcce35b8249cf149214617"
-  integrity sha512-D0WfRmU9TQ8I9PFx9Yc+EBHw+vSpIub4IDvQivcp26PtPrdMGAq5SDcpXEo/epqa/DXotVpekHiLNTg3iaKXBQ==
+"@types/node@*", "@types/node@20.10.1", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
+  version "20.10.1"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.10.1.tgz#d2c96f356c3125fedc983d74c424910c3767141c"
+  integrity sha512-T2qwhjWwGH81vUEx4EXmBKsTJRXFXNZTL4v0gi01+zyBmCwzE6TyHszqX01m+QHTEq+EZNo13NeJIdEqf+Myrg==
   dependencies:
     undici-types "~5.26.4"
 
