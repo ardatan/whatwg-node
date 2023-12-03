@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@e2e/shared-server": "0.0.75",
-    "@types/node": "20.10.2",
+    "@types/node": "20.10.3",
     "bun-types": "1.0.15"
   },
   "devDependencies": {
