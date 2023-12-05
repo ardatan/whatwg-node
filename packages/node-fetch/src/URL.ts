@@ -1,5 +1,5 @@
 import FastQuerystring from 'fast-querystring';
-import FastUrl from 'fast-url-parser';
+import FastUrl from '@kamilkisiela/fast-url-parser';
 import { PonyfillURLSearchParams } from './URLSearchParams.js';
 
 FastUrl.queryString = FastQuerystring;

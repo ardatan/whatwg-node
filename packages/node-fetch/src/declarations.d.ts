@@ -1,5 +1,5 @@
 /* eslint-disable */
-declare module 'fast-url-parser' {
+declare module '@kamilkisiela/fast-url-parser' {
   class Url {
     static queryString: {
       parse(value: string): any;
