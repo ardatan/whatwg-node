@@ -110,4 +110,39 @@ describe('Fastify', () => {
       baz: 'qux',
     });
   });
+  it('should handle headers and status', async () => {
+    const headers = { 'x-custom-header': '55', 'x-cache-header': 'true' };
+    const status = 300;
+
+    const serverAdapter = createServerAdapter(request => {
+      const url = new URL(request.url);
+      const searchParamsObj = Object.fromEntries(url.searchParams);
+      return Response.json(searchParamsObj, { headers, status });
+    });
+    const fastifyServer = fastify();
+    fastifyServer.route({
+      url: '/mypath',
+      method: ['GET', 'POST', 'OPTIONS'],
+      handler: async (req, reply) => {
+        const response = await serverAdapter.handleNodeRequest(req, {
+          req,
+          reply,
+        });
+        response.headers.forEach((value, key) => {
+          reply.header(key, value);
+        });
+
+        reply.status(response.status);
+
+        reply.send(response.body);
+
+        return reply;
+      },
+    });
+    const res = await fastifyServer.inject({
+      url: '/mypath',
+    });
+    expect(res.headers).toMatchObject(headers);
+    expect(res.statusCode).toBe(status);
+  });
 });
