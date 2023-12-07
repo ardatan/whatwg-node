@@ -4,7 +4,7 @@ describe('Server Context', () => {
     it('should be passed to the handler', async () => {
         const exampleStaticCtx = { foo: 'bar' };
         const seenCtx = new Set();
-        const adapter = createServerAdapter(function handler(req: Request, ctx: any) {
+        const adapter = createServerAdapter<typeof exampleStaticCtx>(function handler(_req, ctx) {
             seenCtx.add(ctx);
             ctx.foo = 'baz';
             return new Response('ok');
