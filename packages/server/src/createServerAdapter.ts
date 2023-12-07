@@ -19,6 +19,7 @@ import {
   handleErrorFromRequestHandler,
   isFetchEvent,
   isNodeRequest,
+  isolateObject,
   isPromise,
   isRequestInit,
   isServerResponse,
@@ -282,7 +283,7 @@ function createServerAdapter<
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = (ctx.length > 1 ? completeAssign(...ctx) : ctx[0]) || {};
+    const serverContext = (ctx.length > 1 ? completeAssign(...ctx) : isolateObject(ctx[0]));
     if (serverContext.waitUntil == null) {
       const waitUntilPromises: Promise<void>[] = [];
       addWaitUntil(serverContext, waitUntilPromises);
