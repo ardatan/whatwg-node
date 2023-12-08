@@ -1,5 +1,17 @@
 # @whatwg-node/server
 
+## 0.9.19
+
+### Patch Changes
+
+- [#997](https://github.com/ardatan/whatwg-node/pull/997)
+  [`0c28ae9`](https://github.com/ardatan/whatwg-node/commit/0c28ae90f531fb98ea9d9b585b530a5f542f1d60)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid mutating the static context
+
+  For example if the adapter receives the server object as the server context, it is isolated and
+  the handler cannot mutate it, otherwise it will leak. Bun does that so this patch is needed to
+  avoid leaking the server object.
+
 ## 0.9.18
 
 ### Patch Changes
