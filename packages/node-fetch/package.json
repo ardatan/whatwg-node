@@ -34,10 +34,10 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
+    "@kamilkisiela/fast-url-parser": "^1.1.4",
     "@whatwg-node/events": "^0.1.0",
     "busboy": "^1.6.0",
     "fast-querystring": "^1.1.1",
-    "fast-url-parser": "^1.1.3",
     "tslib": "^2.3.1"
   },
   "devDependencies": {
