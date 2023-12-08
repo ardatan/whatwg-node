@@ -444,9 +444,8 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
   });
 }
 
-
 export function isolateObject<TIsolatedObject extends object>(
-  originalCtx: TIsolatedObject
+  originalCtx: TIsolatedObject,
 ): TIsolatedObject {
   if (originalCtx == null) {
     return {} as TIsolatedObject;
@@ -491,7 +490,9 @@ export function isolateObject<TIsolatedObject extends object>(
       const extraKeys = Reflect.ownKeys(extraProps);
       const originalKeys = Reflect.ownKeys(originalCtx);
       const deletedKeys = Array.from(deletedProps);
-      return Array.from(new Set(extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys)))));
+      return Array.from(
+        new Set(extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys)))),
+      );
     },
     getOwnPropertyDescriptor(originalCtx, prop) {
       if (prop in extraProps) {
@@ -501,6 +502,6 @@ export function isolateObject<TIsolatedObject extends object>(
         return undefined;
       }
       return Reflect.getOwnPropertyDescriptor(originalCtx, prop);
-    }
+    },
   });
 }
