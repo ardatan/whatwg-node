@@ -1,5 +1,26 @@
 # @whatwg-node/node-fetch
 
+## 0.5.2
+
+### Patch Changes
+
+- [#990](https://github.com/ardatan/whatwg-node/pull/990)
+  [`c6806ff`](https://github.com/ardatan/whatwg-node/commit/c6806ff4228a03ce03caa0b3766efb34eb07c3e6)
+  Thanks [@kamilkisiela](https://github.com/kamilkisiela)! - dependencies updates:
+
+  - Added dependency
+    [`@kamilkisiela/fast-url-parser@^1.1.4` ↗︎](https://www.npmjs.com/package/@kamilkisiela/fast-url-parser/v/1.1.4)
+    (to `dependencies`)
+  - Removed dependency
+    [`fast-url-parser@^1.1.3` ↗︎](https://www.npmjs.com/package/fast-url-parser/v/1.1.3) (from
+    `dependencies`)
+
+- [#990](https://github.com/ardatan/whatwg-node/pull/990)
+  [`c6806ff`](https://github.com/ardatan/whatwg-node/commit/c6806ff4228a03ce03caa0b3766efb34eb07c3e6)
+  Thanks [@kamilkisiela](https://github.com/kamilkisiela)! - Fix
+  https://github.com/petkaantonov/urlparser/issues/20 by using
+  https://github.com/kamilkisiela/fast-url-parser fork
+
 ## 0.5.1
 
 ### Patch Changes
