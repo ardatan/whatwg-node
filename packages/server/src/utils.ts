@@ -443,3 +443,65 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
     status: error.status || 500,
   });
 }
+
+export function isolateObject<TIsolatedObject extends object>(
+  originalCtx: TIsolatedObject,
+): TIsolatedObject {
+  if (originalCtx == null) {
+    return {} as TIsolatedObject;
+  }
+  const extraProps: Partial<TIsolatedObject> = {};
+  const deletedProps = new Set<string | symbol>();
+  return new Proxy(originalCtx, {
+    get(originalCtx, prop, receiver) {
+      if (prop in extraProps) {
+        return Reflect.get(extraProps, prop, receiver);
+      }
+      if (deletedProps.has(prop)) {
+        return undefined;
+      }
+      if (prop in originalCtx) {
+        return Reflect.get(originalCtx, prop, receiver);
+      }
+    },
+    set(_originalCtx, prop, value, receiver) {
+      return Reflect.set(extraProps, prop, value, receiver);
+    },
+    has(originalCtx, prop) {
+      if (deletedProps.has(prop)) {
+        return false;
+      }
+      if (prop in extraProps) {
+        return true;
+      }
+      return Reflect.has(originalCtx, prop);
+    },
+    defineProperty(_originalCtx, prop, descriptor) {
+      return Reflect.defineProperty(extraProps, prop, descriptor);
+    },
+    deleteProperty(_originalCtx, prop) {
+      if (prop in extraProps) {
+        return Reflect.deleteProperty(extraProps, prop);
+      }
+      deletedProps.add(prop);
+      return true;
+    },
+    ownKeys(originalCtx) {
+      const extraKeys = Reflect.ownKeys(extraProps);
+      const originalKeys = Reflect.ownKeys(originalCtx);
+      const deletedKeys = Array.from(deletedProps);
+      return Array.from(
+        new Set(extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys)))),
+      );
+    },
+    getOwnPropertyDescriptor(originalCtx, prop) {
+      if (prop in extraProps) {
+        return Reflect.getOwnPropertyDescriptor(extraProps, prop);
+      }
+      if (deletedProps.has(prop)) {
+        return undefined;
+      }
+      return Reflect.getOwnPropertyDescriptor(originalCtx, prop);
+    },
+  });
+}
