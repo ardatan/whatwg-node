@@ -9,7 +9,7 @@
   "dependencies": {
     "@e2e/shared-server": "0.0.76",
     "@types/node": "20.10.4",
-    "bun-types": "1.0.15"
+    "bun-types": "1.0.16"
   },
   "devDependencies": {
     "typescript": "5.3.3"
