@@ -39,12 +39,7 @@ import {
 } from './uwebsockets.js';
 
 async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
-  const waitUntils = await Promise.allSettled(waitUntilPromises);
-  waitUntils.forEach(waitUntil => {
-    if (waitUntil.status === 'rejected') {
-      console.error(waitUntil.reason);
-    }
-  });
+  await Promise.allSettled(waitUntilPromises);
 }
 
 type RequestContainer = { request: Request };
@@ -56,14 +51,6 @@ function isRequestAccessible(serverContext: any): serverContext is RequestContai
   } catch {
     return false;
   }
-}
-
-function addWaitUntil(serverContext: any, waitUntilPromises: Promise<unknown>[]): void {
-  serverContext['waitUntil'] = function (promise: Promise<void> | void) {
-    if (promise != null) {
-      waitUntilPromises.push(promise);
-    }
-  };
 }
 
 export interface ServerAdapterOptions<TServerContext> {
@@ -206,8 +193,10 @@ function createServerAdapter<
     const defaultServerContext = {
       req: nodeRequest,
       res: serverResponse,
+      waitUntil(cb: Promise<unknown>) {
+        waitUntilPromises.push(cb.catch(err => console.error(err)));
+      },
     };
-    addWaitUntil(defaultServerContext, waitUntilPromises);
     let response$: Response | Promise<Response> | undefined;
     try {
       response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
@@ -234,10 +223,15 @@ function createServerAdapter<
     const defaultServerContext = {
       res,
       req,
+      waitUntil(cb: Promise<unknown>) {
+        waitUntilPromises.push(cb.catch(err => console.error(err)));
+      },
     };
-    addWaitUntil(defaultServerContext, waitUntilPromises);
+    const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
     const serverContext =
-      ctx.length > 0 ? completeAssign(defaultServerContext, ...ctx) : defaultServerContext;
+      filteredCtxParts.length > 0
+        ? completeAssign(defaultServerContext, ...ctx)
+        : defaultServerContext;
     const request = getRequestFromUWSRequest({
       req,
       res,
@@ -277,23 +271,32 @@ function createServerAdapter<
     if (!event.respondWith || !event.request) {
       throw new TypeError(`Expected FetchEvent, got ${event}`);
     }
-    const serverContext = ctx.length > 0 ? Object.assign({}, event, ...ctx) : event;
+    const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
+    const serverContext =
+      filteredCtxParts.length > 0
+        ? completeAssign({}, event, ...filteredCtxParts)
+        : isolateObject(event);
     const response$ = handleRequest(event.request, serverContext);
     event.respondWith(response$);
   }
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : isolateObject(ctx[0]);
-    if (serverContext.waitUntil == null) {
-      const waitUntilPromises: Promise<void>[] = [];
-      addWaitUntil(serverContext, waitUntilPromises);
-      const response$ = handleRequest(request, serverContext);
-      if (waitUntilPromises.length > 0) {
-        return handleWaitUntils(waitUntilPromises).then(() => response$);
-      }
-      return response$;
+    const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
+    let waitUntilPromises: Promise<void>[] | undefined;
+    const serverContext =
+      filteredCtxParts.length > 1
+        ? completeAssign(...filteredCtxParts)
+        : isolateObject(
+            filteredCtxParts[0],
+            filteredCtxParts[0] == null || filteredCtxParts[0].waitUntil == null
+              ? (waitUntilPromises = [])
+              : undefined,
+          );
+    const response$ = handleRequest(request, serverContext);
+    if (waitUntilPromises?.length) {
+      return handleWaitUntils(waitUntilPromises).then(() => response$);
     }
-    return handleRequest(request, serverContext);
+    return response$;
   }
 
   const fetchFn: ServerAdapterObject<TServerContext>['fetch'] = (

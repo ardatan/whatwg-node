@@ -1,3 +1,5 @@
+import { Request } from '@whatwg-node/fetch';
+import { Response } from '@whatwg-node/server';
 import { createServerAdapter } from '../src/createServerAdapter';
 
 describe('Server Context', () => {
@@ -19,5 +21,14 @@ describe('Server Context', () => {
     expect(seenCtx.size).toBe(2);
     expect(seenCtx.has(exampleStaticCtx)).toBe(false);
     expect(exampleStaticCtx.foo).toBe('bar');
+  });
+  it('filters empty ctx', async () => {
+    const adapter = createServerAdapter<any>(function handler(_req, ctx) {
+      return Response.json(ctx);
+    });
+    const ctxParts: any[] = [undefined, undefined, { foo: 'bar' }, undefined, { bar: 'baz' }];
+    const res = await adapter(new Request('https://example.com'), ...ctxParts);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ foo: 'bar', bar: 'baz' });
   });
 });

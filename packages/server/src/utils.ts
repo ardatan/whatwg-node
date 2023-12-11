@@ -446,6 +446,7 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
 
 export function isolateObject<TIsolatedObject extends object>(
   originalCtx: TIsolatedObject,
+  waitUntilPromises?: Promise<unknown>[],
 ): TIsolatedObject {
   if (originalCtx == null) {
     return {} as TIsolatedObject;
@@ -454,6 +455,11 @@ export function isolateObject<TIsolatedObject extends object>(
   const deletedProps = new Set<string | symbol>();
   return new Proxy(originalCtx, {
     get(originalCtx, prop, receiver) {
+      if (waitUntilPromises != null && prop === 'waitUntil') {
+        return function waitUntil(promise: Promise<unknown>) {
+          waitUntilPromises.push(promise.catch(err => console.error(err)));
+        };
+      }
       if (prop in extraProps) {
         return Reflect.get(extraProps, prop, receiver);
       }
@@ -468,6 +474,9 @@ export function isolateObject<TIsolatedObject extends object>(
       return Reflect.set(extraProps, prop, value, receiver);
     },
     has(originalCtx, prop) {
+      if (waitUntilPromises != null && prop === 'waitUntil') {
+        return true;
+      }
       if (deletedProps.has(prop)) {
         return false;
       }
@@ -490,9 +499,13 @@ export function isolateObject<TIsolatedObject extends object>(
       const extraKeys = Reflect.ownKeys(extraProps);
       const originalKeys = Reflect.ownKeys(originalCtx);
       const deletedKeys = Array.from(deletedProps);
-      return Array.from(
-        new Set(extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys)))),
+      const allKeys = new Set(
+        extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys))),
       );
+      if (waitUntilPromises != null) {
+        allKeys.add('waitUntil');
+      }
+      return Array.from(allKeys);
     },
     getOwnPropertyDescriptor(originalCtx, prop) {
       if (prop in extraProps) {
