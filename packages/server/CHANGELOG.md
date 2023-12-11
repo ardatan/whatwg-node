@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.20
+
+### Patch Changes
+
+- [`eb326a6`](https://github.com/ardatan/whatwg-node/commit/eb326a6e00fb75305b3cf2bd9187b8e55dcf85f2) Thanks [@ardatan](https://github.com/ardatan)! - Fix for undefined server context parts
+
 ## 0.9.19
 
 ### Patch Changes
@@ -738,7 +744,7 @@
   - `createServerAdapter` can now accept the request handler itself.
 
   ```ts
-  createServerAdapter(req => {
+  createServerAdapter((req) => {
     return new Response(`I got ${req.url}`);
   });
   ```
