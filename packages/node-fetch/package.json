@@ -43,7 +43,7 @@
   "devDependencies": {
     "@types/busboy": "1.5.3",
     "@types/pem": "^1.14.0",
-    "node-libcurl": "^3.0.0",
+    "node-libcurl": "3.0.1-0",
     "pem": "^1.14.8"
   },
   "publishConfig": {
