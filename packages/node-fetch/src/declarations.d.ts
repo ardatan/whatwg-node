@@ -31,4 +31,5 @@ declare module '@kamilkisiela/fast-url-parser' {
   export = Url;
 }
 
-declare var libcurl: typeof import('node-libcurl');
+// TODO
+declare var libcurl: any;
