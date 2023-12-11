@@ -69,17 +69,13 @@ jobs:
     steps:
       - name: Checkout Master
         uses: actions/checkout@v4
-      - if: matrix.node-version > 18
-        name: Install Required Libraries
+      - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
       - name: Use Node
         uses: actions/setup-node@master
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'yarn'
-      - if: matrix.node-version > 20
-        name: Remove node-libcurl and uWS
-        run: node scripts/remove-node-libcurl-uws.cjs
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
@@ -113,17 +109,8 @@ jobs:
     steps:
       - name: Checkout Master
         uses: actions/checkout@v4
-      - if: matrix.node-version > 18
-        name: Install Required Libraries
+      - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
-      - name: Use Node
-        uses: actions/setup-node@master
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'yarn'
-      - if: matrix.node-version > 20
-        name: Remove node-libcurl and uWS
-        run: node scripts/remove-node-libcurl-uws.cjs
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
