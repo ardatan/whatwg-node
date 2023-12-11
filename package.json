@@ -23,6 +23,9 @@
     "test:leaks": "LEAK_TEST=1 jest --runInBand --detectOpenHandles --detectLeaks --logHeapUsage --forceExit",
     "ts:check": "tsc --noEmit"
   },
+  "optionalDependencies": {
+    "node-libcurl": "3.0.1-0"
+  },
   "devDependencies": {
     "@babel/core": "7.23.5",
     "@babel/plugin-proposal-class-properties": "7.18.6",
