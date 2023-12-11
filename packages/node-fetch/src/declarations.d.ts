@@ -31,4 +31,5 @@ declare module '@kamilkisiela/fast-url-parser' {
   export = Url;
 }
 
+// TODO
 declare var libcurl: any;
