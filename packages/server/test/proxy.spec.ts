@@ -36,6 +36,7 @@ describe('Proxy', () => {
   let libcurl: any;
   beforeAll(async () => {
     libcurl = globalThis['libcurl'];
+    globalThis['libcurl'] = undefined;
     aborted = false;
     await new Promise<void>(resolve => originalServer.listen(0, resolve));
     await new Promise<void>(resolve => proxyServer.listen(0, resolve));
