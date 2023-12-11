@@ -7,44 +7,35 @@ on:
 
 jobs:
   dependencies:
-    steps:
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
-      - if: ${{ github.event.pull_request.title != 'Upcoming Release Changes' }}
-        uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yaml@main
-        secrets:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
+    uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yaml@main
+    if: ${{ github.event.pull_request.title != 'Upcoming Release Changes' }}
+    secrets:
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
 
   alpha:
-    steps:
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
-      - if:
-          ${{ (github.event.pull_request.head.repo.full_name == github.repository ||
-          github.event.inputs.onDemand == 'yes') && github.event.pull_request.title != 'Upcoming
-          Release Changes' }}
-        uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@main
-        with:
-          npmTag: alpha
-          buildScript: build
-          nodeVersion: 20
-        secrets:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
+    if:
+      ${{ (github.event.pull_request.head.repo.full_name == github.repository ||
+      github.event.inputs.onDemand == 'yes') && github.event.pull_request.title != 'Upcoming Release
+      Changes' }}
+    uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@main
+    with:
+      npmTag: alpha
+      buildScript: build
+      nodeVersion: 20
+    secrets:
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
+      npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
 
   release-candidate:
-    steps:
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
-      - if:
-          ${{ github.event.pull_request.head.repo.full_name == github.repository &&
-          github.event.pull_request.title == 'Upcoming Release Changes' }}
-        uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@main
-        with:
-          npmTag: rc
-          buildScript: build
-          nodeVersion: 20
-          restoreDeletedChangesets: true
-        secrets:
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
+    if:
+      ${{ github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.title == 'Upcoming Release Changes' }}
+    uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@main
+    with:
+      npmTag: rc
+      buildScript: build
+      nodeVersion: 20
+      restoreDeletedChangesets: true
+    secrets:
+      githubToken: ${{ secrets.GITHUB_TOKEN }}
+      npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
