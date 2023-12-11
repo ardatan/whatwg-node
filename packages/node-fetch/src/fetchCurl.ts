@@ -86,7 +86,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.once('end', function endListener() {
       curlHandle.close();
     });
-    curlHandle.once('error', function errorListener(error) {
+    curlHandle.once('error', function errorListener(error: any) {
       if (error.isCurlError && error.code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
         // this is expected
       } else {
@@ -95,34 +95,37 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       }
       curlHandle.close();
     });
-    curlHandle.once('stream', function streamListener(stream, status, headersBuf: Buffer) {
-      const headersFlat = headersBuf
-        .toString('utf8')
-        .split(/\r?\n|\r/g)
-        .filter(headerFilter => {
-          if (headerFilter && !headerFilter.startsWith('HTTP/')) {
-            if (
-              fetchRequest.redirect === 'error' &&
-              (headerFilter.includes('location') || headerFilter.includes('Location'))
-            ) {
-              reject(new Error('redirect is not allowed'));
+    curlHandle.once(
+      'stream',
+      function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
+        const headersFlat = headersBuf
+          .toString('utf8')
+          .split(/\r?\n|\r/g)
+          .filter(headerFilter => {
+            if (headerFilter && !headerFilter.startsWith('HTTP/')) {
+              if (
+                fetchRequest.redirect === 'error' &&
+                (headerFilter.includes('location') || headerFilter.includes('Location'))
+              ) {
+                reject(new Error('redirect is not allowed'));
+              }
+              return true;
             }
-            return true;
-          }
-          return false;
-        });
-      const headersInit = headersFlat.map(
-        headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
-      );
-      resolve(
-        new PonyfillResponse(stream, {
-          status,
-          headers: headersInit,
-          url: fetchRequest.url,
-        }),
-      );
-      streamResolved = true;
-    });
+            return false;
+          });
+        const headersInit = headersFlat.map(
+          headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
+        );
+        resolve(
+          new PonyfillResponse(stream, {
+            status,
+            headers: headersInit,
+            url: fetchRequest.url,
+          }),
+        );
+        streamResolved = true;
+      },
+    );
     curlHandle.perform();
   });
 }
