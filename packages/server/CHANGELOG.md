@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.21
+
+### Patch Changes
+
+- [#1015](https://github.com/ardatan/whatwg-node/pull/1015) [`84e6e37`](https://github.com/ardatan/whatwg-node/commit/84e6e3771360b163ee8c41177b08640ec2a793a7) Thanks [@ardatan](https://github.com/ardatan)! - Send AbortSignal at correct time
+
 ## 0.9.20
 
 ### Patch Changes
