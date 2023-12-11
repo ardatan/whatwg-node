@@ -76,7 +76,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     if (fetchRequest['_signal']) {
       fetchRequest['_signal'].onabort = () => {
         if (streamResolved) {
-          curlHandle.pause(CurlPause.Recv);
+          if (curlHandle.isOpen) {
+            curlHandle.pause(CurlPause.Recv);
+          }
         } else {
           reject(new PonyfillAbortError());
           curlHandle.close();

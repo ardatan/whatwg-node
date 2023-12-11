@@ -32,4 +32,4 @@ declare module '@kamilkisiela/fast-url-parser' {
 }
 
 // TODO
-declare var libcurl: any;
+declare var libcurl: typeof import('node-libcurl');

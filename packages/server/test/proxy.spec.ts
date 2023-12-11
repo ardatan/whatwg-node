@@ -33,12 +33,15 @@ describe('Proxy', () => {
     );
   });
   const proxyServer = createServer(proxyAdapter);
+  let libcurl: any;
   beforeAll(async () => {
+    libcurl = globalThis['libcurl'];
     aborted = false;
     await new Promise<void>(resolve => originalServer.listen(0, resolve));
     await new Promise<void>(resolve => proxyServer.listen(0, resolve));
   });
   afterAll(async () => {
+    globalThis['libcurl'] = libcurl;
     await new Promise(resolve => originalServer.close(resolve));
     await new Promise(resolve => proxyServer.close(resolve));
   });
