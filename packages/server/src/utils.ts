@@ -21,6 +21,7 @@ export interface NodeRequest {
   headers?: any;
   req?: IncomingMessage | Http2ServerRequest;
   raw?: IncomingMessage | Http2ServerRequest;
+  connection?: Socket;
   socket?: Socket;
   query?: any;
   once?(event: string, listener: (...args: any[]) => void): void;
@@ -133,9 +134,10 @@ export function normalizeNodeRequest(
   if (RequestCtor !== globalThis.Request) {
     signal = new ServerAdapterRequestAbortSignal();
 
-    if (rawRequest.once) {
-      rawRequest.once('end', () => (signal as ServerAdapterRequestAbortSignal).sendAbort());
-      rawRequest.once('close', () => (signal as ServerAdapterRequestAbortSignal).sendAbort());
+    if (rawRequest.connection?.once) {
+      rawRequest.connection?.once('close', () =>
+        (signal as ServerAdapterRequestAbortSignal).sendAbort(),
+      );
     }
   } else {
     const controller = new AbortController();
