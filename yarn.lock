@@ -2190,10 +2190,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@6.13.2":
-  version "6.13.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.13.2.tgz#64b2bd1aced14a5867e2b34b554d6c42b8470ec6"
-  integrity sha512-NO5+nTQTJKeSeqZdZsc8h/ObhnAypjvDcVFatdtoMuE/mpv3Lb/8q81dXAlTU16Eo5jU8aBrGN7yZ9X6ehf8UQ==
+"@pulumi/aws@6.13.3":
+  version "6.13.3"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.13.3.tgz#5219d36943203cf977d1c1b37906f0c5b0dd44d6"
+  integrity sha512-/BeCRheITpOrwFnHfnm9OiRYnr69McvDYE95UnHd5E4mawRuhGNsrkQ+byF9TYQojz0B22F+AOZKNi5gTd1aqA==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     builtin-modules "3.0.0"
@@ -3354,10 +3354,10 @@ builtins@^5.0.1:
   dependencies:
     semver "^7.0.0"
 
-bun-types@1.0.16:
-  version "1.0.16"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.16.tgz#b9435a8e4e2d89acc710bc59beabe34d66c35224"
-  integrity sha512-GnElqUSGWvFP1Hxv2FdxLuCDzUcHZ1ac/QrOOpZ18r2RHig+S+JXIOT0YIvrHo4XwqLeurlB6CqYminiCxQIEw==
+bun-types@1.0.17:
+  version "1.0.17"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.17.tgz#82f0b171fc3c84ba2123e26eb8d4b457279c5935"
+  integrity sha512-5dj7Pi0qmZB1gaY2LmtKKrKixgnxi/qDcawsA4ttWQhT0jWyecSEB8la7c6DIgrMkJciixAtyLLe3aj0SJaRAw==
 
 busboy@1.6.0, busboy@^1.6.0:
   version "1.6.0"
