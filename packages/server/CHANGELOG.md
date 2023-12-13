@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.22
+
+### Patch Changes
+
+- [`340c719`](https://github.com/ardatan/whatwg-node/commit/340c719b1e54bcb8446f0b648d9a9c906557e7f4) Thanks [@ardatan](https://github.com/ardatan)! - Handle aborted requests correctly
+
 ## 0.9.21
 
 ### Patch Changes
