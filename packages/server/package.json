@@ -41,7 +41,7 @@
     "@types/express": "4.17.21",
     "@types/node": "20.10.4",
     "express": "4.18.2",
-    "fastify": "4.24.3",
+    "fastify": "4.25.0",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.34.0"
   },
   "publishConfig": {
