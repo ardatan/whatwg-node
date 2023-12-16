@@ -150,4 +150,19 @@ describe('Form Data', () => {
     expect(requestText).toContain(`Content-Type: text/plain`);
     expect(requestText).toContain(`Hello world!`);
   });
+  if (globalThis.File) {
+    it('support native File', async () => {
+      const formData = new PonyfillFormData();
+      const file = new globalThis.File(['Hello world!'], 'greetings.txt', { type: 'text/plain' });
+      formData.append('greetings', file as any);
+      const request = new PonyfillRequest('http://localhost:8080', {
+        method: 'POST',
+        body: formData,
+      });
+      const requestText = await request.text();
+      expect(requestText).toContain(`Content-Disposition: form-data; name="greetings"`);
+      expect(requestText).toContain(`Content-Type: text/plain`);
+      expect(requestText).toContain(`Hello world!`);
+    });
+  }
 });

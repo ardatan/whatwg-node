@@ -134,7 +134,11 @@ export function getStreamFromFormData(
 }
 
 function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) {
-  (blob as PonyfillFile).name = fileName || blob.name || name;
+  Object.defineProperty(blob as PonyfillFile, 'name', {
+    configurable: true,
+    enumerable: true,
+    value: fileName || blob.name || name,
+  });
   return blob as PonyfillFile;
 }
 
