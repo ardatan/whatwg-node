@@ -1,5 +1,11 @@
 # @whatwg-node/node-fetch
 
+## 0.5.3
+
+### Patch Changes
+
+- [`f844a4d`](https://github.com/ardatan/whatwg-node/commit/f844a4da5ddc8888b105b509fee7794c6217fd98) Thanks [@ardatan](https://github.com/ardatan)! - Support native File
+
 ## 0.5.2
 
 ### Patch Changes
