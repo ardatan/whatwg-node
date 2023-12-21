@@ -146,3 +146,42 @@ describe('Fastify', () => {
     expect(res.statusCode).toBe(status);
   });
 });
+
+describe('fastify + simple get', () => {
+  it('should return get response via reply.send(response.body)', async () => {
+    const myServerAdapter = createServerAdapter(() => {
+      return new Response('Hello World');
+    });
+
+    const app = fastify({
+      logger: true,
+    });
+
+    app.route({
+      url: '/mypath',
+      method: ['GET', 'POST', 'OPTIONS'],
+      handler: async (req, reply) => {
+        const response = await myServerAdapter.handleNodeRequest(req, {
+          req,
+          reply,
+        });
+        response.headers.forEach((value, key) => {
+          reply.header(key, value);
+        });
+
+        reply.status(response.status);
+
+        reply.send(response.body);
+
+        return reply;
+      },
+    });
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/mypath',
+    });
+
+    expect(response.body).toBe('Hello World');
+  });
+});
