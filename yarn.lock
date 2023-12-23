@@ -8803,7 +8803,6 @@ typescript@~3.8.3:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.34.0:
   version "20.34.0"
-  uid fca27c05066342b01951782248640c8013b37196
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/fca27c05066342b01951782248640c8013b37196"
 
 unbox-primitive@^1.0.2:

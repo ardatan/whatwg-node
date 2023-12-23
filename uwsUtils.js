@@ -1,7 +1,7 @@
 const uws = require('uWebSockets.js');
 
 let handler;
-let uwsApp = uws.App().any('/*', (...args) => {
+let uwsApp = uws.App().any('*', (...args) => {
   const res = handler(...args);
   handler = undefined;
   return res;
