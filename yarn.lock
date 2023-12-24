@@ -3366,10 +3366,10 @@ builtins@^5.0.1:
   dependencies:
     semver "^7.0.0"
 
-bun-types@1.0.19:
-  version "1.0.19"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.19.tgz#d01398500a18f90b3fdc1a879290081efbf4899e"
-  integrity sha512-7P5/r+twssrkDQ6HMit2GARMBbAxz1tLLEcMgQOCZeCX9BzNtabktjPCu+DmcvDYDnL/Ke75pmKg9CNBTlCzlQ==
+bun-types@1.0.20:
+  version "1.0.20"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.20.tgz#a2998ebf1bffa0ddfab1c62c7026091fa082603a"
+  integrity sha512-MB9OwwwNDdolaPBX9TSEq/9WlexEH1n2d5G/fnre/sz0NAzoxYaOgd3cpxNmNGsExMbgxkccSLNcVPV0rrfunA==
   dependencies:
     "@types/node" "*"
     "@types/ws" "*"
@@ -4733,10 +4733,10 @@ fast-uri@^2.0.0, fast-uri@^2.1.0:
   resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-2.3.0.tgz#bdae493942483d299e7285dcb4627767d42e2793"
   integrity sha512-eel5UKGn369gGEWOqBShmFJWfq/xSJvsgDzgLYC845GneayWvXBf0lJCBn5qTABfewy1ZDPoaR5OZCP+kssfuw==
 
-fastify@4.25.1:
-  version "4.25.1"
-  resolved "https://registry.yarnpkg.com/fastify/-/fastify-4.25.1.tgz#7070ec392f168be9f08d0ac30f819ce1d076dbc8"
-  integrity sha512-D8d0rv61TwqoAS7lom2tvIlgVMlx88lLsiwXyWNjA7CU/LC/mx/Gp2WAlC0S/ABq19U+y/aRvYFG5xLUu2aMrg==
+fastify@4.25.2:
+  version "4.25.2"
+  resolved "https://registry.yarnpkg.com/fastify/-/fastify-4.25.2.tgz#ce725c9f457149244ebfec848468fa3550f0981f"
+  integrity sha512-SywRouGleDHvRh054onj+lEZnbC1sBCLkR0UY3oyJwjD4BdZJUrxBqfkfCaqn74pVCwBaRHGuL3nEWeHbHzAfw==
   dependencies:
     "@fastify/ajv-compiler" "^3.5.0"
     "@fastify/error" "^3.4.0"
