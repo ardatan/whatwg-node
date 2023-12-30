@@ -61,7 +61,8 @@ function getHostnameWithPort(nodeRequest: NodeRequest) {
 
 function buildFullUrl(nodeRequest: NodeRequest) {
   const hostnameWithPort = getHostnameWithPort(nodeRequest);
-  const protocol = nodeRequest.protocol || 'http';
+  const protocol =
+    nodeRequest.protocol || ((nodeRequest.socket as any)?.encrypted ? 'https' : 'http');
   const endpoint = nodeRequest.originalUrl || nodeRequest.url || '/graphql';
 
   return `${protocol}://${hostnameWithPort}${endpoint}`;
