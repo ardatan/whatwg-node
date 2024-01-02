@@ -1,3 +1,5 @@
+const shouldSkipPonyfill = require('./shouldSkipPonyfill');
+
 module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
   
@@ -7,8 +9,7 @@ module.exports = function createNodePonyfill(opts = {}) {
     ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
-  // Bun and Deno already have a Fetch API
-  if (globalThis.Deno || process.versions.bun) {
+  if (shouldSkipPonyfill()) {
     return globalThis;
   }
 
