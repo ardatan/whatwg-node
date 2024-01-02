@@ -1,5 +1,11 @@
 # @whatwg-node/fetch
 
+## 0.9.15
+
+### Patch Changes
+
+- [`772552c`](https://github.com/ardatan/whatwg-node/commit/772552c0521b883c30d8f4d64c8ea093e75a95a0) Thanks [@ardatan](https://github.com/ardatan)! - Skip ponyfilling if NextJS
+
 ## 0.9.14
 
 ### Patch Changes
