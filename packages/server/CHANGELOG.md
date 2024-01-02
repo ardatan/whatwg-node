@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.23
+
+### Patch Changes
+
+- [`f775c41`](https://github.com/ardatan/whatwg-node/commit/f775c41b255c75a84102ebb1928e986813c31372) Thanks [@ardatan](https://github.com/ardatan)! - If protocol is not available, use socket.encrypted correctly
+
 ## 0.9.22
 
 ### Patch Changes
