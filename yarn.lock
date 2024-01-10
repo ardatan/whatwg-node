@@ -2194,10 +2194,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@6.17.0":
-  version "6.17.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.17.0.tgz#b868ad0f4fbbe80dcc123ef28e9262806534076d"
-  integrity sha512-mouN/IufNJQd2O0dNBscWWGkOv4iY7eS4A2b7wh1e3GQqU5Vl8PeLJBS2s29ElGaFfNiLwSjG16U88iemrp0RQ==
+"@pulumi/aws@6.18.0":
+  version "6.18.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.18.0.tgz#76ee86e54762bcfc117f972fc298786de86dbdb3"
+  integrity sha512-DFAZ0GIo/b0AXUdGoEbVV7BJQzQdPhdfOcvoM0O0pRewQb14GrblM5XNQ5jwG50r24n+bC4Pcf3hYujRLIzWgA==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     builtin-modules "3.0.0"
@@ -2236,10 +2236,10 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.100.0", "@pulumi/pulumi@^3.0.0":
-  version "3.100.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.100.0.tgz#de9db220b3b02beeb2a0b68d7788386bd7a52062"
-  integrity sha512-eRAm+IzDjoIYpgqVkivQUsvkM8+X8g9VCCMEeufqwDaC0OgXjmXmglkYq7KJKq5/FFiJgZ1isV7xluo/wVTySQ==
+"@pulumi/pulumi@3.101.0", "@pulumi/pulumi@^3.0.0":
+  version "3.101.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.101.0.tgz#db89022abccac39198868b569e9a228fd0f99b11"
+  integrity sha512-QDX4ExQwRTkOUS6QUq1ldHeTeqFQhsHAyPFS858AFicyOZuOpuD99hKNtFeBz6SEpv7ep1FOSAT/Kp5+IYOqyQ==
   dependencies:
     "@grpc/grpc-js" "1.9.6"
     "@logdna/tail-file" "^2.0.6"
@@ -3363,10 +3363,10 @@ builtins@^5.0.1:
   dependencies:
     semver "^7.0.0"
 
-bun-types@1.0.21:
-  version "1.0.21"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.21.tgz#dc60fe20d565f9cc6fcc38a012011500e8e2bcf9"
-  integrity sha512-Ugagjf+XZUXDvxDRa3EnhLeMzm2g8ZYFleBF55Ac3GZSzPqdMLAdK9kvZB6M1H4nAFvrEHdV2PHqkzIoNs+3wQ==
+bun-types@1.0.22:
+  version "1.0.22"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.22.tgz#b329f2dd8fa5933c24ac161aa4b41f8e95c0bdd6"
+  integrity sha512-JxmXAx6cXb37+rMsn30WRXlz9lbPFR9rQE78hNSoy5wJ8m/nUktkmHpo7xZb/YKDds23ifxWLjDtyni9MeXLgw==
   dependencies:
     "@types/node" "*"
     "@types/ws" "*"
