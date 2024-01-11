@@ -6,8 +6,9 @@ import { PonyfillFormData } from '../src/FormData.js';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('Node Fetch Ponyfill', () => {
-  runTestsForEachFetchImpl(() => {
-    const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
+  runTestsForEachFetchImpl(implementationName => {
+    // const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
+    const baseUrl = 'https://httpbin.org';
     it('should fetch', async () => {
       const response = await fetchPonyfill(baseUrl + '/get');
       expect(response.status).toBe(200);
@@ -119,6 +120,39 @@ describe('Node Fetch Ponyfill', () => {
           signal: AbortSignal.timeout(1000),
         }),
       ).rejects.toThrow('aborted');
+    });
+    // TODO: Remove .only on test before merging.
+    // TODO: Remove console.logs before merging.
+    it.only('should respect AbortSignal on a streamed response', async () => {
+      console.log(`should respect AbortSignal on a streamed response (${implementationName})`);
+      expect.assertions(1);
+      const controller = new AbortController();
+      const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/${10 * 1024 * 1024 * 1024}`, {
+        signal: controller.signal,
+      });
+      // NOTE: We have tried to reduce the time below 2 seconds, but when doing so it doesn't
+      // appear that we always hit the streamed response abort code path.
+      setTimeout(() => {
+        console.log('Aborting');
+        controller.abort();
+      }, 2000);
+      try {
+        const response = await fetchPromise;
+        if (!response || !response.body) {
+          throw new Error('Response or response body is null');
+        }
+        for await (const chunk of response.body) {
+          if (controller.signal.aborted) {
+            console.log("Controller's signal is aborted");
+            break;
+          }
+          console.log('Received chunk of size', chunk.length);
+        }
+        console.log('Done');
+      } catch (err: any) {
+        console.log(err);
+        expect(err.message).toMatch(/aborted/);
+      }
     });
     it('should respect gzip', async () => {
       const response = await fetchPonyfill(baseUrl + '/gzip');

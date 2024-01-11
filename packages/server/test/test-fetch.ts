@@ -2,10 +2,11 @@ import { globalAgent as httpGlobalAgent } from 'node:http';
 import { globalAgent as httpsGlobalAgent } from 'node:https';
 
 const libcurl = globalThis.libcurl;
-export function runTestsForEachFetchImpl(callback: () => void) {
+export function runTestsForEachFetchImpl(callback: (implementationName: string) => void) {
   if (libcurl) {
     describe('libcurl', () => {
-      callback();
+      // eslint-disable-next-line n/no-callback-literal
+      callback('libcurl');
     });
   }
   describe('node-http', () => {
@@ -17,6 +18,7 @@ export function runTestsForEachFetchImpl(callback: () => void) {
       httpGlobalAgent.destroy();
       httpsGlobalAgent.destroy();
     });
-    callback();
+    // eslint-disable-next-line n/no-callback-literal
+    callback('libcurl');
   });
 }

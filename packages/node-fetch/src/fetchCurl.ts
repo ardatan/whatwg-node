@@ -76,9 +76,12 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     if (fetchRequest['_signal']) {
       fetchRequest['_signal'].onabort = () => {
         if (streamResolved) {
+          // TODO: Remove this console.log before merging. Helpful to make sure code path is being hit by test.
+          console.log('ℹ️ Hit streamed response abort handler');
           if (curlHandle.isOpen) {
             curlHandle.pause(CurlPause.Recv);
           }
+          // QUESTION: Should we be rejecting with abort here? And should the curlHandle be closed?
         } else {
           reject(new PonyfillAbortError());
           curlHandle.close();
