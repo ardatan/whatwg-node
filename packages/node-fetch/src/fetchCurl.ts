@@ -7,7 +7,7 @@ import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  const { Curl, CurlCode, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
+  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
 
@@ -75,13 +75,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     let streamResolved: Readable | undefined;
     if (fetchRequest['_signal']) {
       fetchRequest['_signal'].onabort = () => {
-        if (streamResolved) {
-          if (curlHandle.isOpen) {
-            curlHandle.pause(CurlPause.Recv);
-          }
-        } else {
-          reject(new PonyfillAbortError());
-          curlHandle.close();
+        if (curlHandle.isOpen) {
+          curlHandle.pause(CurlPause.Recv);
         }
       };
     }
@@ -108,6 +103,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
                 fetchRequest.redirect === 'error' &&
                 (headerFilter.includes('location') || headerFilter.includes('Location'))
               ) {
+                stream.destroy();
                 reject(new Error('redirect is not allowed'));
               }
               return true;
