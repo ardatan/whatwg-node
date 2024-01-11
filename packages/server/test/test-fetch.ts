@@ -3,7 +3,7 @@ import { globalAgent as httpsGlobalAgent } from 'node:https';
 
 const libcurl = globalThis.libcurl;
 export function runTestsForEachFetchImpl(callback: () => void) {
-  if (!libcurl) {
+  if (libcurl) {
     describe('libcurl', () => {
       callback();
     });
