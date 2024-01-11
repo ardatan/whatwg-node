@@ -11,14 +11,17 @@ let globals = {};
 
 try {
   global.uwsUtils = require('./uwsUtils');
-} catch (e) {
-  console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`);
+} catch (err) {
+  console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`, err);
 }
 
 try {
   globals.libcurl = require('node-libcurl');
 } catch (err) {
-  console.log('Failed to load node-libcurl. Skipping tests that require it.');
+  if (process.env.CI) {
+    throw new Error('Failed to load node-libcurl.');
+  }
+  console.warn('Failed to load node-libcurl. Skipping tests that require it.', err);
 }
 
 module.exports = {

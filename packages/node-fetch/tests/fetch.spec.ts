@@ -120,6 +120,31 @@ describe('Node Fetch Ponyfill', () => {
         }),
       ).rejects.toThrow('aborted');
     });
+    it('should respect AbortSignal on a streamed response', async () => {
+      expect.assertions(1);
+      const controller = new AbortController();
+      const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/${10 * 1024 * 1024 * 1024}`, {
+        signal: controller.signal,
+      });
+      try {
+        const response = await fetchPromise;
+        if (!response || !response.body) {
+          throw new Error('Response or response body is null');
+        }
+        let cnt = 0;
+        for await (const _ of response.body) {
+          if (controller.signal.aborted) {
+            throw new Error('aborted but stream leaks');
+          }
+          cnt++;
+          if (cnt === 4) {
+            controller.abort();
+          }
+        }
+      } catch (err: any) {
+        expect(err.message).toMatch(/aborted/);
+      }
+    });
     it('should respect gzip', async () => {
       const response = await fetchPonyfill(baseUrl + '/gzip');
       expect(response.status).toBe(200);

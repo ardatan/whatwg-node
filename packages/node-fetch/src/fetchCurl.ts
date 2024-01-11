@@ -1,5 +1,4 @@
 import { Readable } from 'node:stream';
-import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
@@ -7,7 +6,7 @@ import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  const { Curl, CurlCode, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
+  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
 
@@ -72,16 +71,11 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.enable(CurlFeature.NoHeaderParsing);
 
   return new Promise(function promiseResolver(resolve, reject) {
-    let streamResolved = false;
+    let streamResolved: Readable | undefined;
     if (fetchRequest['_signal']) {
       fetchRequest['_signal'].onabort = () => {
-        if (streamResolved) {
-          if (curlHandle.isOpen) {
-            curlHandle.pause(CurlPause.Recv);
-          }
-        } else {
-          reject(new PonyfillAbortError());
-          curlHandle.close();
+        if (curlHandle.isOpen) {
+          curlHandle.pause(CurlPause.Recv);
         }
       };
     }
@@ -89,10 +83,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       curlHandle.close();
     });
     curlHandle.once('error', function errorListener(error: any) {
-      if (error.isCurlError && error.code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-        // this is expected
+      if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
+        streamResolved.destroy(error);
       } else {
-        // this is unexpected
         reject(error);
       }
       curlHandle.close();
@@ -109,6 +102,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
                 fetchRequest.redirect === 'error' &&
                 (headerFilter.includes('location') || headerFilter.includes('Location'))
               ) {
+                stream.destroy();
                 reject(new Error('redirect is not allowed'));
               }
               return true;
@@ -125,7 +119,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
             url: fetchRequest.url,
           }),
         );
-        streamResolved = true;
+        streamResolved = stream;
       },
     );
     curlHandle.perform();
