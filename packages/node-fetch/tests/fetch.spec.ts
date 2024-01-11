@@ -7,8 +7,7 @@ import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(implementationName => {
-    // const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
-    const baseUrl = 'https://httpbin.org';
+    const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
     it('should fetch', async () => {
       const response = await fetchPonyfill(baseUrl + '/get');
       expect(response.status).toBe(200);
