@@ -1,3 +1,4 @@
+/* eslint-disable n/no-callback-literal */
 import { globalAgent as httpGlobalAgent } from 'node:http';
 import { globalAgent as httpsGlobalAgent } from 'node:https';
 
@@ -5,7 +6,6 @@ const libcurl = globalThis.libcurl;
 export function runTestsForEachFetchImpl(callback: (implementationName: string) => void) {
   if (libcurl) {
     describe('libcurl', () => {
-      // eslint-disable-next-line n/no-callback-literal
       callback('libcurl');
     });
   }
@@ -18,7 +18,6 @@ export function runTestsForEachFetchImpl(callback: (implementationName: string) 
       httpGlobalAgent.destroy();
       httpsGlobalAgent.destroy();
     });
-    // eslint-disable-next-line n/no-callback-literal
-    callback('libcurl');
+    callback('node-http');
   });
 }
