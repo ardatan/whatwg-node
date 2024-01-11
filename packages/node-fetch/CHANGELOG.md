@@ -1,5 +1,11 @@
 # @whatwg-node/node-fetch
 
+## 0.5.4
+
+### Patch Changes
+
+- [#1076](https://github.com/ardatan/whatwg-node/pull/1076) [`25796e3`](https://github.com/ardatan/whatwg-node/commit/25796e345480fe5323dddcdc033989b1792c2476) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Fix abort logic for node-libcurl
+
 ## 0.5.3
 
 ### Patch Changes
