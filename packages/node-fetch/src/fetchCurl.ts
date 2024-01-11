@@ -72,15 +72,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.enable(CurlFeature.NoHeaderParsing);
 
   return new Promise(function promiseResolver(resolve, reject) {
-    let resolvedStream: Readable;
+    let streamResolved: Readable | undefined;
     if (fetchRequest['_signal']) {
       fetchRequest['_signal'].onabort = () => {
-        if (resolvedStream) {
+        if (streamResolved) {
           if (curlHandle.isOpen) {
             curlHandle.pause(CurlPause.Recv);
-            resolvedStream.destroy(new PonyfillAbortError());
           }
-          // QUESTION: Should we be rejecting with abort here? And should the curlHandle be closed?
         } else {
           reject(new PonyfillAbortError());
           curlHandle.close();
@@ -91,10 +89,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       curlHandle.close();
     });
     curlHandle.once('error', function errorListener(error: any) {
-      if (error.isCurlError && error.code === CurlCode.CURLE_ABORTED_BY_CALLBACK) {
-        // this is expected
+      if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
+        streamResolved.destroy(error);
       } else {
-        // this is unexpected
         reject(error);
       }
       curlHandle.close();
@@ -127,7 +124,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
             url: fetchRequest.url,
           }),
         );
-        resolvedStream = stream;
+        streamResolved = stream;
       },
     );
     curlHandle.perform();
