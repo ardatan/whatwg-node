@@ -163,7 +163,7 @@ describe('Node Fetch Ponyfill', () => {
       const body = await response.json();
       expect(body.brotli).toBe(true);
     });
-    it('should load correctly', async () => {
+    it.skip('should load correctly', async () => {
       const response = await fetchPonyfill(
         'https://api.apis.guru/v2/specs/mashape.com/geodb/1.0.0/swagger.json',
       );
