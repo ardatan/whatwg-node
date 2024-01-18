@@ -290,7 +290,7 @@ async function sendAsyncIterable(
         // @ts-expect-error http and http2 writes are actually compatible
         .write(chunk)
     ) {
-      break;
+      await new Promise(resolve => serverResponse.once('drain', resolve));
     }
   }
   endResponse(serverResponse);

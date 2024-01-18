@@ -8,7 +8,7 @@ import { runTestsForEachServerImpl } from './test-server.js';
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(() => {
     runTestsForEachServerImpl(testServer => {
-      it.only('should handle empty responses', async () => {
+      it('should handle empty responses', async () => {
         const serverAdapter = createServerAdapter(() => {
           return undefined as any;
         });
@@ -92,6 +92,39 @@ describe('Node Specific Cases', () => {
 
         expect(collectedValues).toHaveLength(3);
         await sleep(100);
+        expect(cancelFn).toHaveBeenCalledTimes(1);
+      });
+
+      it('should handle large streaming responses', async () => {
+        const cancelFn = jest.fn();
+        const successFn = jest.fn();
+        const serverAdapter = createServerAdapter(() => {
+          let i = 0;
+            const t = 5;
+          const stream = new ReadableStream({
+            pull(controller) {
+              i++;
+              if (i > t) {
+                controller.close();
+              } else {
+                successFn();
+                controller.enqueue('x'.repeat(20480));
+              }
+            },
+            cancel: cancelFn,
+          });
+          return new Response(stream, { status: 200 });
+        });
+        testServer.addOnceHandler(serverAdapter);
+        const response = await fetch(testServer.url);
+
+        let result: string = '';
+        for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+          result += Buffer.from(chunk).toString('utf-8');
+        }
+
+        expect(result.length).toBe(102400);
+        expect(successFn).toHaveBeenCalledTimes(5);
         expect(cancelFn).toHaveBeenCalledTimes(1);
       });
 
