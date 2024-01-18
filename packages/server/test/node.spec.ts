@@ -100,7 +100,7 @@ describe('Node Specific Cases', () => {
         const successFn = jest.fn();
         const serverAdapter = createServerAdapter(() => {
           let i = 0;
-            const t = 5;
+          const t = 5;
           const stream = new ReadableStream({
             pull(controller) {
               i++;
