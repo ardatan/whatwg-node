@@ -97,7 +97,41 @@ describe('Node Specific Cases', () => {
           await sleep(100);
           expect(cancelFn).toHaveBeenCalledTimes(1);
         });
+        it('should handle large streaming responses', async () => {
+          const cancelFn = jest.fn();
+          const successFn = jest.fn();
+          const serverAdapter = createServerAdapter(() => {
+            let i = 0;
+            const t = 5;
+            const stream = new ReadableStream({
+              pull(controller) {
+                i++;
+                if (i > t) {
+                  controller.close();
+                } else {
+                  successFn();
+                  controller.enqueue('x'.repeat(5409));
+                }
+              },
+              cancel: cancelFn,
+            });
+            return new Response(stream, { status: 200 });
+          });
+          testServer.addOnceHandler(serverAdapter);
+          const response = await fetch(testServer.url);
 
+          let result: string | null = '';
+          for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+            result += Buffer.from(chunk).toString('utf-8');
+          }
+
+          expect(result.length).toBe(27045);
+          expect(successFn).toHaveBeenCalledTimes(5);
+          expect(cancelFn).toHaveBeenCalledTimes(1);
+
+          result = null;
+        });
+        
         it('should not kill the server if response is ended on low level', async () => {
           const serverAdapter = createServerAdapter<{
             res: HttpResponse | ServerResponse;
