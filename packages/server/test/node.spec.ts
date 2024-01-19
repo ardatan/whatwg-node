@@ -118,7 +118,7 @@ describe('Node Specific Cases', () => {
         testServer.addOnceHandler(serverAdapter);
         const response = await fetch(testServer.url);
 
-        let result: string = '';
+        let result: string | null = '';
         for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
           result += Buffer.from(chunk).toString('utf-8');
         }
