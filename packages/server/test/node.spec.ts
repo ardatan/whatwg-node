@@ -138,6 +138,7 @@ describe('Node Specific Cases', () => {
         });
         testServer.addOnceHandler(serverAdapter);
         const response = await fetch(testServer.url);
+        await response.text();
         expect(response.status).toBe(418);
       });
 
