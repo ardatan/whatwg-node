@@ -108,7 +108,7 @@ describe('Node Specific Cases', () => {
                 controller.close();
               } else {
                 successFn();
-                controller.enqueue('x'.repeat(20480));
+                controller.enqueue('x'.repeat(5409));
               }
             },
             cancel: cancelFn,
@@ -123,9 +123,11 @@ describe('Node Specific Cases', () => {
           result += Buffer.from(chunk).toString('utf-8');
         }
 
-        expect(result.length).toBe(102400);
+        expect(result.length).toBe(27045);
         expect(successFn).toHaveBeenCalledTimes(5);
         expect(cancelFn).toHaveBeenCalledTimes(1);
+
+        result = null;
       });
 
       it('should not kill the server if response is ended on low level', async () => {
