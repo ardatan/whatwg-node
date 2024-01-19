@@ -2236,10 +2236,10 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.101.1", "@pulumi/pulumi@^3.0.0":
-  version "3.101.1"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.101.1.tgz#5e9bad99faaeed636b89a0726a20c151fa53bd9d"
-  integrity sha512-Jfes7XCjFjB0kqetqP1nYEMog9ghtilPKiyl6KyS+hvSZ55X9Sffa3St545ZDC5GpHrevCT7KgHuScS40q3nKQ==
+"@pulumi/pulumi@3.102.0", "@pulumi/pulumi@^3.0.0":
+  version "3.102.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.102.0.tgz#9beb88f23aba8584d62e00a36a406af2b8437888"
+  integrity sha512-BWrIOqS9Vg4pYY6/pDzDwYM0o9cu1EY7ajcrjKWbPn/EcO0DIQKvItcNLl7QUprfHjpepsfLdyXKi0KlH0jj1g==
   dependencies:
     "@grpc/grpc-js" "1.9.6"
     "@logdna/tail-file" "^2.0.6"
@@ -2511,10 +2511,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@20.11.4", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
-  version "20.11.4"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.4.tgz#c724a5d6723182af758b91b994209336f4439cb7"
-  integrity sha512-6I0fMH8Aoy2lOejL3s4LhyIYX34DPwY8bl5xlNjBvUEk8OHrcuzsFt+Ied4LvJihbtXPM+8zUqdydfIti86v9g==
+"@types/node@*", "@types/node@20.11.5", "@types/node@>=12.12.47", "@types/node@>=13.7.0":
+  version "20.11.5"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.5.tgz#be10c622ca7fcaa3cf226cf80166abc31389d86e"
+  integrity sha512-g557vgQjUUfN76MZAN/dt1z3dzcUsimuysco0KeluHgrPdJXkP/XdAURgyO2W9fZWHRtRBiVKzKn8vyOAwlG+w==
   dependencies:
     undici-types "~5.26.4"
 
@@ -7409,10 +7409,10 @@ prettier-plugin-sh@^0.14.0:
     mvdan-sh "^0.10.1"
     sh-syntax "^0.4.1"
 
-prettier@3.2.2:
-  version "3.2.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.2.2.tgz#96e580f7ca9c96090ad054616c0c4597e2844b65"
-  integrity sha512-HTByuKZzw7utPiDO523Tt2pLtEyK7OibUD9suEJQrPUCYQqrHr74GGX6VidMrovbf/I50mPqr8j/II6oBAuc5A==
+prettier@3.2.4:
+  version "3.2.4"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-3.2.4.tgz#4723cadeac2ce7c9227de758e5ff9b14e075f283"
+  integrity sha512-FWu1oLHKCrtpO1ypU6J0SbK2d9Ckwysq6bHj/uaCP26DxrPpppCLQRGVuqAxSTvhF00AcvDRyYrLNW7ocBhFFQ==
 
 prettier@^2.7.1:
   version "2.8.8"
@@ -9111,10 +9111,10 @@ workerd@1.20231218.0:
     "@cloudflare/workerd-linux-arm64" "1.20231218.0"
     "@cloudflare/workerd-windows-64" "1.20231218.0"
 
-wrangler@3.22.5:
-  version "3.22.5"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.22.5.tgz#e76c5eb2e87fdb9f46a0c6e48c57713e3dae014f"
-  integrity sha512-9ScB/eX5+f8OEA0BHW9+EQDXTVdusZNpAaDu/yY65kJ2ggjehRCFWebz5ZdYSeJojBj7cvwu/skDqDwFAqlDTw==
+wrangler@3.23.0:
+  version "3.23.0"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.23.0.tgz#aa1d11409a97e8c9140bc86dd1f1a3ea79b8b663"
+  integrity sha512-mOWPL02/popoF6jjb4TT8au4yvo8VFu6O6/IwcRN74rlgwaGS0XvlkFtbofBGAdDUHAh5DXkuoPNS871mXNuJg==
   dependencies:
     "@cloudflare/kv-asset-handler" "^0.2.0"
     "@esbuild-plugins/node-globals-polyfill" "^0.2.3"
