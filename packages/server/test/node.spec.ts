@@ -8,7 +8,7 @@ import { runTestsForEachServerImpl } from './test-server.js';
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(() => {
     runTestsForEachServerImpl(testServer => {
-      it.only('should handle empty responses', async () => {
+      it('should handle empty responses', async () => {
         const serverAdapter = createServerAdapter(() => {
           return undefined as any;
         });
