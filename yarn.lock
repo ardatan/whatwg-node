@@ -3362,10 +3362,10 @@ builtins@^5.0.1:
   dependencies:
     semver "^7.0.0"
 
-bun-types@1.0.24:
-  version "1.0.24"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.24.tgz#b347dc5f2d1a7c7988cd3ee4c211c13c4d4d785d"
-  integrity sha512-nocKV7PwMtxDqUibC12H9hjKMuJjwz5CZLBq8qz/CP+BJGm+9XZeHNAuc3KTtUKkHTurV5vVrJnthuYooW0cAQ==
+bun-types@1.0.25:
+  version "1.0.25"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.25.tgz#ef38ac40e9c9e2db188061474081426934a464a7"
+  integrity sha512-9lxeUR/OJsvlZH4GOWteiAdx7ikrSxCUX7Rr0JJux+DrR3LejouVLxIZnTeQ3UPAZovvSgKivWeHPJ2wlo7/Kg==
   dependencies:
     "@types/node" "*"
     "@types/ws" "*"
