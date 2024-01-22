@@ -54,7 +54,7 @@
     "patch-package": "8.0.0",
     "prettier": "3.2.4",
     "rimraf": "5.0.5",
-    "ts-jest": "29.1.1",
+    "ts-jest": "29.1.2",
     "typescript": "5.3.3"
   },
   "resolutions": {
