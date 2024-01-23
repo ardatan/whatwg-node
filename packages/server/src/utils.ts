@@ -462,24 +462,27 @@ export function isolateObject<TIsolatedObject extends object>(
   const extraProps: Partial<TIsolatedObject> = {};
   const deletedProps = new Set<string | symbol>();
   return new Proxy(originalCtx, {
-    get(originalCtx, prop, receiver) {
+    get(originalCtx, prop) {
       if (waitUntilPromises != null && prop === 'waitUntil') {
         return function waitUntil(promise: Promise<unknown>) {
           waitUntilPromises.push(promise.catch(err => console.error(err)));
         };
       }
-      if (prop in extraProps) {
-        return Reflect.get(extraProps, prop, receiver);
+      const extraPropVal = (extraProps as any)[prop];
+      if (extraPropVal != null) {
+        if (typeof extraPropVal === 'function') {
+          return extraPropVal.bind(extraProps);
+        }
+        return extraPropVal;
       }
       if (deletedProps.has(prop)) {
         return undefined;
       }
-      if (prop in originalCtx) {
-        return Reflect.get(originalCtx, prop, receiver);
-      }
+      return (originalCtx as any)[prop];
     },
-    set(_originalCtx, prop, value, receiver) {
-      return Reflect.set(extraProps, prop, value, receiver);
+    set(_originalCtx, prop, value) {
+      (extraProps as any)[prop] = value;
+      return true;
     },
     has(originalCtx, prop) {
       if (waitUntilPromises != null && prop === 'waitUntil') {
@@ -491,7 +494,7 @@ export function isolateObject<TIsolatedObject extends object>(
       if (prop in extraProps) {
         return true;
       }
-      return Reflect.has(originalCtx, prop);
+      return prop in originalCtx;
     },
     defineProperty(_originalCtx, prop, descriptor) {
       return Reflect.defineProperty(extraProps, prop, descriptor);
