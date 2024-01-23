@@ -11,5 +11,6 @@ declare global {
 
 app.http('whatwgnode', {
   methods: ['GET', 'POST'],
+  authLevel: 'anonymous',
   handler,
 });

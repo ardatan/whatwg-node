@@ -1,6 +1,7 @@
 const { build } = require('esbuild');
 const { writeFileSync } = require('fs');
 const { join } = require('path');
+const packageJson = require('../package.json');
 
 const projectRoot = join(__dirname, '..');
 
@@ -21,6 +22,9 @@ async function main() {
     JSON.stringify({
       name: 'whatwg-node-test-function',
       version: '0.0.1',
+      dependencies: {
+        '@azure/functions': packageJson.dependencies['@azure/functions'],
+      },
     }),
   );
 
@@ -38,29 +42,8 @@ async function main() {
       },
       extensionBundle: {
         id: 'Microsoft.Azure.Functions.ExtensionBundle',
-        version: '[2.*, 3.0.0)',
+        version: '[2.*, 4.*)',
       },
-    }),
-  );
-
-  writeFileSync(
-    join(projectRoot, './dist/WhatWGNode/function.json'),
-    JSON.stringify({
-      bindings: [
-        {
-          authLevel: 'anonymous',
-          type: 'httpTrigger',
-          direction: 'in',
-          name: 'req',
-          methods: ['get', 'post'],
-          route: '{*segments}',
-        },
-        {
-          type: 'http',
-          direction: 'out',
-          name: 'res',
-        },
-      ],
     }),
   );
 
