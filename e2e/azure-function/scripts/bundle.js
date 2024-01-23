@@ -14,7 +14,7 @@ async function main() {
     bundle: true,
     platform: 'node',
     target: 'node20',
-    external: ['@azure/functions'],
+    external: ['@azure/functions-core'],
   });
 
   writeFileSync(
@@ -22,9 +22,6 @@ async function main() {
     JSON.stringify({
       name: 'whatwg-node-test-function',
       version: '0.0.1',
-      dependencies: {
-        '@azure/functions': packageJson.dependencies['@azure/functions'],
-      },
     }),
   );
 
@@ -42,7 +39,11 @@ async function main() {
       },
       extensionBundle: {
         id: 'Microsoft.Azure.Functions.ExtensionBundle',
-        version: '[2.*, 4.*)',
+        version: '[3.15.0, 4.0.0)',
+      },
+      concurrency: {
+        dynamicConcurrencyEnabled: true,
+        snapshotPersistenceEnabled: true,
       },
     }),
   );
