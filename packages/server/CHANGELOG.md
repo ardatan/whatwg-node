@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.24
+
+### Patch Changes
+
+- [#1101](https://github.com/ardatan/whatwg-node/pull/1101) [`bf0c9ab`](https://github.com/ardatan/whatwg-node/commit/bf0c9ab7d2894f9c604c2b6d9f6e4d72eec074fb) Thanks [@ardatan](https://github.com/ardatan)! - Access the property in the given server context object correctly
+
 ## 0.9.23
 
 ### Patch Changes
