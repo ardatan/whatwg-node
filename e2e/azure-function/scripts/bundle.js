@@ -12,7 +12,8 @@ async function main() {
     minify: false,
     bundle: true,
     platform: 'node',
-    target: 'node14',
+    target: 'node20',
+    external: ['@azure/functions'],
   });
 
   writeFileSync(
