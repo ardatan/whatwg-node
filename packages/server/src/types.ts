@@ -61,6 +61,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   handleUWS: UWSHandler;
 
   handle(req: NodeRequest, res: NodeResponse, ...ctx: Partial<TServerContext>[]): Promise<void>;
+  handle(requestLike: RequestLike, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   handle(request: Request, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
   handle(fetchEvent: FetchEvent & Partial<TServerContext>, ...ctx: Partial<TServerContext>[]): void;
   handle(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]): Promise<void>;
@@ -68,6 +69,19 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
     container: { request: Request } & Partial<TServerContext>,
     ...ctx: Partial<TServerContext>[]
   ): Promise<Response> | Response;
+}
+
+export interface RequestLike {
+  url: string;
+  method: string;
+  headers: HeadersLike;
+  body?: AsyncIterable<Uint8Array> | null;
+}
+
+export interface HeadersLike extends Iterable<[string, string]> {
+  get(name: string): string | null | undefined;
+  set(name: string, value: string): void;
+  has(name: string): boolean;
 }
 
 export type ServerAdapter<
