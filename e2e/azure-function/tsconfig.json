@@ -5,10 +5,10 @@
     "target": "es2016",
     "module": "commonjs",
     "moduleResolution": "node",
-    "lib": ["dom"],
+    "lib": ["dom", "esnext"],
     "declaration": true,
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "files": ["src/index.ts", "scripts/e2e.ts"]
+  "files": ["src/functions/index.ts", "scripts/e2e.ts"]
 }

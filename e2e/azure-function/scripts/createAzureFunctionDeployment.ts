@@ -115,7 +115,7 @@ export function createAzureFunctionDeployment(): DeploymentConfiguration<{
           resourceGroupName: resourceGroup.name,
           accountName: storageAccount.name,
           containerName: codeContainer.name,
-          source: new pulumi.asset.FileArchive(join(__dirname, '..', 'dist')),
+          source: new pulumi.asset.FileArchive(join(__dirname, '..')),
         },
         {
           deleteBeforeReplace: true,
