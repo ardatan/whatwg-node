@@ -299,7 +299,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (bodyInit instanceof PonyfillReadableStream) {
+  if (bodyInit instanceof PonyfillReadableStream && bodyInit.readable != null) {
     return {
       bodyType: BodyInitType.ReadableStream,
       bodyFactory: () => bodyInit,
