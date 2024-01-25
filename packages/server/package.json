@@ -42,6 +42,8 @@
     "@types/node": "20.11.6",
     "express": "4.18.2",
     "fastify": "4.25.2",
+    "react": "0.0.0-experimental-e5205658f-20230913",
+    "react-dom": "0.0.0-experimental-e5205658f-20230913",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.34.0"
   },
   "publishConfig": {
@@ -56,3 +58,4 @@
     "definition": "dist/typings/index.d.ts"
   }
 }
+

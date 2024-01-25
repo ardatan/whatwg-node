@@ -7735,6 +7735,14 @@ raw-body@2.5.1:
     iconv-lite "0.4.24"
     unpipe "1.0.0"
 
+react-dom@0.0.0-experimental-e5205658f-20230913:
+  version "0.0.0-experimental-e5205658f-20230913"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-e5205658f-20230913.tgz#5eb3f8f6e660f3498fcf81fdefd15f3f1d7130dc"
+  integrity sha512-Lnv7ObEPUBh/G2NoF2/1nmueYY5vmKsfgEBlG5gjMXeDgbKAf7yYI+wK49URKP9RyJRMjTOUcBghtM+nUwPWdg==
+  dependencies:
+    loose-envify "^1.1.0"
+    scheduler "0.0.0-experimental-e5205658f-20230913"
+
 react-dom@18.2.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-18.2.0.tgz#22aaf38708db2674ed9ada224ca4aa708d821e3d"
@@ -7752,6 +7760,13 @@ react-is@^18.0.0:
   version "18.2.0"
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-18.2.0.tgz#199431eeaaa2e09f86427efbb4f1473edb47609b"
   integrity sha512-xWGDIW6x921xtzPkhiULtthJHoJvBbF3q26fzloPCK0hsvxtPVelvftw3zjbHWSkR2km9Z+4uxbDDK/6Zw9B8w==
+
+react@0.0.0-experimental-e5205658f-20230913:
+  version "0.0.0-experimental-e5205658f-20230913"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-e5205658f-20230913.tgz#b14fd35fea76cb1e86c84982c304a4ddea752455"
+  integrity sha512-Vbc4OkA2YHmlUUr4bvzkaxnpTpJO/N7AMIRrlUFzU6rhbaQWp0+GisxQrsEJd1oLd8kpnXbf6LUiBRfhT/JZ3g==
+  dependencies:
+    loose-envify "^1.1.0"
 
 react@18.2.0:
   version "18.2.0"
@@ -8139,6 +8154,13 @@ sax@1.2.1, sax@>=0.6.0:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/sax/-/sax-1.2.1.tgz#7b8e656190b228e81a66aea748480d828cd2d37a"
   integrity sha512-8I2a3LovHTOpm7NV5yOyO8IHqgVsfK4+UuySrXU8YXkSRX7k6hCV9b3HrkKCr3nMpgj+0bmocaJJWpvp1oc7ZA==
+
+scheduler@0.0.0-experimental-e5205658f-20230913:
+  version "0.0.0-experimental-e5205658f-20230913"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-e5205658f-20230913.tgz#ac5599f9923a751365cbf834cdf333542dd3f6fb"
+  integrity sha512-EGj1PauhuhJnJz0vr341m1MAUeX+hrsLVWwl0Uh/TKOVXWNSRn8BngAivX81HwgUTab9RETU81o1L2jmIo1CeA==
+  dependencies:
+    loose-envify "^1.1.0"
 
 scheduler@^0.23.0:
   version "0.23.0"

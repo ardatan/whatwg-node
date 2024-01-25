@@ -1,3 +1,4 @@
+import React from 'react';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import { ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
@@ -144,5 +145,46 @@ describe('Fastify', () => {
     });
     expect(res.headers).toMatchObject(headers);
     expect(res.statusCode).toBe(status);
+  });
+
+  it('Should handle react streaming response', async () => {
+    const serverAdapter = createServerAdapter(async () => {
+      const MyComponent = () => {
+        return React.createElement('h1', null, 'Rendered in React');
+      };
+
+      // @ts-expect-error React types not available yet
+      const { renderToReadableStream } = await import('react-dom/server.edge');
+
+      const stream = await renderToReadableStream(React.createElement(MyComponent));
+
+      return stream;
+    });
+
+    const fastifyServer = fastify();
+    fastifyServer.route({
+      url: '/renderReact',
+      method: ['GET'],
+      handler: async (req, reply) => {
+        const response = await serverAdapter.handleNodeRequest(req, {
+          req,
+          reply,
+        });
+        response.headers.forEach((value, key) => {
+          reply.header(key, value);
+        });
+
+        reply.status(response.status);
+
+        reply.send(response.body);
+
+        return reply;
+      },
+    });
+    const res = await fastifyServer.inject({
+      url: '/renderReact',
+    });
+    const body = res.body;
+    expect(body).toEqual('<h1>Rendered in React</h1>');
   });
 });
