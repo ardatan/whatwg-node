@@ -158,7 +158,7 @@ describe('Fastify', () => {
 
       const stream = await renderToReadableStream(React.createElement(MyComponent));
 
-      return stream;
+      return new Response(stream);
     });
 
     const fastifyServer = fastify();
