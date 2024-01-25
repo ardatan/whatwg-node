@@ -2,4 +2,4 @@
 "@whatwg-node/node-fetch": patch
 ---
 
-Support native ReadableStream in PonyfillResponse
+Support native `ReadableStream` as `BodyInit`
