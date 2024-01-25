@@ -368,6 +368,16 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
 
+  if (isReadableStream(bodyInit)) {
+    return {
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        return new PonyfillReadableStream(bodyInit);
+      },
+    };
+  }
+
   if ((bodyInit as any)[Symbol.iterator] || (bodyInit as any)[Symbol.asyncIterator]) {
     return {
       contentType: null,
@@ -392,4 +402,8 @@ function isBlob(value: any): value is Blob {
 
 function isURLSearchParams(value: any): value is URLSearchParams {
   return value?.sort != null;
+}
+
+function isReadableStream(value: any): value is ReadableStream {
+  return value?.getReader != null;
 }
