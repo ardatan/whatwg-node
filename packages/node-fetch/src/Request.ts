@@ -119,4 +119,6 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   clone(): PonyfillRequest<TJSON> {
     return new PonyfillRequest(this);
   }
+
+  [Symbol.toStringTag] = 'Request';
 }
