@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.5.5
+
+### Patch Changes
+
+- [#1110](https://github.com/ardatan/whatwg-node/pull/1110) [`45ec735`](https://github.com/ardatan/whatwg-node/commit/45ec735bd3081f42221bdccb70692b420ce16efa) Thanks [@dac09](https://github.com/dac09)! - Support wrapping the native \`Request\`
+
+- [#1111](https://github.com/ardatan/whatwg-node/pull/1111) [`a129376`](https://github.com/ardatan/whatwg-node/commit/a1293766bcf8d2465844aec1d80957e2af1b16f1) Thanks [@dac09](https://github.com/dac09)! - Support native `ReadableStream` as `BodyInit`
+
 ## 0.5.4
 
 ### Patch Changes
