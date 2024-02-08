@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.25
+
+### Patch Changes
+
+- [`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf) Thanks [@ardatan](https://github.com/ardatan)! - Use duplex half for stream based Requests
+
 ## 0.9.24
 
 ### Patch Changes
