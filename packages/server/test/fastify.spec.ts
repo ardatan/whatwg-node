@@ -1,5 +1,7 @@
 import React from 'react';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
+// @ts-expect-error Types are not available yet
+import { renderToReadableStream } from 'react-dom/server.edge';
 import { ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
 import { ServerAdapter, ServerAdapterBaseObject } from '../src/types.js';
@@ -152,9 +154,6 @@ describe('Fastify', () => {
       const MyComponent = () => {
         return React.createElement('h1', null, 'Rendered in React');
       };
-
-      // @ts-expect-error React types not available yet
-      const { renderToReadableStream } = await import('react-dom/server.edge');
 
       const stream = await renderToReadableStream(React.createElement(MyComponent));
 
