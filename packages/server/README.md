@@ -117,14 +117,9 @@ self.addEventListener('fetch', myServerAdapter)
 You can use our adapter as a Deno request handler like below;
 
 ```ts
-import { serve } from 'https://deno.land/std@0.157.0/http/server.ts'
-import myServerAdapter from './myServerAdapter'
+import myServerAdapter from './myServerAdapter.ts'
 
-serve(myServerAdapter, {
-  onListen({ hostname, port }) {
-    console.log(`Listening on http://${hostname}:${port}/graphql`)
-  }
-})
+Deno.serve(myServerAdapter)
 ```
 
 ### Express
