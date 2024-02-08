@@ -114,8 +114,7 @@ self.addEventListener('fetch', myServerAdapter)
 ### Deno
 
 [Deno is a simple, modern and secure runtime for JavaScript and TypeScript that uses V8 and is built in Rust](https://deno.land/).
-Although an adapter is not needed when using [`Deno.serve`](https://deno.land/api?s=Deno.serve), one can be used as a
-Deno request handler as shown below:
+You can use our adapter as a Deno request handler like below;
 
 ```ts
 import myServerAdapter from './myServerAdapter.ts'
