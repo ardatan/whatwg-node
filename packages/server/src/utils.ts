@@ -213,6 +213,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
       headers: nodeRequest.headers,
+      duplex: 'half',
       body: new ReadableStream({
         start(controller) {
           rawRequest.on('data', chunk => {
@@ -230,7 +231,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
         },
       }),
       signal,
-    });
+    } as RequestInit);
   }
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
@@ -238,8 +239,9 @@ It will affect your performance. Please check our Bun integration recipe, and av
     method: nodeRequest.method,
     headers: nodeRequest.headers,
     body: rawRequest as any,
+    duplex: 'half',
     signal,
-  });
+  } as RequestInit);
 }
 
 export function isReadable(stream: any): stream is Readable {

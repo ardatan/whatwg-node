@@ -9,6 +9,7 @@ function isRequest(input: any): input is PonyfillRequest {
 export type RequestPonyfillInit = PonyfillBodyOptions &
   Omit<RequestInit, 'body' | 'headers'> & {
     body?: BodyPonyfillInit | null;
+    duplex?: 'half' | 'full';
     headers?: PonyfillHeadersInit;
     headersSerializer?: HeadersSerializer;
     agent?: Agent;
@@ -62,6 +63,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.referrerPolicy = requestInit?.referrerPolicy || 'no-referrer';
     this._signal = requestInit?.signal;
     this.headersSerializer = requestInit?.headersSerializer;
+    this.duplex = requestInit?.duplex || 'half';
 
     this.url = url || '';
 
@@ -104,6 +106,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrerPolicy: ReferrerPolicy;
   url: string;
   agent?: Agent;
+  duplex: 'half' | 'full';
 
   private _signal: AbortSignal | undefined | null;
 
