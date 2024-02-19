@@ -130,6 +130,20 @@ describe('Node Specific Cases', () => {
         expect(await response.text()).toContain('This is an error.');
       });
 
+      it('should handle async body read streams', async () => {
+        const serverAdapter = createServerAdapter(async request => {
+          await new Promise(resolve => setTimeout(resolve, 10));
+          return new Response(await request.text(), { status: 200 });
+        });
+        testServer.addOnceHandler(serverAdapter);
+        const response = await fetch(testServer.url, {
+          method: 'POST',
+          body: 'Hello World',
+        });
+        expect(response.status).toBe(200);
+        expect(await response.text()).toContain('Hello World');
+      });
+
       it('should respect the status code', async () => {
         const serverAdapter = createServerAdapter(() => {
           const error = new Error('This is an error.');
