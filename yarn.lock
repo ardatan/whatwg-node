@@ -3468,10 +3468,10 @@ builtins@^5.0.1:
   dependencies:
     semver "^7.0.0"
 
-bun-types@1.0.27:
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.27.tgz#8cde2cdef434d9c0ebe3d15b3163ceaba2329b4b"
-  integrity sha512-fwaJ3Ey6InD4nAkUd+AwzHDmxGdWWRy/SWh0QQEw7QF/ABnoqSv+iQrA5tIK4TyUyR/V9446G+w53+sOmJOJyA==
+bun-types@1.0.28:
+  version "1.0.28"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.0.28.tgz#c4fa0a542d7629b8b651feaf72e282e061f99b23"
+  integrity sha512-wQqbLYRM0YnsXZMFujbCr/9YxlEl51jshMXcJ2Y9wEuU7k6TKcX2KDh032k9oHfB1wH8/SleXboIsULMtFaAaA==
   dependencies:
     "@types/node" "~20.11.3"
     "@types/ws" "~8.5.10"
