@@ -133,7 +133,8 @@ describe('Node Specific Cases', () => {
       it('should handle async body read streams', async () => {
         const serverAdapter = createServerAdapter(async request => {
           await new Promise(resolve => setTimeout(resolve, 10));
-          return new Response(await request.text(), { status: 200 });
+          const reqText = await request.text();
+          return new Response(reqText, { status: 200 });
         });
         testServer.addOnceHandler(serverAdapter);
         const response = await fetch(testServer.url, {

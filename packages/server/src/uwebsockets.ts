@@ -46,11 +46,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
     let multipleChunks = false;
     res.onData(function (ab, isLast) {
       const chunk = Buffer.from(ab, 0, ab.byteLength);
-      if (!multipleChunks && isLast) {
-        readable.push(chunk);
-      } else {
-        readable.push(Buffer.from(chunk));
-      }
+      readable.push(Buffer.from(chunk));
       if (isLast) {
         readable.push(null);
       }
@@ -59,7 +55,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
   }
   const headers = new fetchAPI.Headers();
   req.forEach((key, value) => {
-    headers.set(key, value);
+    headers.append(key, value);
   });
   let url = `http://localhost${req.getUrl()}`;
   const query = req.getQuery();
