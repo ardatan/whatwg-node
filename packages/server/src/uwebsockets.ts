@@ -43,14 +43,12 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
     res.onAborted(() => {
       readable.push(null);
     });
-    let multipleChunks = false;
     res.onData(function (ab, isLast) {
       const chunk = Buffer.from(ab, 0, ab.byteLength);
       readable.push(Buffer.from(chunk));
       if (isLast) {
         readable.push(null);
       }
-      multipleChunks = true;
     });
   }
   const headers = new fetchAPI.Headers();
