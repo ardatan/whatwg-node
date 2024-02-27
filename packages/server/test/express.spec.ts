@@ -24,7 +24,7 @@ describe('express', () => {
       }),
     );
     server = app.listen(0);
-    await new Promise<void>(resolve => server.on('listening', resolve));
+    await new Promise<void>(resolve => server.once('listening', resolve));
     port = (server.address() as AddressInfo).port;
   });
 
@@ -35,19 +35,22 @@ describe('express', () => {
   });
 
   runTestsForEachFetchImpl(() => {
-    it('should respond with relevant status code', async () => {
+    describe('should respond with relevant status code', () => {
       for (const statusCodeStr in STATUS_CODES) {
         const status = Number(statusCodeStr);
         if (status < 200) continue;
-        const res = await fetch(`http://localhost:${port}/my-path`, {
-          method: 'POST',
-          headers: {
-            'content-type': 'application/json',
-          },
-          body: JSON.stringify({ status }),
+        it(`should respond with ${statusCodeStr}`, async () => {
+          const res = await fetch(`http://localhost:${port}/my-path`, {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+            },
+            body: JSON.stringify({ status }),
+          });
+          expect(res.status).toBe(status);
+          expect(res.statusText).toBe(STATUS_CODES[status]);
+          await res.text();
         });
-        expect(res.status).toBe(status);
-        expect(res.statusText).toBe(STATUS_CODES[status]);
       }
     });
 
@@ -61,6 +64,7 @@ describe('express', () => {
       });
       expect(res.headers.get('x-foo')).toBe('foo');
       expect(res.headers.get('x-bar')).toBe('bar');
+      await res.text();
     });
   });
 });

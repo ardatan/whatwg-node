@@ -2,6 +2,7 @@ import { createServer } from 'http';
 import { AddressInfo } from 'net';
 import { fetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
+import { runTestsForEachFetchImpl } from './test-fetch';
 
 describe('Proxy', () => {
   let aborted: boolean = false;
@@ -33,54 +34,66 @@ describe('Proxy', () => {
     );
   });
   const proxyServer = createServer(proxyAdapter);
-  let libcurl: any;
   beforeAll(async () => {
-    libcurl = globalThis['libcurl'];
-    globalThis['libcurl'] = undefined;
-    aborted = false;
     await new Promise<void>(resolve => originalServer.listen(0, resolve));
     await new Promise<void>(resolve => proxyServer.listen(0, resolve));
   });
+  beforeEach(() => {
+    aborted = false;
+  });
   afterAll(async () => {
-    globalThis['libcurl'] = libcurl;
     await new Promise(resolve => originalServer.close(resolve));
     await new Promise(resolve => proxyServer.close(resolve));
   });
-  it('proxies requests', async () => {
-    const response = await fetch(
-      `http://localhost:${(proxyServer.address() as AddressInfo).port}/test`,
-      {
+  runTestsForEachFetchImpl(() => {
+    it('proxies requests', async () => {
+      const response = await fetch(
+        `http://localhost:${(proxyServer.address() as AddressInfo).port}/test`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            test: true,
+          }),
+        },
+      );
+      expect(await response.json()).toMatchObject({
         method: 'POST',
+        url: `http://localhost:${(originalServer.address() as AddressInfo).port}/test`,
         headers: {
-          'Content-Type': 'application/json',
+          'content-type': 'application/json',
+          host: `localhost:${(originalServer.address() as AddressInfo).port}`,
         },
         body: JSON.stringify({
           test: true,
         }),
-      },
-    );
-    expect(await response.json()).toMatchObject({
-      method: 'POST',
-      url: `http://localhost:${(originalServer.address() as AddressInfo).port}/test`,
-      headers: {
-        'content-type': 'application/json',
-        host: `localhost:${(originalServer.address() as AddressInfo).port}`,
-      },
-      body: JSON.stringify({
-        test: true,
-      }),
+      });
+      expect(response.status).toBe(200);
     });
-    expect(response.status).toBe(200);
-  });
-  it('handles aborted requests', async () => {
-    const response = fetch(
-      `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
-      {
-        signal: AbortSignal.timeout(500),
-      },
-    );
-    await expect(response).rejects.toThrow();
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    expect(aborted).toBe(true);
+    it('handles aborted requests', async () => {
+      const response = fetch(
+        `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
+        {
+          signal: AbortSignal.timeout(500),
+        },
+      );
+      await expect(response).rejects.toThrow();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      expect(aborted).toBe(true);
+    });
+    it('handles requested terminated before abort', async () => {
+      const res = await fetch(
+        `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
+        {
+          signal: AbortSignal.timeout(2000),
+        },
+      );
+      expect(res.ok).toBe(true);
+      await res.text();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      expect(aborted).toBe(false);
+    });
   });
 });
