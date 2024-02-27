@@ -10,6 +10,7 @@ export interface TestServer {
 }
 
 export async function createUWSTestServer(): Promise<TestServer> {
+  const uwsUtils = createUWS();
   await uwsUtils.start();
   return {
     name: 'uWebSockets.js',
@@ -59,11 +60,13 @@ export const serverImplMap: Record<string, () => Promise<TestServer>> = {
   nodeHttp: createNodeHttpTestServer,
 };
 
-if ((globalThis as any)['uwsUtils']) {
+if ((globalThis as any)['createUWS']) {
   serverImplMap.uWebSockets = createUWSTestServer;
 }
 
-export function runTestsForEachServerImpl(callback: (server: TestServer) => void) {
+export function runTestsForEachServerImpl(
+  callback: (server: TestServer, serverImplName: string) => void,
+) {
   for (const serverImplName in serverImplMap) {
     describe(serverImplName, () => {
       const server: TestServer = {} as TestServer;
@@ -74,7 +77,7 @@ export function runTestsForEachServerImpl(callback: (server: TestServer) => void
         await server.close();
         globalAgent.destroy();
       });
-      callback(server);
+      callback(server, serverImplName);
     });
   }
 }

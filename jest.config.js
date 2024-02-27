@@ -10,7 +10,7 @@ const ESM_PACKAGES = [];
 let globals = {};
 
 try {
-  global.uwsUtils = require('./uwsUtils');
+  global.createUWS = require('./uwsUtils').createUWS;
 } catch (err) {
   console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`, err);
 }
