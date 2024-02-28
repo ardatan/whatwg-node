@@ -16,10 +16,11 @@
     "@jridgewell/trace-mapping" "^0.3.9"
 
 "@azure/functions@^4.1.0":
-  version "4.2.0"
-  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.2.0.tgz#221e605d137e846e53fce4e5e24c95691c4747f3"
-  integrity sha512-RSECLoje4jGVpsVRjEzkna9KvmQOVeB96cg8J5J2g41QQpMWCzD1QTPI5+yI0uvOidGRLYElV1zHZjdvsGf9Nw==
+  version "4.3.0"
+  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.3.0.tgz#8528ebfd82f565d733e96abf9d31b1fb9586d389"
+  integrity sha512-l7iAuSyyBCOgwkDZmV6UUagwkFoqMOVfq01oJ+rJlFhN7Mb8/kkUAZLffCPUxBy2Wwah741BhJGizwaCP9G2/A==
   dependencies:
+    cookie "^0.6.0"
     long "^4.0.0"
     undici "^5.13.0"
 
@@ -2545,10 +2546,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@20.11.20", "@types/node@>=12.12.47", "@types/node@>=13.7.0", "@types/node@~20.11.3":
-  version "20.11.20"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.20.tgz#f0a2aee575215149a62784210ad88b3a34843659"
-  integrity sha512-7/rR21OS+fq8IyHTgtLkDK949uzsa6n8BkziAKtPVpugIkO6D+/ooXMvzXxDnZrmtXVfjb1bKQafYpb8s89LOg==
+"@types/node@*", "@types/node@20.11.21", "@types/node@>=12.12.47", "@types/node@>=13.7.0", "@types/node@~20.11.3":
+  version "20.11.21"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.21.tgz#ad67e65652f7be15686e2df87a38076a81c5e9c5"
+  integrity sha512-/ySDLGscFPNasfqStUuWWPfL78jompfIoVzLJPVVAHBh6rpG68+pI2Gk+fNLeI8/f1yPYL4s46EleVIc20F1Ow==
   dependencies:
     undici-types "~5.26.4"
 
