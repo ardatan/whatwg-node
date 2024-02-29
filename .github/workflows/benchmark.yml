@@ -1,4 +1,4 @@
-name: test
+name: benchmark
 on:
   push:
     branches:
@@ -8,7 +8,7 @@ on:
       - 'website/**'
 
 jobs:
-  benchmarks:
+  server:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
