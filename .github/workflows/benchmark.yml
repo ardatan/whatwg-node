@@ -52,6 +52,13 @@ jobs:
         scenario:
           - noConsumeBody
           - consumeBody
+    services:
+      httpbin:
+        image: mccutchen/go-httpbin
+        env:
+          PORT: 50000
+        ports:
+          - 50000:50000
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -60,8 +67,6 @@ jobs:
         with:
           nodeVersion: 20
           packageManager: yarn
-      - name: Start httpbin
-        run: yarn workspace @benchmarks/node-fetch run start:httpbin &
       - name: Start server
         run: yarn workspace @benchmarks/node-fetch run start:server &
       - name: Benchmark
