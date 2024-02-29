@@ -15,7 +15,7 @@ if (!scenario) {
 /** @type{import('k6/options').Options} */
 export const options = {
   thresholds: {
-    active_handles: ['p(100)<250'], // active handles must be below 250
+    active_handles: ['max<250'], // active handles must be below 250
   },
   scenarios: {
     [scenario]: {
