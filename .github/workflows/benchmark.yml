@@ -59,9 +59,6 @@ jobs:
           PORT: 50000
         ports:
           - 50000:50000
-    env:
-      SCENARIO: ${{ matrix.scenario }}
-      HOST: 0.0.0.0
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -70,13 +67,17 @@ jobs:
         with:
           nodeVersion: 20
           packageManager: yarn
+      - name: Install k6
+        run: |
+          curl https://github.com/grafana/k6/releases/download/v0.49.0/k6-v0.49.0-linux-amd64.tar.gz -L | tar xvz --strip-components 1
       - name: Start server
         run: yarn workspace @benchmarks/node-fetch run start:server &
       - name: Wait for server
         run: curl --retry 5 --retry-delay 1 --retry-connrefused http://$HOST:50001
       - name: Benchmark
-        uses: grafana/k6-action@v0.3.1
         env:
           SCENARIO: ${{ matrix.scenario }}
-        with:
-          filename: ./benchmarks/node-fetch/k6.js
+          GITHUB_PR: ${{ github.event.number }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./k6 run ./benchmarks/node-fetch/k6.js
