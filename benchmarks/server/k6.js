@@ -25,15 +25,13 @@ export function handleSummary(data) {
       org: 'ardatan',
       repo: 'whatwg-node',
       renderTitle({ passes }) {
-        return passes ? '✅ Benchmark Results' : '❌ Benchmark Failed';
+        return passes ? `✅ \`@benchmarks/server\` results` : `❌ \`@benchmarks/server\` failed`;
       },
       renderMessage({ passes, checks, thresholds }) {
         const result = [];
 
         if (thresholds.failures) {
-          result.push(
-            `**Performance regression detected**: it seems like your Pull Request adds some extra latency to GraphQL Yoga`,
-          );
+          result.push(`**Performance regression detected**`);
         }
 
         if (checks.failures) {
