@@ -1,4 +1,5 @@
-name: benchmark
+name: benchmarks
+
 on:
   push:
     branches:
