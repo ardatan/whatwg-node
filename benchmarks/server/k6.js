@@ -56,8 +56,8 @@ export default function run() {
   const res = http.get(`http://127.0.0.1:4000`);
 
   check(res, {
-    no_errors: resp => resp.status === 200,
-    expected_result: resp => {
+    'no-errors': resp => resp.status === 200,
+    'expected-result': resp => {
       const json = resp.json();
       return (
         !!json &&
