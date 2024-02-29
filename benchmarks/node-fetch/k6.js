@@ -46,8 +46,8 @@ export function handleSummary(data) {
       repo: 'whatwg-node',
       renderTitle({ passes }) {
         return passes
-          ? '✅ [@benchmarks/node-fetch](/benchmarks/node-fetch) results'
-          : '❌ [@benchmarks/node-fetch](/benchmarks/node-fetch) failed';
+          ? `✅ \`@benchmarks/node-fetch\` results (${scenario})`
+          : `❌ \`@benchmarks/node-fetch\` failed (${scenario})`;
       },
       renderMessage({ passes, checks, thresholds }) {
         const result = [];
