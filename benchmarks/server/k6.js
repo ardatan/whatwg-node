@@ -11,8 +11,7 @@ export const options = {
   vus: 1,
   duration: '30s',
   thresholds: {
-    no_errors: ['rate>0.98'],
-    expected_result: ['rate>0.98'],
+    checks: ['rate>0.98'],
   },
 };
 
