@@ -1,0 +1,14 @@
+{
+  "name": "@benchmarks/node-fetch",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "bench": "k6 run k6.js",
+    "start": "tsx index.ts",
+    "start:httpbin": "docker run --rm -p 50000:50000 -e PORT=50000 mccutchen/go-httpbin"
+  },
+  "devDependencies": {
+    "@types/k6": "^0.49.0",
+    "tsx": "^4.7.1"
+  }
+}
