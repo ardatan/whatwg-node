@@ -1,6 +1,6 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -41,7 +41,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       });
 
       nodeRequest.once('response', nodeResponse => {
-        let responseBody: Readable = nodeResponse;
+        let responseBody = nodeResponse.pipe(new PassThrough());
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':

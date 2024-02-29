@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
@@ -113,7 +113,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
           headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
         );
         resolve(
-          new PonyfillResponse(stream, {
+          new PonyfillResponse(stream.pipe(new PassThrough()), {
             status,
             headers: headersInit,
             url: fetchRequest.url,

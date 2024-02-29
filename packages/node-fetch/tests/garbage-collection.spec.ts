@@ -1,17 +1,27 @@
 import { Response } from '@whatwg-node/node-fetch';
 import { createServerAdapter } from '@whatwg-node/server';
+import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 import { runTestsForEachServerImpl } from '../../server/test/test-server';
-import { fetchNodeHttp } from '../src/fetchNodeHttp';
-import { PonyfillRequest } from '../src/Request';
+import { fetchPonyfill } from '../src/fetch';
 
 describe('Garbage Collection', () => {
-  runTestsForEachServerImpl(testServer => {
-    beforeEach(() => {
-      testServer.addOnceHandler(createServerAdapter(() => Response.json({ test: 'test' })));
+  runTestsForEachFetchImpl(() => {
+    describe('internal calls', () => {
+      runTestsForEachServerImpl(testServer => {
+        beforeEach(() => {
+          testServer.addOnceHandler(createServerAdapter(() => Response.json({ test: 'test' })));
+        });
+        it('should free resources when body is not consumed', async () => {
+          const response = await fetchPonyfill(testServer.url);
+          expect(response.status).toBe(200);
+        });
+      });
     });
-    it('should free resources when body is not consumed', async () => {
-      const response = await fetchNodeHttp(new PonyfillRequest(testServer.url));
-      expect(response.status).toBe(200);
+    describe('external calls', () => {
+      it('should free resources when body is not consumed', async () => {
+        const response = await fetchPonyfill('http://google.com');
+        expect(response.status).toBe(200);
+      });
     });
   });
 });
