@@ -8,7 +8,7 @@ if (!scenario) {
   throw new Error('SCENARIO env var not defined, see scenarios.ts for available scenarios');
 }
 
-const host = __ENV.host || 'localhost';
+const host = __ENV.HOST || 'localhost';
 
 /** @type{import('k6/options').Options} */
 export const options = {
