@@ -43,3 +43,30 @@ jobs:
           GITHUB_PR: ${{ github.event.number }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  node-fetch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - noConsumeBody
+          - consumeBody
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 20
+          packageManager: yarn
+      - name: Start httpbin
+        run: yarn start:httpbin
+      - name: Start server
+        run: yarn start:server
+      - name: Benchmark
+        uses: grafana/k6-action@v0.3.1
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+        with:
+          filename: ./benchmarks/node-fetch/k6.js
