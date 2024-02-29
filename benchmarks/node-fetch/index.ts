@@ -1,8 +1,9 @@
 import { createServer } from 'http';
 import { isScenario, scenarios } from './scenarios';
 
+const host = process.env.HOST || 'localhost';
 const port = 50001;
-const httpbinUrl = 'http://localhost:50000/anything';
+const httpbinUrl = `http://${host}:50000/anything`;
 
 const server = createServer(async (req, res) => {
   try {
@@ -33,5 +34,5 @@ const server = createServer(async (req, res) => {
 
 server.listen(port);
 
-console.log(`Server listening at http://localhost:${port}`);
+console.log(`Server listening at http://${host}:${port}`);
 console.debug(`Available scenarios: ${Object.keys(scenarios).join(', ')}`);

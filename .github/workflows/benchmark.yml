@@ -59,6 +59,9 @@ jobs:
           PORT: 50000
         ports:
           - 50000:50000
+    env:
+      SCENARIO: ${{ matrix.scenario }}
+      HOST: 0.0.0.0
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

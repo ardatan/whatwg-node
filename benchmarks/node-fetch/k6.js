@@ -8,6 +8,8 @@ if (!scenario) {
   throw new Error('SCENARIO env var not defined, see scenarios.ts for available scenarios');
 }
 
+const host = __ENV.host || 'localhost';
+
 /** @type{import('k6/options').Options} */
 export const options = {
   scenarios: {
@@ -23,8 +25,8 @@ export const options = {
 const activeHandles = new Trend('active_handles');
 
 export default function () {
-  http.get(`http://localhost:50001/scenarios/${scenario}`);
+  http.get(`http://${host}:50001/scenarios/${scenario}`);
 
-  const res = http.get(`http://localhost:50001/activeHandles`);
+  const res = http.get(`http://${host}:50001/activeHandles`);
   activeHandles.add(parseInt(String(res.body)));
 }
