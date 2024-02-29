@@ -61,9 +61,9 @@ jobs:
           nodeVersion: 20
           packageManager: yarn
       - name: Start httpbin
-        run: yarn start:httpbin
+        run: yarn workspace @benchmarks/node-fetch run start:httpbin
       - name: Start server
-        run: yarn start:server
+        run: yarn workspace @benchmarks/node-fetch run start:server
       - name: Benchmark
         uses: grafana/k6-action@v0.3.1
         env:
