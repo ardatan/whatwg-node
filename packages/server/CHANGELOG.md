@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.26
+
+### Patch Changes
+
+- [#1143](https://github.com/ardatan/whatwg-node/pull/1143) [`9958bb1`](https://github.com/ardatan/whatwg-node/commit/9958bb1367e1918217abb4244df1685aa1e025fe) Thanks [@aarne](https://github.com/aarne)! - Fix async handling of uWS
+
+- Updated dependencies [[`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
+  - @whatwg-node/fetch@0.9.17
+
 ## 0.9.25
 
 ### Patch Changes
