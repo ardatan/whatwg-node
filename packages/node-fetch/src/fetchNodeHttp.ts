@@ -96,9 +96,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
         });
-        if (responseBody === nodeResponse) {
-          readableCleanupRegistry.register(ponyfillResponse, nodeResponse);
-        }
         resolve(ponyfillResponse);
       });
       nodeRequest.once('error', reject);
