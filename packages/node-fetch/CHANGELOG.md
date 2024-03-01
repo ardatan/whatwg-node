@@ -1,5 +1,11 @@
 # @whatwg-node/node-fetch
 
+## 0.5.7
+
+### Patch Changes
+
+- [#1162](https://github.com/ardatan/whatwg-node/pull/1162) [`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450) Thanks [@ardatan](https://github.com/ardatan)! - Consume the body with PassThrough
+
 ## 0.5.6
 
 ### Patch Changes
