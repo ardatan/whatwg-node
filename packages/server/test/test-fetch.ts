@@ -7,6 +7,9 @@ export function runTestsForEachFetchImpl(callback: (implementationName: string) 
   if (libcurl) {
     describe('libcurl', () => {
       callback('libcurl');
+      afterAll(() => {
+        libcurl.Curl.globalCleanup();
+      });
     });
   }
   describe('node-http', () => {
@@ -19,5 +22,8 @@ export function runTestsForEachFetchImpl(callback: (implementationName: string) 
       httpsGlobalAgent.destroy();
     });
     callback('node-http');
+  });
+  afterEach(() => {
+    globalThis?.gc?.();
   });
 }

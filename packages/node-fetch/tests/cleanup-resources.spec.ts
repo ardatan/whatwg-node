@@ -4,7 +4,7 @@ import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 import { runTestsForEachServerImpl } from '../../server/test/test-server';
 import { fetchPonyfill } from '../src/fetch';
 
-describe('Garbage Collection', () => {
+describe('Cleanup Resources', () => {
   runTestsForEachFetchImpl(() => {
     describe('internal calls', () => {
       runTestsForEachServerImpl(testServer => {
@@ -18,8 +18,12 @@ describe('Garbage Collection', () => {
       });
     });
     describe('external calls', () => {
-      it('should free resources when body is not consumed', async () => {
+      it('http - should free resources when body is not consumed', async () => {
         const response = await fetchPonyfill('http://google.com');
+        expect(response.status).toBe(200);
+      });
+      it('https - should free resources when body is not consumed', async () => {
+        const response = await fetchPonyfill('https://google.com');
         expect(response.status).toBe(200);
       });
     });

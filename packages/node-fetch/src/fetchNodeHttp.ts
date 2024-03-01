@@ -1,11 +1,11 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
-import { PassThrough, Readable } from 'stream';
+import { Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { getHeadersObj, isNodeReadable } from './utils.js';
+import { getHeadersObj, isNodeReadable, readableCleanupRegistry } from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
   if (url.startsWith('http:')) {
@@ -41,7 +41,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       });
 
       nodeRequest.once('response', nodeResponse => {
-        let responseBody = nodeResponse.pipe(new PassThrough());
+        let responseBody: Readable = nodeResponse;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
@@ -84,6 +84,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
         });
+        if (responseBody === nodeResponse) {
+          readableCleanupRegistry.register(ponyfillResponse, nodeResponse);
+        }
         resolve(ponyfillResponse);
       });
       nodeRequest.once('error', reject);

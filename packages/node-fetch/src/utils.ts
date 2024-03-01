@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -74,3 +74,9 @@ export function isArrayBufferView(obj: any): obj is ArrayBufferView {
 export function isNodeReadable(obj: any): obj is Readable {
   return obj != null && obj.pipe != null;
 }
+
+export const readableCleanupRegistry = new FinalizationRegistry<Readable>(readable => {
+  if (!readable.readableFlowing) {
+    readable.pipe(new PassThrough());
+  }
+});

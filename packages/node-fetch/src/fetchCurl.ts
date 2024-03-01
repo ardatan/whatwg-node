@@ -1,7 +1,7 @@
-import { PassThrough, Readable } from 'node:stream';
+import { Readable } from 'node:stream';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
+import { defaultHeadersSerializer, isNodeReadable, readableCleanupRegistry } from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
@@ -112,13 +112,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         const headersInit = headersFlat.map(
           headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
         );
-        resolve(
-          new PonyfillResponse(stream.pipe(new PassThrough()), {
-            status,
-            headers: headersInit,
-            url: fetchRequest.url,
-          }),
-        );
+        const ponyfillResponse = new PonyfillResponse(stream, {
+          status,
+          headers: headersInit,
+          url: fetchRequest.url,
+        });
+        readableCleanupRegistry.register(ponyfillResponse, stream);
+        resolve(ponyfillResponse);
         streamResolved = stream;
       },
     );
