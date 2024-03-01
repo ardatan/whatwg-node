@@ -2,6 +2,7 @@ import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { PassThrough, Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
+import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -88,6 +89,11 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           });
           responseBody.on('close', () => {
             nodeResponse.destroy();
+          });
+          fetchRequest['_signal']?.addEventListener('abort', () => {
+            if (!nodeResponse.destroyed) {
+              responseBody.emit('error', new PonyfillAbortError());
+            }
           });
         }
         const ponyfillResponse = new PonyfillResponse(responseBody, {

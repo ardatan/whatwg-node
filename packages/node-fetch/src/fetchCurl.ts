@@ -93,6 +93,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.once(
       'stream',
       function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
+        const pipedStream = stream.pipe(new PassThrough());
         const headersFlat = headersBuf
           .toString('utf8')
           .split(/\r?\n|\r/g)
@@ -102,7 +103,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
                 fetchRequest.redirect === 'error' &&
                 (headerFilter.includes('location') || headerFilter.includes('Location'))
               ) {
-                stream.destroy();
+                pipedStream.destroy();
                 reject(new Error('redirect is not allowed'));
               }
               return true;
@@ -112,7 +113,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         const headersInit = headersFlat.map(
           headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
         );
-        const pipedStream = stream.pipe(new PassThrough());
         pipedStream.on('pause', () => {
           stream.pause();
         });
@@ -128,7 +128,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
           url: fetchRequest.url,
         });
         resolve(ponyfillResponse);
-        streamResolved = stream;
+        streamResolved = pipedStream;
       },
     );
     curlHandle.perform();
