@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
@@ -93,6 +93,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.once(
       'stream',
       function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
+        const pipedStream = stream.pipe(new PassThrough());
         const headersFlat = headersBuf
           .toString('utf8')
           .split(/\r?\n|\r/g)
@@ -102,7 +103,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
                 fetchRequest.redirect === 'error' &&
                 (headerFilter.includes('location') || headerFilter.includes('Location'))
               ) {
-                stream.destroy();
+                pipedStream.destroy();
                 reject(new Error('redirect is not allowed'));
               }
               return true;
@@ -112,14 +113,22 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         const headersInit = headersFlat.map(
           headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
         );
-        resolve(
-          new PonyfillResponse(stream, {
-            status,
-            headers: headersInit,
-            url: fetchRequest.url,
-          }),
-        );
-        streamResolved = stream;
+        pipedStream.on('pause', () => {
+          stream.pause();
+        });
+        pipedStream.on('resume', () => {
+          stream.resume();
+        });
+        pipedStream.on('close', () => {
+          stream.destroy();
+        });
+        const ponyfillResponse = new PonyfillResponse(pipedStream, {
+          status,
+          headers: headersInit,
+          url: fetchRequest.url,
+        });
+        resolve(ponyfillResponse);
+        streamResolved = pipedStream;
       },
     );
     curlHandle.perform();

@@ -303,7 +303,7 @@ export function sendNodeResponse(
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
 ) {
-  if (serverResponse.closed || serverResponse.destroyed) {
+  if (serverResponse.closed || serverResponse.destroyed || serverResponse.writableEnded) {
     return;
   }
   if (!fetchResponse) {
