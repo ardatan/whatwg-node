@@ -4,7 +4,7 @@
   "workspaces": [
     "packages/*",
     "e2e/*",
-    "benchmark"
+    "benchmarks/*"
   ],
   "scripts": {
     "build": "bob build",

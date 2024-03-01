@@ -1,0 +1,82 @@
+name: benchmarks
+
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    paths-ignore:
+      - 'website/**'
+
+env:
+  K6_VERSION: 0.49.0
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Install Required Libraries
+        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 20
+          packageManager: yarn
+      - name: Build Packages
+        run: yarn build
+      - name: Setup K6
+        run: |
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6=$K6_VERSION
+      - name: Start Benchmark
+        working-directory: ./benchmarks/server
+        run: |
+          yarn test
+        env:
+          NODE_NO_WARNINGS: true
+          NODE_ENV: production
+          GITHUB_PR: ${{ github.event.number }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  node-fetch:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - noConsumeBody
+          - consumeBody
+    services:
+      httpbin:
+        image: mccutchen/go-httpbin
+        env:
+          PORT: 50000
+        ports:
+          - 50000:50000
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 20
+          packageManager: yarn
+      - name: Install k6
+        run: |
+          curl "https://github.com/grafana/k6/releases/download/v$K6_VERSION/k6-v$K6_VERSION-linux-amd64.tar.gz" -L | tar xvz --strip-components 1
+      - name: Start server
+        run: yarn workspace @benchmarks/node-fetch run start:server &
+      - name: Wait for server
+        run: curl --retry 5 --retry-delay 1 --retry-connrefused http://localhost:50001
+      - name: Benchmark
+        env:
+          SCENARIO: ${{ matrix.scenario }}
+          GITHUB_PR: ${{ github.event.number }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./k6 run ./benchmarks/node-fetch/k6.js

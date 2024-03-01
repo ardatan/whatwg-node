@@ -1,11 +1,11 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "dist",
     "module": "Node16",
     "moduleResolution": "node16"
   },
-  "include": ["./index.ts"],
+  "include": ["server.ts"],
   "exclude": []
 }
