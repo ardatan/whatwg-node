@@ -1,6 +1,6 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
-import { Readable } from 'stream';
+import { PassThrough, Readable } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -77,6 +77,18 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             nodeResponse.resume();
             return;
           }
+        }
+        if (responseBody === nodeResponse) {
+          responseBody = nodeResponse.pipe(new PassThrough());
+          responseBody.on('pause', () => {
+            nodeResponse.pause();
+          });
+          responseBody.on('resume', () => {
+            nodeResponse.resume();
+          });
+          responseBody.on('close', () => {
+            nodeResponse.destroy();
+          });
         }
         const ponyfillResponse = new PonyfillResponse(responseBody, {
           status: nodeResponse.statusCode,
