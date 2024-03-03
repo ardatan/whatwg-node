@@ -42,8 +42,8 @@
     "@types/node": "20.11.24",
     "express": "4.18.3",
     "fastify": "4.26.2",
-    "react": "0.0.0-experimental-e5205658f-20230913",
-    "react-dom": "0.0.0-experimental-e5205658f-20230913",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.34.0"
   },
   "publishConfig": {
