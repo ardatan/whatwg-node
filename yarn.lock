@@ -2446,10 +2446,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@pulumi/aws@6.24.2":
-  version "6.24.2"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.24.2.tgz#dccef8f4d2e09f7b77116386734d667f9b63017e"
-  integrity sha512-srAHI3FennlQ2oRdH84mjVxm1uOgZ2YWJWhHBv3I1eUTHgFR1FgRFQYhn96cyx9JryPFFLJTDAw/0PqXohynTA==
+"@pulumi/aws@6.25.0":
+  version "6.25.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-6.25.0.tgz#8b62294ce4dfb7513f7cbf261384e406efc72296"
+  integrity sha512-p3xwEbOjw9Hcb1f4VUwxsIL+xoJHsu8u0ECpY2slaWGSE4fveP62DC8jrw972SFiVYRZ2r0EdsIeftvFrd1xqg==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
     builtin-modules "3.0.0"
@@ -2675,10 +2675,10 @@
     "@tufjs/canonical-json" "2.0.0"
     minimatch "^9.0.3"
 
-"@types/aws-lambda@8.10.135":
-  version "8.10.135"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.135.tgz#c2f79ca42de77dbd1c7db35704895237c0da1e77"
-  integrity sha512-kD3aDbS5la1LcS89a4bJTLVSJI5euO2fx3euZTge7SbArH7+kcoLS+lK87cdI5GCEfiBQSio5gz546N0FhMmjg==
+"@types/aws-lambda@8.10.136":
+  version "8.10.136"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.136.tgz#12a2af86b9123f4e4549992b27e1bf0dcf60d9f9"
+  integrity sha512-cmmgqxdVGhxYK9lZMYYXYRJk6twBo53ivtXjIUEFZxfxe4TkZTZBK3RRWrY2HjJcUIix0mdifn15yjOAat5lTA==
 
 "@types/aws-lambda@8.10.93":
   version "8.10.93"
