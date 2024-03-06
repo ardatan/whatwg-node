@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
-import { URL } from '@whatwg-node/fetch';
+import { ReadableStream, URL } from '@whatwg-node/fetch';
 import type { FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
@@ -292,7 +292,7 @@ async function sendAsyncIterable(
         // @ts-expect-error http and http2 writes are actually compatible
         .write(chunk)
     ) {
-      break;
+      await new Promise(resolve => serverResponse.once('drain', resolve));
     }
   }
   endResponse(serverResponse);
