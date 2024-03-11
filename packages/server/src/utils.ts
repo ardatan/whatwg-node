@@ -531,3 +531,44 @@ export function isolateObject<TIsolatedObject extends object>(
     },
   });
 }
+
+export interface DeferredPromise<T = void> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason: any) => void;
+}
+
+export function createDeferredPromise<T = void>(): DeferredPromise<T> {
+  let resolveFn: (value: T) => void;
+  let rejectFn: (reason: any) => void;
+  const promise = new Promise<T>(function deferredPromiseExecutor(resolve, reject) {
+    resolveFn = resolve;
+    rejectFn = reject;
+  });
+  return {
+    promise,
+    get resolve() {
+      return resolveFn;
+    },
+    get reject() {
+      return rejectFn;
+    },
+  };
+}
+
+export function handleAbortSignalAndPromiseResponse(
+  response$: Promise<Response> | Response,
+  abortSignal?: AbortSignal | null,
+) {
+  if (isPromise(response$) && abortSignal) {
+    const deferred$ = createDeferredPromise<Response>();
+    abortSignal.addEventListener('abort', function abortSignalFetchErrorHandler() {
+      deferred$.reject(new DOMException('Aborted', 'AbortError'));
+    });
+    response$.then(function fetchSuccessHandler(res) {
+      deferred$.resolve(res);
+    });
+    return deferred$.promise;
+  }
+  return response$;
+}

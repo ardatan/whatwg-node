@@ -208,4 +208,21 @@ describe('adapter.fetch', () => {
     const adapter = createServerAdapter(baseObj);
     expect(adapter.returnThis()).toBe(adapter);
   });
+  it('handles AbortSignal', async () => {
+    const adapter = createServerAdapter(
+      req =>
+        new Promise(resolve => {
+          const timeout = setTimeout(() => resolve(Response.json({ foo: 'bar' })), 100_000);
+          req.signal.addEventListener('abort', () => {
+            clearTimeout(timeout);
+            resolve(Response.error());
+          });
+        }),
+    );
+    const controller = new AbortController();
+    const signal = controller.signal;
+    const promise = adapter.fetch('http://localhost', { signal });
+    controller.abort();
+    await expect(promise).rejects.toThrow('Aborted');
+  });
 });

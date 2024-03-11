@@ -16,6 +16,7 @@ import {
 } from './types.js';
 import {
   completeAssign,
+  handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
   isFetchEvent,
   isNodeRequest,
@@ -306,11 +307,15 @@ function createServerAdapter<
     if (typeof input === 'string' || 'href' in input) {
       const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
-        return handleRequestWithWaitUntil(new fetchAPI.Request(input, initOrCtx), ...restOfCtx);
+        const request = new fetchAPI.Request(input, initOrCtx);
+        const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
+        return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
       }
-      return handleRequestWithWaitUntil(new fetchAPI.Request(input), ...maybeCtx);
+      const request = new fetchAPI.Request(input);
+      return handleRequestWithWaitUntil(request, ...maybeCtx);
     }
-    return handleRequestWithWaitUntil(input, ...maybeCtx);
+    const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
+    return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
   };
 
   const genericRequestHandler = (
