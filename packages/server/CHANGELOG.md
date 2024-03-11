@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.28
+
+### Patch Changes
+
+- [`3f31f2d`](https://github.com/ardatan/whatwg-node/commit/3f31f2d607e4638eb92af139442bba610b33f70e) Thanks [@ardatan](https://github.com/ardatan)! - Handle errors from async request handlers correctly in case of AbortSignal
+
 ## 0.9.27
 
 ### Patch Changes
