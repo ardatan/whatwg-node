@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.27
+
+### Patch Changes
+
+- [`a686f8c`](https://github.com/ardatan/whatwg-node/commit/a686f8c49828303e4dd3582ff6212b233fac1c9f) Thanks [@ardatan](https://github.com/ardatan)! - Respect user provided `AbortSignal` correctly
+
 ## 0.9.26
 
 ### Patch Changes
