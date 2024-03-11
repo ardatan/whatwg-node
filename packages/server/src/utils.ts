@@ -565,9 +565,13 @@ export function handleAbortSignalAndPromiseResponse(
     abortSignal.addEventListener('abort', function abortSignalFetchErrorHandler() {
       deferred$.reject(new DOMException('Aborted', 'AbortError'));
     });
-    response$.then(function fetchSuccessHandler(res) {
-      deferred$.resolve(res);
-    });
+    response$
+      .then(function fetchSuccessHandler(res) {
+        deferred$.resolve(res);
+      })
+      .catch(function fetchErrorHandler(err) {
+        deferred$.reject(err);
+      });
     return deferred$.promise;
   }
   return response$;
