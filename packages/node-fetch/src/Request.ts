@@ -100,7 +100,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   keepalive: boolean;
   method: string;
   mode: RequestMode;
-  priority: string;
+  priority: 'auto' | 'high' | 'low';
   redirect: RequestRedirect;
   referrer: string;
   referrerPolicy: ReferrerPolicy;
