@@ -1,5 +1,11 @@
 # @whatwg-node/node-fetch
 
+## 0.5.8
+
+### Patch Changes
+
+- [#1190](https://github.com/ardatan/whatwg-node/pull/1190) [`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd) Thanks [@ardatan](https://github.com/ardatan)! - Remove node: protocol which is not supported still in some Node versions and ESM mode
+
 ## 0.5.7
 
 ### Patch Changes
