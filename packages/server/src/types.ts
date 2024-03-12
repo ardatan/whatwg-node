@@ -1,4 +1,4 @@
-import type { RequestListener } from 'node:http';
+import type { RequestListener } from 'http';
 import type { NodeRequest, NodeResponse } from './utils.js';
 import { UWSHandler, UWSRequest, UWSResponse } from './uwebsockets.js';
 

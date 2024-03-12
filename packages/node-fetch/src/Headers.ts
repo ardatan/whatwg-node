@@ -1,4 +1,4 @@
-import { inspect } from 'node:util';
+import { inspect } from 'util';
 
 export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;
 

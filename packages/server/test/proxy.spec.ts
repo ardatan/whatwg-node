@@ -1,5 +1,5 @@
-import { createServer } from 'node:http';
-import { AddressInfo } from 'node:net';
+import { createServer } from 'http';
+import { AddressInfo } from 'net';
 import { fetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { runTestsForEachFetchImpl } from './test-fetch';
