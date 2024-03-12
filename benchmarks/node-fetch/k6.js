@@ -3,7 +3,7 @@
 // @ts-expect-error - TS doesn't know this import
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
 // @ts-expect-error - TS doesn't know this import
-import { githubComment } from 'https://raw.githubusercontent.com/enisdenjo/k6-github-pr-comment/comment-key/lib.js';
+import { githubComment } from 'https://raw.githubusercontent.com/dotansimha/k6-github-pr-comment/comment-key/lib.js';
 import http from 'k6/http';
 import { Trend } from 'k6/metrics';
 
