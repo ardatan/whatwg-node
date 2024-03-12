@@ -1,4 +1,4 @@
-import { createServer } from 'node:http';
+import { createServer } from 'http';
 import { afterEach, describe, expect, it } from 'bun:test';
 import { createServerAdapter } from '@whatwg-node/server';
 import { assertDeployedEndpoint } from '../../shared-scripts/src/index';

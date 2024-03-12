@@ -1,5 +1,5 @@
-import { createSecureServer, type Http2SecureServer } from 'node:http2';
-import { AddressInfo } from 'node:net';
+import { createSecureServer, type Http2SecureServer } from 'http2';
+import { AddressInfo } from 'net';
 import { CertificateCreationResult, createCertificate } from 'pem';
 import { fetchPonyfill } from '../src/fetch';
 

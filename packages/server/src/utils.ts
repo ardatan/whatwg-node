@@ -1,7 +1,7 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
-import type { Socket } from 'node:net';
-import type { Readable } from 'node:stream';
+import type { IncomingMessage, ServerResponse } from 'http';
+import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
+import type { Socket } from 'net';
+import type { Readable } from 'stream';
 import { URL } from '@whatwg-node/fetch';
 import type { FetchEvent } from './types.js';
 
@@ -207,7 +207,7 @@ export function normalizeNodeRequest(
       bunNodeCompatModeWarned = true;
       console.warn(
         `You use Bun Node compatibility mode, which is not recommended!
-It will affect your performance. Please check our Bun integration recipe, and avoid using 'node:http' for your server implementation.`,
+It will affect your performance. Please check our Bun integration recipe, and avoid using 'http' for your server implementation.`,
       );
     }
     return new RequestCtor(fullUrl, {

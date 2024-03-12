@@ -1,6 +1,6 @@
 /* eslint-disable n/no-callback-literal */
-import { globalAgent as httpGlobalAgent } from 'node:http';
-import { globalAgent as httpsGlobalAgent } from 'node:https';
+import { globalAgent as httpGlobalAgent } from 'http';
+import { globalAgent as httpsGlobalAgent } from 'https';
 
 const libcurl = globalThis.libcurl;
 export function runTestsForEachFetchImpl(callback: (implementationName: string) => void) {

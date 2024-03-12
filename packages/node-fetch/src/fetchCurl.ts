@@ -1,4 +1,4 @@
-import { PassThrough, Readable } from 'node:stream';
+import { PassThrough, Readable } from 'stream';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable } from './utils.js';

@@ -1,4 +1,4 @@
-import type { Readable } from 'node:stream';
+import type { Readable } from 'stream';
 import type { FetchAPI } from './types.js';
 import { ServerAdapterRequestAbortSignal } from './utils.js';
 

@@ -1,4 +1,4 @@
-import { Readable } from 'node:stream';
+import { Readable } from 'stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
