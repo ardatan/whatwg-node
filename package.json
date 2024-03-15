@@ -33,7 +33,7 @@
     "@changesets/cli": "2.27.1",
     "@theguild/prettier-config": "2.0.5",
     "@types/jest": "29.5.12",
-    "@types/node": "20.11.27",
+    "@types/node": "20.11.28",
     "@types/react-dom": "18.2.18",
     "@typescript-eslint/eslint-plugin": "7.2.0",
     "@typescript-eslint/parser": "7.2.0",
@@ -59,7 +59,7 @@
     "typescript": "5.4.2"
   },
   "resolutions": {
-    "@pulumi/pulumi": "3.110.0"
+    "@pulumi/pulumi": "3.111.0"
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
