@@ -2498,10 +2498,10 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.110.0", "@pulumi/pulumi@^3.0.0":
-  version "3.110.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.110.0.tgz#9526495cb44092baeaeaa01fe91d2ab04bec872e"
-  integrity sha512-lWz6RYKplvWo6VTpN7SfTSXX8CcQTY2yRfiE1W6wOEgN+BOiKKeBEWrlnMImjqII8D3XXch6ViwYwd4r/eL6lQ==
+"@pulumi/pulumi@3.111.0", "@pulumi/pulumi@^3.0.0":
+  version "3.111.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.111.0.tgz#d4072cbe1f968e78f8132b5444b6e90a18555abe"
+  integrity sha512-pExlV1D/ag3oDo5Q7MSj9rmYuGm6DyHjBUMmitkk4dY50X7k6MPF5DVTefh1/j4NjO6frT1xmn4bluBJKT98Zg==
   dependencies:
     "@grpc/grpc-js" "^1.10.1"
     "@logdna/tail-file" "^2.0.6"
@@ -2870,10 +2870,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node@*", "@types/node@20.11.27", "@types/node@>=12.12.47", "@types/node@>=13.7.0", "@types/node@~20.11.3":
-  version "20.11.27"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.27.tgz#debe5cfc8a507dd60fe2a3b4875b1604f215c2ac"
-  integrity sha512-qyUZfMnCg1KEz57r7pzFtSGt49f6RPkPBis3Vo4PbS7roQEDn22hiHzl/Lo1q4i4hDEgBJmBF/NTNg2XR0HbFg==
+"@types/node@*", "@types/node@20.11.28", "@types/node@>=12.12.47", "@types/node@>=13.7.0", "@types/node@~20.11.3":
+  version "20.11.28"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.28.tgz#4fd5b2daff2e580c12316e457473d68f15ee6f66"
+  integrity sha512-M/GPWVS2wLkSkNHVeLkrF2fD5Lx5UC4PxA0uZcKc6QqbIQUJyW1jVjueJYi1z8n0I5PxYrtpnPnWglE+y9A0KA==
   dependencies:
     undici-types "~5.26.4"
 
