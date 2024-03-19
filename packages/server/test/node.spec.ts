@@ -187,6 +187,21 @@ describe('Node Specific Cases', () => {
         expect(response.status).toBe(200);
         expect(await response.text()).toBe('?foo=bar');
       });
+
+      it('sends content-length correctly', async () => {
+        const serverAdapter = createServerAdapter(req => {
+          return Response.json({
+            contentLength: req.headers.get('content-length'),
+          });
+        });
+        testServer.addOnceHandler(serverAdapter);
+        const response = await fetch(testServer.url, {
+          method: 'POST',
+          body: 'Hello World',
+        });
+        const resJson = await response.json();
+        expect(resJson.contentLength).toBe('11');
+      });
     });
   });
 });
