@@ -116,6 +116,8 @@ export class ServerAdapterRequestAbortSignal extends EventTarget implements Abor
 
 let bunNodeCompatModeWarned = false;
 
+export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   RequestCtor: typeof Request,
@@ -130,30 +132,34 @@ export function normalizeNodeRequest(
     fullUrl = url.toString();
   }
 
-  let signal: AbortSignal;
+  let signal: AbortSignal | undefined;
 
-  // If ponyfilled
-  if (RequestCtor !== globalThis.Request) {
-    signal = new ServerAdapterRequestAbortSignal();
+  const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
+  nodeRequestResponseMap.delete(nodeRequest);
+  if (nodeResponse?.once) {
+    let sendAbortSignal: VoidFunction;
 
-    if (rawRequest?.once) {
-      rawRequest.once('close', () => {
-        if (rawRequest.aborted) {
-          (signal as ServerAdapterRequestAbortSignal).sendAbort();
-        }
-      });
+    // If ponyfilled
+    if (RequestCtor !== globalThis.Request) {
+      signal = new ServerAdapterRequestAbortSignal();
+      sendAbortSignal = () => (signal as ServerAdapterRequestAbortSignal).sendAbort();
+    } else {
+      const controller = new AbortController();
+      signal = controller.signal;
+      sendAbortSignal = () => controller.abort();
     }
-  } else {
-    const controller = new AbortController();
-    signal = controller.signal;
 
-    if (rawRequest.once) {
-      rawRequest.once('close', () => {
-        if (rawRequest.aborted) {
-          controller.abort();
-        }
-      });
-    }
+    let responseFinished = false;
+
+    nodeResponse.once('finish', () => {
+      responseFinished = true;
+    });
+
+    nodeResponse.once('close', () => {
+      if (!responseFinished && signal && !signal.aborted) {
+        sendAbortSignal();
+      }
+    });
   }
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {

@@ -162,18 +162,22 @@ describe('Node Specific Cases', () => {
         const serverAdapter = createServerAdapter(
           req =>
             new Promise(resolve => {
-              req.signal.onabort = () => {
+              req.signal.addEventListener('abort', () => {
                 abortListener();
                 resolve(new Response('Hello World', { status: 200 }));
-              };
+              });
             }),
         );
         testServer.addOnceHandler(serverAdapter);
         const controller = new AbortController();
-        setTimeout(() => controller.abort(), 1000);
-        const error = await fetch(testServer.url, { signal: controller.signal }).catch(e => e);
+        const error$ = fetch(testServer.url, { signal: controller.signal }).catch(e => e);
+        await sleep(100);
+        expect(abortListener).toHaveBeenCalledTimes(0);
+        controller.abort();
+        await sleep(100);
+        const error = await error$;
         expect(error.toString().toLowerCase()).toContain('abort');
-        await new Promise(resolve => setTimeout(resolve, 300));
+        await sleep(100);
         expect(abortListener).toHaveBeenCalledTimes(1);
       });
 

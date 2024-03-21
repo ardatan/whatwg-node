@@ -26,6 +26,7 @@ import {
   isServerResponse,
   iterateAsyncVoid,
   NodeRequest,
+  nodeRequestResponseMap,
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
@@ -198,6 +199,7 @@ function createServerAdapter<
         waitUntilPromises.push(cb.catch(err => console.error(err)));
       },
     };
+    nodeRequestResponseMap.set(nodeRequest, serverResponse);
     let response$: Response | Promise<Response> | undefined;
     try {
       response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
