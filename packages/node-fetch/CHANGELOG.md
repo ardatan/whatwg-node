@@ -1,5 +1,11 @@
 # @whatwg-node/node-fetch
 
+## 0.5.9
+
+### Patch Changes
+
+- [`dfb4290`](https://github.com/ardatan/whatwg-node/commit/dfb4290e7aac77dd2c3f6c5e654206b5dfa54a58) Thanks [@ardatan](https://github.com/ardatan)! - Send Content-Length:0 if the body is empty in POSTlike requests
+
 ## 0.5.8
 
 ### Patch Changes
