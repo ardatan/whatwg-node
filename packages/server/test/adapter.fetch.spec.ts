@@ -223,6 +223,6 @@ describe('adapter.fetch', () => {
     const signal = controller.signal;
     const promise = adapter.fetch('http://localhost', { signal });
     controller.abort();
-    await expect(promise).rejects.toThrow('Aborted');
+    await expect(promise).rejects.toThrow('This operation was aborted');
   });
 });
