@@ -86,15 +86,16 @@ function isRequestBody(body: any): body is BodyInit {
 export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
   aborted = false;
   _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason = 'Request got aborted';
+  reason: any;
 
   throwIfAborted(): void {
     if (this.aborted) {
-      throw new DOMException('Aborted', 'AbortError');
+      throw this.reason;
     }
   }
 
   sendAbort() {
+    this.reason = new DOMException('This operation was aborted', 'AbortError');
     this.aborted = true;
     this.dispatchEvent(new Event('abort'));
   }
@@ -563,7 +564,7 @@ export function handleAbortSignalAndPromiseResponse(
   if (isPromise(response$) && abortSignal) {
     const deferred$ = createDeferredPromise<Response>();
     abortSignal.addEventListener('abort', function abortSignalFetchErrorHandler() {
-      deferred$.reject(new DOMException('Aborted', 'AbortError'));
+      deferred$.reject(abortSignal.reason);
     });
     response$
       .then(function fetchSuccessHandler(res) {
