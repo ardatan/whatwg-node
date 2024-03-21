@@ -86,7 +86,7 @@ function isRequestBody(body: any): body is BodyInit {
 export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
   aborted = false;
   _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason: any;
+  reason = 'Request got aborted';
 
   throwIfAborted(): void {
     if (this.aborted) {
