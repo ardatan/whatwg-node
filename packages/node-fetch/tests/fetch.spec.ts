@@ -1,9 +1,12 @@
+import { Blob as NodeBlob } from 'buffer';
 import { Readable } from 'stream';
+import { URL as NodeURL } from 'url';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
 import { PonyfillBlob } from '../src/Blob.js';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillFormData } from '../src/FormData.js';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
+import { PonyfillURL } from '../src/URL.js';
 
 describe('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(() => {
@@ -170,6 +173,48 @@ describe('Node Fetch Ponyfill', () => {
       expect(response.status).toBe(200);
       const body = await response.json();
       expect(body.swagger).toBe('2.0');
+    });
+    it('should handle object urls for PonyfillBlob', async () => {
+      const testJsonBlob = new PonyfillBlob([JSON.stringify({ test: 'test' })], {
+        type: 'application/json',
+      });
+      const objectUrl = PonyfillURL.createObjectURL(testJsonBlob);
+      const response = await fetchPonyfill(objectUrl);
+      expect(response.status).toBe(200);
+      expect([...response.headers]).toEqual([
+        ['content-type', 'application/json'],
+        ['content-length', '15'],
+      ]);
+      const resJson = await response.json();
+      expect(resJson.test).toBe('test');
+    });
+    it('should handle object urls for global Blob', async () => {
+      const testJsonBlob = new globalThis.Blob([JSON.stringify({ test: 'test' })], {
+        type: 'application/json',
+      });
+      const objectUrl = URL.createObjectURL(testJsonBlob);
+      const response = await fetchPonyfill(objectUrl);
+      expect(response.status).toBe(200);
+      expect([...response.headers]).toEqual([
+        ['content-type', 'application/json'],
+        ['content-length', '15'],
+      ]);
+      const resJson = await response.json();
+      expect(resJson.test).toBe('test');
+    });
+    it('should handle object urls for Node.js Blob', async () => {
+      const testJsonBlob = new NodeBlob([JSON.stringify({ test: 'test' })], {
+        type: 'application/json',
+      });
+      const objectUrl = NodeURL.createObjectURL(testJsonBlob);
+      const response = await fetchPonyfill(objectUrl);
+      expect(response.status).toBe(200);
+      expect([...response.headers]).toEqual([
+        ['content-type', 'application/json'],
+        ['content-length', '15'],
+      ]);
+      const resJson = await response.json();
+      expect(resJson.test).toBe('test');
     });
   });
 });

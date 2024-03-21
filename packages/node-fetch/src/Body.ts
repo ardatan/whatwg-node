@@ -200,8 +200,9 @@ export class PonyfillBody<TJSON = any> implements Body {
       bb.on('close', () => {
         resolve(formData);
       });
-      bb.on('error', err => {
-        reject(err);
+      bb.on('error', (err: any = 'An error occurred while parsing the form data') => {
+        const errMessage = err.message || err.toString();
+        reject(new TypeError(errMessage, err.cause));
       });
       _body?.readable.pipe(bb);
     });

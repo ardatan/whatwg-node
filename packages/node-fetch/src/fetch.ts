@@ -4,6 +4,7 @@ import { fetchCurl } from './fetchCurl.js';
 import { fetchNodeHttp } from './fetchNodeHttp.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
+import { PonyfillURL } from './URL.js';
 import { fakePromise } from './utils.js';
 
 const BASE64_SUFFIX = ';base64';
@@ -37,6 +38,20 @@ function getResponseForDataUri(url: string) {
   });
 }
 
+function getResponseForBlob(url: string) {
+  const blob = PonyfillURL.getBlobFromURL(url);
+  if (!blob) {
+    throw new TypeError('Invalid Blob URL');
+  }
+  return new PonyfillResponse(blob, {
+    status: 200,
+    headers: {
+      'content-type': blob.type,
+      'content-length': blob.size.toString(),
+    },
+  });
+}
+
 function isURL(obj: any): obj is URL {
   return obj != null && obj.href != null;
 }
@@ -57,6 +72,10 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
 
   if (fetchRequest.url.startsWith('file:')) {
     const response = getResponseForFile(fetchRequest.url);
+    return fakePromise(response);
+  }
+  if (fetchRequest.url.startsWith('blob:')) {
+    const response = getResponseForBlob(fetchRequest.url);
     return fakePromise(response);
   }
   if (globalThis.libcurl) {
