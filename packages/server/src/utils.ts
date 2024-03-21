@@ -149,16 +149,16 @@ export function normalizeNodeRequest(
       sendAbortSignal = () => controller.abort();
     }
 
-    let responseFinished = false;
-
-    nodeResponse.once('finish', () => {
-      responseFinished = true;
-    });
-
-    nodeResponse.once('close', () => {
-      if (!responseFinished && signal && !signal.aborted) {
+    const closeEventListener: EventListener = () => {
+      if (signal && !signal.aborted) {
         sendAbortSignal();
       }
+    };
+
+    nodeResponse.once('close', closeEventListener);
+
+    nodeResponse.once('finish', () => {
+      nodeResponse.removeListener('close', closeEventListener);
     });
   }
 
