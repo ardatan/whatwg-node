@@ -202,6 +202,37 @@ describe('Node Specific Cases', () => {
         const resJson = await response.json();
         expect(resJson.contentLength).toBe('11');
       });
+
+      it('sends content-length correctly if body is nullish', async () => {
+        const serverAdapter = createServerAdapter(req => {
+          return Response.json({
+            contentLength: req.headers.get('content-length'),
+          });
+        });
+        testServer.addOnceHandler(serverAdapter);
+        const response = await fetch(testServer.url, {
+          method: 'POST',
+        });
+
+        const resJson = await response.json();
+        expect(resJson.contentLength).toBe('0');
+      });
+
+      it('sends content-length correctly if body is empty', async () => {
+        const serverAdapter = createServerAdapter(req => {
+          return Response.json({
+            contentLength: req.headers.get('content-length'),
+          });
+        });
+        testServer.addOnceHandler(serverAdapter);
+        const response = await fetch(testServer.url, {
+          method: 'POST',
+          body: '',
+        });
+
+        const resJson = await response.json();
+        expect(resJson.contentLength).toBe('0');
+      });
     });
   });
 });

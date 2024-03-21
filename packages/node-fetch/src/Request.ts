@@ -81,6 +81,12 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
       }
 
       const contentLengthInHeaders = this.headers.get('content-length');
+
+      if (bodyInit == null && !contentLengthInHeaders) {
+        this.contentLength = 0;
+        this.headers.set('content-length', '0');
+      }
+
       if (!contentLengthInHeaders) {
         if (this.contentLength) {
           this.headers.set('content-length', this.contentLength.toString());
