@@ -1,5 +1,4 @@
 import { Readable } from 'stream';
-import { Body } from '@whatwg-node/node-fetch';
 import { PonyfillBlob } from '../src/Blob.js';
 import { PonyfillBody } from '../src/Body.js';
 import { PonyfillTextDecoder } from '../src/TextEncoderDecoder.js';
