@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.30
+
+### Patch Changes
+
+- [#1218](https://github.com/ardatan/whatwg-node/pull/1218) [`1443f93`](https://github.com/ardatan/whatwg-node/commit/1443f9320561c1334d9de890c8847fb874cb67fa) Thanks [@ardatan](https://github.com/ardatan)! - Set \`reason\` in \`ServerAdapterRequestAbortSignal\` to get a proper error when the request got aborted by the client
+
 ## 0.9.29
 
 ### Patch Changes
