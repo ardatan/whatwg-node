@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.31
+
+### Patch Changes
+
+- [#1220](https://github.com/ardatan/whatwg-node/pull/1220) [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69) Thanks [@ardatan](https://github.com/ardatan)! - Fix UWS's behavior in case of request cancellation
+
+- [#1220](https://github.com/ardatan/whatwg-node/pull/1220) [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69) Thanks [@ardatan](https://github.com/ardatan)! - Use ServerResponse's close event to catch request cancellation
+
 ## 0.9.30
 
 ### Patch Changes
