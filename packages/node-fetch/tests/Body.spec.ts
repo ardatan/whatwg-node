@@ -63,4 +63,21 @@ describe('Body', () => {
     const result = decoder.decode(buf);
     expect(result).toBe('hello world');
   });
+
+  it('throws a TypeError if the body is unable to parse as FormData', async () => {
+    const formStr =
+      '--Boundary_with_capital_letters\r\n' +
+      'Content-Type: application/json\r\n' +
+      'Content-Disposition: form-data; name="does_this_work"\r\n' +
+      '\r\n' +
+      'YES\r\n' +
+      '--Boundary_with_capital_letters-Random junk';
+
+    const body = new PonyfillBody(
+      new PonyfillBlob([formStr], {
+        type: 'multipart/form-data; boundary=Boundary_with_capital_letters',
+      }),
+    );
+    await expect(() => body.formData()).rejects.toThrow(TypeError);
+  });
 });
