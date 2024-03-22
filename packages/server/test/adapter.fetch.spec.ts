@@ -1,5 +1,6 @@
 import { Request, Response, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/index.js';
+import { createDeferred } from './test-utils.js';
 
 describe('adapter.fetch', () => {
   // Request as first parameter
@@ -209,16 +210,17 @@ describe('adapter.fetch', () => {
     expect(adapter.returnThis()).toBe(adapter);
   });
   it('handles AbortSignal', async () => {
-    const adapter = createServerAdapter(
-      req =>
-        new Promise(resolve => {
-          const timeout = setTimeout(() => resolve(Response.json({ foo: 'bar' })), 100_000);
-          req.signal.addEventListener('abort', () => {
-            clearTimeout(timeout);
-            resolve(Response.error());
-          });
-        }),
-    );
+    const adapterResponseDeferred = createDeferred<Response>();
+    const adapter = createServerAdapter(req => {
+      req.signal.addEventListener('abort', () => {
+        adapterResponseDeferred.resolve(
+          Response.json({
+            message: "You're so late!",
+          }),
+        );
+      });
+      return adapterResponseDeferred.promise;
+    });
     const controller = new AbortController();
     const signal = controller.signal;
     const promise = adapter.fetch('http://localhost', { signal });

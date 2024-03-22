@@ -4,6 +4,7 @@ import { fetch, ReadableStream, Response, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
+import { createDeferred, sleep } from './test-utils.js';
 
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(() => {
@@ -159,21 +160,29 @@ describe('Node Specific Cases', () => {
 
       it('handles AbortSignal correctly', async () => {
         const abortListener = jest.fn();
-        const serverAdapter = createServerAdapter(
-          req =>
-            new Promise(resolve => {
-              req.signal.onabort = () => {
-                abortListener();
-                resolve(new Response('Hello World', { status: 200 }));
-              };
+        const adapterResponseDeferred = createDeferred<Response>();
+        function resolveAdapter() {
+          adapterResponseDeferred.resolve(
+            Response.json({
+              message: "You're so late!",
             }),
-        );
+          );
+        }
+        const serverAdapter = createServerAdapter(req => {
+          req.signal.addEventListener('abort', () => {
+            abortListener();
+            resolveAdapter();
+          });
+          return adapterResponseDeferred.promise;
+        });
         testServer.addOnceHandler(serverAdapter);
         const controller = new AbortController();
-        setTimeout(() => controller.abort(), 1000);
-        const error = await fetch(testServer.url, { signal: controller.signal }).catch(e => e);
-        expect(error.toString().toLowerCase()).toContain('abort');
-        await new Promise(resolve => setTimeout(resolve, 300));
+        const response$ = fetch(testServer.url, { signal: controller.signal });
+        expect(abortListener).toHaveBeenCalledTimes(0);
+        await sleep(300);
+        controller.abort();
+        await expect(response$).rejects.toThrow();
+        await sleep(300);
         expect(abortListener).toHaveBeenCalledTimes(1);
       });
 
@@ -236,7 +245,3 @@ describe('Node Specific Cases', () => {
     });
   });
 });
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}

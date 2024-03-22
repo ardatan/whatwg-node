@@ -75,7 +75,11 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     if (fetchRequest['_signal']) {
       fetchRequest['_signal'].onabort = () => {
         if (curlHandle.isOpen) {
-          curlHandle.pause(CurlPause.Recv);
+          try {
+            curlHandle.pause(CurlPause.Recv);
+          } catch (e) {
+            reject(e);
+          }
         }
       };
     }
@@ -86,6 +90,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
         streamResolved.destroy(error);
       } else {
+        if (error.message === 'Operation was aborted by an application callback') {
+          error.message = 'The operation was aborted.';
+        }
         reject(error);
       }
       curlHandle.close();
