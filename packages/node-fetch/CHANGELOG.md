@@ -1,5 +1,15 @@
 # @whatwg-node/node-fetch
 
+## 0.5.10
+
+### Patch Changes
+
+- [#1219](https://github.com/ardatan/whatwg-node/pull/1219) [`fa097a4`](https://github.com/ardatan/whatwg-node/commit/fa097a466c483cafc2130d227a3728db054d97cd) Thanks [@ardatan](https://github.com/ardatan)! - Support blob: object URLs
+
+- [#1219](https://github.com/ardatan/whatwg-node/pull/1219) [`fa097a4`](https://github.com/ardatan/whatwg-node/commit/fa097a466c483cafc2130d227a3728db054d97cd) Thanks [@ardatan](https://github.com/ardatan)! - Throw TypeError when multipart request is unable to parse as FormData
+
+- [#1220](https://github.com/ardatan/whatwg-node/pull/1220) [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69) Thanks [@ardatan](https://github.com/ardatan)! - Do not throw when Curl request cancellation
+
 ## 0.5.9
 
 ### Patch Changes
