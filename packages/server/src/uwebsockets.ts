@@ -1,6 +1,5 @@
 import type { Readable } from 'stream';
 import type { FetchAPI } from './types.js';
-import { ServerAdapterRequestAbortSignal } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -32,9 +31,10 @@ interface GetRequestFromUWSOpts {
   req: UWSRequest;
   res: UWSResponse;
   fetchAPI: FetchAPI;
+  signal: AbortSignal;
 }
 
-export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromUWSOpts) {
+export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequestFromUWSOpts) {
   let body: ReadableStream | undefined;
   const method = req.getMethod();
   if (method !== 'get' && method !== 'head') {
@@ -64,18 +64,17 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI }: GetRequestFromU
     method,
     headers,
     body: body as any,
-    signal: new ServerAdapterRequestAbortSignal(),
+    signal,
   });
 }
 
-async function forwardResponseBodyToUWSResponse(uwsResponse: UWSResponse, fetchResponse: Response) {
-  let resAborted = false;
-  uwsResponse.onAborted(function () {
-    resAborted = true;
-  });
-
+async function forwardResponseBodyToUWSResponse(
+  uwsResponse: UWSResponse,
+  fetchResponse: Response,
+  signal: AbortSignal,
+) {
   for await (const chunk of fetchResponse.body as any as AsyncIterable<Uint8Array>) {
-    if (resAborted) {
+    if (signal.aborted) {
       return;
     }
     uwsResponse.cork(() => {
@@ -87,13 +86,20 @@ async function forwardResponseBodyToUWSResponse(uwsResponse: UWSResponse, fetchR
   });
 }
 
-export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: Response) {
+export function sendResponseToUwsOpts(
+  uwsResponse: UWSResponse,
+  fetchResponse: Response,
+  signal: AbortSignal,
+) {
   if (!fetchResponse) {
     uwsResponse.writeStatus('404 Not Found');
     uwsResponse.end();
     return;
   }
   const bufferOfRes: Uint8Array = (fetchResponse as any)._buffer;
+  if (signal.aborted) {
+    return;
+  }
   uwsResponse.cork(() => {
     uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
     for (const [key, value] of fetchResponse.headers) {
@@ -122,5 +128,5 @@ export function sendResponseToUwsOpts(uwsResponse: UWSResponse, fetchResponse: R
     uwsResponse.end();
     return;
   }
-  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse);
+  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse, signal);
 }

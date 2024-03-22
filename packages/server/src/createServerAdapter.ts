@@ -235,15 +235,22 @@ function createServerAdapter<
       filteredCtxParts.length > 0
         ? completeAssign(defaultServerContext, ...ctx)
         : defaultServerContext;
+
+    const signal = new ServerAdapterRequestAbortSignal();
+    const originalResEnd = res.end.bind(res);
+    let resEnded = false;
+    res.end = function (data: any) {
+      resEnded = true;
+      return originalResEnd(data);
+    };
+    res.onAborted(() => {
+      signal.sendAbort();
+    });
     const request = getRequestFromUWSRequest({
       req,
       res,
       fetchAPI,
-    });
-    let resAborted = false;
-    res.onAborted(() => {
-      resAborted = true;
-      (request.signal as ServerAdapterRequestAbortSignal).sendAbort();
+      signal,
     });
     let response$: Response | Promise<Response> | undefined;
     try {
@@ -255,18 +262,24 @@ function createServerAdapter<
       return response$
         .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => {
-          if (!resAborted) {
-            return sendResponseToUwsOpts(res, response);
+          if (!signal.aborted && !resEnded) {
+            return sendResponseToUwsOpts(res, response, signal);
           }
         })
         .catch(err => {
-          console.error(`Unexpected error while handling request: ${err.message || err}`);
+          console.error(
+            `Unexpected error while handling request: \n${err.stack || err.message || err}`,
+          );
         });
     }
     try {
-      return sendResponseToUwsOpts(res, response$);
+      if (!signal.aborted && !resEnded) {
+        return sendResponseToUwsOpts(res, response$, signal);
+      }
     } catch (err: any) {
-      console.error(`Unexpected error while handling request: ${err.message || err}`);
+      console.error(
+        `Unexpected error while handling request: \n${err.stack || err.message || err}`,
+      );
     }
   }
 

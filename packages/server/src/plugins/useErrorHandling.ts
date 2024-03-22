@@ -5,7 +5,7 @@ import { ServerAdapterPlugin } from './types.js';
 export function createDefaultErrorHandler<TServerContext = {}>(
   ResponseCtor: typeof Response = DefaultResponseCtor,
 ): ErrorHandler<TServerContext> {
-  return function defaultErrorHandler(e: any): Response | Promise<Response> {
+  return function defaultErrorHandler(e: any): Response {
     if (e.details || e.status || e.headers || e.name === 'HTTPError') {
       return new ResponseCtor(
         typeof e.details === 'object' ? JSON.stringify(e.details) : e.message,
@@ -16,11 +16,15 @@ export function createDefaultErrorHandler<TServerContext = {}>(
       );
     }
     console.error(e);
-    if (ResponseCtor.error) {
-      return ResponseCtor.error();
-    }
-    return new ResponseCtor(null, { status: 500 });
+    return createDefaultErrorResponse(ResponseCtor);
   };
+}
+
+function createDefaultErrorResponse(ResponseCtor: typeof Response) {
+  if (ResponseCtor.error) {
+    return ResponseCtor.error();
+  }
+  return new ResponseCtor(null, { status: 500 });
 }
 
 export class HTTPError extends Error {
@@ -55,11 +59,17 @@ export function useErrorHandling<TServerContext>(
         try {
           const response$ = requestHandler(request, serverContext);
           if (isPromise(response$)) {
-            return response$.catch(e => errorHandler(e, request, serverContext));
+            return response$.catch(
+              e =>
+                errorHandler(e, request, serverContext) ||
+                createDefaultErrorResponse(fetchAPI.Response),
+            );
           }
           return response$;
         } catch (e) {
-          return errorHandler(e, request, serverContext);
+          return (
+            errorHandler(e, request, serverContext) || createDefaultErrorResponse(fetchAPI.Response)
+          );
         }
       });
     },
