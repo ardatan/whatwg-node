@@ -11,6 +11,7 @@ const http2Req = null as unknown as Http2ServerRequest;
 const http2Res = null as unknown as Http2ServerResponse;
 
 adapter.handleNodeRequest(http2Req);
+adapter.handleNodeRequestAndResponse(http2Req, http2Res);
 adapter.handle(http2Req, http2Res);
 adapter(http2Req, http2Res);
 const http2Server = createHttp2Server(adapter);
@@ -20,6 +21,7 @@ const httpReq = null as unknown as IncomingMessage;
 const httpRes = null as unknown as ServerResponse;
 
 adapter.handleNodeRequest(httpReq);
+adapter.handleNodeRequestAndResponse(httpReq, httpRes);
 adapter.handle(httpReq, httpRes);
 adapter(httpReq, httpRes);
 

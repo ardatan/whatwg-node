@@ -180,10 +180,22 @@ function createServerAdapter<
         }
       : givenHandleRequest;
 
+  // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
     return handleRequest(request, serverContext);
+  }
+
+  function handleNodeRequestAndResponse(
+    nodeRequest: NodeRequest,
+    nodeResponseOrContainer: NodeResponse | { raw: NodeResponse },
+    ...ctx: Partial<TServerContext>[]
+  ) {
+    const nodeResponse: NodeResponse =
+      (nodeResponseOrContainer as any).raw || nodeResponseOrContainer;
+    nodeRequestResponseMap.set(nodeRequest, nodeResponse);
+    return handleNodeRequest(nodeRequest, ...ctx);
   }
 
   function requestListener(
@@ -379,6 +391,7 @@ function createServerAdapter<
     handleRequest,
     fetch: fetchFn,
     handleNodeRequest,
+    handleNodeRequestAndResponse,
     requestListener,
     handleEvent,
     handleUWS,

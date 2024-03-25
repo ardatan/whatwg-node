@@ -1,3 +1,5 @@
+import { request } from 'http';
+import { AddressInfo } from 'net';
 import React from 'react';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 // @ts-expect-error Types are not available yet
@@ -5,10 +7,34 @@ import { renderToReadableStream } from 'react-dom/server.edge';
 import { ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
 import { ServerAdapter, ServerAdapterBaseObject } from '../src/types.js';
+import { createDeferred, sleep } from './test-utils.js';
 
 interface FastifyServerContext {
   req: FastifyRequest;
   reply: FastifyReply;
+}
+
+type FastifyServerAdapter = ServerAdapter<any, ServerAdapterBaseObject<any>>;
+
+async function handleFastify(
+  serverAdapter: FastifyServerAdapter,
+  req: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const response = await serverAdapter.handleNodeRequestAndResponse(req, reply, {
+    req: reply.request,
+    reply,
+  });
+
+  response.headers.forEach((value, key) => {
+    reply.header(key, value);
+  });
+
+  reply.status(response.status);
+
+  reply.send(response.body);
+
+  return reply;
 }
 
 describe('Fastify', () => {
@@ -16,33 +42,14 @@ describe('Fastify', () => {
     it('noop', () => {});
     return;
   }
-  let serverAdapter: ServerAdapter<
-    FastifyServerContext,
-    ServerAdapterBaseObject<FastifyServerContext>
-  >;
+  let serverAdapter: FastifyServerAdapter;
   const fastifyServer = fastify();
   fastifyServer.route({
     url: '/mypath',
     method: ['GET', 'POST', 'OPTIONS'],
-    handler: async (req, reply) => {
-      const response = await serverAdapter.handleNodeRequest(req, {
-        req,
-        reply,
-      });
-      response.headers.forEach((value, key) => {
-        reply.header(key, value);
-      });
-
-      reply.status(response.status);
-
-      reply.send(response.body);
-
-      return reply;
-    },
+    handler: (req, reply) => handleFastify(serverAdapter, req, reply),
   });
-  afterAll(async () => {
-    await fastifyServer.close();
-  });
+  afterAll(() => fastifyServer.close());
   it('should handle streams', async () => {
     let cnt = 0;
     const encoder = new TextEncoder();
@@ -79,30 +86,10 @@ describe('Fastify', () => {
     `);
   });
   it('should handle GET requests with query params', async () => {
-    const serverAdapter = createServerAdapter(request => {
+    serverAdapter = createServerAdapter((request: Request) => {
       const url = new URL(request.url);
       const searchParamsObj = Object.fromEntries(url.searchParams);
       return Response.json(searchParamsObj);
-    });
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/mypath',
-      method: ['GET', 'POST', 'OPTIONS'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
     });
     const res = await fastifyServer.inject({
       url: '/mypath?foo=bar&baz=qux',
@@ -117,30 +104,10 @@ describe('Fastify', () => {
     const headers = { 'x-custom-header': '55', 'x-cache-header': 'true' };
     const status = 300;
 
-    const serverAdapter = createServerAdapter(request => {
+    serverAdapter = createServerAdapter((request: Request) => {
       const url = new URL(request.url);
       const searchParamsObj = Object.fromEntries(url.searchParams);
       return Response.json(searchParamsObj, { headers, status });
-    });
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/mypath',
-      method: ['GET', 'POST', 'OPTIONS'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
     });
     const res = await fastifyServer.inject({
       url: '/mypath',
@@ -150,7 +117,7 @@ describe('Fastify', () => {
   });
 
   it('Should handle react streaming response', async () => {
-    const serverAdapter = createServerAdapter(async () => {
+    serverAdapter = createServerAdapter(async () => {
       const MyComponent = () => {
         return React.createElement('h1', null, 'Rendered in React');
       };
@@ -159,31 +126,87 @@ describe('Fastify', () => {
 
       return new Response(stream);
     });
-
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/renderReact',
-      method: ['GET'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
-    });
     const res = await fastifyServer.inject({
-      url: '/renderReact',
+      url: '/mypath',
     });
     const body = res.body;
     expect(body).toEqual('<h1>Rendered in React</h1>');
+  });
+
+  it('handles AbortSignal', async () => {
+    const abortListener = jest.fn();
+    const adapterDeferred = createDeferred<Response>();
+    serverAdapter = createServerAdapter((request: Request) => {
+      request.signal.addEventListener('abort', abortListener);
+      return adapterDeferred.promise;
+    });
+    const abortCtrl = new AbortController();
+    const res$ = fastifyServer.inject({
+      url: '/mypath',
+      signal: abortCtrl.signal,
+    });
+    expect(abortListener).toHaveBeenCalledTimes(0);
+    abortCtrl.abort();
+    adapterDeferred.resolve(
+      new Response('This should not be sent', {
+        status: 200,
+        statusText: 'OK',
+      }),
+    );
+    expect(abortListener).toHaveBeenCalledTimes(0);
+    await expect(res$).rejects.toThrow('aborted');
+    expect(abortListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles AbortSignal with body', async () => {
+    const abortListener = jest.fn();
+    let reqText: string | undefined;
+    const adapterDeferred = createDeferred<Response>();
+    serverAdapter = createServerAdapter<FastifyServerContext>((request: Request) => {
+      request.signal.addEventListener('abort', abortListener);
+      request.text().then(text => {
+        reqText = text;
+      });
+      return adapterDeferred.promise;
+    });
+    await fastifyServer.listen({ port: 0 });
+    const abortCtrl = new AbortController();
+    const res = request(
+      `http://localhost:${(fastifyServer.server.address() as AddressInfo).port}/mypath`,
+      {
+        method: 'POST',
+        signal: abortCtrl.signal,
+      },
+    );
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('TEST');
+    res.end();
+    expect(abortListener).toHaveBeenCalledTimes(0);
+    await sleep(300);
+    abortCtrl.abort();
+    await sleep(300);
+    expect(reqText).toEqual('TEST');
+    expect(abortListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends POST request with body', async () => {
+    serverAdapter = createServerAdapter<FastifyServerContext>(async request => {
+      const text = await request.text();
+      return Response.json({
+        reqBody: text,
+      });
+    });
+    const res = await fastifyServer.inject({
+      url: '/mypath',
+      method: 'POST',
+      payload: 'TEST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    });
+    const resBody = res.json();
+    expect(resBody).toEqual({
+      reqBody: 'TEST',
+    });
   });
 });
