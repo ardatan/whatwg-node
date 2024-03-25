@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.32
+
+### Patch Changes
+
+- [#1224](https://github.com/ardatan/whatwg-node/pull/1224) [`d6bec0a`](https://github.com/ardatan/whatwg-node/commit/d6bec0aae49f8f6d2b27b62c53ba7cde2ce40485) Thanks [@ardatan](https://github.com/ardatan)! - Introduce `handleRequestFromResponse` method for a better Fastify integration
+
 ## 0.9.31
 
 ### Patch Changes
