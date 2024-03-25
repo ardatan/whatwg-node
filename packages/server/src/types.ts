@@ -56,7 +56,8 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   /**
    * This function takes Node's request and response objects and returns a WHATWG Fetch spec compliant `Response` object.
    */
-  handleNodeRequestFromResponse(
+  handleNodeRequestAndResponse(
+    nodeRequest: NodeRequest,
     nodeResponseOrContainer: { raw: NodeResponse } | NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ): Promise<Response> | Response;

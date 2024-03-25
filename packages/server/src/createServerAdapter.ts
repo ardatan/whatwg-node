@@ -187,13 +187,13 @@ function createServerAdapter<
     return handleRequest(request, serverContext);
   }
 
-  function handleNodeRequestFromResponse(
+  function handleNodeRequestAndResponse(
+    nodeRequest: NodeRequest,
     nodeResponseOrContainer: NodeResponse | { raw: NodeResponse },
     ...ctx: Partial<TServerContext>[]
   ) {
     const nodeResponse: NodeResponse =
       (nodeResponseOrContainer as any).raw || nodeResponseOrContainer;
-    const nodeRequest = nodeResponse.req;
     nodeRequestResponseMap.set(nodeRequest, nodeResponse);
     return handleNodeRequest(nodeRequest, ...ctx);
   }
@@ -391,7 +391,7 @@ function createServerAdapter<
     handleRequest,
     fetch: fetchFn,
     handleNodeRequest,
-    handleNodeRequestFromResponse,
+    handleNodeRequestAndResponse,
     requestListener,
     handleEvent,
     handleUWS,

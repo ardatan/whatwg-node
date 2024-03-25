@@ -1,3 +1,4 @@
+import { request } from 'http';
 import React from 'react';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 // @ts-expect-error Types are not available yet
@@ -5,7 +6,7 @@ import { renderToReadableStream } from 'react-dom/server.edge';
 import { ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
 import { ServerAdapter, ServerAdapterBaseObject } from '../src/types.js';
-import { createDeferred } from './test-utils.js';
+import { createDeferred, sleep } from './test-utils.js';
 
 interface FastifyServerContext {
   req: FastifyRequest;
@@ -14,8 +15,12 @@ interface FastifyServerContext {
 
 type FastifyServerAdapter = ServerAdapter<any, ServerAdapterBaseObject<any>>;
 
-async function handleFastify(serverAdapter: FastifyServerAdapter, reply: FastifyReply) {
-  const response = await serverAdapter.handleNodeRequestFromResponse(reply, {
+async function handleFastify(
+  serverAdapter: FastifyServerAdapter,
+  req: FastifyRequest,
+  reply: FastifyReply,
+) {
+  const response = await serverAdapter.handleNodeRequestAndResponse(req, reply, {
     req: reply.request,
     reply,
   });
@@ -41,11 +46,9 @@ describe('Fastify', () => {
   fastifyServer.route({
     url: '/mypath',
     method: ['GET', 'POST', 'OPTIONS'],
-    handler: (_req, reply) => handleFastify(serverAdapter, reply),
+    handler: (req, reply) => handleFastify(serverAdapter, req, reply),
   });
-  afterAll(async () => {
-    await fastifyServer.close();
-  });
+  afterAll(() => fastifyServer.close());
   it('should handle streams', async () => {
     let cnt = 0;
     const encoder = new TextEncoder();
@@ -151,6 +154,34 @@ describe('Fastify', () => {
     );
     expect(abortListener).toHaveBeenCalledTimes(0);
     await expect(res$).rejects.toThrow('aborted');
+    expect(abortListener).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles AbortSignal with body', async () => {
+    const abortListener = jest.fn();
+    let reqText: string | undefined;
+    const adapterDeferred = createDeferred<Response>();
+    serverAdapter = createServerAdapter<FastifyServerContext>((request: Request) => {
+      request.signal.addEventListener('abort', abortListener);
+      request.text().then(text => {
+        reqText = text;
+      });
+      return adapterDeferred.promise;
+    });
+    await fastifyServer.listen({ port: 0 });
+    const abortCtrl = new AbortController();
+    const res = request(`http://localhost:${fastifyServer.server.address().port}/mypath`, {
+      method: 'POST',
+      signal: abortCtrl.signal,
+    });
+    res.setHeader('Content-Type', 'text/plain');
+    res.write('TEST');
+    res.end();
+    expect(abortListener).toHaveBeenCalledTimes(0);
+    await sleep(300);
+    abortCtrl.abort();
+    await sleep(300);
+    expect(reqText).toEqual('TEST');
     expect(abortListener).toHaveBeenCalledTimes(1);
   });
 });

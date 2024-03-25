@@ -151,6 +151,7 @@ export function normalizeNodeRequest(
 
     const closeEventListener: EventListener = () => {
       if (signal && !signal.aborted) {
+        (rawRequest as any).aborted = true;
         sendAbortSignal();
       }
     };

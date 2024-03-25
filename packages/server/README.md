@@ -167,7 +167,7 @@ app.route({
   url: '/mypath',
   method: ['GET', 'POST', 'OPTIONS'],
   handler: async (req, reply) => {
-    const response = await myServerAdapter.handleNodeRequestFromResponse(reply, {
+    const response = await myServerAdapter.handleNodeRequestAndResponse(req, reply, {
       req,
       reply
     })
