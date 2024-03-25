@@ -5,10 +5,30 @@ import { renderToReadableStream } from 'react-dom/server.edge';
 import { ReadableStream, Response, TextEncoder, URL } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter.js';
 import { ServerAdapter, ServerAdapterBaseObject } from '../src/types.js';
+import { createDeferred } from './test-utils.js';
 
 interface FastifyServerContext {
   req: FastifyRequest;
   reply: FastifyReply;
+}
+
+type FastifyServerAdapter = ServerAdapter<any, ServerAdapterBaseObject<any>>;
+
+async function handleFastify(serverAdapter: FastifyServerAdapter, reply: FastifyReply) {
+  const response = await serverAdapter.handleNodeRequestFromResponse(reply, {
+    req: reply.request,
+    reply,
+  });
+
+  response.headers.forEach((value, key) => {
+    reply.header(key, value);
+  });
+
+  reply.status(response.status);
+
+  reply.send(response.body);
+
+  return reply;
 }
 
 describe('Fastify', () => {
@@ -16,29 +36,12 @@ describe('Fastify', () => {
     it('noop', () => {});
     return;
   }
-  let serverAdapter: ServerAdapter<
-    FastifyServerContext,
-    ServerAdapterBaseObject<FastifyServerContext>
-  >;
+  let serverAdapter: FastifyServerAdapter;
   const fastifyServer = fastify();
   fastifyServer.route({
     url: '/mypath',
     method: ['GET', 'POST', 'OPTIONS'],
-    handler: async (req, reply) => {
-      const response = await serverAdapter.handleNodeRequest(req, {
-        req,
-        reply,
-      });
-      response.headers.forEach((value, key) => {
-        reply.header(key, value);
-      });
-
-      reply.status(response.status);
-
-      reply.send(response.body);
-
-      return reply;
-    },
+    handler: (_req, reply) => handleFastify(serverAdapter, reply),
   });
   afterAll(async () => {
     await fastifyServer.close();
@@ -79,30 +82,10 @@ describe('Fastify', () => {
     `);
   });
   it('should handle GET requests with query params', async () => {
-    const serverAdapter = createServerAdapter(request => {
+    serverAdapter = createServerAdapter((request: Request) => {
       const url = new URL(request.url);
       const searchParamsObj = Object.fromEntries(url.searchParams);
       return Response.json(searchParamsObj);
-    });
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/mypath',
-      method: ['GET', 'POST', 'OPTIONS'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
     });
     const res = await fastifyServer.inject({
       url: '/mypath?foo=bar&baz=qux',
@@ -117,30 +100,10 @@ describe('Fastify', () => {
     const headers = { 'x-custom-header': '55', 'x-cache-header': 'true' };
     const status = 300;
 
-    const serverAdapter = createServerAdapter(request => {
+    serverAdapter = createServerAdapter((request: Request) => {
       const url = new URL(request.url);
       const searchParamsObj = Object.fromEntries(url.searchParams);
       return Response.json(searchParamsObj, { headers, status });
-    });
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/mypath',
-      method: ['GET', 'POST', 'OPTIONS'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
     });
     const res = await fastifyServer.inject({
       url: '/mypath',
@@ -150,7 +113,7 @@ describe('Fastify', () => {
   });
 
   it('Should handle react streaming response', async () => {
-    const serverAdapter = createServerAdapter(async () => {
+    serverAdapter = createServerAdapter(async () => {
       const MyComponent = () => {
         return React.createElement('h1', null, 'Rendered in React');
       };
@@ -159,31 +122,27 @@ describe('Fastify', () => {
 
       return new Response(stream);
     });
-
-    const fastifyServer = fastify();
-    fastifyServer.route({
-      url: '/renderReact',
-      method: ['GET'],
-      handler: async (req, reply) => {
-        const response = await serverAdapter.handleNodeRequest(req, {
-          req,
-          reply,
-        });
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body);
-
-        return reply;
-      },
-    });
     const res = await fastifyServer.inject({
-      url: '/renderReact',
+      url: '/mypath',
     });
     const body = res.body;
     expect(body).toEqual('<h1>Rendered in React</h1>');
+  });
+
+  it('handles AbortSignal', async () => {
+    const abortListener = jest.fn();
+    const adapterDeferred = createDeferred<Response>();
+    serverAdapter = createServerAdapter((request: Request) => {
+      request.signal.addEventListener('abort', abortListener);
+      return adapterDeferred.promise;
+    });
+    const abortCtrl = new AbortController();
+    const res$ = fastifyServer.inject({
+      url: '/mypath',
+      signal: abortCtrl.signal,
+    });
+    abortCtrl.abort();
+    await expect(res$).rejects.toThrow('aborted');
+    expect(abortListener).toHaveBeenCalledTimes(1);
   });
 });
