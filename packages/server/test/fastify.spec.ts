@@ -1,4 +1,5 @@
 import { request } from 'http';
+import { AddressInfo } from 'net';
 import React from 'react';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 // @ts-expect-error Types are not available yet
@@ -170,10 +171,13 @@ describe('Fastify', () => {
     });
     await fastifyServer.listen({ port: 0 });
     const abortCtrl = new AbortController();
-    const res = request(`http://localhost:${fastifyServer.server.address().port}/mypath`, {
-      method: 'POST',
-      signal: abortCtrl.signal,
-    });
+    const res = request(
+      `http://localhost:${(fastifyServer.server.address() as AddressInfo).port}/mypath`,
+      {
+        method: 'POST',
+        signal: abortCtrl.signal,
+      },
+    );
     res.setHeader('Content-Type', 'text/plain');
     res.write('TEST');
     res.end();
