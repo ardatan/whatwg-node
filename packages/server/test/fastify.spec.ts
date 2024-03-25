@@ -141,7 +141,9 @@ describe('Fastify', () => {
       url: '/mypath',
       signal: abortCtrl.signal,
     });
+    expect(abortListener).toHaveBeenCalledTimes(0);
     abortCtrl.abort();
+    expect(abortListener).toHaveBeenCalledTimes(0);
     await expect(res$).rejects.toThrow('aborted');
     expect(abortListener).toHaveBeenCalledTimes(1);
   });
