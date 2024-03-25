@@ -188,4 +188,25 @@ describe('Fastify', () => {
     expect(reqText).toEqual('TEST');
     expect(abortListener).toHaveBeenCalledTimes(1);
   });
+
+  it('sends POST request with body', async () => {
+    serverAdapter = createServerAdapter<FastifyServerContext>(async request => {
+      const text = await request.text();
+      return Response.json({
+        reqBody: text,
+      });
+    });
+    const res = await fastifyServer.inject({
+      url: '/mypath',
+      method: 'POST',
+      payload: 'TEST',
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    });
+    const resBody = res.json();
+    expect(resBody).toEqual({
+      reqBody: 'TEST',
+    });
+  });
 });
