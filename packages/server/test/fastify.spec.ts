@@ -143,6 +143,12 @@ describe('Fastify', () => {
     });
     expect(abortListener).toHaveBeenCalledTimes(0);
     abortCtrl.abort();
+    adapterDeferred.resolve(
+      new Response('This should not be sent', {
+        status: 200,
+        statusText: 'OK',
+      }),
+    );
     expect(abortListener).toHaveBeenCalledTimes(0);
     await expect(res$).rejects.toThrow('aborted');
     expect(abortListener).toHaveBeenCalledTimes(1);
