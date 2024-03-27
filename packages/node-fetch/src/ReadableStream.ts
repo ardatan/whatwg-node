@@ -1,21 +1,5 @@
 import { Readable } from 'stream';
 
-try {
-  const originalReadableFromWeb = Readable.fromWeb;
-
-  Readable.fromWeb = function fromWeb(stream: any): Readable {
-    if (stream instanceof PonyfillReadableStream) {
-      return stream.readable;
-    }
-    return originalReadableFromWeb(stream as any);
-  };
-} catch (e) {
-  console.warn(
-    'Could not patch Readable.fromWeb, so this might break Readable.fromWeb usage with the whatwg-node and the integrations like Fastify',
-    e,
-  );
-}
-
 function createController<T>(
   desiredSize: number,
   readable: Readable,
