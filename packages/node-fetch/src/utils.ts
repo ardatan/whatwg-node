@@ -4,6 +4,26 @@ function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
 }
 
+export function patchReadableFromWeb() {
+  try {
+    const originalReadableFromWeb = Readable.fromWeb;
+
+    if (originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
+      Readable.fromWeb = function ReadableFromWebPatchedByWhatWgNode(stream: any): Readable {
+        if (stream.readable != null) {
+          return stream.readable;
+        }
+        return originalReadableFromWeb(stream as any);
+      };
+    }
+  } catch (e) {
+    console.warn(
+      'Could not patch Readable.fromWeb, so this might break Readable.fromWeb usage with the whatwg-node and the integrations like Fastify',
+      e,
+    );
+  }
+}
+
 export function getHeadersObj(headers: Headers): Record<string, string> {
   if (headers == null || !isHeadersInstance(headers)) {
     return headers as any;
