@@ -1,5 +1,21 @@
 import { Readable } from 'stream';
 
+try {
+  const originalReadableFromWeb = Readable.fromWeb;
+
+  Readable.fromWeb = function fromWeb(stream: any): Readable {
+    if (stream instanceof PonyfillReadableStream) {
+      return stream.readable;
+    }
+    return originalReadableFromWeb(stream as any);
+  };
+} catch (e) {
+  console.warn(
+    'Could not patch Readable.fromWeb, so this might break Readable.fromWeb usage with the whatwg-node and the integrations like Fastify',
+    e,
+  );
+}
+
 function createController<T>(
   desiredSize: number,
   readable: Readable,
@@ -191,4 +207,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   static [Symbol.hasInstance](instance: unknown): instance is PonyfillReadableStream<unknown> {
     return isReadableStream(instance);
   }
+
+  [Symbol.toStringTag] = 'ReadableStream';
 }

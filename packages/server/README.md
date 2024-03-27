@@ -171,14 +171,8 @@ app.route({
       req,
       reply
     })
-    response.headers.forEach((value, key) => {
-      reply.header(key, value)
-    })
 
-    reply.status(response.status)
-
-    // Fastify doesn't accept `null` as a response body
-    reply.send(response.body || undefined)
+    reply.send(response)
 
     return reply
   }
