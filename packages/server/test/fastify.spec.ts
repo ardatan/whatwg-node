@@ -26,13 +26,7 @@ async function handleFastify(
     reply,
   });
 
-  response.headers.forEach((value, key) => {
-    reply.header(key, value);
-  });
-
-  reply.status(response.status);
-
-  reply.send(response.body);
+  reply.send(response);
 
   return reply;
 }

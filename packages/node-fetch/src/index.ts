@@ -1,3 +1,5 @@
+import { patchReadableFromWeb } from './utils.js';
+
 export { fetchPonyfill as fetch } from './fetch.js';
 export { PonyfillHeaders as Headers } from './Headers.js';
 export { PonyfillBody as Body } from './Body.js';
@@ -14,3 +16,6 @@ export {
 } from './TextEncoderDecoder.js';
 export { PonyfillURL as URL } from './URL.js';
 export { PonyfillURLSearchParams as URLSearchParams } from './URLSearchParams.js';
+
+// Not sure it is the right thing to do, but it is the only way to make it work for Fastify
+patchReadableFromWeb();
