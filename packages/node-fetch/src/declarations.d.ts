@@ -33,3 +33,6 @@ declare module '@kamilkisiela/fast-url-parser' {
 
 // TODO
 declare var libcurl: any;
+declare module 'scheduler/tracing' {
+  export type Interaction = any;
+}
