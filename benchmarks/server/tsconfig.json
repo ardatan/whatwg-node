@@ -4,7 +4,8 @@
     "baseUrl": "./",
     "outDir": "dist",
     "module": "Node16",
-    "moduleResolution": "node16"
+    "moduleResolution": "node16",
+    "skipLibCheck": true
   },
   "include": ["server.ts"],
   "exclude": []

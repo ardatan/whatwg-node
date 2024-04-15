@@ -31,6 +31,6 @@
       "fetchache": ["packages/fetchache/src/index.ts"]
     }
   },
-  "include": ["packages", "examples", "uwsUtils.d.ts"],
+  "include": ["packages", "examples", "uwsUtils.d.ts", "scheduler-tracing.d.ts"],
   "exclude": ["**/node_modules", "**/test-files", "**/dist", "**/e2e", "**/benchmark"]
 }
