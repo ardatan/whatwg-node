@@ -1,5 +1,15 @@
 # @whatwg-node/server
 
+## 0.9.33
+
+### Patch Changes
+
+- [#1246](https://github.com/ardatan/whatwg-node/pull/1246) [`4717be5`](https://github.com/ardatan/whatwg-node/commit/4717be5a0311334c81176c4a3bc6c01e286f3a39) Thanks [@ardatan](https://github.com/ardatan)! - Ensure unique context objects are sent per each request.
+
+  For example in CloudFlare Workers,
+  `fetch` receives `env` and `ctx`, and `env` is shared across requests. That causes the server receives the same context object for each request.
+  Now the server creates a new context object for each request, even if the first argument is the same. Before, it always takes the first argument as the context object, then merges the following arguments into it.
+
 ## 0.9.32
 
 ### Patch Changes
