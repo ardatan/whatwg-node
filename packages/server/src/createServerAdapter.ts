@@ -313,7 +313,7 @@ function createServerAdapter<
     let waitUntilPromises: Promise<void>[] | undefined;
     const serverContext =
       filteredCtxParts.length > 1
-        ? completeAssign(...filteredCtxParts)
+        ? completeAssign({}, ...filteredCtxParts)
         : isolateObject(
             filteredCtxParts[0],
             filteredCtxParts[0] == null || filteredCtxParts[0].waitUntil == null

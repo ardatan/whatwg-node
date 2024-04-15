@@ -227,4 +227,25 @@ describe('adapter.fetch', () => {
     controller.abort();
     await expect(promise).rejects.toThrow('This operation was aborted');
   });
+
+  it('should provide a unique context for each request', async () => {
+    const requestHandler = jest.fn((_req: Request, _ctx: any) =>
+      Response.json({
+        hello: 'world',
+      }),
+    );
+    const sharedCtxPart1 = { foo: 'bar' };
+    const sharedCtxPart2 = { bar: 'baz' };
+    const adapter = createServerAdapter(requestHandler);
+    const request1 = new Request('http://localhost:8080/');
+    const response1 = await adapter.fetch(request1, sharedCtxPart1, sharedCtxPart2);
+    const response1Body = await response1.json();
+    expect(response1Body).toEqual({ hello: 'world' });
+    const request2 = new Request('http://localhost:8080/');
+    const response2 = await adapter.fetch(request2, sharedCtxPart1, sharedCtxPart2);
+    const response2Body = await response2.json();
+    expect(response2Body).toEqual({ hello: 'world' });
+    expect(requestHandler).toHaveBeenCalledTimes(2);
+    expect(requestHandler.mock.calls[0][1]).not.toBe(requestHandler.mock.calls[1][1]);
+  });
 });
