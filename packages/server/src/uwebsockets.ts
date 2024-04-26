@@ -97,6 +97,9 @@ async function forwardResponseBodyToUWSResponse(
         return;
       }
       uwsResponse.cork(() => {
+        if (signal.aborted) {
+          return;
+        }
         uwsResponse.write(value);
       });
     }
@@ -116,7 +119,13 @@ export function sendResponseToUwsOpts(
   signal: AbortSignal,
 ) {
   if (!fetchResponse) {
+    if (signal.aborted) {
+      return;
+    }
     uwsResponse.writeStatus('404 Not Found');
+    if (signal.aborted) {
+      return;
+    }
     uwsResponse.end();
     return;
   }
@@ -125,6 +134,9 @@ export function sendResponseToUwsOpts(
     return;
   }
   uwsResponse.cork(() => {
+    if (signal.aborted) {
+      return;
+    }
     uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
     for (const [key, value] of fetchResponse.headers) {
       // content-length causes an error with Node.js's fetch
@@ -133,15 +145,24 @@ export function sendResponseToUwsOpts(
           const setCookies = fetchResponse.headers.getSetCookie?.();
           if (setCookies) {
             for (const setCookie of setCookies) {
+              if (signal.aborted) {
+                return;
+              }
               uwsResponse.writeHeader(key, setCookie);
             }
             continue;
           }
         }
+        if (signal.aborted) {
+          return;
+        }
         uwsResponse.writeHeader(key, value);
       }
     }
     if (bufferOfRes) {
+      if (signal.aborted) {
+        return;
+      }
       uwsResponse.end(bufferOfRes);
     }
   });
@@ -149,6 +170,9 @@ export function sendResponseToUwsOpts(
     return;
   }
   if (!fetchResponse.body) {
+    if (signal.aborted) {
+      return;
+    }
     uwsResponse.end();
     return;
   }
