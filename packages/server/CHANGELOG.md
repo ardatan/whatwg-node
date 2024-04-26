@@ -1,5 +1,11 @@
 # @whatwg-node/server
 
+## 0.9.34
+
+### Patch Changes
+
+- [`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c) Thanks [@ardatan](https://github.com/ardatan)! - Do not call res.onAborted multiple times because it causes it to overwrite the previous listener, and use AbortSignal's abort event instead
+
 ## 0.9.33
 
 ### Patch Changes
