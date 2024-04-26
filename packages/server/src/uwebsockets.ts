@@ -1,5 +1,6 @@
 import type { Readable } from 'stream';
 import type { FetchAPI } from './types.js';
+import { isAsyncIterable } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -73,17 +74,40 @@ async function forwardResponseBodyToUWSResponse(
   fetchResponse: Response,
   signal: AbortSignal,
 ) {
-  for await (const chunk of fetchResponse.body as any as AsyncIterable<Uint8Array>) {
-    if (signal.aborted) {
-      return;
+  if (fetchResponse.body != null) {
+    if (isAsyncIterable(fetchResponse.body)) {
+      for await (const chunk of fetchResponse.body) {
+        if (!signal.aborted) {
+          uwsResponse.cork(() => {
+            if (!signal.aborted) {
+              uwsResponse.write(chunk);
+            }
+          });
+        }
+      }
     }
+    const reader = fetchResponse.body.getReader();
+    while (!signal.aborted) {
+      const { done, value } = await reader.read();
+      if (done) {
+        break;
+      }
+      if (signal.aborted) {
+        reader.releaseLock();
+        return;
+      }
+      uwsResponse.cork(() => {
+        uwsResponse.write(value);
+      });
+    }
+  }
+  if (!signal.aborted) {
     uwsResponse.cork(() => {
-      uwsResponse.write(chunk);
+      if (!signal.aborted) {
+        uwsResponse.end();
+      }
     });
   }
-  uwsResponse.cork(() => {
-    uwsResponse.end();
-  });
 }
 
 export function sendResponseToUwsOpts(
