@@ -20,6 +20,8 @@ export interface UWSResponse {
   close(): void;
   write(body: any): boolean;
   cork(callback: () => void): void;
+  // Custom property
+  ended?: boolean;
 }
 
 export type UWSHandler = (res: UWSResponse, req: UWSRequest) => void | Promise<void>;
@@ -71,38 +73,36 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
 
 async function forwardResponseBodyToUWSResponse(
   uwsResponse: UWSResponse,
-  fetchResponse: Response,
+  responseBody: ReadableStream<Uint8Array>,
   signal: AbortSignal,
 ) {
-  if (fetchResponse.body != null) {
-    if (isAsyncIterable(fetchResponse.body)) {
-      for await (const chunk of fetchResponse.body) {
-        if (!signal.aborted) {
-          uwsResponse.cork(() => {
-            if (!signal.aborted) {
-              uwsResponse.write(chunk);
-            }
-          });
-        }
+  if (isAsyncIterable<Uint8Array>(responseBody)) {
+    for await (const chunk of responseBody) {
+      if (!signal.aborted) {
+        uwsResponse.cork(() => {
+          if (!signal.aborted) {
+            uwsResponse.write(chunk);
+          }
+        });
       }
     }
-    const reader = fetchResponse.body.getReader();
-    while (!signal.aborted) {
-      const { done, value } = await reader.read();
-      if (done) {
-        break;
-      }
+  }
+  const reader = responseBody.getReader();
+  while (!signal.aborted) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    if (signal.aborted) {
+      reader.releaseLock();
+      return;
+    }
+    uwsResponse.cork(() => {
       if (signal.aborted) {
-        reader.releaseLock();
         return;
       }
-      uwsResponse.cork(() => {
-        if (signal.aborted) {
-          return;
-        }
-        uwsResponse.write(value);
-      });
-    }
+      uwsResponse.write(value);
+    });
   }
   if (!signal.aborted) {
     uwsResponse.cork(() => {
@@ -119,22 +119,22 @@ export function sendResponseToUwsOpts(
   signal: AbortSignal,
 ) {
   if (!fetchResponse) {
-    if (signal.aborted) {
+    if (signal.aborted || uwsResponse.ended) {
       return;
     }
     uwsResponse.writeStatus('404 Not Found');
-    if (signal.aborted) {
+    if (signal.aborted || uwsResponse.ended) {
       return;
     }
     uwsResponse.end();
     return;
   }
   const bufferOfRes: Uint8Array = (fetchResponse as any)._buffer;
-  if (signal.aborted) {
+  if (signal.aborted || uwsResponse.ended) {
     return;
   }
   uwsResponse.cork(() => {
-    if (signal.aborted) {
+    if (signal.aborted || uwsResponse.ended) {
       return;
     }
     uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
@@ -145,7 +145,7 @@ export function sendResponseToUwsOpts(
           const setCookies = fetchResponse.headers.getSetCookie?.();
           if (setCookies) {
             for (const setCookie of setCookies) {
-              if (signal.aborted) {
+              if (signal.aborted || uwsResponse.ended) {
                 return;
               }
               uwsResponse.writeHeader(key, setCookie);
@@ -153,14 +153,14 @@ export function sendResponseToUwsOpts(
             continue;
           }
         }
-        if (signal.aborted) {
+        if (signal.aborted || uwsResponse.ended) {
           return;
         }
         uwsResponse.writeHeader(key, value);
       }
     }
     if (bufferOfRes) {
-      if (signal.aborted) {
+      if (signal.aborted || uwsResponse.ended) {
         return;
       }
       uwsResponse.end(bufferOfRes);
@@ -170,11 +170,11 @@ export function sendResponseToUwsOpts(
     return;
   }
   if (!fetchResponse.body) {
-    if (signal.aborted) {
+    if (signal.aborted || uwsResponse.ended) {
       return;
     }
     uwsResponse.end();
     return;
   }
-  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse, signal);
+  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse.body, signal);
 }

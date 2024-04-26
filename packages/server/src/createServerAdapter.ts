@@ -250,9 +250,8 @@ function createServerAdapter<
 
     const signal = new ServerAdapterRequestAbortSignal();
     const originalResEnd = res.end.bind(res);
-    let resEnded = false;
     res.end = function (data: any) {
-      resEnded = true;
+      res.ended = true;
       return originalResEnd(data);
     };
     res.onAborted(() => {
@@ -274,23 +273,23 @@ function createServerAdapter<
       return response$
         .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => {
-          if (!signal.aborted && !resEnded) {
+          if (!signal.aborted && !res.ended) {
             return sendResponseToUwsOpts(res, response, signal);
           }
         })
         .catch(err => {
           console.error(
-            `Unexpected error while handling request: \n${err.stack || err.message || err}`,
+            `Unexpected error while handling request (aborted: ${signal.aborted}): \n${err.stack || err.message || err}`,
           );
         });
     }
     try {
-      if (!signal.aborted && !resEnded) {
+      if (!signal.aborted && !res.ended) {
         return sendResponseToUwsOpts(res, response$, signal);
       }
     } catch (err: any) {
       console.error(
-        `Unexpected error while handling request: \n${err.stack || err.message || err}`,
+        `Unexpected error while handling request (aborted: ${signal.aborted}): \n${err.stack || err.message || err}`,
       );
     }
   }

@@ -5,7 +5,7 @@ import type { Readable } from 'stream';
 import { URL } from '@whatwg-node/fetch';
 import type { FetchEvent } from './types.js';
 
-export function isAsyncIterable(body: any): body is AsyncIterable<any> {
+export function isAsyncIterable<T>(body: any): body is AsyncIterable<T> {
   return (
     body != null && typeof body === 'object' && typeof body[Symbol.asyncIterator] === 'function'
   );
@@ -372,7 +372,7 @@ export function sendNodeResponse(
     return;
   }
 
-  if (isAsyncIterable(fetchBody)) {
+  if (isAsyncIterable<Uint8Array>(fetchBody)) {
     return sendAsyncIterable(serverResponse, fetchBody);
   }
 }
