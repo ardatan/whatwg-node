@@ -1,5 +1,11 @@
 # @whatwg-node/node-fetch
 
+## 0.5.11
+
+### Patch Changes
+
+- [`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c) Thanks [@ardatan](https://github.com/ardatan)! - Handle request errors properly
+
 ## 0.5.10
 
 ### Patch Changes
