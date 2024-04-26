@@ -186,6 +186,41 @@ describe('Node Specific Cases', () => {
         expect(abortListener).toHaveBeenCalledTimes(1);
       });
 
+      it('handles AbortSignal correctly with streaming bodies', async () => {
+        const abortListener = jest.fn();
+        const adapterResponseDeferred = createDeferred<Response>();
+        function resolveAdapter() {
+          adapterResponseDeferred.resolve(
+            Response.json({
+              message: "You're so late!",
+            }),
+          );
+        }
+        const controller = new AbortController();
+        const serverAdapter = createServerAdapter(req => {
+          req.signal.addEventListener('abort', abortListener);
+          return req.text().then(() => {
+            controller.abort();
+            return adapterResponseDeferred.promise;
+          });
+        });
+        testServer.addOnceHandler(serverAdapter);
+        let error: Error | undefined;
+        try {
+          await fetch(testServer.url, {
+            method: 'POST',
+            signal: controller.signal,
+            body: 'Hello world!',
+          });
+        } catch (e: any) {
+          error = e;
+        }
+        expect(error).toBeDefined();
+        await sleep(300);
+        expect(abortListener).toHaveBeenCalledTimes(1);
+        resolveAdapter();
+      });
+
       it('handles query parameters correctly', async () => {
         const serverAdapter = createServerAdapter(req => {
           const urlObj = new URL(req.url);

@@ -156,6 +156,7 @@ export function normalizeNodeRequest(
       }
     };
 
+    nodeResponse.once('error', closeEventListener);
     nodeResponse.once('close', closeEventListener);
 
     nodeResponse.once('finish', () => {

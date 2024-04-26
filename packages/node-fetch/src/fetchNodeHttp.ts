@@ -96,6 +96,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             }
           });
         }
+        nodeResponse.once('error', reject);
         const ponyfillResponse = new PonyfillResponse(responseBody, {
           status: nodeResponse.statusCode,
           statusText: nodeResponse.statusMessage,

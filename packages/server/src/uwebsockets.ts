@@ -1,5 +1,6 @@
 import type { Readable } from 'stream';
 import type { FetchAPI } from './types.js';
+import { ServerAdapterRequestAbortSignal } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -40,7 +41,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
   if (method !== 'get' && method !== 'head') {
     body = new fetchAPI.ReadableStream({});
     const readable = (body as any).readable as Readable;
-    res.onAborted(() => {
+    signal.addEventListener('abort', () => {
       readable.push(null);
     });
     res.onData(function (ab, isLast) {
@@ -71,7 +72,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
 async function forwardResponseBodyToUWSResponse(
   uwsResponse: UWSResponse,
   fetchResponse: Response,
-  signal: AbortSignal,
+  signal: ServerAdapterRequestAbortSignal,
 ) {
   for await (const chunk of fetchResponse.body as any as AsyncIterable<Uint8Array>) {
     if (signal.aborted) {
@@ -89,7 +90,7 @@ async function forwardResponseBodyToUWSResponse(
 export function sendResponseToUwsOpts(
   uwsResponse: UWSResponse,
   fetchResponse: Response,
-  signal: AbortSignal,
+  signal: ServerAdapterRequestAbortSignal,
 ) {
   if (!fetchResponse) {
     uwsResponse.writeStatus('404 Not Found');

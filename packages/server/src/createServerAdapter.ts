@@ -255,9 +255,13 @@ function createServerAdapter<
       resEnded = true;
       return originalResEnd(data);
     };
-    res.onAborted(() => {
+    const originalOnAborted = res.onAborted.bind(res);
+    originalOnAborted(function () {
       signal.sendAbort();
     });
+    res.onAborted = function (cb: () => void) {
+      signal.addEventListener('abort', cb);
+    };
     const request = getRequestFromUWSRequest({
       req,
       res,
