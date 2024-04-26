@@ -37,15 +37,14 @@ function isBlob(obj: any): obj is Blob {
 
 // Will be removed after v14 reaches EOL
 // Needed because v14 doesn't have .stream() implemented
-export class PonyfillBlob implements Blob {
-  type: string;
+export class PonyfillBlob extends Blob {
   private encoding: BufferEncoding;
   private _size: number | null = null;
   constructor(
     private blobParts: BlobPart[],
     options?: BlobOptions,
   ) {
-    this.type = options?.type || 'application/octet-stream';
+    super(blobParts, { type: options?.type || 'application/octet-stream' });
     this.encoding = options?.encoding || 'utf8';
     this._size = options?.size || null;
     if (blobParts.length === 1 && isBlob(blobParts[0])) {

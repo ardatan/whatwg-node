@@ -1,3 +1,4 @@
+import { Blob as NodeBlob } from 'buffer';
 import { Readable } from 'stream';
 import { PonyfillBlob } from '../src/Blob.js';
 import { PonyfillBody } from '../src/Body.js';
@@ -79,5 +80,9 @@ describe('Body', () => {
       }),
     );
     await expect(() => body.formData()).rejects.toThrow(TypeError);
+  });
+  it('PonyfillBlob is compatible with native Blob', () => {
+    const body = new PonyfillBlob([]);
+    expect(body instanceof NodeBlob).toBe(true);
   });
 });
