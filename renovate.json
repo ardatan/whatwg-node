@@ -20,7 +20,7 @@
         "next",
         "react",
         "react-dom",
-        "*pulumi*"
+        "@pulumi/*"
       ],
       "matchPackagePatterns": ["*"],
       "matchUpdateTypes": ["minor", "patch"],
