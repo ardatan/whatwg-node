@@ -45,7 +45,7 @@
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.29.1",
     "eslint-plugin-n": "16.6.2",
-    "eslint-plugin-n": "17.5.1",
+    "eslint-plugin-n": "17.6.0",
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-standard": "5.0.0",
     "husky": "9.0.11",
@@ -54,7 +54,7 @@
     "node-libcurl": "4.0.0",
     "patch-package": "8.0.0",
     "prettier": "3.2.5",
-    "rimraf": "5.0.5",
+    "rimraf": "5.0.6",
     "ts-jest": "29.1.2",
     "typescript": "5.4.5"
   },
