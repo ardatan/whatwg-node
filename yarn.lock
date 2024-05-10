@@ -3807,10 +3807,10 @@ builtins@^5.0.0:
   dependencies:
     semver "^7.0.0"
 
-bun-types@1.1.7:
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.1.7.tgz#65fabfac11975066b63b2f6071537a9a85c6de7a"
-  integrity sha512-9L1w3dxXrJ5dg9ERd8cc8IJTHZ+0WpSDB9kIo6tVl1s3msNsotsTeh02Wwy8cvd3a4XWEz9+TrJsqhT0dJ6XCQ==
+bun-types@1.1.8:
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.1.8.tgz#33690cd1b5632ba4d0d9a1a75cb59e9b05fb5ff7"
+  integrity sha512-dwhfuUKSGK8hm5Llcvb5+ejRh+4mIt8ibObJVKhZBsi0ScpXmt+AlaS1eDW6uRXCHj084Qt0kIqAJ08/7ZGC9Q==
   dependencies:
     "@types/node" "~20.12.8"
     "@types/ws" "~8.5.10"
@@ -4894,10 +4894,10 @@ eslint-plugin-jsx-a11y@^6.7.1:
     object.entries "^1.1.7"
     object.fromentries "^2.0.7"
 
-eslint-plugin-n@17.5.1:
-  version "17.5.1"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-n/-/eslint-plugin-n-17.5.1.tgz#0f0ef75e3540ffd76ad9a4947b141a545319389e"
-  integrity sha512-+E242KoY16xtwqqBRgSsDCrZ3K40jg3Np9fOgQyakcHaqymK3bnxYB1F1oe8Ksts8TDDViROFgraoLzbWhfHVw==
+eslint-plugin-n@17.6.0:
+  version "17.6.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-n/-/eslint-plugin-n-17.6.0.tgz#891b7239ac2e58d80a8ed636addc9de4108e66d1"
+  integrity sha512-Y73o88ROwbCtVCCmZjYlYcPYkOG7mIzxxVK1XFRSa2epbKWtAPsmYpAD0pqxg/ZwlcWxMDceQPKHYQi4VIHz7w==
   dependencies:
     "@eslint-community/eslint-utils" "^4.4.0"
     enhanced-resolve "^5.15.0"
@@ -8677,6 +8677,13 @@ rimraf@5.0.5:
   dependencies:
     glob "^10.3.7"
 
+rimraf@5.0.6:
+  version "5.0.6"
+  resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-5.0.6.tgz#f13b90af1794a2e8e1ecd052263bcf688742af88"
+  integrity sha512-X72SgyOf+1lFnGM6gYcmZ4+jMOwuT4E4SajKQzUIlI7EoR5eFHMhS/wf8Ll0mN+w2bxcIVldrJQ6xT7HFQywjg==
+  dependencies:
+    glob "^10.3.7"
+
 rimraf@^2.6.3:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.7.1.tgz#35797f13a7fdadc566142c29d4f07ccad483e3ec"
@@ -9540,9 +9547,9 @@ tslib@2.6.2, tslib@^2.0.0, tslib@^2.1.0, tslib@^2.2.0, tslib@^2.3.1, tslib@^2.4.
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tsx@^4.7.1:
-  version "4.9.3"
-  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.9.3.tgz#801ca18ca22b3d2f7acd89d4b888aa2425ea1302"
-  integrity sha512-czVbetlILiyJZI5zGlj2kw9vFiSeyra9liPD4nG+Thh4pKTi0AmMEQ8zdV/L2xbIVKrIqif4sUNrsMAOksx9Zg==
+  version "4.9.4"
+  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.9.4.tgz#a7c37d944f0d88743c8b6bb030adb3cfc488435a"
+  integrity sha512-TlSJTVn2taGGDgdV3jAqCj7WQ/CafCB5p4SbG7W2Bl/0AJWH1ShJlBbc0y2lOFTjQEVAAULSTlmehw/Mwv3S/Q==
   dependencies:
     esbuild "~0.20.2"
     get-tsconfig "^4.7.3"
