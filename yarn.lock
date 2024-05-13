@@ -2855,10 +2855,10 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
 
-"@types/k6@^0.50.0":
-  version "0.50.1"
-  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.50.1.tgz#fcf0de8398a73c1c351731bf473b09f7e3ef8aa9"
-  integrity sha512-szGVf09jYCvZoaYZcNa8YaGwJFHOVlYUdLfEVXQLLG6RC/XtBqITDlDGbM8YOsnE5Sb6GlQzJGzSLR8eojhnEA==
+"@types/k6@^0.51.0":
+  version "0.51.0"
+  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.51.0.tgz#04c92a5ca8e8b463a197866b129c2d5a220e9a12"
+  integrity sha512-xelcvFGPI4VYrV5ozADmRuFQBKmDqDRzxfHVuCDD1/firZiSQvTP0pntxHuYUSkRyL8I83kvABXUlnLYNT2VuA==
 
 "@types/keyv@^3.1.4":
   version "3.1.4"
