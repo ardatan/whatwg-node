@@ -6,6 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
+  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72",
   "scripts": {
     "build": "bob build",
     "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
@@ -44,7 +45,6 @@
     "eslint-config-prettier": "9.1.0",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.29.1",
-    "eslint-plugin-n": "16.6.2",
     "eslint-plugin-n": "17.7.0",
     "eslint-plugin-promise": "6.1.1",
     "eslint-plugin-standard": "5.0.0",
