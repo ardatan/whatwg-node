@@ -2,7 +2,7 @@ import { ServerAdapterPlugin } from './types.js';
 
 export type CORSOptions =
   | {
-      origin?: string[] | string;
+      origin?: string[] | string | ((req: Request) => string | string[]);
       methods?: string[];
       allowedHeaders?: string[];
       exposedHeaders?: string[];
@@ -36,27 +36,31 @@ export function getCORSHeadersByRequestAndOptions(
   // If defined origins have '*' or undefined by any means, we should allow all origins
   if (
     corsOptions.origin == null ||
-    corsOptions.origin.length === 0 ||
-    corsOptions.origin.includes('*')
+    (typeof corsOptions.origin !== 'function' && corsOptions.origin.length === 0) ||
+    corsOptions.origin === '*'
   ) {
     headers['Access-Control-Allow-Origin'] = currentOrigin;
     // Vary by origin because there are multiple origins
     headers['Vary'] = 'Origin';
-  } else if (typeof corsOptions.origin === 'string') {
-    // If there is one specific origin is specified, use it directly
-    headers['Access-Control-Allow-Origin'] = corsOptions.origin;
-  } else if (Array.isArray(corsOptions.origin)) {
-    // If there is only one origin defined in the array, consider it as a single one
-    if (corsOptions.origin.length === 1) {
-      headers['Access-Control-Allow-Origin'] = corsOptions.origin[0];
-    } else if (corsOptions.origin.includes(currentOrigin)) {
-      // If origin is available in the headers, use it
-      headers['Access-Control-Allow-Origin'] = currentOrigin;
-      // Vary by origin because there are multiple origins
-      headers['Vary'] = 'Origin';
-    } else {
-      // There is no origin found in the headers, so we should return null
-      headers['Access-Control-Allow-Origin'] = 'null';
+  } else {
+    const origin =
+      typeof corsOptions.origin === 'function' ? corsOptions.origin(request) : corsOptions.origin;
+    if (typeof origin === 'string') {
+      // If there is one specific origin is specified, use it directly
+      headers['Access-Control-Allow-Origin'] = origin;
+    } else if (Array.isArray(origin)) {
+      // If there is only one origin defined in the array, consider it as a single one
+      if (origin.length === 1) {
+        headers['Access-Control-Allow-Origin'] = origin[0];
+      } else if (origin.includes(currentOrigin)) {
+        // If origin is available in the headers, use it
+        headers['Access-Control-Allow-Origin'] = currentOrigin;
+        // Vary by origin because there are multiple origins
+        headers['Vary'] = 'Origin';
+      } else {
+        // There is no origin found in the headers, so we should return null
+        headers['Access-Control-Allow-Origin'] = 'null';
+      }
     }
   }
 
