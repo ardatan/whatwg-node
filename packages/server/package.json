@@ -43,8 +43,7 @@
     "express": "4.19.2",
     "fastify": "4.27.0",
     "react": "0.0.0-experimental-e5205658f-20230913",
-    "react-dom": "0.0.0-experimental-e5205658f-20230913",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.34.0"
+    "react-dom": "0.0.0-experimental-e5205658f-20230913"
   },
   "publishConfig": {
     "directory": "dist",

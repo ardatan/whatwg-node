@@ -27,11 +27,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Use Node 20
+      - name: Use Node 22
         uses: actions/setup-node@master
         with:
-          node-version: 20
-          cache: 'yarn'
+          node-version: 22
 
       - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
