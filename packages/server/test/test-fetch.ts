@@ -1,27 +1,80 @@
 /* eslint-disable n/no-callback-literal */
 import { globalAgent as httpGlobalAgent } from 'http';
 import { globalAgent as httpsGlobalAgent } from 'https';
+import { createFetch } from '@whatwg-node/fetch';
+import { createServerAdapter } from '../src/createServerAdapter';
+import { FetchAPI } from '../src/types';
 
 const libcurl = globalThis.libcurl;
-export function runTestsForEachFetchImpl(callback: (implementationName: string) => void) {
-  if (libcurl) {
-    describe('libcurl', () => {
-      callback('libcurl');
+export function runTestsForEachFetchImpl(
+  callback: (
+    implementationName: string,
+    api: {
+      fetchAPI: FetchAPI;
+      createServerAdapter: typeof createServerAdapter;
+    },
+  ) => void,
+  opts: { noLibCurl?: boolean } = {},
+) {
+  describe('Ponyfill', () => {
+    if (opts.noLibCurl) {
+      const fetchAPI = createFetch({ skipPonyfill: false });
+      callback('ponyfill', {
+        fetchAPI,
+        createServerAdapter: (baseObj: any, opts?: any) =>
+          createServerAdapter(baseObj, {
+            fetchAPI,
+            ...opts,
+          }),
+      });
+      return;
+    }
+    if (libcurl) {
+      describe('libcurl', () => {
+        const fetchAPI = createFetch({ skipPonyfill: false });
+        callback('libcurl', {
+          fetchAPI,
+          createServerAdapter: (baseObj: any, opts?: any) =>
+            createServerAdapter(baseObj, {
+              fetchAPI,
+              ...opts,
+            }),
+        });
+        afterAll(() => {
+          libcurl.Curl.globalCleanup();
+        });
+      });
+    }
+    describe('node-http', () => {
+      beforeAll(() => {
+        (globalThis.libcurl as any) = null;
+      });
       afterAll(() => {
-        libcurl.Curl.globalCleanup();
+        globalThis.libcurl = libcurl;
+        httpGlobalAgent.destroy();
+        httpsGlobalAgent.destroy();
+      });
+      const fetchAPI = createFetch({ skipPonyfill: false });
+      callback('node-http', {
+        fetchAPI,
+        createServerAdapter: (baseObj: any, opts?: any) =>
+          createServerAdapter(baseObj, {
+            fetchAPI,
+            ...opts,
+          }),
       });
     });
-  }
-  describe('node-http', () => {
-    beforeAll(() => {
-      (globalThis.libcurl as any) = null;
+  });
+  describe('Native', () => {
+    const fetchAPI = createFetch({ skipPonyfill: true });
+    callback('native', {
+      fetchAPI,
+      createServerAdapter: (baseObj: any, opts?: any) =>
+        createServerAdapter(baseObj, {
+          fetchAPI,
+          ...opts,
+        }),
     });
-    afterAll(() => {
-      globalThis.libcurl = libcurl;
-      httpGlobalAgent.destroy();
-      httpsGlobalAgent.destroy();
-    });
-    callback('node-http');
   });
   afterEach(() => {
     globalThis?.gc?.();
