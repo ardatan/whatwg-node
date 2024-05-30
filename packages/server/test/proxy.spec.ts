@@ -5,7 +5,7 @@ import { runTestsForEachServerImpl } from './test-server';
 
 describe('Proxy', () => {
   runTestsForEachFetchImpl(
-    (fetchImplName, { createServerAdapter, fetchAPI: { fetch, Response } }) => {
+    (_, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;
       const originalAdapter = createServerAdapter(async request => {
         if (request.url.endsWith('/delay')) {
@@ -80,20 +80,17 @@ describe('Proxy', () => {
           });
           expect(response.status).toBe(200);
         });
-        // TODO: Flakey on native fetch
-        if (!process.env.LEAK_TEST || fetchImplName !== 'native') {
-          it('handles aborted requests', async () => {
-            const response = fetch(
-              `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
-              {
-                signal: AbortSignal.timeout(500),
-              },
-            );
-            await expect(response).rejects.toThrow();
-            await new Promise<void>(resolve => setTimeout(resolve, 500));
-            expect(aborted).toBe(true);
-          });
-        }
+        it('handles aborted requests', async () => {
+          const response = fetch(
+            `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
+            {
+              signal: AbortSignal.timeout(500),
+            },
+          );
+          await expect(response).rejects.toThrow();
+          await new Promise<void>(resolve => setTimeout(resolve, 500));
+          expect(aborted).toBe(true);
+        });
         it('handles requested terminated before abort', async () => {
           const res = await fetch(
             `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
@@ -107,6 +104,10 @@ describe('Proxy', () => {
           expect(aborted).toBe(false);
         });
       });
+    },
+    {
+      // TODO: Flakey on native fetch
+      noNativeFetch: !!process.env.LEAK_TEST,
     },
   );
 });

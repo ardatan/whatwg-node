@@ -6,6 +6,7 @@ describe('FormData', () => {
     runTestsForEachFetchImpl(
       (_, { createServerAdapter, fetchAPI: { Response, FormData, File, fetch } }) => {
         if (!File) {
+          it.skip('File does not exist in this version of Node', () => {});
           return;
         }
         it('should forward formdata correctly', async () => {

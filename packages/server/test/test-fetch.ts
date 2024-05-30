@@ -78,8 +78,8 @@ export function runTestsForEachFetchImpl(
           }),
       });
       afterEach(async () => {
-        // @ts-expect-error TS types are not available yet but documented [here](https://github.com/nodejs/undici/discussions/2167#discussioncomment-6239992)
         const undiciGlobalDispatcher: Dispatcher =
+          // @ts-expect-error TS types are not available yet but documented [here](https://github.com/nodejs/undici/discussions/2167#discussioncomment-6239992)
           globalThis[Symbol.for('undici.globalDispatcher.1')];
         await undiciGlobalDispatcher?.close();
         await undiciGlobalDispatcher?.destroy();
