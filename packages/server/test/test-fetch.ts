@@ -28,10 +28,6 @@ export function runTestsForEachFetchImpl(
             ...opts,
           }),
       });
-      afterEach(() => {
-        // @ts-expect-error TS types are not available yet but documented [here](https://github.com/nodejs/undici/discussions/2167#discussioncomment-6239992)
-        return (globalThis[Symbol.for('undici.globalDispatcher.1')] as Dispatcher)?.destroy();
-      });
       return;
     }
     if (libcurl) {
@@ -80,6 +76,18 @@ export function runTestsForEachFetchImpl(
             fetchAPI,
             ...opts,
           }),
+      });
+      afterEach(async () => {
+        // @ts-expect-error TS types are not available yet but documented [here](https://github.com/nodejs/undici/discussions/2167#discussioncomment-6239992)
+        const undiciGlobalDispatcher: Dispatcher =
+          globalThis[Symbol.for('undici.globalDispatcher.1')];
+        await undiciGlobalDispatcher?.close();
+        await undiciGlobalDispatcher?.destroy();
+        return new Promise<void>(resolve => {
+          setTimeout(() => {
+            resolve();
+          }, 300);
+        });
       });
     });
   }

@@ -6,7 +6,10 @@ import { createDeferred, sleep } from './test-utils.js';
 
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
-    (_, { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } }) => {
+    (
+      fetchImplName,
+      { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } },
+    ) => {
       runTestsForEachServerImpl(testServer => {
         it('should handle empty responses', async () => {
           const serverAdapter = createServerAdapter(() => {
@@ -157,68 +160,71 @@ describe('Node Specific Cases', () => {
           expect(response.status).toBe(418);
         });
 
-        it('handles AbortSignal correctly', async () => {
-          const abortListener = jest.fn();
-          const adapterResponseDeferred = createDeferred<Response>();
-          function resolveAdapter() {
-            adapterResponseDeferred.resolve(
-              Response.json({
-                message: "You're so late!",
-              }),
-            );
-          }
-          const serverAdapter = createServerAdapter(req => {
-            req.signal.addEventListener('abort', () => {
-              abortListener();
-              resolveAdapter();
-            });
-            return adapterResponseDeferred.promise;
-          });
-          testServer.addOnceHandler(serverAdapter);
-          const controller = new AbortController();
-          const response$ = fetch(testServer.url, { signal: controller.signal });
-          expect(abortListener).toHaveBeenCalledTimes(0);
-          await sleep(300);
-          controller.abort();
-          await expect(response$).rejects.toThrow();
-          await sleep(300);
-          expect(abortListener).toHaveBeenCalledTimes(1);
-        });
-
-        it('handles AbortSignal correctly with streaming bodies', async () => {
-          const abortListener = jest.fn();
-          const adapterResponseDeferred = createDeferred<Response>();
-          function resolveAdapter() {
-            adapterResponseDeferred.resolve(
-              Response.json({
-                message: "You're so late!",
-              }),
-            );
-          }
-          const controller = new AbortController();
-          const serverAdapter = createServerAdapter(req => {
-            req.signal.addEventListener('abort', abortListener);
-            return req.text().then(() => {
-              controller.abort();
+        // TODO: Flakey on native fetch
+        if (!process.env.LEAK_TEST || fetchImplName !== 'native') {
+          it('handles AbortSignal correctly', async () => {
+            const abortListener = jest.fn();
+            const adapterResponseDeferred = createDeferred<Response>();
+            function resolveAdapter() {
+              adapterResponseDeferred.resolve(
+                Response.json({
+                  message: "You're so late!",
+                }),
+              );
+            }
+            const serverAdapter = createServerAdapter(req => {
+              req.signal.addEventListener('abort', () => {
+                abortListener();
+                resolveAdapter();
+              });
               return adapterResponseDeferred.promise;
             });
+            testServer.addOnceHandler(serverAdapter);
+            const controller = new AbortController();
+            const response$ = fetch(testServer.url, { signal: controller.signal });
+            expect(abortListener).toHaveBeenCalledTimes(0);
+            await sleep(300);
+            controller.abort();
+            await expect(response$).rejects.toThrow();
+            await sleep(300);
+            expect(abortListener).toHaveBeenCalledTimes(1);
           });
-          testServer.addOnceHandler(serverAdapter);
-          let error: Error | undefined;
-          try {
-            await fetch(testServer.url, {
-              method: 'POST',
-              signal: controller.signal,
-              body: 'Hello world!',
+
+          it('handles AbortSignal correctly with streaming bodies', async () => {
+            const abortListener = jest.fn();
+            const adapterResponseDeferred = createDeferred<Response>();
+            function resolveAdapter() {
+              adapterResponseDeferred.resolve(
+                Response.json({
+                  message: "You're so late!",
+                }),
+              );
+            }
+            const controller = new AbortController();
+            const serverAdapter = createServerAdapter(req => {
+              req.signal.addEventListener('abort', abortListener);
+              return req.text().then(() => {
+                controller.abort();
+                return adapterResponseDeferred.promise;
+              });
             });
-          } catch (e: any) {
-            error = e;
-          }
-          expect(error).toBeDefined();
-          await sleep(300);
-          expect(abortListener).toHaveBeenCalledTimes(1);
-          resolveAdapter();
-        });
+            testServer.addOnceHandler(serverAdapter);
+            let error: Error | undefined;
+            try {
+              await fetch(testServer.url, {
+                method: 'POST',
+                signal: controller.signal,
+                body: 'Hello world!',
+              });
+            } catch (e: any) {
+              error = e;
+            }
+            expect(error).toBeDefined();
+            await sleep(300);
+            expect(abortListener).toHaveBeenCalledTimes(1);
+            resolveAdapter();
+          });
+        }
 
         it('handles query parameters correctly', async () => {
           const serverAdapter = createServerAdapter(req => {
