@@ -9,7 +9,7 @@ module.exports = function createNodePonyfill(opts = {}) {
     ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
-  if (shouldSkipPonyfill()) {
+  if (opts.skipPonyfill || shouldSkipPonyfill()) {
     return globalThis;
   }
 
