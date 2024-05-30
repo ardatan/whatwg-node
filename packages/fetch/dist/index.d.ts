@@ -43,6 +43,7 @@ declare module '@whatwg-node/fetch' {
   export const createFetch: (opts?: {
     useNodeFetch?: boolean;
     formDataLimits?: FormDataLimits;
+    skipPonyfill?: boolean;
   }) => {
     fetch: typeof fetch;
     Request: typeof Request;

@@ -11,6 +11,12 @@ on:
 jobs:
   server:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scenario:
+          - native
+          - ponyfill
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -33,6 +39,7 @@ jobs:
         run: |
           yarn test
         env:
+          SCENARIO: ${{ matrix.scenario }}
           NODE_NO_WARNINGS: true
           NODE_ENV: production
           GITHUB_PR: ${{ github.event.number }}
