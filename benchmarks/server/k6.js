@@ -27,7 +27,7 @@ export function handleSummary(data) {
       renderTitle({ passes }) {
         return passes
           ? `✅ \`@benchmarks/server-${__ENV.SCENARIO},\` results`
-          : `❌ \`@benchmarks/server\` failed`;
+          : `❌ \`@benchmarks/server-${__ENV.SCENARIO}\` failed`;
       },
       renderMessage({ passes, checks, thresholds }) {
         const result = [];
