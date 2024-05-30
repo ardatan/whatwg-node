@@ -30,7 +30,7 @@ export function runTestsForEachFetchImpl(
       });
       afterEach(() => {
         // @ts-expect-error TS types are not available yet but documented [here](https://github.com/nodejs/undici/discussions/2167#discussioncomment-6239992)
-        return (globalThis[Symbol.for('undici.globalDispatcher.1')] as Dispatcher).destroy();
+        return (globalThis[Symbol.for('undici.globalDispatcher.1')] as Dispatcher)?.destroy();
       });
       return;
     }
