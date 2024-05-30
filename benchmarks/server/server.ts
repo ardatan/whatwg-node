@@ -1,7 +1,27 @@
 import { createServer } from 'http';
-import { createServerAdapter, Response } from '@whatwg-node/server';
+import { createServerAdapter } from '@whatwg-node/server';
 
-const serverAdapter = createServerAdapter(() => Response.json({ message: `Hello, World!` }));
+const serverAdapter = createServerAdapter(() => Response.json({ message: `Hello, World!` }), {
+  fetchAPI: {
+    fetch,
+    Request,
+    Response,
+    Headers,
+    FormData,
+    ReadableStream,
+    WritableStream,
+    TransformStream,
+    Blob,
+    File,
+    crypto,
+    btoa,
+    TextDecoder,
+    TextEncoder,
+    URLPattern,
+    URL,
+    URLSearchParams,
+  },
+});
 
 createServer(serverAdapter).listen(4000, () => {
   console.log('listening on 0.0.0.0:4000');
