@@ -23,11 +23,11 @@ export function handleSummary(data) {
       pr: __ENV.GITHUB_PR,
       org: 'ardatan',
       repo: 'whatwg-node',
-      commentKey: `@benchmarks/server-${__ENV.SCENARIO}`,
+      commentKey: `@benchmarks/server+${__ENV.SCENARIO}`,
       renderTitle({ passes }) {
         return passes
-          ? `✅ \`@benchmarks/server-${__ENV.SCENARIO},\` results`
-          : `❌ \`@benchmarks/server-${__ENV.SCENARIO}\` failed`;
+          ? `✅ \`@benchmarks/server\` results (${__ENV.SCENARIO})`
+          : `❌ \`@benchmarks/server\` failed (${__ENV.SCENARIO})`;
       },
       renderMessage({ passes, checks, thresholds }) {
         const result = [];
