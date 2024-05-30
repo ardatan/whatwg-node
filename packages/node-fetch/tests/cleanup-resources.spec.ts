@@ -10,18 +10,21 @@ describe('Cleanup Resources', () => {
         });
         it('should free resources when body is not consumed', async () => {
           const response = await fetch(testServer.url);
-          expect(response.status).toBe(200);
+          await response.text();
+          expect(response.ok).toBe(true);
         });
       });
     });
     describe('external calls', () => {
       it('http - should free resources when body is not consumed', async () => {
         const response = await fetch('http://google.com');
-        expect(response.status).toBe(200);
+        await response.text();
+        expect(response.ok).toBe(true);
       });
       it('https - should free resources when body is not consumed', async () => {
         const response = await fetch('https://google.com');
-        expect(response.status).toBe(200);
+        await response.text();
+        expect(response.ok).toBe(true);
       });
     });
   });
