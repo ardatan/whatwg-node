@@ -1,6 +1,7 @@
 /* eslint-disable n/no-callback-literal */
 import { globalAgent as httpGlobalAgent } from 'http';
 import { globalAgent as httpsGlobalAgent } from 'https';
+import type { Dispatcher } from 'undici';
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
@@ -14,7 +15,7 @@ export function runTestsForEachFetchImpl(
       createServerAdapter: typeof createServerAdapter;
     },
   ) => void,
-  opts: { noLibCurl?: boolean } = {},
+  opts: { noLibCurl?: boolean; noNativeFetch?: boolean } = {},
 ) {
   describe('Ponyfill', () => {
     if (opts.noLibCurl) {
@@ -26,6 +27,10 @@ export function runTestsForEachFetchImpl(
             fetchAPI,
             ...opts,
           }),
+      });
+      afterEach(() => {
+        // @ts-expect-error TS types are not available yet but documented [here](https://github.com/nodejs/undici/discussions/2167#discussioncomment-6239992)
+        return (globalThis[Symbol.for('undici.globalDispatcher.1')] as Dispatcher).destroy();
       });
       return;
     }
@@ -65,17 +70,19 @@ export function runTestsForEachFetchImpl(
       });
     });
   });
-  describe('Native', () => {
-    const fetchAPI = createFetch({ skipPonyfill: true });
-    callback('native', {
-      fetchAPI,
-      createServerAdapter: (baseObj: any, opts?: any) =>
-        createServerAdapter(baseObj, {
-          fetchAPI,
-          ...opts,
-        }),
+  if (!opts.noNativeFetch) {
+    describe('Native', () => {
+      const fetchAPI = createFetch({ skipPonyfill: true });
+      callback('native', {
+        fetchAPI,
+        createServerAdapter: (baseObj: any, opts?: any) =>
+          createServerAdapter(baseObj, {
+            fetchAPI,
+            ...opts,
+          }),
+      });
     });
-  });
+  }
   afterEach(() => {
     globalThis?.gc?.();
   });

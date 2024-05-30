@@ -5,6 +5,9 @@ describe('FormData', () => {
   runTestsForEachServerImpl(testServer => {
     runTestsForEachFetchImpl(
       (_, { createServerAdapter, fetchAPI: { Response, FormData, File, fetch } }) => {
+        if (!File) {
+          return;
+        }
         it('should forward formdata correctly', async () => {
           let receivedFieldContent: string | undefined;
           let receivedFileName: string | undefined;
