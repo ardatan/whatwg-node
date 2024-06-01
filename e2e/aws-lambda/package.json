@@ -1,6 +1,6 @@
 {
   "name": "@e2e/aws-lambda",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "private": true,
   "scripts": {
     "build": "node scripts/bundle.js",
@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@e2e/shared-scripts": "0.0.0",
-    "@whatwg-node/fetch": "0.9.17",
+    "@whatwg-node/fetch": "0.9.18",
     "aws-lambda": "1.0.7"
   },
   "devDependencies": {

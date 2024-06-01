@@ -1,66 +1,85 @@
 # @e2e/shared-server
 
+## 0.0.94
+
+### Patch Changes
+
+- Updated dependencies
+  [[`36904b4`](https://github.com/ardatan/whatwg-node/commit/36904b46871aaf823055eb05fbd8969453cba9ae)]:
+  - @whatwg-node/fetch@0.9.18
+
 ## 0.0.93
 
 ### Patch Changes
 
-- Updated dependencies [[`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c)]:
+- Updated dependencies
+  [[`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c)]:
   - @whatwg-node/server@0.9.34
 
 ## 0.0.92
 
 ### Patch Changes
 
-- Updated dependencies [[`4717be5`](https://github.com/ardatan/whatwg-node/commit/4717be5a0311334c81176c4a3bc6c01e286f3a39)]:
+- Updated dependencies
+  [[`4717be5`](https://github.com/ardatan/whatwg-node/commit/4717be5a0311334c81176c4a3bc6c01e286f3a39)]:
   - @whatwg-node/server@0.9.33
 
 ## 0.0.91
 
 ### Patch Changes
 
-- Updated dependencies [[`d6bec0a`](https://github.com/ardatan/whatwg-node/commit/d6bec0aae49f8f6d2b27b62c53ba7cde2ce40485)]:
+- Updated dependencies
+  [[`d6bec0a`](https://github.com/ardatan/whatwg-node/commit/d6bec0aae49f8f6d2b27b62c53ba7cde2ce40485)]:
   - @whatwg-node/server@0.9.32
 
 ## 0.0.90
 
 ### Patch Changes
 
-- Updated dependencies [[`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69), [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69)]:
+- Updated dependencies
+  [[`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69),
+  [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69)]:
   - @whatwg-node/server@0.9.31
 
 ## 0.0.89
 
 ### Patch Changes
 
-- Updated dependencies [[`1443f93`](https://github.com/ardatan/whatwg-node/commit/1443f9320561c1334d9de890c8847fb874cb67fa)]:
+- Updated dependencies
+  [[`1443f93`](https://github.com/ardatan/whatwg-node/commit/1443f9320561c1334d9de890c8847fb874cb67fa)]:
   - @whatwg-node/server@0.9.30
 
 ## 0.0.88
 
 ### Patch Changes
 
-- Updated dependencies [[`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd)]:
+- Updated dependencies
+  [[`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd)]:
   - @whatwg-node/server@0.9.29
 
 ## 0.0.87
 
 ### Patch Changes
 
-- Updated dependencies [[`3f31f2d`](https://github.com/ardatan/whatwg-node/commit/3f31f2d607e4638eb92af139442bba610b33f70e)]:
+- Updated dependencies
+  [[`3f31f2d`](https://github.com/ardatan/whatwg-node/commit/3f31f2d607e4638eb92af139442bba610b33f70e)]:
   - @whatwg-node/server@0.9.28
 
 ## 0.0.86
 
 ### Patch Changes
 
-- Updated dependencies [[`a686f8c`](https://github.com/ardatan/whatwg-node/commit/a686f8c49828303e4dd3582ff6212b233fac1c9f)]:
+- Updated dependencies
+  [[`a686f8c`](https://github.com/ardatan/whatwg-node/commit/a686f8c49828303e4dd3582ff6212b233fac1c9f)]:
   - @whatwg-node/server@0.9.27
 
 ## 0.0.85
 
 ### Patch Changes
 
-- Updated dependencies [[`9958bb1`](https://github.com/ardatan/whatwg-node/commit/9958bb1367e1918217abb4244df1685aa1e025fe), [`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
+- Updated dependencies
+  [[`9958bb1`](https://github.com/ardatan/whatwg-node/commit/9958bb1367e1918217abb4244df1685aa1e025fe),
+  [`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
   - @whatwg-node/server@0.9.26
   - @whatwg-node/fetch@0.9.17
 
@@ -68,56 +87,64 @@
 
 ### Patch Changes
 
-- Updated dependencies [[`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf)]:
+- Updated dependencies
+  [[`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf)]:
   - @whatwg-node/server@0.9.25
 
 ## 0.0.83
 
 ### Patch Changes
 
-- Updated dependencies [[`d9800cc`](https://github.com/ardatan/whatwg-node/commit/d9800cc1693ceae7893e08cf5a3a4bcc49f0f9d5)]:
+- Updated dependencies
+  [[`d9800cc`](https://github.com/ardatan/whatwg-node/commit/d9800cc1693ceae7893e08cf5a3a4bcc49f0f9d5)]:
   - @whatwg-node/fetch@0.9.16
 
 ## 0.0.82
 
 ### Patch Changes
 
-- Updated dependencies [[`bf0c9ab`](https://github.com/ardatan/whatwg-node/commit/bf0c9ab7d2894f9c604c2b6d9f6e4d72eec074fb)]:
+- Updated dependencies
+  [[`bf0c9ab`](https://github.com/ardatan/whatwg-node/commit/bf0c9ab7d2894f9c604c2b6d9f6e4d72eec074fb)]:
   - @whatwg-node/server@0.9.24
 
 ## 0.0.81
 
 ### Patch Changes
 
-- Updated dependencies [[`772552c`](https://github.com/ardatan/whatwg-node/commit/772552c0521b883c30d8f4d64c8ea093e75a95a0)]:
+- Updated dependencies
+  [[`772552c`](https://github.com/ardatan/whatwg-node/commit/772552c0521b883c30d8f4d64c8ea093e75a95a0)]:
   - @whatwg-node/fetch@0.9.15
 
 ## 0.0.80
 
 ### Patch Changes
 
-- Updated dependencies [[`f775c41`](https://github.com/ardatan/whatwg-node/commit/f775c41b255c75a84102ebb1928e986813c31372)]:
+- Updated dependencies
+  [[`f775c41`](https://github.com/ardatan/whatwg-node/commit/f775c41b255c75a84102ebb1928e986813c31372)]:
   - @whatwg-node/server@0.9.23
 
 ## 0.0.79
 
 ### Patch Changes
 
-- Updated dependencies [[`340c719`](https://github.com/ardatan/whatwg-node/commit/340c719b1e54bcb8446f0b648d9a9c906557e7f4)]:
+- Updated dependencies
+  [[`340c719`](https://github.com/ardatan/whatwg-node/commit/340c719b1e54bcb8446f0b648d9a9c906557e7f4)]:
   - @whatwg-node/server@0.9.22
 
 ## 0.0.78
 
 ### Patch Changes
 
-- Updated dependencies [[`84e6e37`](https://github.com/ardatan/whatwg-node/commit/84e6e3771360b163ee8c41177b08640ec2a793a7)]:
+- Updated dependencies
+  [[`84e6e37`](https://github.com/ardatan/whatwg-node/commit/84e6e3771360b163ee8c41177b08640ec2a793a7)]:
   - @whatwg-node/server@0.9.21
 
 ## 0.0.77
 
 ### Patch Changes
 
-- Updated dependencies [[`eb326a6`](https://github.com/ardatan/whatwg-node/commit/eb326a6e00fb75305b3cf2bd9187b8e55dcf85f2)]:
+- Updated dependencies
+  [[`eb326a6`](https://github.com/ardatan/whatwg-node/commit/eb326a6e00fb75305b3cf2bd9187b8e55dcf85f2)]:
   - @whatwg-node/server@0.9.20
 
 ## 0.0.76
