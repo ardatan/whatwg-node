@@ -3804,10 +3804,10 @@ builtin-modules@3.0.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.0.0.tgz#1e587d44b006620d90286cc7a9238bbc6129cab1"
   integrity sha512-hMIeU4K2ilbXV6Uv93ZZ0Avg/M91RaKXucQ+4me2Do1txxBDyDZWCBa5bJSLqoNTRpXTLwEzIk1KmloenDDjhg==
 
-bun-types@1.1.10:
-  version "1.1.10"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.1.10.tgz#ead82692112e8ed0c723975cd615d9301dee2e3e"
-  integrity sha512-oBsZ0Bf9HEKr1Ta5bUYgVO6sHkZtTlfHlEj9DGpghZphNdhKI/38eZ5dk+/et/HrStT1sfykHBUW4ughmoNKog==
+bun-types@1.1.12:
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.1.12.tgz#004f708adb774f21ca67e4aeabdabb2acf0d42af"
+  integrity sha512-DIM2C9qCECwhck9nLsCDeTv943VmGMCkwX3KljjprSRDXaK2CSiUDVGbUit80Er38ukgxuESJgYPAys4FsNCdg==
   dependencies:
     "@types/node" "~20.12.8"
     "@types/ws" "~8.5.10"
