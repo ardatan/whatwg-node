@@ -1,24 +1,35 @@
 # @e2e/aws-lambda
 
+## 0.0.28
+
+### Patch Changes
+
+- Updated dependencies
+  [[`36904b4`](https://github.com/ardatan/whatwg-node/commit/36904b46871aaf823055eb05fbd8969453cba9ae)]:
+  - @whatwg-node/fetch@0.9.18
+
 ## 0.0.27
 
 ### Patch Changes
 
-- Updated dependencies [[`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
+- Updated dependencies
+  [[`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
   - @whatwg-node/fetch@0.9.17
 
 ## 0.0.26
 
 ### Patch Changes
 
-- Updated dependencies [[`d9800cc`](https://github.com/ardatan/whatwg-node/commit/d9800cc1693ceae7893e08cf5a3a4bcc49f0f9d5)]:
+- Updated dependencies
+  [[`d9800cc`](https://github.com/ardatan/whatwg-node/commit/d9800cc1693ceae7893e08cf5a3a4bcc49f0f9d5)]:
   - @whatwg-node/fetch@0.9.16
 
 ## 0.0.25
 
 ### Patch Changes
 
-- Updated dependencies [[`772552c`](https://github.com/ardatan/whatwg-node/commit/772552c0521b883c30d8f4d64c8ea093e75a95a0)]:
+- Updated dependencies
+  [[`772552c`](https://github.com/ardatan/whatwg-node/commit/772552c0521b883c30d8f4d64c8ea093e75a95a0)]:
   - @whatwg-node/fetch@0.9.15
 
 ## 0.0.24
