@@ -95,6 +95,10 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
         this.contentLength = parseInt(contentLengthInHeaders, 10);
       }
     }
+
+    if (requestInit?.agent) {
+      this.agent = requestInit.agent;
+    }
   }
 
   headersSerializer?: HeadersSerializer;
