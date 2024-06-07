@@ -9543,9 +9543,9 @@ tslib@2.6.2, tslib@^2.0.0, tslib@^2.1.0, tslib@^2.2.0, tslib@^2.3.1, tslib@^2.4.
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tsx@^4.7.1:
-  version "4.12.0"
-  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.12.0.tgz#2a2483d27f2073fc36e8f89bcb1b753d031d699b"
-  integrity sha512-642NAWAbDqPZINjmL32Lh/B+pd8vbVj6LHPsWm09IIHqQuWhCrNfcPTjRlHFWvv3FfM4vt9NLReBIjUNj5ZhDg==
+  version "4.13.0"
+  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.13.0.tgz#f0f98d1adcd8de397e46b3242805e9098449b8ac"
+  integrity sha512-kNY70P2aLMdVBii1Err5ENxDhQ6Vz2PbQGX68DcvzY2/PWK5NLBO6vI7lPr1/2xG3IKSt2MN+KOAyWDQSRlbCA==
   dependencies:
     esbuild "~0.20.2"
     get-tsconfig "^4.7.5"
