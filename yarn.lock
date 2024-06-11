@@ -9414,9 +9414,9 @@ tslib@2.6.2, tslib@^2.0.0, tslib@^2.1.0, tslib@^2.2.0, tslib@^2.3.1, tslib@^2.4.
   integrity sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==
 
 tsx@^4.7.1:
-  version "4.15.1"
-  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.15.1.tgz#884a8d5f6bbeed82724e53f1138a6b824923c29d"
-  integrity sha512-k/6h17jA1KfUR7SpcteOa880zGmF56s8gMIcSqUR5avyNFi9nlCEKpMiHLrzrqyARGr52A/JablmGey1DEWbCA==
+  version "4.15.2"
+  resolved "https://registry.yarnpkg.com/tsx/-/tsx-4.15.2.tgz#f2d9dfb747d89b508d950d235a4d6165400a0234"
+  integrity sha512-kIZTOCmR37nEw0qxQks2dR+eZWSXydhTGmz7yx94vEiJtJGBTkUl0D/jt/5fey+CNdm6i3Cp+29WKRay9ScQUw==
   dependencies:
     esbuild "~0.21.4"
     get-tsconfig "^4.7.5"
@@ -9889,10 +9889,10 @@ workerd@1.20240605.0:
     "@cloudflare/workerd-linux-arm64" "1.20240605.0"
     "@cloudflare/workerd-windows-64" "1.20240605.0"
 
-wrangler@3.60.0:
-  version "3.60.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.60.0.tgz#73d981169d0d2b5fe6153eed7952e4df5cb36827"
-  integrity sha512-8lW4E7VAhCVXy7AV7Vom2BsyjekIt15Aa8jnBLsfE2CxalzWQzx49BK25hOYhjHQT4GqBXeoNOZ43FrMQ+SUUA==
+wrangler@3.60.1:
+  version "3.60.1"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.60.1.tgz#c1d7c42dba266f1670a2fbaa55e636f02fedcb4f"
+  integrity sha512-pVrqzgpRwFk/8bp/afsnuw6ttOJ0Y8XFDfLjVMnVeDGZJpQ5eHV3hf8fImavn2BeH6DLHucKnJHwISnzDciqRQ==
   dependencies:
     "@cloudflare/kv-asset-handler" "0.3.2"
     "@esbuild-plugins/node-globals-polyfill" "^0.2.3"
