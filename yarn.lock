@@ -2606,10 +2606,10 @@
     "@tufjs/canonical-json" "2.0.0"
     minimatch "^9.0.4"
 
-"@types/aws-lambda@8.10.139":
-  version "8.10.139"
-  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.139.tgz#0e80ed41d948dd22b682c5352d5f71ea7301f786"
-  integrity sha512-n+RhGv0ONxnelVLw1J301bwaqxVDP2SWzHocLHxfAbI3lsvji1SXvFR+mB9ttfg7x3kLM6EWe5FnmIEoZNwpRw==
+"@types/aws-lambda@8.10.140":
+  version "8.10.140"
+  resolved "https://registry.yarnpkg.com/@types/aws-lambda/-/aws-lambda-8.10.140.tgz#617534c437f3cb9bda3e6661c25e9a1510ae9f2d"
+  integrity sha512-4Dh3dk2TUcbdfHrX0Al90mNGJDvA9NBiTQPzbrjGi/dLxzKCGOYgT8YQ47jUKNFALkAJAadifq0pzyjIUlhVhg==
 
 "@types/aws-lambda@8.10.93":
   version "8.10.93"
