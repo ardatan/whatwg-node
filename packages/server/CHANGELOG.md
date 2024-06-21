@@ -1,103 +1,149 @@
 # @whatwg-node/server
 
+## 0.9.35
+
+### Patch Changes
+
+- [`cf07839`](https://github.com/ardatan/whatwg-node/commit/cf078397ceec3dc2e331b8507c076c05d50dac45)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fixes TypeScript v5.5 compatibility issues
+
 ## 0.9.34
 
 ### Patch Changes
 
-- [`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c) Thanks [@ardatan](https://github.com/ardatan)! - Do not call res.onAborted multiple times because it causes it to overwrite the previous listener, and use AbortSignal's abort event instead
+- [`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not call res.onAborted multiple times because
+  it causes it to overwrite the previous listener, and use AbortSignal's abort event instead
 
 ## 0.9.33
 
 ### Patch Changes
 
-- [#1246](https://github.com/ardatan/whatwg-node/pull/1246) [`4717be5`](https://github.com/ardatan/whatwg-node/commit/4717be5a0311334c81176c4a3bc6c01e286f3a39) Thanks [@ardatan](https://github.com/ardatan)! - Ensure unique context objects are sent per each request.
+- [#1246](https://github.com/ardatan/whatwg-node/pull/1246)
+  [`4717be5`](https://github.com/ardatan/whatwg-node/commit/4717be5a0311334c81176c4a3bc6c01e286f3a39)
+  Thanks [@ardatan](https://github.com/ardatan)! - Ensure unique context objects are sent per each
+  request.
 
-  For example in CloudFlare Workers,
-  `fetch` receives `env` and `ctx`, and `env` is shared across requests. That causes the server receives the same context object for each request.
-  Now the server creates a new context object for each request, even if the first argument is the same. Before, it always takes the first argument as the context object, then merges the following arguments into it.
+  For example in CloudFlare Workers, `fetch` receives `env` and `ctx`, and `env` is shared across
+  requests. That causes the server receives the same context object for each request. Now the server
+  creates a new context object for each request, even if the first argument is the same. Before, it
+  always takes the first argument as the context object, then merges the following arguments into
+  it.
 
 ## 0.9.32
 
 ### Patch Changes
 
-- [#1224](https://github.com/ardatan/whatwg-node/pull/1224) [`d6bec0a`](https://github.com/ardatan/whatwg-node/commit/d6bec0aae49f8f6d2b27b62c53ba7cde2ce40485) Thanks [@ardatan](https://github.com/ardatan)! - Introduce `handleRequestFromResponse` method for a better Fastify integration
+- [#1224](https://github.com/ardatan/whatwg-node/pull/1224)
+  [`d6bec0a`](https://github.com/ardatan/whatwg-node/commit/d6bec0aae49f8f6d2b27b62c53ba7cde2ce40485)
+  Thanks [@ardatan](https://github.com/ardatan)! - Introduce `handleRequestFromResponse` method for
+  a better Fastify integration
 
 ## 0.9.31
 
 ### Patch Changes
 
-- [#1220](https://github.com/ardatan/whatwg-node/pull/1220) [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69) Thanks [@ardatan](https://github.com/ardatan)! - Fix UWS's behavior in case of request cancellation
+- [#1220](https://github.com/ardatan/whatwg-node/pull/1220)
+  [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix UWS's behavior in case of request
+  cancellation
 
-- [#1220](https://github.com/ardatan/whatwg-node/pull/1220) [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69) Thanks [@ardatan](https://github.com/ardatan)! - Use ServerResponse's close event to catch request cancellation
+- [#1220](https://github.com/ardatan/whatwg-node/pull/1220)
+  [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use ServerResponse's close event to catch request
+  cancellation
 
 ## 0.9.30
 
 ### Patch Changes
 
-- [#1218](https://github.com/ardatan/whatwg-node/pull/1218) [`1443f93`](https://github.com/ardatan/whatwg-node/commit/1443f9320561c1334d9de890c8847fb874cb67fa) Thanks [@ardatan](https://github.com/ardatan)! - Set \`reason\` in \`ServerAdapterRequestAbortSignal\` to get a proper error when the request got aborted by the client
+- [#1218](https://github.com/ardatan/whatwg-node/pull/1218)
+  [`1443f93`](https://github.com/ardatan/whatwg-node/commit/1443f9320561c1334d9de890c8847fb874cb67fa)
+  Thanks [@ardatan](https://github.com/ardatan)! - Set \`reason\` in
+  \`ServerAdapterRequestAbortSignal\` to get a proper error when the request got aborted by the
+  client
 
 ## 0.9.29
 
 ### Patch Changes
 
-- [#1190](https://github.com/ardatan/whatwg-node/pull/1190) [`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd) Thanks [@ardatan](https://github.com/ardatan)! - Remove node: protocol which is not supported still in some Node versions and ESM mode
+- [#1190](https://github.com/ardatan/whatwg-node/pull/1190)
+  [`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove node: protocol which is not supported
+  still in some Node versions and ESM mode
 
 ## 0.9.28
 
 ### Patch Changes
 
-- [`3f31f2d`](https://github.com/ardatan/whatwg-node/commit/3f31f2d607e4638eb92af139442bba610b33f70e) Thanks [@ardatan](https://github.com/ardatan)! - Handle errors from async request handlers correctly in case of AbortSignal
+- [`3f31f2d`](https://github.com/ardatan/whatwg-node/commit/3f31f2d607e4638eb92af139442bba610b33f70e)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle errors from async request handlers
+  correctly in case of AbortSignal
 
 ## 0.9.27
 
 ### Patch Changes
 
-- [`a686f8c`](https://github.com/ardatan/whatwg-node/commit/a686f8c49828303e4dd3582ff6212b233fac1c9f) Thanks [@ardatan](https://github.com/ardatan)! - Respect user provided `AbortSignal` correctly
+- [`a686f8c`](https://github.com/ardatan/whatwg-node/commit/a686f8c49828303e4dd3582ff6212b233fac1c9f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Respect user provided `AbortSignal` correctly
 
 ## 0.9.26
 
 ### Patch Changes
 
-- [#1143](https://github.com/ardatan/whatwg-node/pull/1143) [`9958bb1`](https://github.com/ardatan/whatwg-node/commit/9958bb1367e1918217abb4244df1685aa1e025fe) Thanks [@aarne](https://github.com/aarne)! - Fix async handling of uWS
+- [#1143](https://github.com/ardatan/whatwg-node/pull/1143)
+  [`9958bb1`](https://github.com/ardatan/whatwg-node/commit/9958bb1367e1918217abb4244df1685aa1e025fe)
+  Thanks [@aarne](https://github.com/aarne)! - Fix async handling of uWS
 
-- Updated dependencies [[`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
+- Updated dependencies
+  [[`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
   - @whatwg-node/fetch@0.9.17
 
 ## 0.9.25
 
 ### Patch Changes
 
-- [`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf) Thanks [@ardatan](https://github.com/ardatan)! - Use duplex half for stream based Requests
+- [`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use duplex half for stream based Requests
 
 ## 0.9.24
 
 ### Patch Changes
 
-- [#1101](https://github.com/ardatan/whatwg-node/pull/1101) [`bf0c9ab`](https://github.com/ardatan/whatwg-node/commit/bf0c9ab7d2894f9c604c2b6d9f6e4d72eec074fb) Thanks [@ardatan](https://github.com/ardatan)! - Access the property in the given server context object correctly
+- [#1101](https://github.com/ardatan/whatwg-node/pull/1101)
+  [`bf0c9ab`](https://github.com/ardatan/whatwg-node/commit/bf0c9ab7d2894f9c604c2b6d9f6e4d72eec074fb)
+  Thanks [@ardatan](https://github.com/ardatan)! - Access the property in the given server context
+  object correctly
 
 ## 0.9.23
 
 ### Patch Changes
 
-- [`f775c41`](https://github.com/ardatan/whatwg-node/commit/f775c41b255c75a84102ebb1928e986813c31372) Thanks [@ardatan](https://github.com/ardatan)! - If protocol is not available, use socket.encrypted correctly
+- [`f775c41`](https://github.com/ardatan/whatwg-node/commit/f775c41b255c75a84102ebb1928e986813c31372)
+  Thanks [@ardatan](https://github.com/ardatan)! - If protocol is not available, use
+  socket.encrypted correctly
 
 ## 0.9.22
 
 ### Patch Changes
 
-- [`340c719`](https://github.com/ardatan/whatwg-node/commit/340c719b1e54bcb8446f0b648d9a9c906557e7f4) Thanks [@ardatan](https://github.com/ardatan)! - Handle aborted requests correctly
+- [`340c719`](https://github.com/ardatan/whatwg-node/commit/340c719b1e54bcb8446f0b648d9a9c906557e7f4)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle aborted requests correctly
 
 ## 0.9.21
 
 ### Patch Changes
 
-- [#1015](https://github.com/ardatan/whatwg-node/pull/1015) [`84e6e37`](https://github.com/ardatan/whatwg-node/commit/84e6e3771360b163ee8c41177b08640ec2a793a7) Thanks [@ardatan](https://github.com/ardatan)! - Send AbortSignal at correct time
+- [#1015](https://github.com/ardatan/whatwg-node/pull/1015)
+  [`84e6e37`](https://github.com/ardatan/whatwg-node/commit/84e6e3771360b163ee8c41177b08640ec2a793a7)
+  Thanks [@ardatan](https://github.com/ardatan)! - Send AbortSignal at correct time
 
 ## 0.9.20
 
 ### Patch Changes
 
-- [`eb326a6`](https://github.com/ardatan/whatwg-node/commit/eb326a6e00fb75305b3cf2bd9187b8e55dcf85f2) Thanks [@ardatan](https://github.com/ardatan)! - Fix for undefined server context parts
+- [`eb326a6`](https://github.com/ardatan/whatwg-node/commit/eb326a6e00fb75305b3cf2bd9187b8e55dcf85f2)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix for undefined server context parts
 
 ## 0.9.19
 
@@ -837,9 +883,9 @@
   - `createServerAdapter` can now accept the request handler itself.
 
   ```ts
-  createServerAdapter((req) => {
-    return new Response(`I got ${req.url}`);
-  });
+  createServerAdapter(req => {
+    return new Response(`I got ${req.url}`)
+  })
   ```
 
   Breaking Changes;
