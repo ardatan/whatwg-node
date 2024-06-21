@@ -85,7 +85,7 @@ function isRequestBody(body: any): body is BodyInit {
 
 export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
   aborted = false;
-  _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
+  private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
   reason: any;
 
   throwIfAborted(): void {
@@ -111,6 +111,10 @@ export class ServerAdapterRequestAbortSignal extends EventTarget implements Abor
     } else {
       this.removeEventListener('abort', value);
     }
+  }
+
+  any(signals: Iterable<AbortSignal>): AbortSignal {
+    return AbortSignal.any([...signals]);
   }
 }
 
