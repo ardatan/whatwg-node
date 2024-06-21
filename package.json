@@ -9,11 +9,11 @@
   "packageManager": "yarn@1.22.22",
   "scripts": {
     "build": "bob build",
-    "ci:lint": "eslint --ext .ts . --output-file eslint_report.json --format json",
+    "ci:lint": "cross-env \"ESLINT_USE_FLAT_CONFIG=false\" eslint --ext .ts . --output-file eslint_report.json --format json",
     "clean-dist": "rimraf \"dist\" && rimraf \".bob\"",
     "esm:check": "bob check",
     "jest-with-gc": "node --expose-gc ./node_modules/.bin/jest",
-    "lint": "eslint --ext .ts .",
+    "lint": "cross-env \"ESLINT_USE_FLAT_CONFIG=false\" eslint --ext .ts .",
     "postinstall": "patch-package && husky",
     "prebuild": "yarn clean-dist",
     "prerelease": "yarn build",
@@ -45,7 +45,7 @@
     "babel-jest": "29.7.0",
     "bob-the-bundler": "7.0.1",
     "cross-env": "7.0.3",
-    "eslint": "8.57.0",
+    "eslint": "9.5.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.29.1",
@@ -66,7 +66,7 @@
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
-      "eslint --fix"
+      "cross-env \"ESLINT_USE_FLAT_CONFIG=false\" eslint --fix"
     ],
     "**/*.{ts,tsx,graphql,yml,md,mdx,js,json}": [
       "prettier --write"
