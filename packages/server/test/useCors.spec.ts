@@ -100,5 +100,22 @@ describe('CORS', () => {
         expect(headers?.['Access-Control-Allow-Origin']).toBeUndefined();
       });
     });
+    describe('Vary header', () => {
+      const corsOptionsWithMultipleOrigins: CORSOptions = {
+        origin: ['http://localhost:4000', 'http://localhost:4001'],
+      };
+      it('should return vary with multiple values', () => {
+        const request = new Request('http://localhost:4002/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            origin: 'http://localhost:4001',
+            'access-control-request-headers': 'x-foobar',
+          },
+        });
+        const headers = getCORSHeadersByRequestAndOptions(request, corsOptionsWithMultipleOrigins);
+        expect(headers?.Vary).toBe('Origin, Access-Control-Request-Headers');
+      });
+    });
   });
 });
