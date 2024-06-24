@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.36
+
+### Patch Changes
+
+- [#1407](https://github.com/ardatan/whatwg-node/pull/1407)
+  [`ebbc85b`](https://github.com/ardatan/whatwg-node/commit/ebbc85b5dbf1fad554718276f2892012c59cbabe)
+  Thanks [@Akryum](https://github.com/Akryum)! - Vary: Access-Control-Request-Headers would
+  overwrite Vary: Origin
+
 ## 0.9.35
 
 ### Patch Changes
