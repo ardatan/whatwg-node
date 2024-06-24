@@ -43,7 +43,7 @@ jobs:
 
       - name: Use Bun
         if: matrix.plan == 'bun'
-        uses: oven-sh/setup-bun@v1
+        uses: oven-sh/setup-bun@v2
 
       - name: Cache Node Modules
         uses: actions/cache@v4
