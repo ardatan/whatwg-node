@@ -77,8 +77,9 @@ export function getCORSHeadersByRequestAndOptions(
       headers['Access-Control-Allow-Headers'] = requestHeaders;
       if (headers['Vary']) {
         headers['Vary'] += ', Access-Control-Request-Headers';
+      } else {
+        headers['Vary'] = 'Access-Control-Request-Headers';
       }
-      headers['Vary'] = 'Access-Control-Request-Headers';
     }
   }
 
