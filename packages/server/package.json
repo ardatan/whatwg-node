@@ -35,7 +35,7 @@
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
     "@whatwg-node/fetch": "^0.9.17",
-    "tslib": "^2.3.1"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
     "@types/express": "4.17.21",
