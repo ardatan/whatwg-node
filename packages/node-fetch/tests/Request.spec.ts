@@ -1,3 +1,4 @@
+import { Agent } from 'http';
 import { PonyfillRequest } from '../src/Request.js';
 
 describe('Request', () => {
@@ -30,5 +31,15 @@ describe('Request', () => {
     expect(secondPony.method).toBe('PUT');
     expect(secondPony.headers.get('x-test')).toBe('1');
     expect(await secondPony.text()).toBe('test');
+  });
+
+  it('should allow agent as RequestInfo and RequestInit', async () => {
+    const agent = new Agent();
+    const firstPony = new PonyfillRequest('http://a', {
+      agent,
+    });
+    const secondPony = new PonyfillRequest(firstPony);
+    expect(firstPony.agent).toBe(agent);
+    expect(secondPony.agent).toBe(agent);
   });
 });
