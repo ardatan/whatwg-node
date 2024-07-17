@@ -1,5 +1,5 @@
 ---
-'@whatwg-node/server': major
+'@whatwg-node/server': minor
 ---
 
 Fix context type to expose the `waitUntil` method.
