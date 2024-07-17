@@ -13,6 +13,7 @@ import {
   ServerAdapterBaseObject,
   ServerAdapterObject,
   ServerAdapterRequestHandler,
+  type ServerAdapterInitialContext,
 } from './types.js';
 import {
   completeAssign,
@@ -98,8 +99,8 @@ function createServerAdapter<
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
 
-  const onRequestHooks: OnRequestHook<TServerContext>[] = [];
-  const onResponseHooks: OnResponseHook<TServerContext>[] = [];
+  const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
+  const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
@@ -112,9 +113,9 @@ function createServerAdapter<
     }
   }
 
-  const handleRequest: ServerAdapterRequestHandler<TServerContext> =
+  const handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
     onRequestHooks.length > 0 || onResponseHooks.length > 0
-      ? function handleRequest(request: Request, serverContext: TServerContext) {
+      ? function handleRequest(request, serverContext) {
           let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
           let response: Response | undefined;
           if (onRequestHooks.length === 0) {
@@ -150,7 +151,9 @@ function createServerAdapter<
             if (onRequestHooks.length === 0) {
               return response;
             }
-            const onResponseHookPayload: OnResponseEventPayload<TServerContext> = {
+            const onResponseHookPayload: OnResponseEventPayload<
+              TServerContext & ServerAdapterInitialContext
+            > = {
               request,
               response,
               serverContext,

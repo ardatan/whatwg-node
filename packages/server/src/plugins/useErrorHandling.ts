@@ -52,10 +52,9 @@ export function useErrorHandling<TServerContext>(
   return {
     onRequest({ requestHandler, setRequestHandler, fetchAPI }) {
       const errorHandler = onError || createDefaultErrorHandler<TServerContext>(fetchAPI.Response);
-      setRequestHandler(function handlerWithErrorHandling(
-        request: Request,
-        serverContext: TServerContext,
-      ): Promise<Response> | Response {
+      setRequestHandler(function handlerWithErrorHandling(request, serverContext):
+        | Promise<Response>
+        | Response {
         try {
           const response$ = requestHandler(request, serverContext);
           if (isPromise(response$)) {
