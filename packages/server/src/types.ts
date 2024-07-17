@@ -121,7 +121,7 @@ export type ServerAdapter<
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
-  ctx: TServerContext,
+  ctx: TServerContext & ServerAdapterInitialContext,
 ) => Promise<Response> | Response;
 
 export type ServerAdapterNodeContext = {
