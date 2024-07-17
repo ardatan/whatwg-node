@@ -27,7 +27,6 @@ import {
   isServerResponse,
   iterateAsyncVoid,
   NodeRequest,
-  nodeRequestResponseMap,
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
@@ -183,13 +182,6 @@ function createServerAdapter<
         }
       : givenHandleRequest;
 
-  // TODO: Remove this on the next major version
-  function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
-    return handleRequest(request, serverContext);
-  }
-
   function handleNodeRequestAndResponse(
     nodeRequest: NodeRequest,
     nodeResponseOrContainer: NodeResponse | { raw: NodeResponse },
@@ -197,40 +189,45 @@ function createServerAdapter<
   ) {
     const nodeResponse: NodeResponse =
       (nodeResponseOrContainer as any).raw || nodeResponseOrContainer;
-    nodeRequestResponseMap.set(nodeRequest, nodeResponse);
-    return handleNodeRequest(nodeRequest, ...ctx);
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
+    const request = normalizeNodeRequest(nodeRequest, nodeResponse, fetchAPI.Request);
+    return handleRequest(request, serverContext);
   }
 
   function requestListener(
     nodeRequest: NodeRequest,
-    serverResponse: NodeResponse,
+    nodeResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ) {
     const waitUntilPromises: Promise<unknown>[] = [];
     const defaultServerContext = {
       req: nodeRequest,
-      res: serverResponse,
+      res: nodeResponse,
       waitUntil(cb: Promise<unknown>) {
         waitUntilPromises.push(cb.catch(err => console.error(err)));
       },
     };
-    nodeRequestResponseMap.set(nodeRequest, serverResponse);
     let response$: Response | Promise<Response> | undefined;
     try {
-      response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
+      response$ = handleNodeRequestAndResponse(
+        nodeRequest,
+        nodeResponse,
+        defaultServerContext as any,
+        ...ctx,
+      );
     } catch (err: any) {
       response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
     }
     if (isPromise(response$)) {
       return response$
         .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, serverResponse, nodeRequest))
+        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest))
         .catch(err => {
           console.error(`Unexpected error while handling request: ${err.message || err}`);
         });
     }
     try {
-      return sendNodeResponse(response$, serverResponse, nodeRequest);
+      return sendNodeResponse(response$, nodeResponse, nodeRequest);
     } catch (err: any) {
       console.error(`Unexpected error while handling request: ${err.message || err}`);
     }
@@ -395,9 +392,8 @@ function createServerAdapter<
   };
 
   const adapterObj: ServerAdapterObject<TServerContext> = {
-    handleRequest,
+    handleRequest: handleRequestWithWaitUntil,
     fetch: fetchFn,
-    handleNodeRequest,
     handleNodeRequestAndResponse,
     requestListener,
     handleEvent,

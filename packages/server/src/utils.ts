@@ -120,10 +120,9 @@ export class ServerAdapterRequestAbortSignal extends EventTarget implements Abor
 
 let bunNodeCompatModeWarned = false;
 
-export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
-
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
+  nodeResponse: NodeResponse,
   RequestCtor: typeof Request,
 ): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
@@ -138,9 +137,7 @@ export function normalizeNodeRequest(
 
   let signal: AbortSignal | undefined;
 
-  const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
-  nodeRequestResponseMap.delete(nodeRequest);
-  if (nodeResponse?.once) {
+  if (nodeResponse.once) {
     let sendAbortSignal: VoidFunction;
 
     // If ponyfilled
