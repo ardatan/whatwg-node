@@ -314,7 +314,7 @@ function createServerAdapter<
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
     const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
-    let waitUntilPromises: Promise<void>[] | undefined;
+    let waitUntilPromises: Promise<unknown>[] | undefined;
     const serverContext =
       filteredCtxParts.length > 1
         ? completeAssign({}, ...filteredCtxParts)
