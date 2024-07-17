@@ -15,7 +15,7 @@ export type OnRequestHook<TServerContext> = (
 
 export interface OnRequestEventPayload<TServerContext> {
   request: Request;
-  serverContext: TServerContext | undefined;
+  serverContext: TServerContext;
   fetchAPI: FetchAPI;
   requestHandler: ServerAdapterRequestHandler<TServerContext>;
   setRequestHandler(newRequestHandler: ServerAdapterRequestHandler<TServerContext>): void;
@@ -29,6 +29,6 @@ export type OnResponseHook<TServerContext> = (
 
 export interface OnResponseEventPayload<TServerContext> {
   request: Request;
-  serverContext: TServerContext | undefined;
+  serverContext: TServerContext;
   response: Response;
 }
