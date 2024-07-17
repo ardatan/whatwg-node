@@ -134,5 +134,12 @@ export type WaitUntilFn = (promise: Promise<void> | void) => void;
 export type FetchAPI = ReturnType<typeof import('@whatwg-node/fetch').createFetch>;
 
 export type ServerAdapterInitialContext = {
+  /**
+   * Register a promise that should be waited in the background for before the server process is exited.
+   *
+   * This also avoids unhandled promise rejections, which would otherwise cause the process to exit on some environment like Node.
+   * @param promise The promise to wait for
+   * @returns
+   */
   waitUntil: WaitUntilFn;
 };
