@@ -1,6 +1,6 @@
 import { Readable } from 'stream';
 import busboy from 'busboy';
-import { PonyfillBlob } from './Blob.js';
+import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
@@ -229,22 +229,29 @@ export class PonyfillBody<TJSON = any> implements Body {
     });
   }
 
-  arrayBuffer(): Promise<Buffer> {
+  buffer(): Promise<Buffer> {
     if (this._buffer) {
       return fakePromise(this._buffer);
     }
     if (this.bodyType === BodyInitType.Blob) {
-      if (this.bodyInit instanceof PonyfillBlob) {
-        return this.bodyInit.arrayBuffer().then(buf => {
-          this._buffer = buf as Buffer;
+      if (hasBufferMethod(this.bodyInit)) {
+        return this.bodyInit.buffer().then(buf => {
+          this._buffer = buf;
           return this._buffer;
         });
       }
-      const bodyInitTyped = this.bodyInit as Blob;
-      return bodyInitTyped.arrayBuffer().then(arrayBuffer => {
-        this._buffer = Buffer.from(arrayBuffer, undefined, bodyInitTyped.size);
-        return this._buffer;
-      });
+      if (hasBytesMethod(this.bodyInit)) {
+        return this.bodyInit.bytes().then(bytes => {
+          this._buffer = Buffer.from(bytes);
+          return this._buffer;
+        });
+      }
+      if (hasArrayBufferMethod(this.bodyInit)) {
+        return this.bodyInit.arrayBuffer().then(buf => {
+          this._buffer = Buffer.from(buf, undefined, buf.byteLength);
+          return this._buffer;
+        });
+      }
     }
     return this._collectChunksFromReadable().then(chunks => {
       if (chunks.length === 1) {
@@ -256,6 +263,14 @@ export class PonyfillBody<TJSON = any> implements Body {
     });
   }
 
+  bytes(): Promise<Uint8Array> {
+    return this.buffer();
+  }
+
+  arrayBuffer(): Promise<ArrayBuffer> {
+    return this.buffer();
+  }
+
   _json: TJSON | null = null;
 
   json(): Promise<TJSON> {
@@ -263,7 +278,14 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise(this._json);
     }
     return this.text().then(text => {
-      this._json = JSON.parse(text);
+      try {
+        this._json = JSON.parse(text);
+      } catch (e) {
+        if (e instanceof SyntaxError) {
+          e.message += `, "${text}" is not valid JSON`;
+        }
+        throw e;
+      }
       return this._json!;
     });
   }
@@ -278,7 +300,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._text = this.bodyInit as string;
       return fakePromise(this._text);
     }
-    return this.arrayBuffer().then(buffer => {
+    return this.buffer().then(buffer => {
       this._text = buffer.toString('utf-8');
       return this._text;
     });

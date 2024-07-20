@@ -19,8 +19,8 @@ describe('data uris', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('Content-Type')).toBe(mimeType);
     expect(res.headers.get('Content-Length')).toBe(length.toString());
-    const buf = await res.arrayBuffer();
-    expect(buf.toString('base64')).toBe(base64Part);
+    const buf = await res.bytes();
+    expect(Buffer.from(buf).toString('base64')).toBe(base64Part);
   });
   it('should accept data uri with specified charset', async () => {
     const r = await fetchPonyfill('data:text/plain;charset=UTF-8;page=21,the%20data:1234,5678');

@@ -82,8 +82,7 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
         policyResponseFrom(revalidationResponse),
       );
 
-      const newArrayBuffer = await revalidationResponse.arrayBuffer();
-      const newBody: BodyInit = modified ? newArrayBuffer : bodyInit;
+      const newBody: BodyInit = modified ? await getBytesFromBody(revalidationResponse) : bodyInit;
 
       return storeResponseAndReturnClone(
         cache,
@@ -113,11 +112,10 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
       ttl *= 2;
     }
 
-    const arrayBuffer = await response.arrayBuffer();
-    const uint8array = new Uint8Array(arrayBuffer);
+    const bytes = await getBytesFromBody(response);
     const entry = {
       policy: policy.toObject(),
-      bytes: Array.from(uint8array),
+      bytes: Array.from(bytes),
     };
 
     await cache.set(cacheKey, entry, {
@@ -128,7 +126,7 @@ export function fetchFactory({ fetch, Response, cache }: FetchacheOptions): Fetc
     // body can only be used once.
     // To avoid https://github.com/bitinn/node-fetch/issues/151, we don't use
     // response.clone() but create a new response from the consumed body
-    return new Response(uint8array, response);
+    return new Response(bytes, response);
   }
 }
 
@@ -177,4 +175,11 @@ export interface KeyValueCache<V = any> {
   get(key: string): Promise<V | undefined>;
   set(key: string, value: V, options?: KeyValueCacheSetOptions): Promise<void>;
   delete(key: string): Promise<boolean | void>;
+}
+
+function getBytesFromBody(body: Body) {
+  if ((body as any).bytes) {
+    return (body as any).bytes();
+  }
+  return body.arrayBuffer().then(buffer => new Uint8Array(buffer));
 }

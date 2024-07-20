@@ -31,8 +31,32 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
   }
 }
 
-function isBlob(obj: any): obj is Blob {
+export function hasBufferMethod(obj: any): obj is { buffer(): Promise<Buffer> } {
+  return obj != null && obj.buffer != null;
+}
+
+export function hasArrayBufferMethod(obj: any): obj is { arrayBuffer(): Promise<ArrayBuffer> } {
   return obj != null && obj.arrayBuffer != null;
+}
+
+export function hasBytesMethod(obj: any): obj is { bytes(): Promise<Uint8Array> } {
+  return obj != null && obj.bytes != null;
+}
+
+export function hasTextMethod(obj: any): obj is { text(): Promise<string> } {
+  return obj != null && obj.text != null;
+}
+
+export function hasSizeProperty(obj: any): obj is { size: number } {
+  return obj != null && typeof obj.size === 'number';
+}
+
+export function hasStreamMethod(obj: any): obj is { stream(): any } {
+  return obj != null && obj.stream != null;
+}
+
+export function hasBlobSignature(obj: any): obj is Blob {
+  return obj != null && obj[Symbol.toStringTag] === 'Blob';
 }
 
 // Will be removed after v14 reaches EOL
@@ -48,25 +72,61 @@ export class PonyfillBlob implements Blob {
     this.type = options?.type || 'application/octet-stream';
     this.encoding = options?.encoding || 'utf8';
     this._size = options?.size || null;
-    if (blobParts.length === 1 && isBlob(blobParts[0])) {
+    if (blobParts.length === 1 && hasBlobSignature(blobParts[0])) {
       return blobParts[0] as PonyfillBlob;
     }
   }
 
-  arrayBuffer() {
+  _buffer: Buffer | null = null;
+
+  buffer() {
+    if (this._buffer) {
+      return fakePromise(this._buffer);
+    }
     if (this.blobParts.length === 1) {
       const blobPart = this.blobParts[0];
-      if (isBlob(blobPart)) {
-        return blobPart.arrayBuffer() as Promise<Buffer>;
+      if (hasBufferMethod(blobPart)) {
+        return blobPart.buffer().then(buf => {
+          this._buffer = buf;
+          return this._buffer;
+        });
       }
-      return fakePromise(getBlobPartAsBuffer(blobPart));
+      if (hasBytesMethod(blobPart)) {
+        return blobPart.bytes().then(bytes => {
+          this._buffer = Buffer.from(bytes);
+          return this._buffer;
+        });
+      }
+      if (hasArrayBufferMethod(blobPart)) {
+        return blobPart.arrayBuffer().then(arrayBuf => {
+          this._buffer = Buffer.from(arrayBuf, undefined, blobPart.size);
+          return this._buffer;
+        });
+      }
+      this._buffer = getBlobPartAsBuffer(blobPart);
+      return fakePromise(this._buffer);
     }
+
     const jobs: Promise<void>[] = [];
     const bufferChunks: Buffer[] = this.blobParts.map((blobPart, i) => {
-      if (isBlob(blobPart)) {
+      if (hasBufferMethod(blobPart)) {
+        jobs.push(
+          blobPart.buffer().then(buf => {
+            bufferChunks[i] = buf;
+          }),
+        );
+        return undefined as any;
+      } else if (hasArrayBufferMethod(blobPart)) {
         jobs.push(
           blobPart.arrayBuffer().then(arrayBuf => {
             bufferChunks[i] = Buffer.from(arrayBuf, undefined, blobPart.size);
+          }),
+        );
+        return undefined as any;
+      } else if (hasBytesMethod(blobPart)) {
+        jobs.push(
+          blobPart.bytes().then(bytes => {
+            bufferChunks[i] = Buffer.from(bytes);
           }),
         );
         return undefined as any;
@@ -80,19 +140,36 @@ export class PonyfillBlob implements Blob {
     return fakePromise(Buffer.concat(bufferChunks, this._size || undefined));
   }
 
+  arrayBuffer(): Promise<ArrayBuffer> {
+    return this.buffer();
+  }
+
+  _text: string | null = null;
+
   text() {
+    if (this._text) {
+      return fakePromise(this._text);
+    }
     if (this.blobParts.length === 1) {
       const blobPart = this.blobParts[0];
       if (typeof blobPart === 'string') {
-        return fakePromise(blobPart);
+        this._text = blobPart;
+        return fakePromise(this._text);
       }
-      if (isBlob(blobPart)) {
-        return blobPart.text();
+      if (hasTextMethod(blobPart)) {
+        return blobPart.text().then(text => {
+          this._text = text;
+          return this._text;
+        });
       }
       const buf = getBlobPartAsBuffer(blobPart);
-      return fakePromise(buf.toString(this.encoding));
+      this._text = buf.toString(this.encoding);
+      return fakePromise(this._text);
     }
-    return this.arrayBuffer().then(buf => buf.toString(this.encoding));
+    return this.buffer().then(buf => {
+      this._text = buf.toString(this.encoding);
+      return this._text;
+    });
   }
 
   get size() {
@@ -101,7 +178,7 @@ export class PonyfillBlob implements Blob {
       for (const blobPart of this.blobParts) {
         if (typeof blobPart === 'string') {
           this._size += Buffer.byteLength(blobPart);
-        } else if (isBlob(blobPart)) {
+        } else if (hasSizeProperty(blobPart)) {
           this._size += blobPart.size;
         } else if (isArrayBufferView(blobPart)) {
           this._size += blobPart.byteLength;
@@ -114,13 +191,21 @@ export class PonyfillBlob implements Blob {
   stream(): any {
     if (this.blobParts.length === 1) {
       const blobPart = this.blobParts[0];
-      if (isBlob(blobPart)) {
+      if (hasStreamMethod(blobPart)) {
         return blobPart.stream();
       }
       const buf = getBlobPartAsBuffer(blobPart);
       return new PonyfillReadableStream({
         start: controller => {
           controller.enqueue(buf);
+          controller.close();
+        },
+      });
+    }
+    if (this._buffer != null) {
+      return new PonyfillReadableStream({
+        start: controller => {
+          controller.enqueue(this._buffer!);
           controller.close();
         },
       });
@@ -141,7 +226,18 @@ export class PonyfillBlob implements Blob {
           return;
         }
         if (blobPart) {
-          if (isBlob(blobPart)) {
+          if (hasBufferMethod(blobPart)) {
+            return blobPart.buffer().then(buf => {
+              controller.enqueue(buf);
+            });
+          }
+          if (hasBytesMethod(blobPart)) {
+            return blobPart.bytes().then(bytes => {
+              const buf = Buffer.from(bytes);
+              controller.enqueue(buf);
+            });
+          }
+          if (hasArrayBufferMethod(blobPart)) {
             return blobPart.arrayBuffer().then(arrayBuffer => {
               const buf = Buffer.from(arrayBuffer, undefined, blobPart.size);
               controller.enqueue(buf);
