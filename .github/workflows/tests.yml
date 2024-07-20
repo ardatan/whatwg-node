@@ -21,7 +21,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 22
+          nodeVersion: 22.4
       - name: Prettier Check
         run: yarn prettier:check
   lint:
@@ -35,7 +35,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 22
+          nodeVersion: 22.4
       - name: ESLint
         run: yarn lint
 
@@ -50,7 +50,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 22
+          nodeVersion: 22.4
       - name: Type Check
         run: yarn ts:check
 
@@ -64,7 +64,7 @@ jobs:
           - 8888:80
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [18, 20, 22.4]
       fail-fast: false
     steps:
       - name: Checkout Master
@@ -99,7 +99,7 @@ jobs:
           - 8888:80
     strategy:
       matrix:
-        node-version: [18, 22]
+        node-version: [18, 22.4]
       fail-fast: false
     steps:
       - name: Checkout Master
@@ -135,7 +135,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 22
+          nodeVersion: 22.4
       - name: Build Packages
         run: yarn build
       - name: Test ESM
