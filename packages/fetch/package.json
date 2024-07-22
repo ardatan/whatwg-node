@@ -25,7 +25,7 @@
   "sideEffects": false,
   "bob": false,
   "denoify": {
-    "index": "dist/global-ponyfill.js"
+    "index": "dist/esm-ponyfill.js"
   },
   "react-native": "dist/global-ponyfill.js"
 }
