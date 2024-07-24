@@ -7,7 +7,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
     onRequest({ request, setRequest, fetchAPI, endResponse }) {
       if (request.body) {
         const contentEncodingHeader = request.headers.get('content-encoding');
-        if (contentEncodingHeader) {
+        if (contentEncodingHeader && contentEncodingHeader !== 'none') {
           const contentEncodings = contentEncodingHeader?.split(',');
           if (
             !contentEncodings.every(encoding =>

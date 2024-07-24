@@ -7,10 +7,11 @@ describe('Compression', () => {
   const exampleData = JSON.stringify({
     hello: 'world',
   });
+  const encodings = [...getSupportedEncodings(), 'none'];
   describe('Adapter', () => {
     runTestsForEachFetchImpl(
       (_, { fetchAPI, createServerAdapter }) => {
-        for (const encoding of getSupportedEncodings()) {
+        for (const encoding of encodings) {
           describe(encoding, () => {
             it('from the server to the client with "accept-encoding"', async () => {
               const adapter = createServerAdapter(() => new fetchAPI.Response(exampleData), {
@@ -34,7 +35,15 @@ describe('Compression', () => {
                   plugins: [useContentEncoding()],
                 },
               );
-              const stream = new CompressionStream(encoding);
+              if (encoding === 'none') {
+                const res = await adapter.fetch('/', {
+                  method: 'POST',
+                  body: exampleData,
+                });
+                await expect(res.text()).resolves.toEqual(exampleData);
+                return;
+              }
+              const stream = new CompressionStream(encoding as CompressionFormat);
               const writer = stream.writable.getWriter();
               writer.write(exampleData);
               writer.close();
@@ -77,7 +86,7 @@ describe('Compression', () => {
         expect(acceptedEncodings).toContain('deflate');
         await expect(res.text()).resolves.toEqual(exampleData);
       });
-      for (const encoding of getSupportedEncodings()) {
+      for (const encoding of encodings) {
         describe(encoding, () => {
           it(`from the server to the client`, async () => {
             const adapter = createServerAdapter(() => new fetchAPI.Response(exampleData), {
@@ -89,7 +98,9 @@ describe('Compression', () => {
                 'accept-encoding': encoding,
               },
             });
-            expect(res.headers.get('content-encoding')).toEqual(encoding);
+            expect(res.headers.get('content-encoding')).toEqual(
+              encoding === 'none' ? null : encoding,
+            );
             expect(res.status).toEqual(200);
             await expect(res.text()).resolves.toEqual(exampleData);
           });
@@ -104,7 +115,15 @@ describe('Compression', () => {
               },
             );
             server.addOnceHandler(adapter);
-            const stream = new CompressionStream(encoding);
+            if (encoding === 'none') {
+              const res = await fetchAPI.fetch(server.url, {
+                method: 'POST',
+                body: exampleData,
+              });
+              await expect(res.text()).resolves.toEqual(exampleData);
+              return;
+            }
+            const stream = new CompressionStream(encoding as CompressionFormat);
             const writer = stream.writable.getWriter();
             writer.write(exampleData);
             writer.close();

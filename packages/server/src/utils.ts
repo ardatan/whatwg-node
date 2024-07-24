@@ -613,7 +613,7 @@ export function getSupportedEncodings() {
 
 export function handleResponseDecompression(response: Response, ResponseCtor: typeof Response) {
   const contentEncodingHeader = response?.headers.get('content-encoding');
-  if (!contentEncodingHeader) {
+  if (!contentEncodingHeader || contentEncodingHeader === 'none') {
     return response;
   }
   if (!response?.body) {
