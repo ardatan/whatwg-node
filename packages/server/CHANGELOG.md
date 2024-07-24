@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.38
+
+### Patch Changes
+
+- [`f7bcbea`](https://github.com/ardatan/whatwg-node/commit/f7bcbea0c0a940870efb47faeb4b64d07d990ce4)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support \`Content-Encoding: none\`
+
 ## 0.9.37
 
 ### Patch Changes
