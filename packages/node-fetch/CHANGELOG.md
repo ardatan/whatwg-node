@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.5.14
+
+### Patch Changes
+
+- [#1481](https://github.com/ardatan/whatwg-node/pull/1481)
+  [`481bdfd`](https://github.com/ardatan/whatwg-node/commit/481bdfd0734b6c2c70b17dccb701b068f8aa06d9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Send supported encoding formats in
+  \`accept-encoding\` header by default
+
 ## 0.5.13
 
 ### Patch Changes
