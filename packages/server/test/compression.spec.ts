@@ -1,5 +1,5 @@
 import { useContentEncoding } from '../src/plugins/useContentEncoding';
-import { SUPPORTED_ENCODINGS } from '../src/utils';
+import { getSupportedEncodings } from '../src/utils';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
@@ -10,9 +10,9 @@ describe('Compression', () => {
   describe('Adapter', () => {
     runTestsForEachFetchImpl(
       (_, { fetchAPI, createServerAdapter }) => {
-        for (const encoding of SUPPORTED_ENCODINGS) {
+        for (const encoding of getSupportedEncodings()) {
           describe(encoding, () => {
-            it('from the server to the client', async () => {
+            it('from the server to the client with "accept-encoding"', async () => {
               const adapter = createServerAdapter(() => new fetchAPI.Response(exampleData), {
                 plugins: [useContentEncoding()],
               });
@@ -56,7 +56,28 @@ describe('Compression', () => {
   });
   runTestsForEachFetchImpl((_, { fetchAPI, createServerAdapter }) => {
     runTestsForEachServerImpl(server => {
-      for (const encoding of SUPPORTED_ENCODINGS) {
+      it(`from the server to the client without 'accept-encoding'`, async () => {
+        let req: Request | undefined;
+        const adapter = createServerAdapter(
+          passedReq => {
+            req = passedReq;
+            return new fetchAPI.Response(exampleData);
+          },
+          {
+            plugins: [useContentEncoding()],
+          },
+        );
+        server.addOnceHandler(adapter);
+        const res = await fetchAPI.fetch(server.url);
+        expect(res.headers.get('content-encoding')).toBeTruthy();
+        expect(res.status).toEqual(200);
+        const acceptedEncodings = req?.headers.get('accept-encoding');
+        expect(acceptedEncodings).toBeTruthy();
+        expect(acceptedEncodings).toContain('gzip');
+        expect(acceptedEncodings).toContain('deflate');
+        await expect(res.text()).resolves.toEqual(exampleData);
+      });
+      for (const encoding of getSupportedEncodings()) {
         describe(encoding, () => {
           it(`from the server to the client`, async () => {
             const adapter = createServerAdapter(() => new fetchAPI.Response(exampleData), {

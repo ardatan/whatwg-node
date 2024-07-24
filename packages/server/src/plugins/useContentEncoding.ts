@@ -1,4 +1,4 @@
-import { decompressedResponseMap, SUPPORTED_ENCODINGS } from '../utils.js';
+import { decompressedResponseMap, getSupportedEncodings } from '../utils.js';
 import type { ServerAdapterPlugin } from './types.js';
 
 export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServerContext> {
@@ -11,7 +11,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
           const contentEncodings = contentEncodingHeader?.split(',');
           if (
             !contentEncodings.every(encoding =>
-              SUPPORTED_ENCODINGS.includes(encoding as CompressionFormat),
+              getSupportedEncodings().includes(encoding as CompressionFormat),
             )
           ) {
             endResponse(
@@ -45,7 +45,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
         const encodings = encodingMap.get(request);
         if (encodings) {
           const supportedEncoding = encodings.find(encoding =>
-            SUPPORTED_ENCODINGS.includes(encoding as CompressionFormat),
+            getSupportedEncodings().includes(encoding as CompressionFormat),
           );
           if (supportedEncoding) {
             const newHeaders = new fetchAPI.Headers(response.headers);
