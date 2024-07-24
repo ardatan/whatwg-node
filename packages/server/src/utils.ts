@@ -589,3 +589,40 @@ export function handleAbortSignalAndPromiseResponse(
   }
   return response$;
 }
+
+export const decompressedResponseMap = new WeakMap<Response, Response>();
+
+export const SUPPORTED_ENCODINGS: CompressionFormat[] = ['deflate', 'gzip'];
+
+export function handleResponseDecompression(response: Response, ResponseCtor: typeof Response) {
+  if (!response.body) {
+    return response;
+  }
+  const contentEncodingHeader = response.headers.get('content-encoding');
+  if (!contentEncodingHeader) {
+    return response;
+  }
+  let decompressedResponse = decompressedResponseMap.get(response);
+  if (!decompressedResponse || decompressedResponse.bodyUsed) {
+    let decompressedBody = response.body;
+    const contentEncodings = contentEncodingHeader.split(',');
+    if (
+      !contentEncodings?.every(encoding =>
+        SUPPORTED_ENCODINGS.includes(encoding as CompressionFormat),
+      )
+    ) {
+      return new ResponseCtor('Unsupported encoding' + contentEncodingHeader, {
+        status: 415,
+        statusText: 'Unsupported Media Type',
+      });
+    }
+    for (const contentEncoding of contentEncodings) {
+      decompressedBody = decompressedBody.pipeThrough(
+        new DecompressionStream(contentEncoding as CompressionFormat),
+      );
+    }
+    decompressedResponse = new ResponseCtor(decompressedBody, response);
+    decompressedResponseMap.set(response, decompressedResponse);
+  }
+  return decompressedResponse;
+}
