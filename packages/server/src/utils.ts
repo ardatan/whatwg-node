@@ -595,7 +595,7 @@ export const decompressedResponseMap = new WeakMap<Response, Response>();
 export const SUPPORTED_ENCODINGS: CompressionFormat[] = ['deflate', 'gzip'];
 
 export function handleResponseDecompression(response: Response, ResponseCtor: typeof Response) {
-  const contentEncodingHeader = response.headers.get('content-encoding');
+  const contentEncodingHeader = response?.headers.get('content-encoding');
   if (!contentEncodingHeader) {
     return response;
   }
