@@ -611,7 +611,7 @@ export function handleResponseDecompression(response: Response, ResponseCtor: ty
         SUPPORTED_ENCODINGS.includes(encoding as CompressionFormat),
       )
     ) {
-      return new ResponseCtor('Unsupported encoding' + contentEncodingHeader, {
+      return new ResponseCtor(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
         status: 415,
         statusText: 'Unsupported Media Type',
       });

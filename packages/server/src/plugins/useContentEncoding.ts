@@ -15,7 +15,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
             )
           ) {
             endResponse(
-              new fetchAPI.Response('Unsupported encoding: ' + contentEncodingHeader, {
+              new fetchAPI.Response(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
                 status: 415,
                 statusText: 'Unsupported Media Type',
               }),
