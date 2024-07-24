@@ -596,7 +596,8 @@ let SUPPORTED_ENCODINGS: CompressionFormat[];
 
 export function getSupportedEncodings() {
   if (!SUPPORTED_ENCODINGS) {
-    const possibleEncodings: CompressionFormat[] = ['deflate', 'deflate-raw', 'gzip'];
+    // TODO: deflate-raw is buggy in Node.js
+    const possibleEncodings: CompressionFormat[] = ['deflate', 'gzip' /* 'deflate-raw' */];
     SUPPORTED_ENCODINGS = possibleEncodings.filter(encoding => {
       try {
         // eslint-disable-next-line no-new
@@ -623,7 +624,7 @@ export function handleResponseDecompression(response: Response, ResponseCtor: ty
     let decompressedBody = response.body;
     const contentEncodings = contentEncodingHeader.split(',');
     if (
-      !contentEncodings?.every(encoding =>
+      !contentEncodings.every(encoding =>
         getSupportedEncodings().includes(encoding as CompressionFormat),
       )
     ) {
