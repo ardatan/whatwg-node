@@ -1,5 +1,5 @@
-import { decompressedResponseMap, SUPPORTED_ENCODINGS } from '../utils';
-import { ServerAdapterPlugin } from './types';
+import { decompressedResponseMap, SUPPORTED_ENCODINGS } from '../utils.js';
+import type { ServerAdapterPlugin } from './types.js';
 
 export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServerContext> {
   const encodingMap = new WeakMap<Request, string[]>();
