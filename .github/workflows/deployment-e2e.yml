@@ -30,7 +30,7 @@ jobs:
       - name: Use Node 22
         uses: actions/setup-node@master
         with:
-          node-version: 22.4
+          node-version: 22
 
       - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
