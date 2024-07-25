@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.41
+
+### Patch Changes
+
+- [`d238c52`](https://github.com/ardatan/whatwg-node/commit/d238c5213a9e80afc393bbfc7d48bc29752f1661)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not apply decompression for fetch method
+
 ## 0.9.40
 
 ### Patch Changes
