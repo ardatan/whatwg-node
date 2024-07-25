@@ -24,7 +24,10 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
    */
-  handleRequest: (request: Request, ctx: TServerContext) => Promise<Response> | Response;
+  handleRequest: (
+    request: Request,
+    ctx: TServerContext & Partial<ServerAdapterInitialContext>,
+  ) => Promise<Response> | Response;
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
@@ -48,10 +51,12 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   ): Promise<Response> | Response;
   /**
    * This function takes Node's request object and returns a WHATWG Fetch spec compliant `Response` object.
+   *
+   * @deprecated Use `handleNodeRequestAndResponse` instead.
    **/
   handleNodeRequest(
     nodeRequest: NodeRequest,
-    ...ctx: Partial<TServerContext>[]
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
   ): Promise<Response> | Response;
   /**
    * This function takes Node's request and response objects and returns a WHATWG Fetch spec compliant `Response` object.
@@ -59,7 +64,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   handleNodeRequestAndResponse(
     nodeRequest: NodeRequest,
     nodeResponseOrContainer: { raw: NodeResponse } | NodeResponse,
-    ...ctx: Partial<TServerContext>[]
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
   ): Promise<Response> | Response;
   /**
    * A request listener function that can be used with any Node server variation.
@@ -68,14 +73,31 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
 
   handleUWS: UWSHandler;
 
-  handle(req: NodeRequest, res: NodeResponse, ...ctx: Partial<TServerContext>[]): Promise<void>;
-  handle(requestLike: RequestLike, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
-  handle(request: Request, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
-  handle(fetchEvent: FetchEvent & Partial<TServerContext>, ...ctx: Partial<TServerContext>[]): void;
-  handle(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]): Promise<void>;
   handle(
-    container: { request: Request } & Partial<TServerContext>,
+    req: NodeRequest,
+    res: NodeResponse,
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
+  ): Promise<void>;
+  handle(
+    requestLike: RequestLike,
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
+  ): Promise<Response> | Response;
+  handle(
+    request: Request,
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
+  ): Promise<Response> | Response;
+  handle(
+    fetchEvent: FetchEvent & Partial<TServerContext & ServerAdapterInitialContext>,
     ...ctx: Partial<TServerContext>[]
+  ): void;
+  handle(
+    res: UWSResponse,
+    req: UWSRequest,
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
+  ): Promise<void>;
+  handle(
+    container: { request: Request } & Partial<TServerContext & ServerAdapterInitialContext>,
+    ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
   ): Promise<Response> | Response;
 }
 
@@ -101,7 +123,7 @@ export type ServerAdapter<
 
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
-  ctx: TServerContext,
+  ctx: TServerContext & ServerAdapterInitialContext,
 ) => Promise<Response> | Response;
 
 export type ServerAdapterNodeContext = {
@@ -109,6 +131,17 @@ export type ServerAdapterNodeContext = {
   res: NodeResponse;
 };
 
-export type WaitUntilFn = (promise: Promise<void> | void) => void;
+export type WaitUntilFn = (promise: Promise<unknown>) => void;
 
 export type FetchAPI = ReturnType<typeof import('@whatwg-node/fetch').createFetch>;
+
+export type ServerAdapterInitialContext = {
+  /**
+   * Register a promise that should be waited in the background for before the server process is exited.
+   *
+   * This also avoids unhandled promise rejections, which would otherwise cause the process to exit on some environment like Node.
+   * @param promise The promise to wait for
+   * @returns
+   */
+  waitUntil: WaitUntilFn;
+};

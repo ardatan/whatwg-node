@@ -13,6 +13,7 @@ import {
   ServerAdapterBaseObject,
   ServerAdapterObject,
   ServerAdapterRequestHandler,
+  type ServerAdapterInitialContext,
 } from './types.js';
 import {
   completeAssign,
@@ -99,8 +100,8 @@ function createServerAdapter<
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
 
-  const onRequestHooks: OnRequestHook<TServerContext>[] = [];
-  const onResponseHooks: OnResponseHook<TServerContext>[] = [];
+  const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
+  const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
@@ -113,9 +114,9 @@ function createServerAdapter<
     }
   }
 
-  const handleRequest: ServerAdapterRequestHandler<TServerContext> =
+  const handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
     onRequestHooks.length > 0 || onResponseHooks.length > 0
-      ? function handleRequest(request: Request, serverContext: TServerContext) {
+      ? function handleRequest(request, serverContext) {
           let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
           let response: Response | undefined;
           if (onRequestHooks.length === 0) {
@@ -154,7 +155,9 @@ function createServerAdapter<
             if (onResponseHooks.length === 0) {
               return response;
             }
-            const onResponseHookPayload: OnResponseEventPayload<TServerContext> = {
+            const onResponseHookPayload: OnResponseEventPayload<
+              TServerContext & ServerAdapterInitialContext
+            > = {
               request,
               response,
               serverContext,
@@ -208,34 +211,38 @@ function createServerAdapter<
 
   function requestListener(
     nodeRequest: NodeRequest,
-    serverResponse: NodeResponse,
+    nodeResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ) {
     const waitUntilPromises: Promise<unknown>[] = [];
     const defaultServerContext = {
       req: nodeRequest,
-      res: serverResponse,
+      res: nodeResponse,
       waitUntil(cb: Promise<unknown>) {
         waitUntilPromises.push(cb.catch(err => console.error(err)));
       },
     };
-    nodeRequestResponseMap.set(nodeRequest, serverResponse);
     let response$: Response | Promise<Response> | undefined;
     try {
-      response$ = handleNodeRequest(nodeRequest, defaultServerContext as any, ...ctx);
+      response$ = handleNodeRequestAndResponse(
+        nodeRequest,
+        nodeResponse,
+        defaultServerContext as any,
+        ...ctx,
+      );
     } catch (err: any) {
       response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
     }
     if (isPromise(response$)) {
       return response$
         .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, serverResponse, nodeRequest))
+        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest))
         .catch(err => {
           console.error(`Unexpected error while handling request: ${err.message || err}`);
         });
     }
     try {
-      return sendNodeResponse(response$, serverResponse, nodeRequest);
+      return sendNodeResponse(response$, nodeResponse, nodeRequest);
     } catch (err: any) {
       console.error(`Unexpected error while handling request: ${err.message || err}`);
     }
@@ -322,7 +329,7 @@ function createServerAdapter<
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
     const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
-    let waitUntilPromises: Promise<void>[] | undefined;
+    let waitUntilPromises: Promise<unknown>[] | undefined;
     const serverContext =
       filteredCtxParts.length > 1
         ? completeAssign({}, ...filteredCtxParts)
@@ -407,7 +414,7 @@ function createServerAdapter<
   };
 
   const adapterObj: ServerAdapterObject<TServerContext> = {
-    handleRequest,
+    handleRequest: handleRequestWithWaitUntil,
     fetch: fetchFn,
     handleNodeRequest,
     handleNodeRequestAndResponse,

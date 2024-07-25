@@ -1,8 +1,12 @@
-import { FetchAPI, ServerAdapterRequestHandler } from '../types.js';
+import {
+  FetchAPI,
+  ServerAdapterRequestHandler,
+  type ServerAdapterInitialContext,
+} from '../types.js';
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
-  onRequest?: OnRequestHook<TServerContext>;
-  onResponse?: OnResponseHook<TServerContext>;
+  onRequest?: OnRequestHook<TServerContext & ServerAdapterInitialContext>;
+  onResponse?: OnResponseHook<TServerContext & ServerAdapterInitialContext>;
 }
 
 export type OnRequestHook<TServerContext> = (
@@ -12,7 +16,7 @@ export type OnRequestHook<TServerContext> = (
 export interface OnRequestEventPayload<TServerContext> {
   request: Request;
   setRequest(newRequest: Request): void;
-  serverContext: TServerContext | undefined;
+  serverContext: TServerContext;
   fetchAPI: FetchAPI;
   requestHandler: ServerAdapterRequestHandler<TServerContext>;
   setRequestHandler(newRequestHandler: ServerAdapterRequestHandler<TServerContext>): void;
@@ -26,7 +30,7 @@ export type OnResponseHook<TServerContext> = (
 
 export interface OnResponseEventPayload<TServerContext> {
   request: Request;
-  serverContext: TServerContext | undefined;
+  serverContext: TServerContext;
   response: Response;
   setResponse(newResponse: Response): void;
   fetchAPI: FetchAPI;
