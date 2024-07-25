@@ -4,9 +4,7 @@ import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
 describe('Compression', () => {
-  const exampleData = JSON.stringify({
-    hello: 'world',
-  });
+  const exampleData = JSON.stringify(new Array(1000).fill('Hello, World!').join(''));
   const encodings = [...getSupportedEncodings(), 'none'];
   describe('Adapter', () => {
     runTestsForEachFetchImpl(
@@ -29,7 +27,10 @@ describe('Compression', () => {
               const adapter = createServerAdapter(
                 async req => {
                   const body = await req.text();
-                  return new fetchAPI.Response(body);
+                  return fetchAPI.Response.json({
+                    body,
+                    contentLength: req.headers.get('content-length'),
+                  });
                 },
                 {
                   plugins: [useContentEncoding()],
@@ -40,22 +41,38 @@ describe('Compression', () => {
                   method: 'POST',
                   body: exampleData,
                 });
-                await expect(res.text()).resolves.toEqual(exampleData);
+                await expect(res.json()).resolves.toEqual({
+                  body: exampleData,
+                  contentLength: String(Buffer.byteLength(exampleData)),
+                });
                 return;
               }
               const stream = new CompressionStream(encoding as CompressionFormat);
               const writer = stream.writable.getWriter();
               writer.write(exampleData);
               writer.close();
+              const chunks: number[] = [];
+              const reader = stream.readable.getReader();
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                  reader.releaseLock();
+                  break;
+                } else if (value) {
+                  chunks.push(...value);
+                }
+              }
+              const uint8Array = new Uint8Array(chunks);
               const res = await adapter.fetch('/', {
                 method: 'POST',
                 headers: {
                   'content-encoding': encoding,
                 },
-                body: stream.readable,
-                duplex: 'half',
+                body: uint8Array,
               });
-              await expect(res.text()).resolves.toEqual(exampleData);
+              const { body, contentLength } = await res.json();
+              expect(body).toEqual(exampleData);
+              expect(Number(contentLength)).toBeLessThan(Buffer.byteLength(body));
             });
           });
         }
@@ -84,14 +101,26 @@ describe('Compression', () => {
         expect(acceptedEncodings).toBeTruthy();
         expect(acceptedEncodings).toContain('gzip');
         expect(acceptedEncodings).toContain('deflate');
-        await expect(res.text()).resolves.toEqual(exampleData);
+        const returnedData = await res.text();
+        expect(returnedData).toEqual(exampleData);
+        expect(Number(res.headers.get('content-length'))).toBeLessThan(
+          Buffer.byteLength(exampleData),
+        );
       });
       for (const encoding of encodings) {
         describe(encoding, () => {
           it(`from the server to the client`, async () => {
-            const adapter = createServerAdapter(() => new fetchAPI.Response(exampleData), {
-              plugins: [useContentEncoding()],
-            });
+            const adapter = createServerAdapter(
+              () =>
+                new fetchAPI.Response(exampleData, {
+                  headers: {
+                    'content-length': String(Buffer.byteLength(exampleData)),
+                  },
+                }),
+              {
+                plugins: [useContentEncoding()],
+              },
+            );
             server.addOnceHandler(adapter);
             const res = await fetchAPI.fetch(server.url, {
               headers: {
@@ -102,13 +131,27 @@ describe('Compression', () => {
               encoding === 'none' ? null : encoding,
             );
             expect(res.status).toEqual(200);
-            await expect(res.text()).resolves.toEqual(exampleData);
+            const returnedData = await res.text();
+            expect(returnedData).toEqual(exampleData);
+            const contentLength = res.headers.get('content-length');
+            if (contentLength) {
+              const numberContentLength = Number(contentLength);
+              const origSize = Buffer.byteLength(exampleData);
+              if (encoding === 'none') {
+                expect(numberContentLength).toEqual(origSize);
+              } else {
+                expect(numberContentLength).toBeLessThan(origSize);
+              }
+            }
           });
           it(`from the client to the server`, async () => {
             const adapter = createServerAdapter(
               async req => {
                 const body = await req.text();
-                return new fetchAPI.Response(body);
+                return fetchAPI.Response.json({
+                  body,
+                  contentLength: req.headers.get('content-length'),
+                });
               },
               {
                 plugins: [useContentEncoding()],
@@ -120,24 +163,37 @@ describe('Compression', () => {
                 method: 'POST',
                 body: exampleData,
               });
-              await expect(res.text()).resolves.toEqual(exampleData);
+              const { body, contentLength } = await res.json();
+              expect(body).toEqual(exampleData);
+              expect(Number(contentLength)).toEqual(Buffer.byteLength(exampleData));
               return;
             }
             const stream = new CompressionStream(encoding as CompressionFormat);
             const writer = stream.writable.getWriter();
             writer.write(exampleData);
             writer.close();
+            const chunks: number[] = [];
+            const reader = stream.readable.getReader();
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) {
+                reader.releaseLock();
+                break;
+              } else if (value) {
+                chunks.push(...value);
+              }
+            }
+            const uint8Array = new Uint8Array(chunks);
             const res = await fetchAPI.fetch(server.url, {
               method: 'POST',
               headers: {
                 'content-encoding': encoding,
               },
-              body: stream.readable,
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore - not in the types yet
-              duplex: 'half',
+              body: uint8Array,
             });
-            await expect(res.text()).resolves.toEqual(exampleData);
+            const { body, contentLength } = await res.json();
+            expect(body).toEqual(exampleData);
+            expect(Number(contentLength)).toBeLessThan(Buffer.byteLength(body));
           });
         });
       }

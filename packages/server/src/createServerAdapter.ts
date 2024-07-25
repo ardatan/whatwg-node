@@ -151,7 +151,7 @@ function createServerAdapter<
               }),
           );
           function handleResponse(response: Response) {
-            if (onRequestHooks.length === 0) {
+            if (onResponseHooks.length === 0) {
               return response;
             }
             const onResponseHookPayload: OnResponseEventPayload<TServerContext> = {
