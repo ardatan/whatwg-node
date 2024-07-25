@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.42
+
+### Patch Changes
+
+- [`5fa49ca`](https://github.com/ardatan/whatwg-node/commit/5fa49caf6bf6f65791aae3da2edbe8c2136cd53e)
+  Thanks [@ardatan](https://github.com/ardatan)! - Small fix that happens when .fetch receives a
+  dummy request
+
 ## 0.9.41
 
 ### Patch Changes
