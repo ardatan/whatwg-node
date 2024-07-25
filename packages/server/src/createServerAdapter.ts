@@ -19,7 +19,6 @@ import {
   completeAssign,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
-  handleResponseDecompression,
   isFetchEvent,
   isNodeRequest,
   isolateObject,
@@ -350,25 +349,18 @@ function createServerAdapter<
     input,
     ...maybeCtx: Partial<TServerContext>[]
   ) => {
-    function getResponse() {
-      if (typeof input === 'string' || 'href' in input) {
-        const [initOrCtx, ...restOfCtx] = maybeCtx;
-        if (isRequestInit(initOrCtx)) {
-          const request = new fetchAPI.Request(input, initOrCtx);
-          const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
-          return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
-        }
-        const request = new fetchAPI.Request(input);
-        return handleRequestWithWaitUntil(request, ...maybeCtx);
+    if (typeof input === 'string' || 'href' in input) {
+      const [initOrCtx, ...restOfCtx] = maybeCtx;
+      if (isRequestInit(initOrCtx)) {
+        const request = new fetchAPI.Request(input, initOrCtx);
+        const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
+        return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
       }
-      const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
-      return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
+      const request = new fetchAPI.Request(input);
+      return handleRequestWithWaitUntil(request, ...maybeCtx);
     }
-    const res$ = getResponse();
-    if (isPromise(res$)) {
-      return res$.then(res => handleResponseDecompression(res, fetchAPI.Response));
-    }
-    return handleResponseDecompression(res$, fetchAPI.Response);
+    const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
+    return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
   };
 
   const genericRequestHandler = (

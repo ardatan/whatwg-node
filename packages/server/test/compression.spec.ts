@@ -1,5 +1,5 @@
 import { useContentEncoding } from '../src/plugins/useContentEncoding';
-import { getSupportedEncodings } from '../src/utils';
+import { getSupportedEncodings, handleResponseDecompression } from '../src/utils';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
@@ -15,11 +15,12 @@ describe('Compression', () => {
               const adapter = createServerAdapter(() => new fetchAPI.Response(exampleData), {
                 plugins: [useContentEncoding()],
               });
-              const res = await adapter.fetch('/', {
+              let res = await adapter.fetch('/', {
                 headers: {
                   'accept-encoding': encoding,
                 },
               });
+              res = handleResponseDecompression(res, fetchAPI.Response);
               expect(res.status).toEqual(200);
               await expect(res.text()).resolves.toEqual(exampleData);
             });
@@ -63,13 +64,14 @@ describe('Compression', () => {
                 }
               }
               const uint8Array = new Uint8Array(chunks);
-              const res = await adapter.fetch('/', {
+              let res = await adapter.fetch('/', {
                 method: 'POST',
                 headers: {
                   'content-encoding': encoding,
                 },
                 body: uint8Array,
               });
+              res = handleResponseDecompression(res, fetchAPI.Response);
               const { body, contentLength } = await res.json();
               expect(body).toEqual(exampleData);
               expect(Number(contentLength)).toBeLessThan(Buffer.byteLength(body));
