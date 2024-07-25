@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.40
+
+### Patch Changes
+
+- [#1465](https://github.com/ardatan/whatwg-node/pull/1465)
+  [`9f6546f`](https://github.com/ardatan/whatwg-node/commit/9f6546f7c27ab00ba7d44e82c4557135d0217c8a)
+  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Fix context type to expose the
+  `waitUntil` method.
+
 ## 0.9.39
 
 ### Patch Changes
