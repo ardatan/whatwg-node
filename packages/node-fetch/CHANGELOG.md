@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.5.15
+
+### Patch Changes
+
+- [`cf9733e`](https://github.com/ardatan/whatwg-node/commit/cf9733e9dce73c608970c6c12234cd7f2acde65d)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle Buffers correctly in Blobs
+
 ## 0.5.14
 
 ### Patch Changes
