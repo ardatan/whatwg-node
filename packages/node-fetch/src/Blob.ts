@@ -32,19 +32,19 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
 }
 
 export function hasBufferMethod(obj: any): obj is { buffer(): Promise<Buffer> } {
-  return obj != null && obj.buffer != null;
+  return obj != null && obj.buffer != null && typeof obj.buffer === 'function';
 }
 
 export function hasArrayBufferMethod(obj: any): obj is { arrayBuffer(): Promise<ArrayBuffer> } {
-  return obj != null && obj.arrayBuffer != null;
+  return obj != null && obj.arrayBuffer != null && typeof obj.arrayBuffer === 'function';
 }
 
 export function hasBytesMethod(obj: any): obj is { bytes(): Promise<Uint8Array> } {
-  return obj != null && obj.bytes != null;
+  return obj != null && obj.bytes != null && typeof obj.bytes === 'function';
 }
 
 export function hasTextMethod(obj: any): obj is { text(): Promise<string> } {
-  return obj != null && obj.text != null;
+  return obj != null && obj.text != null && typeof obj.text === 'function';
 }
 
 export function hasSizeProperty(obj: any): obj is { size: number } {
@@ -52,11 +52,15 @@ export function hasSizeProperty(obj: any): obj is { size: number } {
 }
 
 export function hasStreamMethod(obj: any): obj is { stream(): any } {
-  return obj != null && obj.stream != null;
+  return obj != null && obj.stream != null && typeof obj.stream === 'function';
 }
 
 export function hasBlobSignature(obj: any): obj is Blob {
   return obj != null && obj[Symbol.toStringTag] === 'Blob';
+}
+
+export function isArrayBuffer(obj: any): obj is ArrayBuffer {
+  return obj != null && obj.byteLength != null && obj.slice != null;
 }
 
 // Will be removed after v14 reaches EOL
@@ -141,6 +145,40 @@ export class PonyfillBlob implements Blob {
   }
 
   arrayBuffer(): Promise<ArrayBuffer> {
+    if (this._buffer) {
+      return fakePromise(this._buffer);
+    }
+    if (this.blobParts.length === 1) {
+      if (isArrayBuffer(this.blobParts[0])) {
+        return fakePromise(this.blobParts[0]);
+      }
+      if (hasArrayBufferMethod(this.blobParts[0])) {
+        return this.blobParts[0].arrayBuffer();
+      }
+    }
+    return this.buffer();
+  }
+
+  bytes(): Promise<Uint8Array> {
+    if (this._buffer) {
+      return fakePromise(this._buffer);
+    }
+    if (this.blobParts.length === 1) {
+      if (Buffer.isBuffer(this.blobParts[0])) {
+        this._buffer = this.blobParts[0];
+        return fakePromise(this.blobParts[0]);
+      }
+      if (this.blobParts[0] instanceof Uint8Array) {
+        this._buffer = Buffer.from(this.blobParts[0]);
+        return fakePromise(this.blobParts[0]);
+      }
+      if (hasBytesMethod(this.blobParts[0])) {
+        return this.blobParts[0].bytes();
+      }
+      if (hasBufferMethod(this.blobParts[0])) {
+        return this.blobParts[0].buffer();
+      }
+    }
     return this.buffer();
   }
 
