@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.43
+
+### Patch Changes
+
+- [`91df5d2`](https://github.com/ardatan/whatwg-node/commit/91df5d250d052ec504a1609a66cc5ae1ac72c686)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix descriptor issue when .fetch is used with
+  dummy context
+
 ## 0.9.42
 
 ### Patch Changes
