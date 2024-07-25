@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.39
+
+### Patch Changes
+
+- [`a3732a6`](https://github.com/ardatan/whatwg-node/commit/a3732a6c85dbce173b0946f70e3628c23738c799)
+  Thanks [@ardatan](https://github.com/ardatan)! - Update content-length when compressed
+
 ## 0.9.38
 
 ### Patch Changes
