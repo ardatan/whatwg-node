@@ -409,7 +409,10 @@ export function completeAssign(...args: any[]) {
     // modified Object.keys to Object.getOwnPropertyNames
     // because Object.keys only returns enumerable properties
     const descriptors: any = Object.getOwnPropertyNames(source).reduce((descriptors: any, key) => {
-      descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      const descriptor = Object.getOwnPropertyDescriptor(source, key);
+      if (descriptor) {
+        descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      }
       return descriptors;
     }, {});
 
