@@ -19,6 +19,7 @@ import {
   completeAssign,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
+  handleResponseDecompression,
   isFetchEvent,
   isNodeRequest,
   isolateObject,
@@ -132,6 +133,9 @@ function createServerAdapter<
             (onRequestHook, stopEarly) =>
               onRequestHook({
                 request,
+                setRequest(newRequest) {
+                  request = newRequest;
+                },
                 serverContext,
                 fetchAPI,
                 url,
@@ -148,7 +152,7 @@ function createServerAdapter<
               }),
           );
           function handleResponse(response: Response) {
-            if (onRequestHooks.length === 0) {
+            if (onResponseHooks.length === 0) {
               return response;
             }
             const onResponseHookPayload: OnResponseEventPayload<
@@ -157,6 +161,10 @@ function createServerAdapter<
               request,
               response,
               serverContext,
+              setResponse(newResponse) {
+                response = newResponse;
+              },
+              fetchAPI,
             };
             const onResponseHooksIteration$ = iterateAsyncVoid(onResponseHooks, onResponseHook =>
               onResponseHook(onResponseHookPayload),
@@ -342,18 +350,25 @@ function createServerAdapter<
     input,
     ...maybeCtx: Partial<TServerContext>[]
   ) => {
-    if (typeof input === 'string' || 'href' in input) {
-      const [initOrCtx, ...restOfCtx] = maybeCtx;
-      if (isRequestInit(initOrCtx)) {
-        const request = new fetchAPI.Request(input, initOrCtx);
-        const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
-        return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
+    function getResponse() {
+      if (typeof input === 'string' || 'href' in input) {
+        const [initOrCtx, ...restOfCtx] = maybeCtx;
+        if (isRequestInit(initOrCtx)) {
+          const request = new fetchAPI.Request(input, initOrCtx);
+          const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
+          return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
+        }
+        const request = new fetchAPI.Request(input);
+        return handleRequestWithWaitUntil(request, ...maybeCtx);
       }
-      const request = new fetchAPI.Request(input);
-      return handleRequestWithWaitUntil(request, ...maybeCtx);
+      const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
+      return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
     }
-    const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
-    return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
+    const res$ = getResponse();
+    if (isPromise(res$)) {
+      return res$.then(res => handleResponseDecompression(res, fetchAPI.Response));
+    }
+    return handleResponseDecompression(res$, fetchAPI.Response);
   };
 
   const genericRequestHandler = (

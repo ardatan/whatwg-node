@@ -15,11 +15,11 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@pulumi/azure-native": "2.49.1",
-    "@pulumi/pulumi": "3.122.0",
+    "@pulumi/azure-native": "2.51.0",
+    "@pulumi/pulumi": "3.126.0",
     "esbuild": "0.23.0",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.5.3"
+    "typescript": "5.5.4"
   }
 }

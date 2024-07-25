@@ -31,8 +31,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             : Readable.from(fetchRequest.body)
           : null
       ) as Readable | null;
-      const headersSerializer = (fetchRequest.headersSerializer as any) || getHeadersObj;
+      const headersSerializer: typeof getHeadersObj =
+        (fetchRequest.headersSerializer as any) || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
+      if (nodeHeaders['accept-encoding'] == null) {
+        nodeHeaders['accept-encoding'] = 'gzip, deflate, br';
+      }
 
       const nodeRequest = requestFn(fetchRequest.url, {
         method: fetchRequest.method,

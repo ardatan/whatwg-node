@@ -589,3 +589,57 @@ export function handleAbortSignalAndPromiseResponse(
   }
   return response$;
 }
+
+export const decompressedResponseMap = new WeakMap<Response, Response>();
+
+let SUPPORTED_ENCODINGS: CompressionFormat[];
+
+export function getSupportedEncodings() {
+  if (!SUPPORTED_ENCODINGS) {
+    // TODO: deflate-raw is buggy in Node.js
+    const possibleEncodings: CompressionFormat[] = ['deflate', 'gzip' /* 'deflate-raw' */];
+    SUPPORTED_ENCODINGS = possibleEncodings.filter(encoding => {
+      try {
+        // eslint-disable-next-line no-new
+        new DecompressionStream(encoding);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  }
+  return SUPPORTED_ENCODINGS;
+}
+
+export function handleResponseDecompression(response: Response, ResponseCtor: typeof Response) {
+  const contentEncodingHeader = response?.headers.get('content-encoding');
+  if (!contentEncodingHeader || contentEncodingHeader === 'none') {
+    return response;
+  }
+  if (!response?.body) {
+    return response;
+  }
+  let decompressedResponse = decompressedResponseMap.get(response);
+  if (!decompressedResponse || decompressedResponse.bodyUsed) {
+    let decompressedBody = response.body;
+    const contentEncodings = contentEncodingHeader.split(',');
+    if (
+      !contentEncodings.every(encoding =>
+        getSupportedEncodings().includes(encoding as CompressionFormat),
+      )
+    ) {
+      return new ResponseCtor(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
+        status: 415,
+        statusText: 'Unsupported Media Type',
+      });
+    }
+    for (const contentEncoding of contentEncodings) {
+      decompressedBody = decompressedBody.pipeThrough(
+        new DecompressionStream(contentEncoding as CompressionFormat),
+      );
+    }
+    decompressedResponse = new ResponseCtor(decompressedBody, response);
+    decompressedResponseMap.set(response, decompressedResponse);
+  }
+  return decompressedResponse;
+}

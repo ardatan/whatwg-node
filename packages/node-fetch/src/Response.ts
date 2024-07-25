@@ -58,7 +58,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   type: ResponseType;
 
   clone() {
-    return new PonyfillResponse(this.body, this);
+    return this;
   }
 
   static error() {

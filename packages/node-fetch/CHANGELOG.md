@@ -1,64 +1,111 @@
 # @whatwg-node/node-fetch
 
+## 0.5.14
+
+### Patch Changes
+
+- [#1481](https://github.com/ardatan/whatwg-node/pull/1481)
+  [`481bdfd`](https://github.com/ardatan/whatwg-node/commit/481bdfd0734b6c2c70b17dccb701b068f8aa06d9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Send supported encoding formats in
+  \`accept-encoding\` header by default
+
+## 0.5.13
+
+### Patch Changes
+
+- [`145e46e`](https://github.com/ardatan/whatwg-node/commit/145e46e8d11ddfddb3fbb5335a1a959cc63c0eba)
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement `.bytes` method for `Blob` and `Body`,
+  now `Uint8Array` is available with `bytes` format
+
+## 0.5.12
+
+### Patch Changes
+
+- [`1c5b838`](https://github.com/ardatan/whatwg-node/commit/1c5b8383ae7020a6c01494001f1a1334c7818f3c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix Request.clone and Response.clone
+
 ## 0.5.11
 
 ### Patch Changes
 
-- [`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c) Thanks [@ardatan](https://github.com/ardatan)! - Handle request errors properly
+- [`e6234df`](https://github.com/ardatan/whatwg-node/commit/e6234df97be45f8c1e23c95c642c8b1d03ee433c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle request errors properly
 
 ## 0.5.10
 
 ### Patch Changes
 
-- [#1219](https://github.com/ardatan/whatwg-node/pull/1219) [`fa097a4`](https://github.com/ardatan/whatwg-node/commit/fa097a466c483cafc2130d227a3728db054d97cd) Thanks [@ardatan](https://github.com/ardatan)! - Support blob: object URLs
+- [#1219](https://github.com/ardatan/whatwg-node/pull/1219)
+  [`fa097a4`](https://github.com/ardatan/whatwg-node/commit/fa097a466c483cafc2130d227a3728db054d97cd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support blob: object URLs
 
-- [#1219](https://github.com/ardatan/whatwg-node/pull/1219) [`fa097a4`](https://github.com/ardatan/whatwg-node/commit/fa097a466c483cafc2130d227a3728db054d97cd) Thanks [@ardatan](https://github.com/ardatan)! - Throw TypeError when multipart request is unable to parse as FormData
+- [#1219](https://github.com/ardatan/whatwg-node/pull/1219)
+  [`fa097a4`](https://github.com/ardatan/whatwg-node/commit/fa097a466c483cafc2130d227a3728db054d97cd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Throw TypeError when multipart request is unable
+  to parse as FormData
 
-- [#1220](https://github.com/ardatan/whatwg-node/pull/1220) [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69) Thanks [@ardatan](https://github.com/ardatan)! - Do not throw when Curl request cancellation
+- [#1220](https://github.com/ardatan/whatwg-node/pull/1220)
+  [`ac6b719`](https://github.com/ardatan/whatwg-node/commit/ac6b71921915e3b75c361956c01f65fbec4ffc69)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not throw when Curl request cancellation
 
 ## 0.5.9
 
 ### Patch Changes
 
-- [`dfb4290`](https://github.com/ardatan/whatwg-node/commit/dfb4290e7aac77dd2c3f6c5e654206b5dfa54a58) Thanks [@ardatan](https://github.com/ardatan)! - Send Content-Length:0 if the body is empty in POSTlike requests
+- [`dfb4290`](https://github.com/ardatan/whatwg-node/commit/dfb4290e7aac77dd2c3f6c5e654206b5dfa54a58)
+  Thanks [@ardatan](https://github.com/ardatan)! - Send Content-Length:0 if the body is empty in
+  POSTlike requests
 
 ## 0.5.8
 
 ### Patch Changes
 
-- [#1190](https://github.com/ardatan/whatwg-node/pull/1190) [`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd) Thanks [@ardatan](https://github.com/ardatan)! - Remove node: protocol which is not supported still in some Node versions and ESM mode
+- [#1190](https://github.com/ardatan/whatwg-node/pull/1190)
+  [`c6f93ee`](https://github.com/ardatan/whatwg-node/commit/c6f93ee1692e9c1e56471e813855b4fb4ad2f0dd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove node: protocol which is not supported
+  still in some Node versions and ESM mode
 
 ## 0.5.7
 
 ### Patch Changes
 
-- [#1162](https://github.com/ardatan/whatwg-node/pull/1162) [`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450) Thanks [@ardatan](https://github.com/ardatan)! - Consume the body with PassThrough
+- [#1162](https://github.com/ardatan/whatwg-node/pull/1162)
+  [`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)
+  Thanks [@ardatan](https://github.com/ardatan)! - Consume the body with PassThrough
 
 ## 0.5.6
 
 ### Patch Changes
 
-- [`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf) Thanks [@ardatan](https://github.com/ardatan)! - Use duplex half for stream based Requests
+- [`ad1e5a0`](https://github.com/ardatan/whatwg-node/commit/ad1e5a0a8408886b373edb19da619049b530cfcf)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use duplex half for stream based Requests
 
 ## 0.5.5
 
 ### Patch Changes
 
-- [#1110](https://github.com/ardatan/whatwg-node/pull/1110) [`45ec735`](https://github.com/ardatan/whatwg-node/commit/45ec735bd3081f42221bdccb70692b420ce16efa) Thanks [@dac09](https://github.com/dac09)! - Support wrapping the native \`Request\`
+- [#1110](https://github.com/ardatan/whatwg-node/pull/1110)
+  [`45ec735`](https://github.com/ardatan/whatwg-node/commit/45ec735bd3081f42221bdccb70692b420ce16efa)
+  Thanks [@dac09](https://github.com/dac09)! - Support wrapping the native \`Request\`
 
-- [#1111](https://github.com/ardatan/whatwg-node/pull/1111) [`a129376`](https://github.com/ardatan/whatwg-node/commit/a1293766bcf8d2465844aec1d80957e2af1b16f1) Thanks [@dac09](https://github.com/dac09)! - Support native `ReadableStream` as `BodyInit`
+- [#1111](https://github.com/ardatan/whatwg-node/pull/1111)
+  [`a129376`](https://github.com/ardatan/whatwg-node/commit/a1293766bcf8d2465844aec1d80957e2af1b16f1)
+  Thanks [@dac09](https://github.com/dac09)! - Support native `ReadableStream` as `BodyInit`
 
 ## 0.5.4
 
 ### Patch Changes
 
-- [#1076](https://github.com/ardatan/whatwg-node/pull/1076) [`25796e3`](https://github.com/ardatan/whatwg-node/commit/25796e345480fe5323dddcdc033989b1792c2476) Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Fix abort logic for node-libcurl
+- [#1076](https://github.com/ardatan/whatwg-node/pull/1076)
+  [`25796e3`](https://github.com/ardatan/whatwg-node/commit/25796e345480fe5323dddcdc033989b1792c2476)
+  Thanks [@ctrlplusb](https://github.com/ctrlplusb)! - Fix abort logic for node-libcurl
 
 ## 0.5.3
 
 ### Patch Changes
 
-- [`f844a4d`](https://github.com/ardatan/whatwg-node/commit/f844a4da5ddc8888b105b509fee7794c6217fd98) Thanks [@ardatan](https://github.com/ardatan)! - Support native File
+- [`f844a4d`](https://github.com/ardatan/whatwg-node/commit/f844a4da5ddc8888b105b509fee7794c6217fd98)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support native File
 
 ## 0.5.2
 
