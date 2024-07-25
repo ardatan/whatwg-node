@@ -27,6 +27,7 @@ import {
   isServerResponse,
   iterateAsyncVoid,
   NodeRequest,
+  nodeRequestResponseMap,
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
@@ -182,6 +183,13 @@ function createServerAdapter<
         }
       : givenHandleRequest;
 
+  // TODO: Remove this on the next major version
+  function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI.Request);
+    return handleRequest(request, serverContext);
+  }
+
   function handleNodeRequestAndResponse(
     nodeRequest: NodeRequest,
     nodeResponseOrContainer: NodeResponse | { raw: NodeResponse },
@@ -189,9 +197,8 @@ function createServerAdapter<
   ) {
     const nodeResponse: NodeResponse =
       (nodeResponseOrContainer as any).raw || nodeResponseOrContainer;
-    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    const request = normalizeNodeRequest(nodeRequest, nodeResponse, fetchAPI.Request);
-    return handleRequest(request, serverContext);
+    nodeRequestResponseMap.set(nodeRequest, nodeResponse);
+    return handleNodeRequest(nodeRequest, ...ctx);
   }
 
   function requestListener(
@@ -394,6 +401,7 @@ function createServerAdapter<
   const adapterObj: ServerAdapterObject<TServerContext> = {
     handleRequest: handleRequestWithWaitUntil,
     fetch: fetchFn,
+    handleNodeRequest,
     handleNodeRequestAndResponse,
     requestListener,
     handleEvent,
