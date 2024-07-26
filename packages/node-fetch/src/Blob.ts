@@ -70,7 +70,7 @@ export class PonyfillBlob implements Blob {
   private encoding: BufferEncoding;
   private _size: number | null = null;
   constructor(
-    private blobParts: BlobPart[],
+    private blobParts: BlobPart[] = [],
     options?: BlobOptions,
   ) {
     this.type = options?.type || 'application/octet-stream';

@@ -59,4 +59,36 @@ describe('Blob', () => {
       });
     });
   }
+  it('together', async () => {
+    const blob = new PonyfillBlob([
+      blobParts.string,
+      blobParts.globalBlob,
+      blobParts.nodeBlob,
+      blobParts.arrayBuffer,
+    ]);
+    const text = await blob.text();
+    expect(text).toBe('stringglobalBlobnodeBlobarrayBuffer');
+    const buffer = await blob.arrayBuffer();
+    expect(Buffer.from(buffer, undefined, buffer.byteLength).toString('utf-8')).toBe(
+      'stringglobalBlobnodeBlobarrayBuffer',
+    );
+    const stream = blob.stream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    expect(Buffer.concat(chunks).toString('utf-8')).toBe('stringglobalBlobnodeBlobarrayBuffer');
+  });
+  it('empty', async () => {
+    const blob = new PonyfillBlob();
+    expect(blob.size).toBe(0);
+    expect(await blob.text()).toBe('');
+    expect(Buffer.from(await blob.arrayBuffer()).toString()).toBe('');
+    const stream = blob.stream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(chunk);
+    }
+    expect(Buffer.concat(chunks).toString());
+  });
 });
