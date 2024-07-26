@@ -14,25 +14,26 @@ export function patchReadableFromWeb() {
       }
       return originalReadableFromWeb(stream as any);
     }
-    if (
-      typeof jest === 'object' &&
-      typeof beforeEach === 'function' &&
-      typeof afterEach === 'function' &&
-      originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode'
-    ) {
-      // To relax jest, we should remove the patch after each test
-      beforeEach(() => {
-        if (Readable.fromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
-          Readable.fromWeb = ReadableFromWebPatchedByWhatWgNode;
-        }
-      });
-      afterEach(() => {
-        if (Readable.fromWeb.name === 'ReadableFromWebPatchedByWhatWgNode') {
-          Readable.fromWeb = originalReadableFromWeb;
-        }
-      });
-    } else if (originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
-      Readable.fromWeb = ReadableFromWebPatchedByWhatWgNode;
+    if (originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
+      if (
+        typeof jest === 'object' &&
+        typeof beforeEach === 'function' &&
+        typeof afterEach === 'function'
+      ) {
+        // To relax jest, we should remove the patch after each test
+        beforeEach(() => {
+          if (Readable.fromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
+            Readable.fromWeb = ReadableFromWebPatchedByWhatWgNode;
+          }
+        });
+        afterEach(() => {
+          if (Readable.fromWeb.name === 'ReadableFromWebPatchedByWhatWgNode') {
+            Readable.fromWeb = originalReadableFromWeb;
+          }
+        });
+      } else {
+        Readable.fromWeb = ReadableFromWebPatchedByWhatWgNode;
+      }
     }
   } catch (e) {
     console.warn(
