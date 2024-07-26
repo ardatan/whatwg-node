@@ -16,6 +16,7 @@ export function patchReadableFromWeb() {
     }
     if (
       typeof jest === 'object' &&
+      typeof beforeEach === 'function' &&
       typeof afterEach === 'function' &&
       originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode'
     ) {
