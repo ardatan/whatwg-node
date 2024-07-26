@@ -7,20 +7,31 @@ function isHeadersInstance(obj: any): obj is Headers {
 export function patchReadableFromWeb() {
   try {
     const originalReadableFromWeb = Readable.fromWeb;
-
-    if (originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
-      Readable.fromWeb = function ReadableFromWebPatchedByWhatWgNode(stream: any): Readable {
-        if (stream.readable != null) {
-          return stream.readable;
-        }
-        return originalReadableFromWeb(stream as any);
-      };
-      if (typeof jest === 'object' && typeof afterEach === 'function') {
-        // To relax jest, we should remove the patch after each test
-        afterEach(() => {
-          Readable.fromWeb = originalReadableFromWeb;
-        });
+    // eslint-disable-next-line no-inner-declarations
+    function ReadableFromWebPatchedByWhatWgNode(stream: any): Readable {
+      if (stream.readable instanceof Readable) {
+        return stream.readable;
       }
+      return originalReadableFromWeb(stream as any);
+    }
+    if (
+      typeof jest === 'object' &&
+      typeof afterEach === 'function' &&
+      originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode'
+    ) {
+      // To relax jest, we should remove the patch after each test
+      beforeEach(() => {
+        if (Readable.fromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
+          Readable.fromWeb = ReadableFromWebPatchedByWhatWgNode;
+        }
+      });
+      afterEach(() => {
+        if (Readable.fromWeb.name === 'ReadableFromWebPatchedByWhatWgNode') {
+          Readable.fromWeb = originalReadableFromWeb;
+        }
+      });
+    } else if (originalReadableFromWeb.name !== 'ReadableFromWebPatchedByWhatWgNode') {
+      Readable.fromWeb = ReadableFromWebPatchedByWhatWgNode;
     }
   } catch (e) {
     console.warn(

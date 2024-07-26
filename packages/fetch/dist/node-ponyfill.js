@@ -8,11 +8,6 @@ if (!shouldSkipPonyfill()) {
   if (!globalThis.libcurl) {
     try {
       globalThis.libcurl = require(nodelibcurlName);
-      if (typeof jest === 'object' && typeof afterEach === 'function') {
-        afterEach(() => {
-          delete globalThis.libcurl;
-        });
-      }
     } catch (e) { }
   }
 }
