@@ -144,14 +144,12 @@ describe('Compression', () => {
             const returnedData = await res.text();
             expect(returnedData).toEqual(exampleData);
             const contentLength = res.headers.get('content-length');
-            if (contentLength) {
-              const numberContentLength = Number(contentLength);
-              const origSize = Buffer.byteLength(exampleData);
-              if (encoding === 'none') {
-                expect(numberContentLength).toEqual(origSize);
-              } else {
-                expect(numberContentLength).toBeLessThan(origSize);
-              }
+            const numberContentLength = Number(contentLength);
+            const origSize = Buffer.byteLength(exampleData);
+            if (encoding === 'none' && contentLength) {
+              expect(numberContentLength).toEqual(origSize);
+            } else {
+              expect(numberContentLength).toBeLessThan(origSize);
             }
           });
           it(`from the client to the server`, async () => {
