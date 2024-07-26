@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.5.18
+
+### Patch Changes
+
+- [`d261573`](https://github.com/ardatan/whatwg-node/commit/d26157339f3896509e45cb5c73aa61164d262d56)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support `new Blob()`
+
 ## 0.5.17
 
 ### Patch Changes
