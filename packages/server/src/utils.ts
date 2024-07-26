@@ -308,13 +308,29 @@ async function sendAsyncIterable(
   serverResponse: NodeResponse,
   asyncIterable: AsyncIterable<Uint8Array>,
 ) {
+  let closed = false;
+  const closeEventListener = () => {
+    closed = true;
+  };
+  serverResponse.once('error', closeEventListener);
+  serverResponse.once('close', closeEventListener);
+
+  serverResponse.once('finish', () => {
+    serverResponse.removeListener('close', closeEventListener);
+  });
   for await (const chunk of asyncIterable) {
+    if (closed) {
+      break;
+    }
     if (
       !serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(chunk)
     ) {
-      break;
+      if (closed) {
+        break;
+      }
+      await new Promise(resolve => serverResponse.once('drain', resolve));
     }
   }
   endResponse(serverResponse);
