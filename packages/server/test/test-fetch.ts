@@ -68,7 +68,7 @@ export function runTestsForEachFetchImpl(
   });
   const nodeMajor = parseInt(process.versions.node.split('.')[0], 10);
   // Node 18 is leaking memory with native fetch
-  if (!opts.noNativeFetch || (process.env.LEAK_TEST && nodeMajor >= 22)) {
+  if (!opts.noNativeFetch && process.env.LEAK_TEST && nodeMajor >= 22) {
     describe('Native', () => {
       const fetchAPI = createFetch({ skipPonyfill: true });
       callback('native', {
