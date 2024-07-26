@@ -1,8 +1,7 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
-import { PassThrough, Readable } from 'stream';
-import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
-import { PonyfillAbortError } from './AbortError.js';
+import { PassThrough, Readable, promises as streamPromises } from 'stream';
+import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'zlib';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -31,8 +30,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             : Readable.from(fetchRequest.body)
           : null
       ) as Readable | null;
-      const headersSerializer = (fetchRequest.headersSerializer as any) || getHeadersObj;
+      const headersSerializer: typeof getHeadersObj =
+        (fetchRequest.headersSerializer as any) || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
+      if (nodeHeaders['accept-encoding'] == null) {
+        nodeHeaders['accept-encoding'] = 'gzip, deflate, br';
+      }
 
       const nodeRequest = requestFn(fetchRequest.url, {
         method: fetchRequest.method,
@@ -42,20 +45,26 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       });
 
       nodeRequest.once('response', nodeResponse => {
-        let responseBody: Readable = nodeResponse;
+        let outputStream: PassThrough;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
           case 'gzip':
-            responseBody = nodeResponse.pipe(createGunzip());
+            outputStream = createGunzip();
             break;
           case 'x-deflate':
           case 'deflate':
-            responseBody = nodeResponse.pipe(createInflate());
+            outputStream = createInflate();
+            break;
+          case 'x-deflate-raw':
+          case 'deflate-raw':
+            outputStream = createInflateRaw();
             break;
           case 'br':
-            responseBody = nodeResponse.pipe(createBrotliDecompress());
+            outputStream = createBrotliDecompress();
             break;
+          default:
+            outputStream = new PassThrough();
         }
         if (nodeResponse.headers.location) {
           if (fetchRequest.redirect === 'error') {
@@ -79,25 +88,19 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
         }
-        if (responseBody === nodeResponse) {
-          responseBody = nodeResponse.pipe(new PassThrough());
-          responseBody.on('pause', () => {
-            nodeResponse.pause();
-          });
-          responseBody.on('resume', () => {
-            nodeResponse.resume();
-          });
-          responseBody.on('close', () => {
-            nodeResponse.destroy();
-          });
-          fetchRequest['_signal']?.addEventListener('abort', () => {
+        streamPromises
+          .pipeline(nodeResponse, outputStream, {
+            signal: fetchRequest['_signal'] ?? undefined,
+            end: true,
+          })
+          .then(() => {
             if (!nodeResponse.destroyed) {
-              responseBody.emit('error', new PonyfillAbortError());
+              nodeResponse.resume();
             }
-          });
-        }
-        nodeResponse.once('error', reject);
-        const ponyfillResponse = new PonyfillResponse(responseBody, {
+          })
+          .catch(reject);
+
+        const ponyfillResponse = new PonyfillResponse(outputStream, {
           status: nodeResponse.statusCode,
           statusText: nodeResponse.statusMessage,
           headers: nodeResponse.headers as Record<string, string>,

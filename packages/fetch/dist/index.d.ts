@@ -15,6 +15,8 @@ declare module '@whatwg-node/fetch' {
   export const ReadableStream: typeof globalThis.ReadableStream;
   export const WritableStream: typeof globalThis.WritableStream;
   export const TransformStream: typeof globalThis.TransformStream;
+  export const CompressionStream: typeof globalThis.CompressionStream;
+  export const DecompressionStream: typeof globalThis.DecompressionStream;
   export const Blob: typeof globalThis.Blob;
   export const File: typeof globalThis.File;
   export const crypto: typeof globalThis.crypto;
@@ -53,6 +55,8 @@ declare module '@whatwg-node/fetch' {
     ReadableStream: typeof ReadableStream;
     WritableStream: typeof WritableStream;
     TransformStream: typeof TransformStream;
+    CompressionStream: typeof CompressionStream;
+    DecompressionStream: typeof DecompressionStream;
     Blob: typeof Blob;
     File: typeof File;
     crypto: typeof crypto;

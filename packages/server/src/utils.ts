@@ -3,7 +3,7 @@ import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import type { Socket } from 'net';
 import type { Readable } from 'stream';
 import { URL } from '@whatwg-node/fetch';
-import type { FetchEvent } from './types.js';
+import type { FetchAPI, FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
@@ -85,7 +85,7 @@ function isRequestBody(body: any): body is BodyInit {
 
 export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
   aborted = false;
-  _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
+  private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
   reason: any;
 
   throwIfAborted(): void {
@@ -112,6 +112,10 @@ export class ServerAdapterRequestAbortSignal extends EventTarget implements Abor
       this.removeEventListener('abort', value);
     }
   }
+
+  any(signals: Iterable<AbortSignal>): AbortSignal {
+    return AbortSignal.any([...signals]);
+  }
 }
 
 let bunNodeCompatModeWarned = false;
@@ -136,6 +140,15 @@ export function normalizeNodeRequest(
 
   const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
   nodeRequestResponseMap.delete(nodeRequest);
+  let normalizedHeaders: Record<string, string> = nodeRequest.headers;
+  if (nodeRequest.headers?.[':method']) {
+    normalizedHeaders = {};
+    for (const key in nodeRequest.headers) {
+      if (!key.startsWith(':')) {
+        normalizedHeaders[key] = nodeRequest.headers[key];
+      }
+    }
+  }
   if (nodeResponse?.once) {
     let sendAbortSignal: VoidFunction;
 
@@ -167,7 +180,7 @@ export function normalizeNodeRequest(
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
-      headers: nodeRequest.headers,
+      headers: normalizedHeaders,
       signal,
     });
   }
@@ -183,14 +196,14 @@ export function normalizeNodeRequest(
     if (isRequestBody(maybeParsedBody)) {
       return new RequestCtor(fullUrl, {
         method: nodeRequest.method,
-        headers: nodeRequest.headers,
+        headers: normalizedHeaders,
         body: maybeParsedBody,
         signal,
       });
     }
     const request = new RequestCtor(fullUrl, {
       method: nodeRequest.method,
-      headers: nodeRequest.headers,
+      headers: normalizedHeaders,
       signal,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
@@ -221,7 +234,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
     }
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
-      headers: nodeRequest.headers,
+      headers: normalizedHeaders,
       duplex: 'half',
       body: new ReadableStream({
         start(controller) {
@@ -246,7 +259,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new RequestCtor(fullUrl, {
     method: nodeRequest.method,
-    headers: nodeRequest.headers,
+    headers: normalizedHeaders,
     body: rawRequest as any,
     duplex: 'half',
     signal,
@@ -295,13 +308,29 @@ async function sendAsyncIterable(
   serverResponse: NodeResponse,
   asyncIterable: AsyncIterable<Uint8Array>,
 ) {
+  let closed = false;
+  const closeEventListener = () => {
+    closed = true;
+  };
+  serverResponse.once('error', closeEventListener);
+  serverResponse.once('close', closeEventListener);
+
+  serverResponse.once('finish', () => {
+    serverResponse.removeListener('close', closeEventListener);
+  });
   for await (const chunk of asyncIterable) {
+    if (closed) {
+      break;
+    }
     if (
       !serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(chunk)
     ) {
-      break;
+      if (closed) {
+        break;
+      }
+      await new Promise(resolve => serverResponse.once('drain', resolve));
     }
   }
   endResponse(serverResponse);
@@ -405,14 +434,17 @@ export function completeAssign(...args: any[]) {
     // modified Object.keys to Object.getOwnPropertyNames
     // because Object.keys only returns enumerable properties
     const descriptors: any = Object.getOwnPropertyNames(source).reduce((descriptors: any, key) => {
-      descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      const descriptor = Object.getOwnPropertyDescriptor(source, key);
+      if (descriptor) {
+        descriptors[key] = Object.getOwnPropertyDescriptor(source, key);
+      }
       return descriptors;
     }, {});
 
     // By default, Object.assign copies enumerable Symbols, too
     Object.getOwnPropertySymbols(source).forEach(sym => {
       const descriptor = Object.getOwnPropertyDescriptor(source, sym);
-      if (descriptor!.enumerable) {
+      if (descriptor?.enumerable) {
         descriptors[sym] = descriptor;
       }
     });
@@ -584,4 +616,67 @@ export function handleAbortSignalAndPromiseResponse(
     return deferred$.promise;
   }
   return response$;
+}
+
+export const decompressedResponseMap = new WeakMap<Response, Response>();
+
+const supportedEncodingsByFetchAPI = new WeakMap<FetchAPI, CompressionFormat[]>();
+
+export function getSupportedEncodings(fetchAPI: FetchAPI) {
+  let supportedEncodings = supportedEncodingsByFetchAPI.get(fetchAPI);
+  if (!supportedEncodings) {
+    const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
+    supportedEncodings = possibleEncodings.filter(encoding => {
+      // deflate-raw is not supported in Node.js >v20
+      if (
+        globalThis.process?.version?.startsWith('v2') &&
+        fetchAPI.DecompressionStream === globalThis.DecompressionStream &&
+        encoding === 'deflate-raw'
+      ) {
+        return false;
+      }
+      try {
+        // eslint-disable-next-line no-new
+        new fetchAPI.DecompressionStream(encoding);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    supportedEncodingsByFetchAPI.set(fetchAPI, supportedEncodings);
+  }
+  return supportedEncodings;
+}
+
+export function handleResponseDecompression(response: Response, fetchAPI: FetchAPI) {
+  const contentEncodingHeader = response?.headers.get('content-encoding');
+  if (!contentEncodingHeader || contentEncodingHeader === 'none') {
+    return response;
+  }
+  if (!response?.body) {
+    return response;
+  }
+  let decompressedResponse = decompressedResponseMap.get(response);
+  if (!decompressedResponse || decompressedResponse.bodyUsed) {
+    let decompressedBody = response.body;
+    const contentEncodings = contentEncodingHeader.split(',');
+    if (
+      !contentEncodings.every(encoding =>
+        getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),
+      )
+    ) {
+      return new fetchAPI.Response(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
+        status: 415,
+        statusText: 'Unsupported Media Type',
+      });
+    }
+    for (const contentEncoding of contentEncodings) {
+      decompressedBody = decompressedBody.pipeThrough(
+        new fetchAPI.DecompressionStream(contentEncoding as CompressionFormat),
+      );
+    }
+    decompressedResponse = new fetchAPI.Response(decompressedBody, response);
+    decompressedResponseMap.set(response, decompressedResponse);
+  }
+  return decompressedResponse;
 }

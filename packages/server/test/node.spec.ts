@@ -97,6 +97,37 @@ describe('Node Specific Cases', () => {
           await sleep(100);
           expect(cancelFn).toHaveBeenCalledTimes(1);
         });
+        it('should handle large streaming responses', async () => {
+          const successFn = jest.fn();
+          const serverAdapter = createServerAdapter(() => {
+            let i = 0;
+            const t = 5;
+            const stream = new ReadableStream({
+              pull(controller) {
+                i++;
+                if (i > t) {
+                  controller.close();
+                } else {
+                  successFn();
+                  controller.enqueue('x'.repeat(5409));
+                }
+              },
+            });
+            return new Response(stream, { status: 200 });
+          });
+          testServer.addOnceHandler(serverAdapter);
+          const response = await fetch(testServer.url);
+
+          let result: string | null = '';
+          for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+            result += Buffer.from(chunk).toString('utf-8');
+          }
+
+          expect(result.length).toBe(27045);
+          expect(successFn).toHaveBeenCalledTimes(5);
+
+          result = null;
+        });
 
         it('should not kill the server if response is ended on low level', async () => {
           const serverAdapter = createServerAdapter<{
@@ -281,6 +312,27 @@ describe('Node Specific Cases', () => {
 
           const resJson = await response.json();
           expect(resJson.contentLength).toBe('0');
+        });
+
+        it('clones the request correctly', async () => {
+          const serverAdapter = createServerAdapter(async req => {
+            const clonedReq = req.clone();
+            const textFromClonedReq = await req.text();
+            const textFromOriginalReq = await clonedReq.text();
+            return Response.json({
+              textFromClonedReq,
+              textFromOriginalReq,
+            });
+          });
+          testServer.addOnceHandler(serverAdapter);
+          const response = await fetch(testServer.url, {
+            method: 'POST',
+            body: 'TEST',
+          });
+
+          const resJson = await response.json();
+          expect(resJson.textFromClonedReq).toBe('TEST');
+          expect(resJson.textFromOriginalReq).toBe('TEST');
         });
       });
     },

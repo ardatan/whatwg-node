@@ -58,7 +58,7 @@ describe('Body', () => {
   });
   it('works with custom decoding', async () => {
     const body = new PonyfillBody('hello world');
-    const buf = await body.arrayBuffer();
+    const buf = await body.bytes();
     const decoder = new PonyfillTextDecoder('utf-8');
     const result = decoder.decode(buf);
     expect(result).toBe('hello world');

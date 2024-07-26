@@ -1,5 +1,86 @@
 # @e2e/shared-server
 
+## 0.0.104
+
+### Patch Changes
+
+- Updated dependencies
+  [[`bebc159`](https://github.com/ardatan/whatwg-node/commit/bebc159e0a470a0ea89a8575f620ead3f1b6b594)]:
+  - @whatwg-node/server@0.9.44
+  - @whatwg-node/fetch@0.9.19
+
+## 0.0.103
+
+### Patch Changes
+
+- Updated dependencies
+  [[`91df5d2`](https://github.com/ardatan/whatwg-node/commit/91df5d250d052ec504a1609a66cc5ae1ac72c686)]:
+  - @whatwg-node/server@0.9.43
+
+## 0.0.102
+
+### Patch Changes
+
+- Updated dependencies
+  [[`5fa49ca`](https://github.com/ardatan/whatwg-node/commit/5fa49caf6bf6f65791aae3da2edbe8c2136cd53e)]:
+  - @whatwg-node/server@0.9.42
+
+## 0.0.101
+
+### Patch Changes
+
+- Updated dependencies
+  [[`d238c52`](https://github.com/ardatan/whatwg-node/commit/d238c5213a9e80afc393bbfc7d48bc29752f1661)]:
+  - @whatwg-node/server@0.9.41
+
+## 0.0.100
+
+### Patch Changes
+
+- Updated dependencies
+  [[`9f6546f`](https://github.com/ardatan/whatwg-node/commit/9f6546f7c27ab00ba7d44e82c4557135d0217c8a)]:
+  - @whatwg-node/server@0.9.40
+
+## 0.0.99
+
+### Patch Changes
+
+- Updated dependencies
+  [[`a3732a6`](https://github.com/ardatan/whatwg-node/commit/a3732a6c85dbce173b0946f70e3628c23738c799)]:
+  - @whatwg-node/server@0.9.39
+
+## 0.0.98
+
+### Patch Changes
+
+- Updated dependencies
+  [[`f7bcbea`](https://github.com/ardatan/whatwg-node/commit/f7bcbea0c0a940870efb47faeb4b64d07d990ce4)]:
+  - @whatwg-node/server@0.9.38
+
+## 0.0.97
+
+### Patch Changes
+
+- Updated dependencies
+  [[`481bdfd`](https://github.com/ardatan/whatwg-node/commit/481bdfd0734b6c2c70b17dccb701b068f8aa06d9)]:
+  - @whatwg-node/server@0.9.37
+
+## 0.0.96
+
+### Patch Changes
+
+- Updated dependencies
+  [[`ebbc85b`](https://github.com/ardatan/whatwg-node/commit/ebbc85b5dbf1fad554718276f2892012c59cbabe)]:
+  - @whatwg-node/server@0.9.36
+
+## 0.0.95
+
+### Patch Changes
+
+- Updated dependencies
+  [[`cf07839`](https://github.com/ardatan/whatwg-node/commit/cf078397ceec3dc2e331b8507c076c05d50dac45)]:
+  - @whatwg-node/server@0.9.35
+
 ## 0.0.94
 
 ### Patch Changes

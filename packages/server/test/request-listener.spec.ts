@@ -6,15 +6,17 @@ const methodsWithoutBody = ['GET', 'DELETE'];
 const methodsWithBody = ['POST', 'PUT', 'PATCH'];
 
 describe('Request Listener', () => {
-  runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI }) => {
+  runTestsForEachFetchImpl((impl, { createServerAdapter, fetchAPI }) => {
     runTestsForEachServerImpl(testServer => {
       [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
+        // PATCH is buggy in Native
+        if (impl === 'native' && method === 'PATCH') return;
         it(`should handle regular requests with ${method}`, () => {
           const requestInit: RequestInit = {
             method,
             headers: {
-              accept: 'application/json',
-              'content-type': 'application/json',
+              accept: 'application/json;charset=utf-8',
+              'content-type': 'application/json;charset=utf-8',
               'random-header': Date.now().toString(),
             },
           };
@@ -24,7 +26,7 @@ describe('Request Listener', () => {
           const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
             status: 200,
             headers: {
-              'content-type': 'application/json',
+              accept: 'application/json;charset=utf-8',
               'random-header': Date.now().toString(),
             },
           });
@@ -41,7 +43,7 @@ describe('Request Listener', () => {
           const requestInit: RequestInit = {
             method,
             headers: {
-              accept: 'application/json',
+              accept: 'application/json;charset=utf-8',
               'random-header': Date.now().toString(),
             },
           };
@@ -51,7 +53,7 @@ describe('Request Listener', () => {
           const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
             status: 200,
             headers: {
-              'content-type': 'application/json',
+              accept: 'application/json;charset=utf-8',
               'random-header': Date.now().toString(),
             },
           });
@@ -68,7 +70,7 @@ describe('Request Listener', () => {
           const requestInit: RequestInit = {
             method,
             headers: {
-              accept: 'application/json',
+              accept: 'application/json;charset=utf-8',
               'random-header': Date.now().toString(),
             },
             // @ts-expect-error duplex is not part of the RequestInit type yet
@@ -80,7 +82,7 @@ describe('Request Listener', () => {
           const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
             status: 200,
             headers: {
-              'content-type': 'application/json',
+              'content-type': 'application/json;charset=utf-8',
               'random-header': Date.now().toString(),
             },
           });

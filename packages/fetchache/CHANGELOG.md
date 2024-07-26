@@ -1,5 +1,13 @@
 # fetchache
 
+## 0.1.6
+
+### Patch Changes
+
+- [`145e46e`](https://github.com/ardatan/whatwg-node/commit/145e46e8d11ddfddb3fbb5335a1a959cc63c0eba)
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement `.bytes` method for `Blob` and `Body`,
+  now `Uint8Array` is available with `bytes` format
+
 ## 0.1.5
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import { PassThrough, Readable } from 'stream';
+import { PassThrough, Readable, promises as streamPromises } from 'stream';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
@@ -100,7 +100,19 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.once(
       'stream',
       function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-        const pipedStream = stream.pipe(new PassThrough());
+        const outputStream = new PassThrough();
+
+        streamPromises
+          .pipeline(stream, outputStream, {
+            end: true,
+            signal: fetchRequest['_signal'] ?? undefined,
+          })
+          .then(() => {
+            if (!stream.destroyed) {
+              stream.resume();
+            }
+          })
+          .catch(reject);
         const headersFlat = headersBuf
           .toString('utf8')
           .split(/\r?\n|\r/g)
@@ -110,7 +122,10 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
                 fetchRequest.redirect === 'error' &&
                 (headerFilter.includes('location') || headerFilter.includes('Location'))
               ) {
-                pipedStream.destroy();
+                if (!stream.destroyed) {
+                  stream.resume();
+                }
+                outputStream.destroy();
                 reject(new Error('redirect is not allowed'));
               }
               return true;
@@ -120,22 +135,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         const headersInit = headersFlat.map(
           headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
         );
-        pipedStream.on('pause', () => {
-          stream.pause();
-        });
-        pipedStream.on('resume', () => {
-          stream.resume();
-        });
-        pipedStream.on('close', () => {
-          stream.destroy();
-        });
-        const ponyfillResponse = new PonyfillResponse(pipedStream, {
+        const ponyfillResponse = new PonyfillResponse(outputStream, {
           status,
           headers: headersInit,
           url: fetchRequest.url,
         });
         resolve(ponyfillResponse);
-        streamResolved = pipedStream;
+        streamResolved = outputStream;
       },
     );
     curlHandle.perform();

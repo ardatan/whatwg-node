@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/node-fetch",
-  "version": "0.5.11",
+  "version": "0.5.17",
   "type": "module",
   "description": "Fetch API implementation for Node",
   "repository": {
@@ -38,7 +38,7 @@
     "@whatwg-node/events": "^0.1.0",
     "busboy": "^1.6.0",
     "fast-querystring": "^1.1.1",
-    "tslib": "^2.3.1"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
     "@types/busboy": "1.5.4",

@@ -53,7 +53,7 @@ describe('Form Data', () => {
     const ab = await new PonyfillRequest('http://a', {
       method: 'post',
       body: form,
-    }).arrayBuffer();
+    }).bytes();
 
     expect(ab.byteLength >= 15).toBe(true);
   });

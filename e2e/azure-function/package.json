@@ -12,14 +12,14 @@
   "dependencies": {
     "@azure/functions": "^4.1.0",
     "@e2e/shared-scripts": "0.0.0",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@pulumi/azure-native": "2.43.1",
-    "@pulumi/pulumi": "3.112.0",
-    "esbuild": "0.21.4",
+    "@pulumi/azure-native": "2.51.0",
+    "@pulumi/pulumi": "3.127.0",
+    "esbuild": "0.23.0",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.4.5"
+    "typescript": "5.5.4"
   }
 }
