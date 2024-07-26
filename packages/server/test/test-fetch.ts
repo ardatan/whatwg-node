@@ -62,9 +62,15 @@ export function runTestsForEachFetchImpl(
       });
     });
   });
-  const nodeMajor = parseInt(process.versions.node.split('.')[0], 10);
-  // Node 18 is leaking memory with native fetch
-  if (!opts.noNativeFetch && process.env.LEAK_TEST && nodeMajor >= 22) {
+  let noNative = opts.noNativeFetch;
+  if (
+    process.env.LEAK_TEST &&
+    // @ts-expect-error - Only if global dispatcher is available
+    !globalThis[Symbol.for('undici.globalDispatcher.1')]
+  ) {
+    noNative = true;
+  }
+  if (!noNative) {
     describe('Native', () => {
       const fetchAPI = createFetch({ skipPonyfill: true });
       callback('native', {

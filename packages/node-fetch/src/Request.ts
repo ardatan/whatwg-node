@@ -1,4 +1,5 @@
-import { Agent } from 'http';
+import { Agent as HTTPAgent, globalAgent as httpGlobalAgent } from 'http';
+import { Agent as HTTPSAgent, globalAgent as httpsGlobalAgent } from 'https';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 
@@ -12,7 +13,7 @@ export type RequestPonyfillInit = PonyfillBodyOptions &
     duplex?: 'half' | 'full';
     headers?: PonyfillHeadersInit;
     headersSerializer?: HeadersSerializer;
-    agent?: Agent;
+    agent?: HTTPAgent | HTTPSAgent | false;
   };
 
 type HeadersSerializer = (
@@ -95,6 +96,8 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
         this.contentLength = parseInt(contentLengthInHeaders, 10);
       }
     }
+
+    this._agent = requestInit?.agent;
   }
 
   headersSerializer?: HeadersSerializer;
@@ -111,8 +114,24 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrer: string;
   referrerPolicy: ReferrerPolicy;
   url: string;
-  agent?: Agent;
   duplex: 'half' | 'full';
+
+  private _agent: HTTPAgent | HTTPSAgent | false | undefined;
+
+  get agent() {
+    if (this._agent != null) {
+      return this._agent;
+    }
+    // Disable agent when running in jest
+    if (globalThis['libcurl'] || typeof jest === 'object') {
+      return false;
+    }
+    if (this.url.startsWith('http:')) {
+      return httpGlobalAgent;
+    } else if (this.url.startsWith('https:')) {
+      return httpsGlobalAgent;
+    }
+  }
 
   private _signal: AbortSignal | undefined | null;
 
