@@ -131,7 +131,7 @@ describe('Node Specific Cases', () => {
 
           result = null;
         });
-        
+
         it('should not kill the server if response is ended on low level', async () => {
           const serverAdapter = createServerAdapter<{
             res: HttpResponse | ServerResponse;
