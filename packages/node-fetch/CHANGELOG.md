@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.5.16
+
+### Patch Changes
+
+- [#1495](https://github.com/ardatan/whatwg-node/pull/1495)
+  [`bebc159`](https://github.com/ardatan/whatwg-node/commit/bebc159e0a470a0ea89a8575f620ead3f1b6b594)
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement \`CompressionStream\`,
+  \`WritableStream\` and \`TransformStream\`
+
 ## 0.5.15
 
 ### Patch Changes
