@@ -1,5 +1,5 @@
 import { createBrotliCompress, createDeflate, createDeflateRaw, createGzip } from 'node:zlib';
-import { PonyfillTransformStream } from './TransformStream';
+import { PonyfillTransformStream } from './TransformStream.js';
 
 export type PonyfillCompressionFormat =
   | 'x-gzip'
