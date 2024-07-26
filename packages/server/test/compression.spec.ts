@@ -1,21 +1,7 @@
-import { FetchAPI } from '@whatwg-node/server';
 import { useContentEncoding } from '../src/plugins/useContentEncoding';
-import { handleResponseDecompression } from '../src/utils';
+import { getSupportedEncodings, handleResponseDecompression } from '../src/utils';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
-
-function getSupportedEncodings(fetchAPI: FetchAPI): string[] {
-  const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
-  return possibleEncodings.filter(encoding => {
-    try {
-      // eslint-disable-next-line no-new
-      new fetchAPI.DecompressionStream(encoding);
-      return true;
-    } catch {
-      return false;
-    }
-  });
-}
 
 describe('Compression', () => {
   const exampleData = JSON.stringify(new Array(1000).fill('Hello, World!').join(''));
