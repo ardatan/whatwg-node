@@ -1,8 +1,8 @@
-import type { IncomingMessage, ServerResponse } from 'node:http';
-import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
-import type { Socket } from 'node:net';
-import type { Readable } from 'node:stream';
-import { ReadableStream, URL } from '@whatwg-node/fetch';
+import type { IncomingMessage, ServerResponse } from 'http';
+import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
+import type { Socket } from 'net';
+import type { Readable } from 'stream';
+import { URL } from '@whatwg-node/fetch';
 import type { FetchAPI, FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
@@ -308,12 +308,28 @@ async function sendAsyncIterable(
   serverResponse: NodeResponse,
   asyncIterable: AsyncIterable<Uint8Array>,
 ) {
+  let closed = false;
+  const closeEventListener = () => {
+    closed = true;
+  };
+  serverResponse.once('error', closeEventListener);
+  serverResponse.once('close', closeEventListener);
+
+  serverResponse.once('finish', () => {
+    serverResponse.removeListener('close', closeEventListener);
+  });
   for await (const chunk of asyncIterable) {
+    if (closed) {
+      break;
+    }
     if (
       !serverResponse
         // @ts-expect-error http and http2 writes are actually compatible
         .write(chunk)
     ) {
+      if (closed) {
+        break;
+      }
       await new Promise(resolve => serverResponse.once('drain', resolve));
     }
   }
