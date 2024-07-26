@@ -4,10 +4,17 @@ const shouldSkipPonyfill = require('./shouldSkipPonyfill');
 const ponyfills = createNodePonyfill();
 
 if (!shouldSkipPonyfill()) {
-  try {
-    const nodelibcurlName = 'node-libcurl'
-    globalThis.libcurl = globalThis.libcurl || require(nodelibcurlName);
-  } catch (e) { }
+  const nodelibcurlName = 'node-libcurl'
+  if (!globalThis.libcurl) {
+    try {
+      globalThis.libcurl = require(nodelibcurlName);
+      if (typeof jest === 'object' && typeof afterEach === 'function') {
+        afterEach(() => {
+          delete globalThis.libcurl;
+        });
+      }
+    } catch (e) { }
+  }
 }
 
 module.exports.fetch = ponyfills.fetch;

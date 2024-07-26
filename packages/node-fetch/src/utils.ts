@@ -15,6 +15,12 @@ export function patchReadableFromWeb() {
         }
         return originalReadableFromWeb(stream as any);
       };
+      if (typeof jest === 'object' && typeof afterEach === 'function') {
+        // To relax jest, we should remove the patch after each test
+        afterEach(() => {
+          Readable.fromWeb = originalReadableFromWeb;
+        });
+      }
     }
   } catch (e) {
     console.warn(
