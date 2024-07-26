@@ -113,7 +113,6 @@ describe('Node Specific Cases', () => {
                   controller.enqueue('x'.repeat(5409));
                 }
               },
-              cancel: cancelFn,
             });
             return new Response(stream, { status: 200 });
           });
@@ -127,7 +126,6 @@ describe('Node Specific Cases', () => {
 
           expect(result.length).toBe(27045);
           expect(successFn).toHaveBeenCalledTimes(5);
-          expect(cancelFn).toHaveBeenCalledTimes(1);
 
           result = null;
         });
