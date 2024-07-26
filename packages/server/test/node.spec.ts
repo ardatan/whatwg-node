@@ -98,7 +98,6 @@ describe('Node Specific Cases', () => {
           expect(cancelFn).toHaveBeenCalledTimes(1);
         });
         it('should handle large streaming responses', async () => {
-          const cancelFn = jest.fn();
           const successFn = jest.fn();
           const serverAdapter = createServerAdapter(() => {
             let i = 0;
