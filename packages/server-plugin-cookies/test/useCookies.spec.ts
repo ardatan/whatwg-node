@@ -13,7 +13,7 @@ describe('Cookie Management', () => {
           plugins: [useCookies()],
         },
       );
-      const response = await serverAdapter.fetch('/', {
+      const response = await serverAdapter.fetch('http://localhost', {
         headers: {
           cookie: 'foo=bar',
         },
@@ -31,7 +31,7 @@ describe('Cookie Management', () => {
           plugins: [useCookies()],
         },
       );
-      const response = await serverAdapter.fetch('/');
+      const response = await serverAdapter.fetch('http://localhost');
       await response.text();
       expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
       [
@@ -57,7 +57,7 @@ describe('Cookie Management', () => {
           plugins: [useCookies()],
         },
       );
-      const response = await serverAdapter.fetch('/');
+      const response = await serverAdapter.fetch('http://localhost');
       await response.text();
       expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
       [
@@ -75,7 +75,7 @@ describe('Cookie Management', () => {
           plugins: [useCookies()],
         },
       );
-      const response = await serverAdapter.fetch('/');
+      const response = await serverAdapter.fetch('http://localhost');
       await response.text();
       expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
       [
@@ -93,7 +93,7 @@ describe('Cookie Management', () => {
           plugins: [useCookies()],
         },
       );
-      const response = await serverAdapter.fetch('/', {
+      const response = await serverAdapter.fetch('http://localhost', {
         headers: {
           cookie: 'foo=bar',
         },
@@ -116,7 +116,7 @@ describe('Cookie Management', () => {
           plugins: [useCookies()],
         },
       );
-      const response = await serverAdapter.fetch('/');
+      const response = await serverAdapter.fetch('http://localhost');
       await response.text();
       expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`
       [
@@ -129,7 +129,7 @@ describe('Cookie Management', () => {
       const serverAdapter = createServerAdapter(() => {
         return new Response('OK');
       });
-      const response = await serverAdapter.fetch('/');
+      const response = await serverAdapter.fetch('http://localhost');
       await response.text();
       expect(response.headers.getSetCookie?.()).toMatchInlineSnapshot(`[]`);
     });

@@ -1,7 +1,7 @@
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
 import { PassThrough, Readable } from 'stream';
-import { createBrotliDecompress, createGunzip, createInflate } from 'zlib';
+import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'zlib';
 import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -56,6 +56,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           case 'x-deflate':
           case 'deflate':
             responseBody = nodeResponse.pipe(createInflate());
+            break;
+          case 'x-deflate-raw':
+          case 'deflate-raw':
+            responseBody = nodeResponse.pipe(createInflateRaw());
             break;
           case 'br':
             responseBody = nodeResponse.pipe(createBrotliDecompress());

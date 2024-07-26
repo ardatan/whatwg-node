@@ -39,18 +39,41 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
   let body: ReadableStream | undefined;
   const method = req.getMethod();
   if (method !== 'get' && method !== 'head') {
-    body = new fetchAPI.ReadableStream({});
+    let controller: ReadableStreamDefaultController;
+    body = new fetchAPI.ReadableStream({
+      start(c) {
+        controller = c;
+      },
+    });
     const readable = (body as any).readable as Readable;
-    signal.addEventListener('abort', () => {
-      readable.push(null);
-    });
-    res.onData(function (ab, isLast) {
-      const chunk = Buffer.from(ab, 0, ab.byteLength);
-      readable.push(Buffer.from(chunk));
-      if (isLast) {
+    if (readable) {
+      signal.addEventListener('abort', () => {
         readable.push(null);
-      }
-    });
+      });
+      res.onData(function (ab, isLast) {
+        const chunk = Buffer.from(ab, 0, ab.byteLength);
+        readable.push(Buffer.from(chunk));
+        if (isLast) {
+          readable.push(null);
+        }
+      });
+    } else {
+      let closed = false;
+      signal.addEventListener('abort', () => {
+        if (!closed) {
+          closed = true;
+          controller.close();
+        }
+      });
+      res.onData(function (ab, isLast) {
+        const chunk = Buffer.from(ab, 0, ab.byteLength);
+        controller.enqueue(Buffer.from(chunk));
+        if (isLast) {
+          closed = true;
+          controller.close();
+        }
+      });
+    }
   }
   const headers = new fetchAPI.Headers();
   req.forEach((key, value) => {
@@ -66,6 +89,9 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
     headers,
     body: body as any,
     signal,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - not in the TS types yet
+    duplex: 'half',
   });
 }
 

@@ -3,7 +3,7 @@ import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import type { Socket } from 'net';
 import type { Readable } from 'stream';
 import { URL } from '@whatwg-node/fetch';
-import type { FetchEvent } from './types.js';
+import type { FetchAPI, FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
@@ -140,6 +140,15 @@ export function normalizeNodeRequest(
 
   const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
   nodeRequestResponseMap.delete(nodeRequest);
+  let normalizedHeaders: Record<string, string> = nodeRequest.headers;
+  if (nodeRequest.headers?.[':method']) {
+    normalizedHeaders = {};
+    for (const key in nodeRequest.headers) {
+      if (!key.startsWith(':')) {
+        normalizedHeaders[key] = nodeRequest.headers[key];
+      }
+    }
+  }
   if (nodeResponse?.once) {
     let sendAbortSignal: VoidFunction;
 
@@ -171,7 +180,7 @@ export function normalizeNodeRequest(
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
-      headers: nodeRequest.headers,
+      headers: normalizedHeaders,
       signal,
     });
   }
@@ -187,14 +196,14 @@ export function normalizeNodeRequest(
     if (isRequestBody(maybeParsedBody)) {
       return new RequestCtor(fullUrl, {
         method: nodeRequest.method,
-        headers: nodeRequest.headers,
+        headers: normalizedHeaders,
         body: maybeParsedBody,
         signal,
       });
     }
     const request = new RequestCtor(fullUrl, {
       method: nodeRequest.method,
-      headers: nodeRequest.headers,
+      headers: normalizedHeaders,
       signal,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
@@ -225,7 +234,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
     }
     return new RequestCtor(fullUrl, {
       method: nodeRequest.method,
-      headers: nodeRequest.headers,
+      headers: normalizedHeaders,
       duplex: 'half',
       body: new ReadableStream({
         start(controller) {
@@ -250,7 +259,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new RequestCtor(fullUrl, {
     method: nodeRequest.method,
-    headers: nodeRequest.headers,
+    headers: normalizedHeaders,
     body: rawRequest as any,
     duplex: 'half',
     signal,
@@ -595,26 +604,35 @@ export function handleAbortSignalAndPromiseResponse(
 
 export const decompressedResponseMap = new WeakMap<Response, Response>();
 
-let SUPPORTED_ENCODINGS: CompressionFormat[];
+const supportedEncodingsByFetchAPI = new WeakMap<FetchAPI, CompressionFormat[]>();
 
-export function getSupportedEncodings() {
-  if (!SUPPORTED_ENCODINGS) {
-    // TODO: deflate-raw is buggy in Node.js
-    const possibleEncodings: CompressionFormat[] = ['deflate', 'gzip' /* 'deflate-raw' */];
-    SUPPORTED_ENCODINGS = possibleEncodings.filter(encoding => {
+export function getSupportedEncodings(fetchAPI: FetchAPI) {
+  let supportedEncodings = supportedEncodingsByFetchAPI.get(fetchAPI);
+  if (!supportedEncodings) {
+    const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
+    supportedEncodings = possibleEncodings.filter(encoding => {
+      // deflate-raw is not supported in Node.js >v20
+      if (
+        globalThis.process?.version?.startsWith('v2') &&
+        fetchAPI.DecompressionStream === globalThis.DecompressionStream &&
+        encoding === 'deflate-raw'
+      ) {
+        return false;
+      }
       try {
         // eslint-disable-next-line no-new
-        new DecompressionStream(encoding);
+        new fetchAPI.DecompressionStream(encoding);
         return true;
       } catch {
         return false;
       }
     });
+    supportedEncodingsByFetchAPI.set(fetchAPI, supportedEncodings);
   }
-  return SUPPORTED_ENCODINGS;
+  return supportedEncodings;
 }
 
-export function handleResponseDecompression(response: Response, ResponseCtor: typeof Response) {
+export function handleResponseDecompression(response: Response, fetchAPI: FetchAPI) {
   const contentEncodingHeader = response?.headers.get('content-encoding');
   if (!contentEncodingHeader || contentEncodingHeader === 'none') {
     return response;
@@ -628,20 +646,20 @@ export function handleResponseDecompression(response: Response, ResponseCtor: ty
     const contentEncodings = contentEncodingHeader.split(',');
     if (
       !contentEncodings.every(encoding =>
-        getSupportedEncodings().includes(encoding as CompressionFormat),
+        getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),
       )
     ) {
-      return new ResponseCtor(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
+      return new fetchAPI.Response(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
         status: 415,
         statusText: 'Unsupported Media Type',
       });
     }
     for (const contentEncoding of contentEncodings) {
       decompressedBody = decompressedBody.pipeThrough(
-        new DecompressionStream(contentEncoding as CompressionFormat),
+        new fetchAPI.DecompressionStream(contentEncoding as CompressionFormat),
       );
     }
-    decompressedResponse = new ResponseCtor(decompressedBody, response);
+    decompressedResponse = new fetchAPI.Response(decompressedBody, response);
     decompressedResponseMap.set(response, decompressedResponse);
   }
   return decompressedResponse;

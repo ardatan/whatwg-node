@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import { PonyfillWritableStream } from './WritableStream';
 
 function createController<T>(
   desiredSize: number,
@@ -168,13 +169,23 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   async pipeTo(destination: WritableStream<T>): Promise<void> {
-    const writer = destination.getWriter();
-    await writer.ready;
-    for await (const chunk of this.readable) {
-      await writer.write(chunk);
+    if (isPonyfillWritableStream(destination)) {
+      return new Promise((resolve, reject) => {
+        this.readable.pipe(destination.writable);
+        destination.writable.once('finish', resolve);
+        destination.writable.once('error', reject);
+      });
+    } else {
+      const writer = destination.getWriter();
+      try {
+        for await (const chunk of this) {
+          await writer.write(chunk);
+        }
+        await writer.close();
+      } catch (err) {
+        await writer.abort(err);
+      }
     }
-    await writer.ready;
-    return writer.close();
   }
 
   pipeThrough<T2>({
@@ -191,4 +202,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   static [Symbol.hasInstance](instance: unknown): instance is PonyfillReadableStream<unknown> {
     return isReadableStream(instance);
   }
+}
+
+function isPonyfillWritableStream(obj: any): obj is PonyfillWritableStream {
+  return obj?.writable != null;
 }
