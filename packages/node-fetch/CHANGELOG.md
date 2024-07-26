@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.5.17
+
+### Patch Changes
+
+- [#1500](https://github.com/ardatan/whatwg-node/pull/1500)
+  [`1f77112`](https://github.com/ardatan/whatwg-node/commit/1f77112c371137348f3f9ab8dc07bff724fcd131)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use suggested \`pipeline\` from \`node:streams\`
+  to pipe streams to the final Response object
+
 ## 0.5.16
 
 ### Patch Changes
