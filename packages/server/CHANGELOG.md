@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.45
+
+### Patch Changes
+
+- [#1088](https://github.com/ardatan/whatwg-node/pull/1088)
+  [`8b2d14a`](https://github.com/ardatan/whatwg-node/commit/8b2d14a1dd81aeaf651fbbe28b16efe15bcde15a)
+  Thanks [@f5io](https://github.com/f5io)! - Wait for the server response to drain the existing data
+  in the stream then send the other one
+
 ## 0.9.44
 
 ### Patch Changes
