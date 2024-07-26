@@ -4,7 +4,7 @@ import { runTestsForEachFetchImpl } from './test-fetch.js';
 describe('useErrorHandling', () => {
   runTestsForEachFetchImpl(
     (_, { createServerAdapter, fetchAPI }) => {
-      it('should return 500 when error is thrown', async () => {
+      it('should return error response when error is thrown', async () => {
         const errorHandler = jest.fn();
         let request: Request | undefined;
         const router = createServerAdapter(
@@ -18,8 +18,9 @@ describe('useErrorHandling', () => {
           },
         );
         const response = await router.fetch('http://localhost/greetings/John');
-        expect(response.status).toBe(500);
-        expect(response.statusText).toBe('Internal Server Error');
+        const errRes = fetchAPI.Response.error();
+        expect(response.status).toBe(errRes.status);
+        expect(response.statusText).toBe(errRes.statusText);
         const text = await response.text();
         expect(text).toHaveLength(0);
         expect(errorHandler).toHaveBeenCalledWith(new Error('Unexpected error'), request, {});

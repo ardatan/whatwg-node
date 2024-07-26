@@ -3,7 +3,7 @@ import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import type { Socket } from 'net';
 import type { Readable } from 'stream';
 import { URL } from '@whatwg-node/fetch';
-import type { FetchEvent } from './types.js';
+import type { FetchAPI, FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
@@ -595,16 +595,16 @@ export function handleAbortSignalAndPromiseResponse(
 
 export const decompressedResponseMap = new WeakMap<Response, Response>();
 
-let SUPPORTED_ENCODINGS: CompressionFormat[];
+export let SUPPORTED_ENCODINGS: CompressionFormat[];
 
-export function getSupportedEncodings() {
+export function getSupportedEncodings(fetchAPI: FetchAPI) {
   if (!SUPPORTED_ENCODINGS) {
     // TODO: deflate-raw is buggy in Node.js
-    const possibleEncodings: CompressionFormat[] = ['deflate', 'gzip' /* 'deflate-raw' */];
+    const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
     SUPPORTED_ENCODINGS = possibleEncodings.filter(encoding => {
       try {
         // eslint-disable-next-line no-new
-        new DecompressionStream(encoding);
+        new fetchAPI.DecompressionStream(encoding);
         return true;
       } catch {
         return false;
@@ -614,7 +614,7 @@ export function getSupportedEncodings() {
   return SUPPORTED_ENCODINGS;
 }
 
-export function handleResponseDecompression(response: Response, ResponseCtor: typeof Response) {
+export function handleResponseDecompression(response: Response, fetchAPI: FetchAPI) {
   const contentEncodingHeader = response?.headers.get('content-encoding');
   if (!contentEncodingHeader || contentEncodingHeader === 'none') {
     return response;
@@ -628,20 +628,20 @@ export function handleResponseDecompression(response: Response, ResponseCtor: ty
     const contentEncodings = contentEncodingHeader.split(',');
     if (
       !contentEncodings.every(encoding =>
-        getSupportedEncodings().includes(encoding as CompressionFormat),
+        getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),
       )
     ) {
-      return new ResponseCtor(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
+      return new fetchAPI.Response(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
         status: 415,
         statusText: 'Unsupported Media Type',
       });
     }
     for (const contentEncoding of contentEncodings) {
       decompressedBody = decompressedBody.pipeThrough(
-        new DecompressionStream(contentEncoding as CompressionFormat),
+        new fetchAPI.DecompressionStream(contentEncoding as CompressionFormat),
       );
     }
-    decompressedResponse = new ResponseCtor(decompressedBody, response);
+    decompressedResponse = new fetchAPI.Response(decompressedBody, response);
     decompressedResponseMap.set(response, decompressedResponse);
   }
   return decompressedResponse;

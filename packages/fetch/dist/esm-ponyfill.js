@@ -6,6 +6,8 @@ const FormData = window.FormData;
 const ReadableStream = window.ReadableStream;
 const WritableStream = window.WritableStream;
 const TransformStream = window.TransformStream;
+const CompressionStream = window.CompressionStream;
+const DecompressionStream = window.DecompressionStream;
 const Blob = window.Blob;
 const File = window.File;
 const crypto = window.crypto;
@@ -26,6 +28,8 @@ export {
     ReadableStream,
     WritableStream,
     TransformStream,
+    CompressionStream,
+    DecompressionStream,
     Blob,
     File,
     crypto,
@@ -47,6 +51,8 @@ export function createFetch() {
         ReadableStream,
         WritableStream,
         TransformStream,
+        CompressionStream,
+        DecompressionStream,
         Blob,
         File,
         crypto,

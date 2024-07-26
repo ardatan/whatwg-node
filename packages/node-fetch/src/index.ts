@@ -14,3 +14,7 @@ export {
 } from './TextEncoderDecoder.js';
 export { PonyfillURL as URL } from './URL.js';
 export { PonyfillURLSearchParams as URLSearchParams } from './URLSearchParams.js';
+export { PonyfillWritableStream as WritableStream } from './WritableStream.js';
+export { PonyfillTransformStream as TransformStream } from './TransformStream.js';
+export { PonyfillCompressionStream as CompressionStream } from './CompressionStream.js';
+export { PonyfillDecompressionStream as DecompressionStream } from './DecompressionStream.js';

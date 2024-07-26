@@ -11,7 +11,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
           const contentEncodings = contentEncodingHeader?.split(',');
           if (
             !contentEncodings.every(encoding =>
-              getSupportedEncodings().includes(encoding as CompressionFormat),
+              getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),
             )
           ) {
             endResponse(
@@ -25,12 +25,25 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
           let newBody = request.body;
           for (const contentEncoding of contentEncodings) {
             newBody = newBody.pipeThrough(
-              new DecompressionStream(contentEncoding as CompressionFormat),
+              new fetchAPI.DecompressionStream(contentEncoding as CompressionFormat),
             );
           }
           const newRequest = new fetchAPI.Request(request.url, {
-            ...request,
             body: newBody,
+            cache: request.cache,
+            credentials: request.credentials,
+            headers: request.headers,
+            integrity: request.integrity,
+            keepalive: request.keepalive,
+            method: request.method,
+            mode: request.mode,
+            redirect: request.redirect,
+            referrer: request.referrer,
+            referrerPolicy: request.referrerPolicy,
+            signal: request.signal,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - not in the TS types yet
+            duplex: 'half',
           });
           setRequest(newRequest);
         }
@@ -46,10 +59,12 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
         const encodings = encodingMap.get(request);
         if (encodings) {
           const supportedEncoding = encodings.find(encoding =>
-            getSupportedEncodings().includes(encoding as CompressionFormat),
+            getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),
           );
           if (supportedEncoding) {
-            const compressionStream = new CompressionStream(supportedEncoding as CompressionFormat);
+            const compressionStream = new fetchAPI.CompressionStream(
+              supportedEncoding as CompressionFormat,
+            );
             // To calculate final content-length
             const contentLength = response.headers.get('content-length');
             if (contentLength) {
@@ -89,7 +104,8 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
             newHeaders.delete('content-length');
             const compressedBody = response.body!.pipeThrough(compressionStream);
             const compressedResponse = new fetchAPI.Response(compressedBody, {
-              ...response,
+              status: response.status,
+              statusText: response.statusText,
               headers: newHeaders,
             });
             decompressedResponseMap.set(compressedResponse, response);

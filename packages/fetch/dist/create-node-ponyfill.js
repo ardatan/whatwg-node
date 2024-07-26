@@ -3,6 +3,8 @@ const shouldSkipPonyfill = require('./shouldSkipPonyfill');
 module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
   
+  ponyfills.URLPattern = globalThis.URLPattern;
+
   // We call this previously to patch `Bun`
   if (!ponyfills.URLPattern) {
     const urlPatternModule = require('urlpattern-polyfill');
@@ -10,7 +12,27 @@ module.exports = function createNodePonyfill(opts = {}) {
   }
 
   if (opts.skipPonyfill || shouldSkipPonyfill()) {
-    return globalThis;
+    return {
+      fetch: globalThis.fetch,
+      Headers: globalThis.Headers,
+      Request: globalThis.Request,
+      Response: globalThis.Response,
+      FormData: globalThis.FormData,
+      ReadableStream: globalThis.ReadableStream,
+      WritableStream: globalThis.WritableStream,
+      TransformStream: globalThis.TransformStream,
+      CompressionStream: globalThis.CompressionStream,
+      DecompressionStream: globalThis.DecompressionStream,
+      Blob: globalThis.Blob,
+      File: globalThis.File,
+      crypto: globalThis.crypto,
+      btoa: globalThis.btoa,
+      TextEncoder: globalThis.TextEncoder,
+      TextDecoder: globalThis.TextDecoder,
+      URLPattern: ponyfills.URLPattern,
+      URL: globalThis.URL,
+      URLSearchParams: globalThis.URLSearchParams
+    };
   }
 
   const newNodeFetch = require('@whatwg-node/node-fetch');
@@ -25,14 +47,10 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.URL = newNodeFetch.URL;
   ponyfills.URLSearchParams = newNodeFetch.URLSearchParams;
 
-  ponyfills.WritableStream = globalThis.WritableStream;
-  ponyfills.TransformStream = globalThis.TransformStream;
-
-  if (!ponyfills.WritableStream) {
-    const streamsWeb = require("stream/web");
-    ponyfills.WritableStream = streamsWeb.WritableStream;
-    ponyfills.TransformStream = streamsWeb.TransformStream;
-  }
+  ponyfills.WritableStream = newNodeFetch.WritableStream;
+  ponyfills.TransformStream = newNodeFetch.TransformStream;
+  ponyfills.CompressionStream = newNodeFetch.CompressionStream;
+  ponyfills.DecompressionStream = newNodeFetch.DecompressionStream;
 
   ponyfills.Blob = newNodeFetch.Blob;
   ponyfills.File = newNodeFetch.File;
