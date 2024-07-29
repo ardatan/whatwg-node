@@ -1,6 +1,5 @@
-import { isAsyncDisposable, isSyncDisposable, MaybePromise, patchSymbols } from './utils.js';
-
-patchSymbols();
+import { DisposableSymbols } from './symbols.js';
+import { isAsyncDisposable, isSyncDisposable, MaybePromise } from './utils.js';
 
 export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
   private callbacks: (() => MaybePromise<void>)[] = [];
@@ -10,9 +9,9 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
 
   use<T extends AsyncDisposable | Disposable | null | undefined>(value: T): T {
     if (isAsyncDisposable(value)) {
-      this.callbacks.push(() => value[Symbol.asyncDispose]());
+      this.callbacks.push(() => value[DisposableSymbols.asyncDispose]());
     } else if (isSyncDisposable(value)) {
-      this.callbacks.push(() => value[Symbol.dispose]());
+      this.callbacks.push(() => value[DisposableSymbols.dispose]());
     }
     return value;
   }
@@ -34,10 +33,10 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
   }
 
   disposeAsync(): Promise<void> {
-    return this[Symbol.asyncDispose]();
+    return this[DisposableSymbols.asyncDispose]();
   }
 
-  async [Symbol.asyncDispose](): Promise<void> {
+  async [DisposableSymbols.asyncDispose](): Promise<void> {
     for (const cb of this.callbacks) {
       await cb();
     }

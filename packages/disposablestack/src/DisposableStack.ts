@@ -1,6 +1,5 @@
-import { isSyncDisposable, patchSymbols } from './utils.js';
-
-patchSymbols();
+import { DisposableSymbols } from './symbols.js';
+import { isSyncDisposable } from './utils.js';
 
 export class PonyfillDisposableStack implements DisposableStack {
   private callbacks: (() => void)[] = [];
@@ -9,15 +8,12 @@ export class PonyfillDisposableStack implements DisposableStack {
   }
 
   dispose(): void {
-    for (const cb of this.callbacks) {
-      cb();
-    }
-    this.callbacks = [];
+    return this[DisposableSymbols.dispose]();
   }
 
   use<T extends Disposable | null | undefined>(value: T): T {
     if (isSyncDisposable(value)) {
-      this.callbacks.push(() => value[Symbol.dispose]());
+      this.callbacks.push(() => value[DisposableSymbols.dispose]());
     }
     return value;
   }
@@ -38,8 +34,11 @@ export class PonyfillDisposableStack implements DisposableStack {
     return stack;
   }
 
-  [Symbol.dispose](): void {
-    this.dispose();
+  [DisposableSymbols.dispose](): void {
+    for (const cb of this.callbacks) {
+      cb();
+    }
+    this.callbacks = [];
   }
 
   readonly [Symbol.toStringTag]: string = 'DisposableStack';
