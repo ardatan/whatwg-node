@@ -90,4 +90,6 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     }
     return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
+
+  [Symbol.toStringTag] = 'Response';
 }
