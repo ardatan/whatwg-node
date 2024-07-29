@@ -1,4 +1,3 @@
-import { CustomEvent } from '@whatwg-node/events';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('FetchEvent listener', () => {
