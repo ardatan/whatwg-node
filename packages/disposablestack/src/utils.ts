@@ -1,4 +1,4 @@
-import { DisposableSymbols } from './symbols';
+import { DisposableSymbols } from './symbols.js';
 
 export function isSyncDisposable(obj: any): obj is Disposable {
   return obj?.[DisposableSymbols.dispose] != null;
