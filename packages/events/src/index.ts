@@ -1,7 +1,7 @@
 export const CustomEvent =
   globalThis.CustomEvent ||
   class PonyfillCustomEvent<T = any> extends Event implements CustomEvent<T> {
-    detail!: T;
+    detail: T = null as T;
     constructor(type: string, eventInitDict?: CustomEventInit<T>) {
       super(type, eventInitDict);
       if (eventInitDict?.detail != null) {
