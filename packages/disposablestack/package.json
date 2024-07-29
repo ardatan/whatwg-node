@@ -1,12 +1,12 @@
 {
-  "name": "@whatwg-node/server-plugin-cookies",
-  "version": "1.0.3",
+  "name": "@whatwg-node/disposablestack",
+  "version": "0.0.0",
   "type": "module",
-  "description": "Cookies Plugin",
+  "description": "Cross Platform Smart DisposableStack API Ponyfill",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
-    "directory": "packages/server-plugin-cookies"
+    "directory": "packages/disposablestack"
   },
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
@@ -33,11 +33,7 @@
     "./package.json": "./package.json"
   },
   "typings": "dist/typings/index.d.ts",
-  "peerDependencies": {
-    "@whatwg-node/server": "^0.9.44"
-  },
   "dependencies": {
-    "@whatwg-node/cookie-store": "0.2.2",
     "tslib": "^2.6.3"
   },
   "publishConfig": {

@@ -288,6 +288,14 @@
     "@babel/helper-create-class-features-plugin" "^7.18.6"
     "@babel/helper-plugin-utils" "^7.18.6"
 
+"@babel/plugin-proposal-explicit-resource-management@7.24.7":
+  version "7.24.7"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-explicit-resource-management/-/plugin-proposal-explicit-resource-management-7.24.7.tgz#9b4bbf1cac69dccdab3fb1833efb38bf96fd8748"
+  integrity sha512-sYvUjHrKctxFiNe/YFyzNyXoblzP4YaZrWSk0js7QU3Lw2lYjLAxnzV8l/4+7PB5+NDFKGblPUq2YbdTxs3Ppg==
+  dependencies:
+    "@babel/helper-plugin-utils" "^7.24.7"
+    "@babel/plugin-syntax-explicit-resource-management" "^7.24.7"
+
 "@babel/plugin-proposal-private-property-in-object@7.21.0-placeholder-for-preset-env.2":
   version "7.21.0-placeholder-for-preset-env.2"
   resolved "https://registry.yarnpkg.com/@babel/plugin-proposal-private-property-in-object/-/plugin-proposal-private-property-in-object-7.21.0-placeholder-for-preset-env.2.tgz#7844f9289546efa9febac2de4cfe358a050bd703"
@@ -327,6 +335,13 @@
   integrity sha512-5gdGbFon+PszYzqs83S3E5mpi7/y/8M9eC90MRTZfduQOYW76ig6SOSPNe41IG5LoP3FGBn2N0RjVDSQiS94kQ==
   dependencies:
     "@babel/helper-plugin-utils" "^7.8.0"
+
+"@babel/plugin-syntax-explicit-resource-management@^7.24.7":
+  version "7.24.7"
+  resolved "https://registry.yarnpkg.com/@babel/plugin-syntax-explicit-resource-management/-/plugin-syntax-explicit-resource-management-7.24.7.tgz#967236d403d9c6f9ded538abb6ca757136dd468a"
+  integrity sha512-gEl7s4tkyWl3EcfUCLVcJJRSogDQju6qX2hdJmZVO0wdpVGzss5bJU8wySoZ7JQw1jBjztEY1a/eYstgv+AQkA==
+  dependencies:
+    "@babel/helper-plugin-utils" "^7.24.7"
 
 "@babel/plugin-syntax-export-namespace-from@^7.8.3":
   version "7.8.3"
@@ -9545,7 +9560,6 @@ typescript@5.5.4:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.34.0:
   version "20.34.0"
-  uid fca27c05066342b01951782248640c8013b37196
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/fca27c05066342b01951782248640c8013b37196"
 
 ufo@^1.5.3:

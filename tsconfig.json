@@ -3,7 +3,7 @@
     "outDir": "dist",
     "baseUrl": ".",
 
-    "target": "es2021",
+    "target": "es2022",
     "module": "esnext",
     "moduleResolution": "node",
     "lib": ["esnext"],
@@ -27,6 +27,8 @@
       "@whatwg-node/cookie-store": ["packages/cookie-store/src/index.ts"],
       "@whatwg-node/server": ["packages/server/src/index.ts"],
       "@whatwg-node/node-fetch": ["packages/node-fetch/src/index.ts"],
+      "@whatwg-node/events": ["packages/events/src/index.ts"],
+      "@whatwg-node/disposablestack": ["packages/disposablestack/src/index.ts"],
       "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
     }
