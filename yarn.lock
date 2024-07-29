@@ -9558,9 +9558,10 @@ typescript@5.5.4:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.5.4.tgz#d9852d6c82bad2d2eda4fd74a5762a8f5909e9ba"
   integrity sha512-Mtq29sKDAEYP7aljRgtPOpTvOfbwRWlS6dPRzwjdE+C0R4brX/GUyhHSecbHMFLNBLcJIPt9nl9yG5TZ1weH+Q==
 
-uWebSockets.js@uNetworking/uWebSockets.js#v20.34.0:
-  version "20.34.0"
-  resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/fca27c05066342b01951782248640c8013b37196"
+uWebSockets.js@uNetworking/uWebSockets.js#v20.44.0:
+  version "20.44.0"
+  uid "8fa05571bf6ea95be8966ad313d9d39453e381ae"
+  resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/8fa05571bf6ea95be8966ad313d9d39453e381ae"
 
 ufo@^1.5.3:
   version "1.5.4"
