@@ -1,6 +1,7 @@
 {
   "name": "@whatwg-node/events",
   "version": "0.1.1",
+  "type": "module",
   "description": "Cross Platform Smart Event API Ponyfill",
   "repository": {
     "type": "git",
