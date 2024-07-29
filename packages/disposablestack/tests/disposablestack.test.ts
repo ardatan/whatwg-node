@@ -29,7 +29,7 @@ function createTestCases<
     adopt: {
       run(stack: TStack, disposeFn: jest.Mock) {
         const value = 'TEST';
-        stack.adopt(value, disposeFn);
+        expect(stack.adopt(value, disposeFn)).toBe(value);
       },
       check(disposeFn: jest.Mock) {
         expect(disposeFn).toBeCalledWith('TEST');
