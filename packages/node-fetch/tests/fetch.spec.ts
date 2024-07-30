@@ -225,6 +225,12 @@ describe('Node Fetch Ponyfill', () => {
         const resJson = await response.json();
         expect(resJson.test).toBe('test');
       });
+      it('handles redirect from http to https', async () => {
+        const response = await fetchPonyfill('http://github.com');
+        await response.text();
+        expect(response.status).toBe(200);
+        expect(response.url === 'https://github.com' || response.redirected).toBeTruthy();
+      });
     },
     { noNativeFetch: true },
   );

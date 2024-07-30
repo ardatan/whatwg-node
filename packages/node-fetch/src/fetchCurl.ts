@@ -138,7 +138,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         const ponyfillResponse = new PonyfillResponse(outputStream, {
           status,
           headers: headersInit,
-          url: fetchRequest.url,
+          url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,
+          redirected: Number(curlHandle.getInfo(Curl.info.REDIRECT_COUNT)) > 0,
         });
         resolve(ponyfillResponse);
         streamResolved = outputStream;

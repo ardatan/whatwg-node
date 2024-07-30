@@ -97,7 +97,15 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
       }
     }
 
-    this._agent = requestInit?.agent;
+    if (requestInit?.agent != null) {
+      if (requestInit.agent === false) {
+        this._agent = false;
+      } else if (this.url.startsWith('http:/') && requestInit.agent instanceof HTTPAgent) {
+        this._agent = requestInit?.agent;
+      } else if (this.url.startsWith('https:/') && requestInit.agent instanceof HTTPSAgent) {
+        this._agent = requestInit?.agent;
+      }
+    }
   }
 
   headersSerializer?: HeadersSerializer;
