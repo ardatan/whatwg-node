@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.5.20
+
+### Patch Changes
+
+- [`0d59a66`](https://github.com/ardatan/whatwg-node/commit/0d59a66289b99e3784ce50d35c5bf9c1c9a24db3)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix redirects from http to https
+
 ## 0.5.19
 
 ### Patch Changes
