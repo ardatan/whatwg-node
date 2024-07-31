@@ -28,7 +28,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
               new fetchAPI.DecompressionStream(contentEncoding as CompressionFormat),
             );
           }
-          const newRequest = new fetchAPI.Request(request.url, {
+          request = new fetchAPI.Request(request.url, {
             body: newBody,
             cache: request.cache,
             credentials: request.credentials,
@@ -45,7 +45,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
             // @ts-ignore - not in the TS types yet
             duplex: 'half',
           });
-          setRequest(newRequest);
+          setRequest(request);
         }
       }
       const acceptEncoding = request.headers.get('accept-encoding');

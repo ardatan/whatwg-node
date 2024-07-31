@@ -79,6 +79,62 @@ describe('Compression', () => {
               expect(body).toEqual(exampleData);
               expect(Number(contentLength)).toBeLessThan(Buffer.byteLength(body));
             });
+            it('both ways', async () => {
+              const adapter = createServerAdapter(
+                async req => {
+                  const body = await req.text();
+                  return fetchAPI.Response.json({
+                    body,
+                    contentLength: req.headers.get('content-length'),
+                  });
+                },
+                {
+                  plugins: [useContentEncoding()],
+                },
+              );
+              if (encoding === 'none') {
+                const res = await adapter.fetch('http://localhost', {
+                  method: 'POST',
+                  body: exampleData,
+                  headers: {
+                    'content-length': String(Buffer.byteLength(exampleData)),
+                  },
+                });
+                await expect(res.json()).resolves.toEqual({
+                  body: exampleData,
+                  contentLength: String(Buffer.byteLength(exampleData)),
+                });
+                return;
+              }
+              const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
+              const writer = stream.writable.getWriter();
+              writer.write(exampleData);
+              writer.close();
+              const chunks: number[] = [];
+              const reader = stream.readable.getReader();
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                  reader.releaseLock();
+                  break;
+                } else if (value) {
+                  chunks.push(...value);
+                }
+              }
+              const uint8Array = new Uint8Array(chunks);
+              let res = await adapter.fetch('http://localhost', {
+                method: 'POST',
+                headers: {
+                  'accept-encoding': encoding,
+                  'content-encoding': encoding,
+                },
+                body: uint8Array,
+              });
+              res = handleResponseDecompression(res, fetchAPI);
+              const { body, contentLength } = await res.json();
+              expect(body).toEqual(exampleData);
+              expect(Number(contentLength)).toBeLessThan(Buffer.byteLength(body));
+            });
           });
         }
       },
