@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.46
+
+### Patch Changes
+
+- [`9805a25`](https://github.com/ardatan/whatwg-node/commit/9805a2525c3d1c3b093000ef1111f770b8e8496a)
+  Thanks [@ardatan](https://github.com/ardatan)! - While using `useContentEncoding`, if compression
+  is applied in both ends, respect `Accept-Encoding` from the client correctly
+
 ## 0.9.45
 
 ### Patch Changes
