@@ -27,23 +27,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     this.redirected = init?.redirected || false;
     this.type = init?.type || 'default';
 
-    const contentTypeInHeaders = this.headers.get('content-type');
-    if (!contentTypeInHeaders) {
-      if (this.contentType) {
-        this.headers.set('content-type', this.contentType);
-      }
-    } else {
-      this.contentType = contentTypeInHeaders;
-    }
-
-    const contentLengthInHeaders = this.headers.get('content-length');
-    if (!contentLengthInHeaders) {
-      if (this.contentLength) {
-        this.headers.set('content-length', this.contentLength.toString());
-      }
-    } else {
-      this.contentLength = parseInt(contentLengthInHeaders, 10);
-    }
+    this.handleContentLengthHeader();
   }
 
   get ok() {

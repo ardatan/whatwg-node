@@ -77,6 +77,32 @@ export class PonyfillBody<TJSON = any> implements Body {
     return body;
   }
 
+  protected handleContentLengthHeader(this: PonyfillBody & { headers: Headers }, forceSet = false) {
+    const contentTypeInHeaders = this.headers.get('content-type');
+    if (!contentTypeInHeaders) {
+      if (this.contentType) {
+        this.headers.set('content-type', this.contentType);
+      }
+    } else {
+      this.contentType = contentTypeInHeaders;
+    }
+
+    const contentLengthInHeaders = this.headers.get('content-length');
+
+    if (forceSet && this.bodyInit == null && !contentLengthInHeaders) {
+      this.contentLength = 0;
+      this.headers.set('content-length', '0');
+    }
+
+    if (!contentLengthInHeaders) {
+      if (this.contentLength) {
+        this.headers.set('content-length', this.contentLength.toString());
+      }
+    } else {
+      this.contentLength = parseInt(contentLengthInHeaders, 10);
+    }
+  }
+
   public get body(): PonyfillReadableStream<Uint8Array> | null {
     const _body = this.generateBody();
     if (_body != null) {
