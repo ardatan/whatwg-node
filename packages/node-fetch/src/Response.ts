@@ -52,7 +52,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     });
   }
 
-  static redirect(url: string, status = 301) {
+  static redirect(url: string, status = 302) {
     if (status < 300 || status > 399) {
       throw new RangeError('Invalid status code');
     }
