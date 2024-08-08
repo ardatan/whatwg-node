@@ -1,5 +1,17 @@
 # @whatwg-node/node-fetch
 
+## 0.5.21
+
+### Patch Changes
+
+- [`1139796`](https://github.com/ardatan/whatwg-node/commit/11397962197b658995535bc402c1eaf6ba1b29bd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Small refactor to handle content length in Body
+  impl
+
+- [`4df7cdf`](https://github.com/ardatan/whatwg-node/commit/4df7cdf5f4a4a8a1cbdf9d51217c297d8f9895a7)
+  Thanks [@ardatan](https://github.com/ardatan)! - \`Response.redirect\`'s default status code is
+  \`302\`
+
 ## 0.5.20
 
 ### Patch Changes
