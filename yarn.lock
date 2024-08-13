@@ -2761,10 +2761,10 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
 
-"@types/k6@^0.52.0":
-  version "0.52.0"
-  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.52.0.tgz#ba11a3f604d8a253e0f5da65d5b7bc00e936bf9e"
-  integrity sha512-yaw2wg61nKQtToDML+nngzgXVjZ6wNA4R0Q3jKDTeadG5EqfZgis5a1Q2hwY7kjuGuXmu8eM6gHg3tgnOj4vNw==
+"@types/k6@^0.53.0":
+  version "0.53.0"
+  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.53.0.tgz#2bba27db67a40bc0b6392cf3753f51cd2495c28b"
+  integrity sha512-5gvPxn4I7b08AS0UZPjYALg4rg4rslSNVfHPiZ1ta0EEwsJOd+uKMkvwGkQOKy0a/8HAfthxD61Qci1kXcJOjg==
 
 "@types/keyv@^3.1.4":
   version "3.1.4"
@@ -6814,10 +6814,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.2.4.tgz#eca284f75d2965079309dc0ad9255abb2ebc1632"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-lint-staged@15.2.8:
-  version "15.2.8"
-  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-15.2.8.tgz#5e19eb7b4dbb922f56fafb4635b44ee3c92f7322"
-  integrity sha512-PUWFf2zQzsd9EFU+kM1d7UP+AZDbKFKuj+9JNVTBkhUFhbg4MAt6WfyMMwBfM4lYqd4D2Jwac5iuTu9rVj4zCQ==
+lint-staged@15.2.9:
+  version "15.2.9"
+  resolved "https://registry.yarnpkg.com/lint-staged/-/lint-staged-15.2.9.tgz#bf70d40b6b192df6ad756fb89822211615e0f4da"
+  integrity sha512-BZAt8Lk3sEnxw7tfxM7jeZlPRuT4M68O0/CwZhhaw6eeWu0Lz5eERE3m386InivXB64fp/mDID452h48tvKlRQ==
   dependencies:
     chalk "~5.3.0"
     commander "~12.1.0"
@@ -9759,10 +9759,10 @@ workerd@1.20240806.0:
     "@cloudflare/workerd-linux-arm64" "1.20240806.0"
     "@cloudflare/workerd-windows-64" "1.20240806.0"
 
-wrangler@3.70.0:
-  version "3.70.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.70.0.tgz#fffe7683d6a7527a7b59efc3cf5f891a410c409b"
-  integrity sha512-aMtCEXmH02SIxbxOFGGuJ8ZemmG9W+IcNRh5D4qIKgzSxqy0mt9mRoPNPSv1geGB2/8YAyeLGPf+tB4lxz+ssg==
+wrangler@3.71.0:
+  version "3.71.0"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.71.0.tgz#074b56c19aa65cb0b899600af12ffd666caf366b"
+  integrity sha512-WHWBmU2z0p1hRtSIIP5HEeoR+6aNpuZR82HMXAwpfeiyijjfkMyt/TUs8gvIOKC3x3+ETQQIdVeX2al5KtrIxQ==
   dependencies:
     "@cloudflare/kv-asset-handler" "0.3.4"
     "@cloudflare/workers-shared" "0.1.0"
