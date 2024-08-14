@@ -6,6 +6,12 @@ export class PonyfillDecompressionStream
   extends PonyfillTransformStream
   implements DecompressionStream
 {
+  static supportedFormats: PonyfillCompressionFormat[] = globalThis.process?.version?.startsWith(
+    'v2',
+  )
+    ? ['gzip', 'deflate', 'br']
+    : ['gzip', 'deflate', 'deflate-raw', 'br'];
+
   constructor(compressionFormat: PonyfillCompressionFormat) {
     switch (compressionFormat) {
       case 'x-gzip':
@@ -23,7 +29,7 @@ export class PonyfillDecompressionStream
         super(createBrotliDecompress());
         break;
       default:
-        throw new Error(`Unsupported compression format: ${compressionFormat}`);
+        throw new TypeError(`Unsupported compression format: '${compressionFormat}'`);
     }
   }
 }
