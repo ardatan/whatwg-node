@@ -1,5 +1,18 @@
 # @whatwg-node/fetch
 
+## 0.9.20
+
+### Patch Changes
+
+- [#1566](https://github.com/ardatan/whatwg-node/pull/1566)
+  [`de1e95a`](https://github.com/ardatan/whatwg-node/commit/de1e95a8eb107083e638aa8472089b96b33bbe4a)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid constructing DecompressionStream to check
+  supported encodings
+
+- Updated dependencies
+  [[`de1e95a`](https://github.com/ardatan/whatwg-node/commit/de1e95a8eb107083e638aa8472089b96b33bbe4a)]:
+  - @whatwg-node/node-fetch@0.5.22
+
 ## 0.9.19
 
 ### Patch Changes
