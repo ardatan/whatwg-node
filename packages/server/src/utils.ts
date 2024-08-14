@@ -626,23 +626,30 @@ export function getSupportedEncodings(fetchAPI: FetchAPI) {
   let supportedEncodings = supportedEncodingsByFetchAPI.get(fetchAPI);
   if (!supportedEncodings) {
     const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
-    supportedEncodings = possibleEncodings.filter(encoding => {
-      // deflate-raw is not supported in Node.js >v20
-      if (
-        globalThis.process?.version?.startsWith('v2') &&
-        fetchAPI.DecompressionStream === globalThis.DecompressionStream &&
-        encoding === 'deflate-raw'
-      ) {
-        return false;
-      }
-      try {
-        // eslint-disable-next-line no-new
-        new fetchAPI.DecompressionStream(encoding);
-        return true;
-      } catch {
-        return false;
-      }
-    });
+    if ((fetchAPI.DecompressionStream as any)['supportedFormats']) {
+      supportedEncodings = (fetchAPI.DecompressionStream as any)[
+        'supportedFormats'
+      ] as CompressionFormat[];
+    } else {
+      supportedEncodings = possibleEncodings.filter(encoding => {
+        // deflate-raw is not supported in Node.js >v20
+        if (
+          globalThis.process?.version?.startsWith('v2') &&
+          fetchAPI.DecompressionStream === globalThis.DecompressionStream &&
+          encoding === 'deflate-raw'
+        ) {
+          return false;
+        }
+        try {
+          // eslint-disable-next-line no-new
+          new fetchAPI.DecompressionStream(encoding);
+          return true;
+        } catch {
+          return false;
+        }
+      });
+    }
+
     supportedEncodingsByFetchAPI.set(fetchAPI, supportedEncodings);
   }
   return supportedEncodings;

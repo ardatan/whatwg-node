@@ -13,6 +13,12 @@ export class PonyfillCompressionStream
   extends PonyfillTransformStream
   implements CompressionStream
 {
+  static supportedFormats: PonyfillCompressionFormat[] = globalThis.process?.version?.startsWith(
+    'v2',
+  )
+    ? ['gzip', 'deflate', 'br']
+    : ['gzip', 'deflate', 'deflate-raw', 'br'];
+
   constructor(compressionFormat: PonyfillCompressionFormat) {
     switch (compressionFormat) {
       case 'x-gzip':
