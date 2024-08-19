@@ -1,3 +1,4 @@
+import { Blob as BufferBlob } from 'buffer';
 import { createServer, type RequestListener } from 'http';
 import * as undici from 'undici';
 import { createServerAdapter, Response } from '@whatwg-node/server';
@@ -38,7 +39,18 @@ if (process.env.SCENARIO === 'native') {
         Response: undici.Response,
         Headers: undici.Headers,
         FormData: undici.FormData,
+        ReadableStream: globalThis.ReadableStream,
+        WritableStream: globalThis.WritableStream,
+        CompressionStream: globalThis.CompressionStream,
+        TransformStream: globalThis.TransformStream,
+        Blob: BufferBlob,
         File: undici.File,
+        crypto: globalThis.crypto,
+        btoa: globalThis.btoa,
+        TextDecoder: globalThis.TextDecoder,
+        TextEncoder: globalThis.TextEncoder,
+        URL: globalThis.URL,
+        URLSearchParams: globalThis.URLSearchParams,
       },
     },
   );
