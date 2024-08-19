@@ -1,4 +1,5 @@
 import { createServer, type RequestListener } from 'http';
+import * as undici from 'undici';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 
 let serverAdapter: RequestListener;
@@ -14,6 +15,7 @@ if (process.env.SCENARIO === 'native') {
         FormData: globalThis.FormData,
         ReadableStream: globalThis.ReadableStream,
         WritableStream: globalThis.WritableStream,
+        CompressionStream: globalThis.CompressionStream,
         TransformStream: globalThis.TransformStream,
         Blob: globalThis.Blob,
         File: globalThis.File,
@@ -26,7 +28,23 @@ if (process.env.SCENARIO === 'native') {
       },
     },
   );
+} else if (process.env.SCENARIO === 'undici') {
+  serverAdapter = (createServerAdapter as any)(
+    () => undici.Response.json({ message: `Hello, World!` }),
+    {
+      fetchAPI: {
+        fetch: undici.fetch,
+        Request: undici.Request,
+        Response: undici.Response,
+        Headers: undici.Headers,
+        FormData: undici.FormData,
+        File: undici.File,
+      },
+    },
+  );
 } else {
+}
+{
   serverAdapter = createServerAdapter(() => Response.json({ message: `Hello, World!` }));
 }
 

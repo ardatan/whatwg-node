@@ -17,6 +17,7 @@ jobs:
         scenario:
           - native
           - ponyfill
+          - undici
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
