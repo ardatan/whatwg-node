@@ -500,6 +500,13 @@ export function isolateObject<TIsolatedObject extends object>(
   waitUntilPromises?: Promise<unknown>[],
 ): TIsolatedObject {
   if (originalCtx == null) {
+    if (waitUntilPromises != null) {
+      return {
+        waitUntil(promise: Promise<unknown>) {
+          waitUntilPromises.push(promise.catch(err => console.error(err)));
+        },
+      } as TIsolatedObject;
+    }
     return {} as TIsolatedObject;
   }
   const extraProps: Partial<TIsolatedObject> = {};
