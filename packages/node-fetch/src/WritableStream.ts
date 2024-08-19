@@ -1,4 +1,5 @@
 import { Writable } from 'stream';
+import { fakePromise } from './utils.js';
 
 export class PonyfillWritableStream<W = any> implements WritableStream<W> {
   writable: Writable;
@@ -117,6 +118,9 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
         // no-op
       },
       write(chunk: W) {
+        if (chunk == null) {
+          return fakePromise(undefined);
+        }
         return new Promise<void>((resolve, reject) => {
           writable.write(chunk, (err: Error | null | undefined) => {
             if (err) {
@@ -128,41 +132,55 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
         });
       },
       close() {
+        if (!writable.errored && writable.closed) {
+          return fakePromise(undefined);
+        }
         return new Promise<void>((resolve, reject) => {
-          writable.end((err: Error | null) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
+          if (writable.errored) {
+            reject(writable.errored);
+          } else {
+            writable.end((err: Error | null) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          }
         });
       },
       abort(reason) {
         return new Promise<void>(resolve => {
           writable.destroy(reason);
-          resolve();
+          writable.once('close', resolve);
         });
       },
     };
   }
 
   close(): Promise<void> {
+    if (!this.writable.errored && this.writable.closed) {
+      return fakePromise(undefined);
+    }
     return new Promise<void>((resolve, reject) => {
-      this.writable.end((err: Error | null) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      });
+      if (this.writable.errored) {
+        reject(this.writable.errored);
+      } else {
+        this.writable.end((err: Error | null) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        });
+      }
     });
   }
 
   abort(reason: any): Promise<void> {
     return new Promise<void>(resolve => {
       this.writable.destroy(reason);
-      resolve();
+      this.writable.once('close', resolve);
     });
   }
 

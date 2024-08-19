@@ -53,7 +53,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
         encodingMap.set(request, acceptEncoding.split(','));
       }
     },
-    onResponse({ request, response, setResponse, fetchAPI }) {
+    onResponse({ request, response, setResponse, fetchAPI, serverContext }) {
       // Hack for avoiding to create whatwg-node to create a readable stream until it's needed
       if ((response as any)['bodyInit'] || response.body) {
         const encodings = encodingMap.get(request);
@@ -71,8 +71,8 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
               const bufOfRes = (response as any)._buffer;
               if (bufOfRes) {
                 const writer = compressionStream.writable.getWriter();
-                writer.write(bufOfRes);
-                writer.close();
+                serverContext.waitUntil(writer.write(bufOfRes));
+                serverContext.waitUntil(writer.close());
                 const reader: ReadableStreamDefaultReader<Uint8Array> =
                   compressionStream.readable.getReader();
                 return Promise.resolve().then(async () => {
@@ -96,6 +96,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
                   });
                   decompressedResponseMap.set(compressedResponse, response);
                   setResponse(compressedResponse);
+                  serverContext.waitUntil(compressionStream.writable.close());
                 });
               }
             }

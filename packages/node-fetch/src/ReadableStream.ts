@@ -1,5 +1,6 @@
 import { Readable } from 'stream';
-import { PonyfillWritableStream } from './WritableStream';
+import { fakePromise } from './utils.js';
+import { PonyfillWritableStream } from './WritableStream.js';
 
 function createController<T>(
   desiredSize: number,
@@ -67,31 +68,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     } else if (isNodeReadable(underlyingSource)) {
       this.readable = underlyingSource as Readable;
     } else if (isReadableStream(underlyingSource)) {
-      let reader: ReadableStreamDefaultReader<T>;
-      let started = false;
-      this.readable = new Readable({
-        read() {
-          if (!started) {
-            started = true;
-            reader = underlyingSource.getReader();
-          }
-          reader
-            .read()
-            .then(({ value, done }) => {
-              if (done) {
-                this.push(null);
-              } else {
-                this.push(value);
-              }
-            })
-            .catch(err => {
-              this.destroy(err);
-            });
-        },
-        destroy(err, callback) {
-          reader.cancel(err).then(() => callback(err), callback);
-        },
-      });
+      this.readable = Readable.fromWeb(underlyingSource as Parameters<typeof Readable.fromWeb>[0]);
     } else {
       let started = false;
       let ongoing = false;
@@ -117,13 +94,26 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
             ongoing = false;
           });
         },
-        async destroy(err, callback) {
-          try {
-            await underlyingSource?.cancel?.(err);
-            callback(null);
-          } catch (err: any) {
-            callback(err);
+        destroy(err, callback) {
+          if (underlyingSource?.cancel) {
+            try {
+              const res$ = underlyingSource.cancel(err);
+              if (res$?.then) {
+                return res$.then(
+                  () => {
+                    callback(null);
+                  },
+                  err => {
+                    callback(err);
+                  },
+                );
+              }
+            } catch (err: any) {
+              callback(err);
+              return;
+            }
           }
+          callback(null);
         },
       });
     }
@@ -131,7 +121,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   cancel(reason?: any): Promise<void> {
     this.readable.destroy(reason);
-    return Promise.resolve();
+    return new Promise(resolve => this.readable.once('end', resolve));
   }
 
   locked = false;
@@ -143,15 +133,31 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     this.locked = true;
     return {
       read() {
-        return iterator.next() as any;
+        return iterator.next() as Promise<ReadableStreamReadResult<T>>;
       },
       releaseLock: () => {
-        iterator.return?.();
+        if (iterator.return) {
+          const retResult$ = iterator.return();
+          if (retResult$.then) {
+            retResult$.then(() => {
+              this.locked = false;
+            });
+            return;
+          }
+        }
         this.locked = false;
       },
-      cancel: async (reason?: any) => {
-        await iterator.return?.(reason);
+      cancel: reason => {
+        if (iterator.return) {
+          const retResult$ = iterator.return(reason);
+          if (retResult$.then) {
+            return retResult$.then(() => {
+              this.locked = false;
+            });
+          }
+        }
         this.locked = false;
+        return fakePromise(undefined);
       },
       closed: new Promise((resolve, reject) => {
         this.readable.once('end', resolve);
@@ -168,7 +174,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     throw new Error('Not implemented');
   }
 
-  async pipeTo(destination: WritableStream<T>): Promise<void> {
+  pipeTo(destination: WritableStream<T>): Promise<void> {
     if (isPonyfillWritableStream(destination)) {
       return new Promise((resolve, reject) => {
         this.readable.pipe(destination.writable);
@@ -177,14 +183,16 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       });
     } else {
       const writer = destination.getWriter();
-      try {
-        for await (const chunk of this) {
-          await writer.write(chunk);
+      return Promise.resolve().then(async () => {
+        try {
+          for await (const chunk of this) {
+            await writer.write(chunk);
+          }
+          await writer.close();
+        } catch (err) {
+          await writer.abort(err);
         }
-        await writer.close();
-      } catch (err) {
-        await writer.abort(err);
-      }
+      });
     }
   }
 
