@@ -55,8 +55,6 @@ if (process.env.SCENARIO === 'native') {
     },
   );
 } else {
-}
-{
   serverAdapter = createServerAdapter(() => Response.json({ message: `Hello, World!` }));
 }
 
