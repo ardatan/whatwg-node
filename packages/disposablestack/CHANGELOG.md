@@ -1,5 +1,13 @@
 # @whatwg-node/disposablestack
 
+## 0.0.2
+
+### Patch Changes
+
+- [`8ab228c`](https://github.com/ardatan/whatwg-node/commit/8ab228cb348ec7e16250c7f530956186311e16d9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Improve `disposed` flag and cleanup callbacks on
+  AsyncDisposable on disposeAsync call
+
 ## 0.0.1
 
 ### Patch Changes
