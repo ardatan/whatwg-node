@@ -68,12 +68,16 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
     if (res$?.then) {
       return res$.then(() => {
         if (this._error) {
-          throw this._error;
+          const error = this._error;
+          this._error = undefined;
+          throw error;
         }
       }) as Promise<void>;
     }
     if (this._error) {
-      throw this._error;
+      const error = this._error;
+      this._error = undefined;
+      throw error;
     }
     return undefined as any as Promise<void>;
   }

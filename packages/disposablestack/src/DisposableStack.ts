@@ -53,7 +53,12 @@ export class PonyfillDisposableStack implements DisposableStack {
   }
 
   [DisposableSymbols.dispose](): void {
-    return this._iterateCallbacks();
+    this._iterateCallbacks();
+    if (this._error) {
+      const error = this._error;
+      this._error = undefined;
+      throw error;
+    }
   }
 
   readonly [Symbol.toStringTag]: string = 'DisposableStack';
