@@ -4,11 +4,7 @@ import { isSyncDisposable } from './utils.js';
 export class PonyfillDisposableStack implements DisposableStack {
   private callbacks: (() => void)[] = [];
   get disposed(): boolean {
-    return false;
-  }
-
-  dispose(): void {
-    return this[DisposableSymbols.dispose]();
+    return this.callbacks.length === 0;
   }
 
   use<T extends Disposable | null | undefined>(value: T): T {
@@ -19,12 +15,16 @@ export class PonyfillDisposableStack implements DisposableStack {
   }
 
   adopt<T>(value: T, onDispose: (value: T) => void): T {
-    this.callbacks.push(() => onDispose(value));
+    if (onDispose) {
+      this.callbacks.push(() => onDispose(value));
+    }
     return value;
   }
 
   defer(onDispose: () => void): void {
-    this.callbacks.push(onDispose);
+    if (onDispose) {
+      this.callbacks.push(onDispose);
+    }
   }
 
   move(): DisposableStack {
@@ -34,11 +34,26 @@ export class PonyfillDisposableStack implements DisposableStack {
     return stack;
   }
 
-  [DisposableSymbols.dispose](): void {
-    for (const cb of this.callbacks) {
-      cb();
+  dispose(): void {
+    return this[DisposableSymbols.dispose]();
+  }
+
+  private _error?: Error;
+
+  private _iterateCallbacks(): void {
+    const cb = this.callbacks.pop();
+    if (cb) {
+      try {
+        cb();
+      } catch (error: any) {
+        this._error = this._error ? new SuppressedError(error, this._error) : error;
+      }
+      return this._iterateCallbacks();
     }
-    this.callbacks = [];
+  }
+
+  [DisposableSymbols.dispose](): void {
+    return this._iterateCallbacks();
   }
 
   readonly [Symbol.toStringTag]: string = 'DisposableStack';

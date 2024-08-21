@@ -4,7 +4,7 @@ import { isAsyncDisposable, isSyncDisposable, MaybePromise } from './utils.js';
 export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
   private callbacks: (() => MaybePromise<void>)[] = [];
   get disposed(): boolean {
-    return false;
+    return this.callbacks.length === 0;
   }
 
   use<T extends AsyncDisposable | Disposable | null | undefined>(value: T): T {
@@ -17,12 +17,16 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
   }
 
   adopt<T>(value: T, onDisposeAsync: (value: T) => MaybePromise<void>): T {
-    this.callbacks.push(() => onDisposeAsync(value));
+    if (onDisposeAsync) {
+      this.callbacks.push(() => onDisposeAsync(value));
+    }
     return value;
   }
 
   defer(onDisposeAsync: () => MaybePromise<void>): void {
-    this.callbacks.push(onDisposeAsync);
+    if (onDisposeAsync) {
+      this.callbacks.push(onDisposeAsync);
+    }
   }
 
   move(): AsyncDisposableStack {
@@ -36,10 +40,42 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
     return this[DisposableSymbols.asyncDispose]();
   }
 
-  async [DisposableSymbols.asyncDispose](): Promise<void> {
-    for (const cb of this.callbacks) {
-      await cb();
+  private _error?: Error;
+
+  private _iterateCallbacks(): MaybePromise<void> {
+    const cb = this.callbacks.pop();
+    if (cb) {
+      try {
+        const res$ = cb();
+        if (res$?.then) {
+          return res$.then(
+            () => this._iterateCallbacks(),
+            error => {
+              this._error = this._error ? new SuppressedError(error, this._error) : error;
+              return this._iterateCallbacks();
+            },
+          );
+        }
+      } catch (error: any) {
+        this._error = this._error ? new SuppressedError(error, this._error) : error;
+      }
+      return this._iterateCallbacks();
     }
+  }
+
+  [DisposableSymbols.asyncDispose](): Promise<void> {
+    const res$ = this._iterateCallbacks();
+    if (res$?.then) {
+      return res$.then(() => {
+        if (this._error) {
+          throw this._error;
+        }
+      }) as Promise<void>;
+    }
+    if (this._error) {
+      throw this._error;
+    }
+    return undefined as any as Promise<void>;
   }
 
   readonly [Symbol.toStringTag]: string = 'AsyncDisposableStack';
