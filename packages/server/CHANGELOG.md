@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.49
+
+### Patch Changes
+
+- [`8a43669`](https://github.com/ardatan/whatwg-node/commit/8a4366984a1854e93251e43711a1c50541818e9f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix waitUntil issue
+
 ## 0.9.48
 
 ### Patch Changes
