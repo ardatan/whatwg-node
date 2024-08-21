@@ -84,7 +84,11 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       };
     }
     curlHandle.once('end', function endListener() {
-      curlHandle.close();
+      try {
+        curlHandle.close();
+      } catch (e) {
+        reject(e);
+      }
     });
     curlHandle.once('error', function errorListener(error: any) {
       if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
@@ -95,7 +99,11 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         }
         reject(error);
       }
-      curlHandle.close();
+      try {
+        curlHandle.close();
+      } catch (e) {
+        reject(e);
+      }
     });
     curlHandle.once(
       'stream',
