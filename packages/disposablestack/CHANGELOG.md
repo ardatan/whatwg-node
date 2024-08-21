@@ -1,5 +1,12 @@
 # @whatwg-node/disposablestack
 
+## 0.0.3
+
+### Patch Changes
+
+- [`0a49705`](https://github.com/ardatan/whatwg-node/commit/0a4970574738c918913d503223968c68a04186e7)
+  Thanks [@ardatan](https://github.com/ardatan)! - Throw SupressedError in DisposableStack
+
 ## 0.0.2
 
 ### Patch Changes
