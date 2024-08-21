@@ -1,4 +1,10 @@
-import { decompressedResponseMap, getSupportedEncodings } from '../utils.js';
+import type { Readable } from 'stream';
+import {
+  decompressedResponseMap,
+  getSupportedEncodings,
+  isAsyncIterable,
+  isReadable,
+} from '../utils.js';
 import type { ServerAdapterPlugin } from './types.js';
 
 export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServerContext> {
@@ -54,6 +60,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
       }
     },
     onResponse({ request, response, setResponse, fetchAPI, serverContext }) {
+      const waitUntil = serverContext.waitUntil?.bind(serverContext) || (() => {});
       // Hack for avoiding to create whatwg-node to create a readable stream until it's needed
       if ((response as any)['bodyInit'] || response.body) {
         const encodings = encodingMap.get(request);
@@ -71,21 +78,15 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
               const bufOfRes = (response as any)._buffer;
               if (bufOfRes) {
                 const writer = compressionStream.writable.getWriter();
-                serverContext.waitUntil(writer.write(bufOfRes));
-                serverContext.waitUntil(writer.close());
-                const reader: ReadableStreamDefaultReader<Uint8Array> =
-                  compressionStream.readable.getReader();
-                return Promise.resolve().then(async () => {
-                  const chunks: number[] = [];
-                  while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) {
-                      reader.releaseLock();
-                      break;
-                    } else if (value) {
-                      chunks.push(...value);
-                    }
-                  }
+                waitUntil(writer.write(bufOfRes));
+                waitUntil(writer.close());
+                const uint8Arrays$ = isReadable((compressionStream.readable as any)['readable'])
+                  ? collectReadableValues((compressionStream.readable as any)['readable'])
+                  : isAsyncIterable(compressionStream.readable)
+                    ? collectAsyncIterableValues(compressionStream.readable)
+                    : collectReadableStreamValues(compressionStream.readable);
+                return uint8Arrays$.then(uint8Arrays => {
+                  const chunks = uint8Arrays.flatMap(uint8Array => [...uint8Array]);
                   const uint8Array = new Uint8Array(chunks);
                   const newHeaders = new fetchAPI.Headers(response.headers);
                   newHeaders.set('content-encoding', supportedEncoding);
@@ -96,7 +97,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
                   });
                   decompressedResponseMap.set(compressedResponse, response);
                   setResponse(compressedResponse);
-                  serverContext.waitUntil(compressionStream.writable.close());
+                  waitUntil(compressionStream.writable.close());
                 });
               }
             }
@@ -116,4 +117,36 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
       }
     },
   };
+}
+
+function collectReadableValues<T>(readable: Readable): Promise<T[]> {
+  const values: T[] = [];
+  readable.on('data', value => values.push(value));
+  return new Promise((resolve, reject) => {
+    readable.once('end', () => resolve(values));
+    readable.once('error', reject);
+  });
+}
+
+async function collectAsyncIterableValues<T>(asyncIterable: AsyncIterable<T>): Promise<T[]> {
+  const values: T[] = [];
+  for await (const value of asyncIterable) {
+    values.push(value);
+  }
+  return values;
+}
+
+async function collectReadableStreamValues<T>(readableStream: ReadableStream<T>): Promise<T[]> {
+  const reader = readableStream.getReader();
+  const values: T[] = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      reader.releaseLock();
+      break;
+    } else if (value) {
+      values.push(value);
+    }
+  }
+  return values;
 }
