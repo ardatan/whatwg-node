@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.5.24
+
+### Patch Changes
+
+- [`39d9055`](https://github.com/ardatan/whatwg-node/commit/39d9055fe1ae0daed412e5689eb649cb4e313302)
+  Thanks [@ardatan](https://github.com/ardatan)! - Prevent \`Curl handle is closed\` error
+
 ## 0.5.23
 
 ### Patch Changes
