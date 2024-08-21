@@ -1,5 +1,17 @@
 # @whatwg-node/node-fetch
 
+## 0.5.23
+
+### Patch Changes
+
+- [#1577](https://github.com/ardatan/whatwg-node/pull/1577)
+  [`99c4344`](https://github.com/ardatan/whatwg-node/commit/99c4344ec82717be079e725538a532a827fbef82)
+  Thanks [@ardatan](https://github.com/ardatan)! - - Improve native ReadableStream handling inside
+  ponyfills
+  - Use `waitUntil` instead of floating promises
+  - Handle early termination in `WritableStream`
+  - Handle `waitUntil` correctly within a dummy call of `ServerAdapter.fetch` method
+
 ## 0.5.22
 
 ### Patch Changes
