@@ -1,5 +1,5 @@
-import { Agent as HTTPAgent, globalAgent as httpGlobalAgent } from 'http';
-import { Agent as HTTPSAgent, globalAgent as httpsGlobalAgent } from 'https';
+import { Agent as HTTPAgent } from 'http';
+import { Agent as HTTPSAgent } from 'https';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 
@@ -77,11 +77,11 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
 
     if (requestInit?.agent != null) {
       if (requestInit.agent === false) {
-        this._agent = false;
+        this.agent = false;
       } else if (this.url.startsWith('http:/') && requestInit.agent instanceof HTTPAgent) {
-        this._agent = requestInit?.agent;
+        this.agent = requestInit.agent;
       } else if (this.url.startsWith('https:/') && requestInit.agent instanceof HTTPSAgent) {
-        this._agent = requestInit?.agent;
+        this.agent = requestInit.agent;
       }
     }
   }
@@ -102,22 +102,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   url: string;
   duplex: 'half' | 'full';
 
-  private _agent: HTTPAgent | HTTPSAgent | false | undefined;
-
-  get agent() {
-    if (this._agent != null) {
-      return this._agent;
-    }
-    // Disable agent when running in jest
-    if (globalThis['libcurl'] || typeof jest === 'object') {
-      return false;
-    }
-    if (this.url.startsWith('http:')) {
-      return httpGlobalAgent;
-    } else if (this.url.startsWith('https:')) {
-      return httpsGlobalAgent;
-    }
-  }
+  agent: HTTPAgent | HTTPSAgent | false | undefined;
 
   private _signal: AbortSignal | undefined | null;
 

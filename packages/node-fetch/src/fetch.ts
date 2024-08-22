@@ -78,7 +78,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
     const response = getResponseForBlob(fetchRequest.url);
     return fakePromise(response);
   }
-  if (globalThis.libcurl) {
+  if (globalThis.libcurl && !fetchRequest.agent) {
     return fetchCurl(fetchRequest);
   }
   return fetchNodeHttp(fetchRequest);

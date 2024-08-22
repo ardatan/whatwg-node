@@ -1,4 +1,6 @@
 /* eslint-disable n/no-callback-literal */
+import { globalAgent as httpGlobalAgent } from 'http';
+import { globalAgent as httpsGlobalAgent } from 'https';
 import type { Dispatcher } from 'undici';
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
@@ -49,6 +51,8 @@ export function runTestsForEachFetchImpl(
         (globalThis.libcurl as any) = null;
       });
       afterAll(() => {
+        httpGlobalAgent.destroy();
+        httpsGlobalAgent.destroy();
         globalThis.libcurl = libcurl;
       });
       const fetchAPI = createFetch({ skipPonyfill: false });
