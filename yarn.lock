@@ -2402,10 +2402,10 @@
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
-"@pulumi/cloudflare@4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-4.16.0.tgz#a49db37a7f7707bc402253631c103f547ffbe9ad"
-  integrity sha512-cwdB70bLeKL/VNIqqOD5fpHQcocVmpHuiHH589eR+QUfbLa4f+M8yA/TTCcxx2AFFctTqO5wgVuC+faL8xZmWQ==
+"@pulumi/cloudflare@5.37.0":
+  version "5.37.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-5.37.0.tgz#5cb59ffcfa95200e87d36395a1afd061a4f970f5"
+  integrity sha512-WIJ/8yR60+jguuVWmQ5ugeSlZLblC+zbT6+a5s9Aagsp3nnJ1UKWBYgkBYU4GTVjVNzsiiYNi4yPExPR3Tep0A==
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
