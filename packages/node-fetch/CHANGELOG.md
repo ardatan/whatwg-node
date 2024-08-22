@@ -1,5 +1,23 @@
 # @whatwg-node/node-fetch
 
+## 0.5.25
+
+### Patch Changes
+
+- [#1592](https://github.com/ardatan/whatwg-node/pull/1592)
+  [`71c79c6`](https://github.com/ardatan/whatwg-node/commit/71c79c639713ef738bd63f233ec20bdc1181b8e5)
+  Thanks [@ardatan](https://github.com/ardatan)! - When cURL is used as the HTTP client
+  implementation instead of node:http, `SSL_VERIFYPEER` should be set `false` when the
+  `NODE_TLS_REJECT_UNAUTHORIZED` environment variable is set to `0`. `CAINFO` should be set to the
+  value of the `NODE_EXTRA_CA_CERTS` environment variable.
+
+  This allows the cURL client to use the same CA certificates and SSL configuration as `node:http`
+
+- [#1592](https://github.com/ardatan/whatwg-node/pull/1592)
+  [`71c79c6`](https://github.com/ardatan/whatwg-node/commit/71c79c639713ef738bd63f233ec20bdc1181b8e5)
+  Thanks [@ardatan](https://github.com/ardatan)! - When `agent` is provided in `Request`, use
+  `node:http` instead of `node-libcurl`
+
 ## 0.5.24
 
 ### Patch Changes
