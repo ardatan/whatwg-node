@@ -14,7 +14,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   curlHandle.setOpt('URL', fetchRequest.url);
 
-  curlHandle.setOpt('SSL_VERIFYPEER', false);
+  if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === '0') {
+    curlHandle.setOpt('SSL_VERIFYPEER', false);
+  }
+
+  if (process.env.NODE_EXTRA_CA_CERTS) {
+    curlHandle.setOpt('CAINFO', process.env.NODE_EXTRA_CA_CERTS);
+  }
 
   curlHandle.enable(CurlFeature.StreamResponse);
 
