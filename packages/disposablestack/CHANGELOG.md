@@ -1,5 +1,13 @@
 # @whatwg-node/disposablestack
 
+## 0.0.4
+
+### Patch Changes
+
+- [`860bfde`](https://github.com/ardatan/whatwg-node/commit/860bfde7d7b6cf1b090e0b91c48bcb3cac69cb89)
+  Thanks [@ardatan](https://github.com/ardatan)! - Ponyfill SuppressedError correctly inside
+  DisposableStack ponyfills
+
 ## 0.0.3
 
 ### Patch Changes
