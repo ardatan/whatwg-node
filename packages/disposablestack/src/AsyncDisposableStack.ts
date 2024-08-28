@@ -1,5 +1,8 @@
+import { PonyfillSuppressedError } from './SupressedError.js';
 import { DisposableSymbols } from './symbols.js';
 import { isAsyncDisposable, isSyncDisposable, MaybePromise } from './utils.js';
+
+const SuppressedError = globalThis.SuppressedError || PonyfillSuppressedError;
 
 export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
   private callbacks: (() => MaybePromise<void>)[] = [];

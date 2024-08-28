@@ -1,5 +1,8 @@
+import { PonyfillSuppressedError } from './SupressedError.js';
 import { DisposableSymbols } from './symbols.js';
 import { isSyncDisposable } from './utils.js';
+
+const SuppressedError = globalThis.SuppressedError || PonyfillSuppressedError;
 
 export class PonyfillDisposableStack implements DisposableStack {
   private callbacks: (() => void)[] = [];
