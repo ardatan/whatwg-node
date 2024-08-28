@@ -7,6 +7,6 @@ export class PonyfillSuppressedError extends Error implements SuppressedError {
   ) {
     super(message);
     this.name = 'SuppressedError';
-    Error.captureStackTrace(this, SuppressedError);
+    Error.captureStackTrace(this, this.constructor);
   }
 }
