@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/disposablestack",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "type": "module",
   "description": "Cross Platform Smart DisposableStack API Ponyfill",
   "repository": {
