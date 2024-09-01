@@ -32,9 +32,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
-
       - name: Use Deno
         if: matrix.plan == 'deno'
         uses: denoland/setup-deno@v1
