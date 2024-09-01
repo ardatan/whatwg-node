@@ -1,5 +1,21 @@
 # @whatwg-node/node-fetch
 
+## 0.5.26
+
+### Patch Changes
+
+- [#1617](https://github.com/ardatan/whatwg-node/pull/1617)
+  [`ed368bf`](https://github.com/ardatan/whatwg-node/commit/ed368bf6ab65e8141406a8b66f54d01785144490)
+  Thanks [@ardatan](https://github.com/ardatan)! - # Fixes for usage of `node-libcurl`
+
+  - Fix \`Error: SSL peer certificate or SSH remove key was not ok error\`, and use
+    `tls.rootCertificates` as default certificates.
+
+  [Learn more](https://github.com/JCMais/node-libcurl/blob/develop/COMMON_ISSUES.md)
+
+  - Fix `API function called from within callback` by preventing the use of `curl_easy_perform` and
+    `curl_multi_perform` inside callbacks.
+
 ## 0.5.25
 
 ### Patch Changes
