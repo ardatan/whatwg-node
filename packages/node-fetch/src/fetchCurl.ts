@@ -1,12 +1,15 @@
 import { PassThrough, Readable, promises as streamPromises } from 'stream';
+import { rootCertificates } from 'tls';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import { defaultHeadersSerializer, isNodeReadable } from './utils.js';
+import { createDeferredPromise, defaultHeadersSerializer, isNodeReadable } from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
+  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis[
+    'libcurl'
+  ] as typeof import('node-libcurl');
 
   const curlHandle = new Curl();
 
@@ -20,6 +23,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   if (process.env.NODE_EXTRA_CA_CERTS) {
     curlHandle.setOpt('CAINFO', process.env.NODE_EXTRA_CA_CERTS);
+  } else {
+    curlHandle.setOpt('CAINFO_BLOB', rootCertificates.join('\n'));
   }
 
   curlHandle.enable(CurlFeature.StreamResponse);
@@ -76,89 +81,95 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   curlHandle.enable(CurlFeature.NoHeaderParsing);
 
-  return new Promise(function promiseResolver(resolve, reject) {
-    let streamResolved: Readable | undefined;
-    if (fetchRequest['_signal']) {
-      fetchRequest['_signal'].onabort = () => {
-        if (curlHandle.isOpen) {
-          try {
-            curlHandle.pause(CurlPause.Recv);
-          } catch (e) {
-            reject(e);
-          }
+  const deferredPromise = createDeferredPromise<PonyfillResponse<TResponseJSON>>();
+  let streamResolved: Readable | undefined;
+  if (fetchRequest['_signal']) {
+    fetchRequest['_signal'].onabort = () => {
+      if (curlHandle.isOpen) {
+        try {
+          curlHandle.pause(CurlPause.Recv);
+        } catch (e) {
+          deferredPromise.reject(e);
         }
-      };
+      }
+    };
+  }
+  curlHandle.once('end', function endListener() {
+    try {
+      curlHandle.close();
+    } catch (e) {
+      deferredPromise.reject(e);
     }
-    curlHandle.once('end', function endListener() {
-      try {
-        curlHandle.close();
-      } catch (e) {
-        reject(e);
-      }
-    });
-    curlHandle.once('error', function errorListener(error: any) {
-      if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
-        streamResolved.destroy(error);
-      } else {
-        if (error.message === 'Operation was aborted by an application callback') {
-          error.message = 'The operation was aborted.';
-        }
-        reject(error);
-      }
-      try {
-        curlHandle.close();
-      } catch (e) {
-        reject(e);
-      }
-    });
-    curlHandle.once(
-      'stream',
-      function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-        const outputStream = new PassThrough();
-
-        streamPromises
-          .pipeline(stream, outputStream, {
-            end: true,
-            signal: fetchRequest['_signal'] ?? undefined,
-          })
-          .then(() => {
-            if (!stream.destroyed) {
-              stream.resume();
-            }
-          })
-          .catch(reject);
-        const headersFlat = headersBuf
-          .toString('utf8')
-          .split(/\r?\n|\r/g)
-          .filter(headerFilter => {
-            if (headerFilter && !headerFilter.startsWith('HTTP/')) {
-              if (
-                fetchRequest.redirect === 'error' &&
-                (headerFilter.includes('location') || headerFilter.includes('Location'))
-              ) {
-                if (!stream.destroyed) {
-                  stream.resume();
-                }
-                outputStream.destroy();
-                reject(new Error('redirect is not allowed'));
-              }
-              return true;
-            }
-            return false;
-          });
-        const headersInit = headersFlat.map(
-          headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
-        );
-        const ponyfillResponse = new PonyfillResponse(outputStream, {
-          status,
-          headers: headersInit,
-          url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,
-          redirected: Number(curlHandle.getInfo(Curl.info.REDIRECT_COUNT)) > 0,
-        });
-        resolve(ponyfillResponse);
-        streamResolved = outputStream;
-      },
-    );
-    curlHandle.perform();
   });
+  curlHandle.once('error', function errorListener(error: any) {
+    if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
+      streamResolved.destroy(error);
+    } else {
+      if (error.message === 'Operation was aborted by an application callback') {
+        error.message = 'The operation was aborted.';
+      }
+      deferredPromise.reject(error);
+    }
+    try {
+      curlHandle.close();
+    } catch (e) {
+      deferredPromise.reject(e);
+    }
+  });
+  curlHandle.once(
+    'stream',
+    function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
+      const outputStream = new PassThrough();
+
+      streamPromises
+        .pipeline(stream, outputStream, {
+          end: true,
+          signal: fetchRequest['_signal'] ?? undefined,
+        })
+        .then(() => {
+          if (!stream.destroyed) {
+            stream.resume();
+          }
+        })
+        .catch(deferredPromise.reject);
+      const headersFlat = headersBuf
+        .toString('utf8')
+        .split(/\r?\n|\r/g)
+        .filter(headerFilter => {
+          if (headerFilter && !headerFilter.startsWith('HTTP/')) {
+            if (
+              fetchRequest.redirect === 'error' &&
+              (headerFilter.includes('location') || headerFilter.includes('Location'))
+            ) {
+              if (!stream.destroyed) {
+                stream.resume();
+              }
+              outputStream.destroy();
+              deferredPromise.reject(new Error('redirect is not allowed'));
+            }
+            return true;
+          }
+          return false;
+        });
+      const headersInit = headersFlat.map(
+        headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
+      );
+      const ponyfillResponse = new PonyfillResponse(outputStream, {
+        status,
+        headers: headersInit,
+        url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,
+        redirected: Number(curlHandle.getInfo(Curl.info.REDIRECT_COUNT)) > 0,
+      });
+      deferredPromise.resolve(ponyfillResponse);
+      streamResolved = outputStream;
+    },
+  );
+  if (Curl.getCount() > 0) {
+    setImmediate(() => {
+      curlHandle.perform();
+    });
+  } else {
+    curlHandle.perform();
+  }
+  return deferredPromise.promise;
 }
