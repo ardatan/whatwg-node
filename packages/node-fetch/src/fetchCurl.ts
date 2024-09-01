@@ -7,9 +7,7 @@ import { createDeferredPromise, defaultHeadersSerializer, isNodeReadable } from 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis[
-    'libcurl'
-  ] as typeof import('node-libcurl');
+  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
 
@@ -164,7 +162,11 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       streamResolved = outputStream;
     },
   );
-  if (Curl.getCount() > 0) {
+  let count = 0;
+  try {
+    count = Curl.getCount();
+  } catch {}
+  if (count > 0) {
     setImmediate(() => {
       curlHandle.perform();
     });
