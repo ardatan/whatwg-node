@@ -4,6 +4,9 @@ function isNextJs() {
 }
 
 module.exports = function shouldSkipPonyfill() {
+  if (typeof globalThis.fetch === 'function') {
+    return true
+  }
   // Bun and Deno already have a Fetch API
   if (globalThis.Deno) {
     return true
@@ -12,9 +15,6 @@ module.exports = function shouldSkipPonyfill() {
     return true
   }
   if (isNextJs()) {
-    return true
-  }
-  if (typeof globalThis.fetch === 'function') {
     return true
   }
   return false
