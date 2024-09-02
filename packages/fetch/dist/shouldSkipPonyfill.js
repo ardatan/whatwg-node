@@ -14,5 +14,8 @@ module.exports = function shouldSkipPonyfill() {
   if (isNextJs()) {
     return true
   }
+  if (typeof globalThis.fetch === 'function') {
+    return true
+  }
   return false
 }
