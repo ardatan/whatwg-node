@@ -16,6 +16,6 @@
     "@whatwg-node/server": "0.9.49"
   },
   "devDependencies": {
-    "start-server-and-test": "2.0.6"
+    "start-server-and-test": "2.0.7"
   }
 }
