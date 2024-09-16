@@ -15,7 +15,7 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@pulumi/azure-native": "2.60.1",
+    "@pulumi/azure-native": "2.61.0",
     "@pulumi/pulumi": "3.132.0",
     "esbuild": "0.23.1",
     "ts-node": "10.9.2",
