@@ -2909,10 +2909,10 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
 
-"@types/k6@^0.53.0":
-  version "0.53.2"
-  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.53.2.tgz#71e74ceb5223d16b0ccb3831103fe1225d0242de"
-  integrity sha512-TxFJbeSfD/RfQe+GeMbpdwiOOySRTj3vfHvcA4yoLQ3wvGPjyppCqmyKXgktf3535T+YAc41bB7GkhuCPRmfUg==
+"@types/k6@^0.54.0":
+  version "0.54.0"
+  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-0.54.0.tgz#da3d185b580f48847faf86a448481fc019c966cc"
+  integrity sha512-ZgsqDQs0dtu9RVxN/315MQOZ3BSrdL85HleMZckcLPrmaE5gtGse02/2EuAIQEtYqNDmqcTrOnoxvptUHIoBYw==
 
 "@types/keyv@^3.1.4":
   version "3.1.4"
