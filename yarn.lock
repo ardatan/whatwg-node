@@ -3794,10 +3794,10 @@ builtin-modules@3.0.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.0.0.tgz#1e587d44b006620d90286cc7a9238bbc6129cab1"
   integrity sha512-hMIeU4K2ilbXV6Uv93ZZ0Avg/M91RaKXucQ+4me2Do1txxBDyDZWCBa5bJSLqoNTRpXTLwEzIk1KmloenDDjhg==
 
-bun-types@1.1.29:
-  version "1.1.29"
-  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.1.29.tgz#52ab2f4905adafc6a625b715c45be1e25b150609"
-  integrity sha512-En3/TzSPMPyl5UlUB1MHzHpcrZDakTm7mS203eLoX1fBoEa3PW+aSS8GAqVJ7Is/m34Z5ogL+ECniLY0uDaCPw==
+bun-types@1.1.30:
+  version "1.1.30"
+  resolved "https://registry.yarnpkg.com/bun-types/-/bun-types-1.1.30.tgz#45ca22303aa1ff02b93e45c1d6ba43617497ed43"
+  integrity sha512-mGh7NLisOXskBU62DxLS+/nwmLlCYHYAkCzdo4DZ9+fzrpP41hAdOqaN4DO6tQfenHb4pYb0/shw29k4/6I2yQ==
   dependencies:
     "@types/node" "~20.12.8"
     "@types/ws" "~8.5.10"
@@ -9848,10 +9848,10 @@ workerd@1.20240925.0:
     "@cloudflare/workerd-linux-arm64" "1.20240925.0"
     "@cloudflare/workerd-windows-64" "1.20240925.0"
 
-wrangler@3.80.1:
-  version "3.80.1"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.80.1.tgz#48695422d4ec7d3c21b322ebb5387ceadcf4db4b"
-  integrity sha512-5pBZpzrGpfAtIzF3iBXfZZ9DoP8OjwfIUYjYmddfkmoe6fSyY5r/+IFP56fb/biK5q6FV5HxUnonDiuNyJKnug==
+wrangler@3.80.2:
+  version "3.80.2"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.80.2.tgz#990f05912cf29fd917946ada70e50f2017348907"
+  integrity sha512-WSMDXoNcg+DjZ4i0RMJpz2TKrCbTtsxNsQAwyYg7LRZlfmTZQZOPbHWhATVa4fCsNL6eElN050fMHOW9MptM9g==
   dependencies:
     "@cloudflare/kv-asset-handler" "0.3.4"
     "@cloudflare/workers-shared" "0.5.4"
