@@ -2541,12 +2541,12 @@
   dependencies:
     "@pulumi/pulumi" "^3.42.0"
 
-"@pulumi/cloudflare@4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-4.16.0.tgz#a49db37a7f7707bc402253631c103f547ffbe9ad"
-  integrity sha512-cwdB70bLeKL/VNIqqOD5fpHQcocVmpHuiHH589eR+QUfbLa4f+M8yA/TTCcxx2AFFctTqO5wgVuC+faL8xZmWQ==
+"@pulumi/cloudflare@5.40.2":
+  version "5.40.2"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-5.40.2.tgz#18a1b2107a555a8b57c9a0cef8f0867e15ef890e"
+  integrity sha512-Ixw3AOE1E8D7PADajOBml26FibwzrwydVlyEIt6EP1Qw6g3Xi3W3csDD7N4WV9Nm/dv/c9dqeWgsw4adc/ZZHw==
   dependencies:
-    "@pulumi/pulumi" "^3.0.0"
+    "@pulumi/pulumi" "^3.136.0"
 
 "@pulumi/docker@^3.0.0":
   version "3.6.1"
@@ -2556,7 +2556,7 @@
     "@pulumi/pulumi" "^3.0.0"
     semver "^5.4.0"
 
-"@pulumi/pulumi@3.136.1", "@pulumi/pulumi@^3.0.0", "@pulumi/pulumi@^3.42.0":
+"@pulumi/pulumi@3.136.1", "@pulumi/pulumi@^3.0.0", "@pulumi/pulumi@^3.136.0", "@pulumi/pulumi@^3.42.0":
   version "3.136.1"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.136.1.tgz#1ef187cdb3f3b4abf119ae6088e76edb20947ed4"
   integrity sha512-bO+AVYKyf4dFDVSbBRoCiwAVE0JhugwAEv5FmWit+VHE3f9eoy1qrw7t5DmGmAiL2cGCwTpvVEIf4y1N7360ZA==
