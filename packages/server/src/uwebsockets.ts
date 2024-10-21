@@ -1,6 +1,5 @@
-import type { Readable } from 'stream';
 import type { FetchAPI } from './types.js';
-import { ServerAdapterRequestAbortSignal } from './utils.js';
+import { isPromise, ServerAdapterRequestAbortSignal } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -36,44 +35,69 @@ interface GetRequestFromUWSOpts {
 }
 
 export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequestFromUWSOpts) {
-  let body: ReadableStream | undefined;
   const method = req.getMethod();
-  if (method !== 'get' && method !== 'head') {
-    let controller: ReadableStreamDefaultController;
-    body = new fetchAPI.ReadableStream({
-      start(c) {
-        controller = c;
-      },
-    });
-    const readable = (body as any).readable as Readable;
-    if (readable) {
-      signal.addEventListener('abort', () => {
-        readable.push(null);
-      });
-      res.onData(function (ab, isLast) {
-        const chunk = Buffer.from(ab, 0, ab.byteLength);
-        readable.push(Buffer.from(chunk));
-        if (isLast) {
-          readable.push(null);
-        }
-      });
-    } else {
-      let closed = false;
-      signal.addEventListener('abort', () => {
-        if (!closed) {
-          closed = true;
-          controller.close();
-        }
-      });
-      res.onData(function (ab, isLast) {
-        const chunk = Buffer.from(ab, 0, ab.byteLength);
-        controller.enqueue(Buffer.from(chunk));
-        if (isLast) {
-          closed = true;
-          controller.close();
-        }
-      });
+
+  let duplex: 'half' | undefined;
+
+  const chunks: Buffer[] = [];
+  const pushFns = [
+    (chunk: Buffer) => {
+      chunks.push(chunk);
+    },
+  ];
+  const push = (chunk: Buffer) => {
+    for (const pushFn of pushFns) {
+      pushFn(chunk);
     }
+  };
+  let stopped = false;
+  const stopFns = [
+    () => {
+      stopped = true;
+    },
+  ];
+  const stop = () => {
+    for (const stopFn of stopFns) {
+      stopFn();
+    }
+  };
+  res.onData(function (ab, isLast) {
+    push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+    if (isLast) {
+      stop();
+    }
+  });
+  let getReadableStream: (() => ReadableStream) | undefined;
+  if (method !== 'get' && method !== 'head') {
+    duplex = 'half';
+    signal.addEventListener('abort', () => {
+      stop();
+    });
+    let readableStream: ReadableStream;
+    getReadableStream = () => {
+      if (!readableStream) {
+        readableStream = new fetchAPI.ReadableStream({
+          start(controller) {
+            for (const chunk of chunks) {
+              controller.enqueue(chunk);
+            }
+            if (stopped) {
+              controller.close();
+              return;
+            }
+            pushFns.push((chunk: Buffer) => {
+              controller.enqueue(chunk);
+            });
+            stopFns.push(() => {
+              if (controller.desiredSize) {
+                controller.close();
+              }
+            });
+          },
+        });
+      }
+      return readableStream;
+    };
   }
   const headers = new fetchAPI.Headers();
   req.forEach((key, value) => {
@@ -84,15 +108,72 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
   if (query) {
     url += `?${query}`;
   }
-  return new fetchAPI.Request(url, {
+  let buffer: Buffer | undefined;
+  function getBody() {
+    if (!getReadableStream) {
+      return null;
+    }
+    if (stopped) {
+      return getBufferFromChunks();
+    }
+    return getReadableStream();
+  }
+  const request = new fetchAPI.Request(url, {
     method,
     headers,
-    body: body as any,
+    get body() {
+      return getBody();
+    },
     signal,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - not in the TS types yet
-    duplex: 'half',
+    duplex,
   });
+  function getBufferFromChunks() {
+    if (!buffer) {
+      buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks);
+    }
+    return buffer;
+  }
+  function collectBuffer() {
+    if (stopped) {
+      return fakePromise(getBufferFromChunks());
+    }
+    return new Promise<Buffer>((resolve, reject) => {
+      try {
+        stopFns.push(() => {
+          resolve(getBufferFromChunks());
+        });
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+  Object.defineProperties(request, {
+    body: {
+      get() {
+        return getBody();
+      },
+    },
+    json: {
+      value() {
+        return collectBuffer()
+          .then(b => b.toString('utf8'))
+          .then(t => JSON.parse(t));
+      },
+    },
+    text: {
+      value() {
+        return collectBuffer().then(b => b.toString('utf8'));
+      },
+    },
+    arrayBuffer: {
+      value() {
+        return collectBuffer();
+      },
+    },
+  });
+  return request;
 }
 
 async function forwardResponseBodyToUWSResponse(
@@ -156,4 +237,38 @@ export function sendResponseToUwsOpts(
     return;
   }
   return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse, signal);
+}
+
+export function fakePromise<T>(value: T): Promise<T> {
+  if (isPromise(value)) {
+    return value;
+  }
+  // Write a fake promise to avoid the promise constructor
+  // being called with `new Promise` in the browser.
+  return {
+    then(resolve: (value: T) => any) {
+      if (resolve) {
+        const callbackResult = resolve(value);
+        if (isPromise(callbackResult)) {
+          return callbackResult;
+        }
+        return fakePromise(callbackResult);
+      }
+      return this;
+    },
+    catch() {
+      return this;
+    },
+    finally(cb) {
+      if (cb) {
+        const callbackResult = cb();
+        if (isPromise(callbackResult)) {
+          return callbackResult.then(() => value);
+        }
+        return fakePromise(value);
+      }
+      return this;
+    },
+    [Symbol.toStringTag]: 'Promise',
+  };
 }

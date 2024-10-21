@@ -329,7 +329,6 @@ describe('Node Specific Cases', () => {
             method: 'POST',
             body: 'TEST',
           });
-
           const resJson = await response.json();
           expect(resJson.textFromClonedReq).toBe('TEST');
           expect(resJson.textFromOriginalReq).toBe('TEST');

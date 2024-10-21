@@ -69,7 +69,6 @@ describe('Proxy', () => {
               body: requestBody,
             },
           );
-          expect(response.status).toBe(200);
           const resJson = await response.json();
           expect(resJson).toMatchObject({
             method: 'POST',

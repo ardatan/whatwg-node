@@ -13,6 +13,7 @@ enum BodyInitType {
   String = 'String',
   Readable = 'Readable',
   Buffer = 'Buffer',
+  AsyncIterable = 'AsyncIterable',
 }
 
 export type BodyPonyfillInit =
@@ -135,6 +136,22 @@ export class PonyfillBody<TJSON = any> implements Body {
   _collectChunksFromReadable() {
     if (this._chunks) {
       return fakePromise(this._chunks);
+    }
+    if (this.bodyType === BodyInitType.AsyncIterable) {
+      const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
+      const collectValue = (): Promise<Uint8Array[]> => {
+        return iterator.next().then(({ value, done }) => {
+          this._chunks ||= [];
+          if (value) {
+            this._chunks.push(value);
+          }
+          if (!done) {
+            return collectValue();
+          }
+          return this._chunks;
+        });
+      };
+      return collectValue();
     }
     const _body = this.generateBody();
     if (!_body) {
@@ -471,6 +488,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     return {
       contentType: null,
       contentLength: null,
+      bodyType: BodyInitType.AsyncIterable,
       bodyFactory() {
         const readable = Readable.from(bodyInit);
         return new PonyfillReadableStream(readable);
