@@ -38,7 +38,7 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@types/express": "4.17.21",
+    "@types/express": "5.0.0",
     "@types/node": "22.7.5",
     "express": "4.21.1",
     "fastify": "4.28.1",
