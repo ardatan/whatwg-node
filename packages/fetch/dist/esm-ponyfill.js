@@ -1,23 +1,22 @@
-const fetch = window.fetch;
-const Headers = window.Headers;
-const Request = window.Request;
-const Response = window.Response;
-const FormData = window.FormData;
-const ReadableStream = window.ReadableStream;
-const WritableStream = window.WritableStream;
-const TransformStream = window.TransformStream;
-const CompressionStream = window.CompressionStream;
-const DecompressionStream = window.DecompressionStream;
-const Blob = window.Blob;
-const File = window.File;
-const crypto = window.crypto;
-const btoa = window.btoa;
-const TextEncoder = window.TextEncoder;
-const TextDecoder = window.TextDecoder;
-const URLPattern = window.URLPattern;
-const URL = window.URL;
-const URLSearchParams = window.URLSearchParams;
-
+const fetch = globalThis.fetch;
+const Headers = globalThis.Headers;
+const Request = globalThis.Request;
+const Response = globalThis.Response;
+const FormData = globalThis.FormData;
+const ReadableStream = globalThis.ReadableStream;
+const WritableStream = globalThis.WritableStream;
+const TransformStream = globalThis.TransformStream;
+const CompressionStream = globalThis.CompressionStream;
+const DecompressionStream = globalThis.DecompressionStream;
+const Blob = globalThis.Blob;
+const File = globalThis.File;
+const crypto = globalThis.crypto;
+const btoa = globalThis.btoa;
+const TextEncoder = globalThis.TextEncoder;
+const TextDecoder = globalThis.TextDecoder;
+const URLPattern = globalThis.URLPattern;
+const URL = globalThis.URL;
+const URLSearchParams = globalThis.URLSearchParams;
 
 export {
     fetch,
