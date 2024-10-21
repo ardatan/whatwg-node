@@ -1,5 +1,19 @@
 # @whatwg-node/fetch
 
+## 0.9.22
+
+### Patch Changes
+
+- [`77dd1c3`](https://github.com/ardatan/whatwg-node/commit/77dd1c3acde29aeb828b6eb37b6fbdbb47a16c57)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use \`globalThis\` instead of \`window\` for the
+  global object reference
+
+  Fixes the issues with Deno
+
+- Updated dependencies
+  [[`9281e02`](https://github.com/ardatan/whatwg-node/commit/9281e021282a43a3dda8c8a5c9647d340b28698e)]:
+  - @whatwg-node/node-fetch@0.5.27
+
 ## 0.9.21
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.5.27
+
+### Patch Changes
+
+- [`9281e02`](https://github.com/ardatan/whatwg-node/commit/9281e021282a43a3dda8c8a5c9647d340b28698e)
+  Thanks [@ardatan](https://github.com/ardatan)! - Improve handling of \`AsyncIterable\` bodies
+
 ## 0.5.26
 
 ### Patch Changes
