@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@e2e/shared-server": "0.0.110",
-    "@types/node": "22.7.5",
-    "bun-types": "1.1.30"
+    "@types/node": "22.7.7",
+    "bun-types": "1.1.31"
   },
   "devDependencies": {
     "typescript": "5.5.4"
