@@ -1,4 +1,5 @@
 import FastQuerystring from 'fast-querystring';
+import { PonyfillIteratorObject } from './IteratorObject.js';
 
 function isURLSearchParams(value: any): value is URLSearchParams {
   return value?.entries != null;
@@ -75,13 +76,17 @@ export class PonyfillURLSearchParams implements URLSearchParams {
     return FastQuerystring.stringify(this.params);
   }
 
-  *keys(): IterableIterator<string> {
+  *_keys(): IterableIterator<string> {
     for (const key in this.params) {
       yield key;
     }
   }
 
-  *entries(): IterableIterator<[string, string]> {
+  keys(): URLSearchParamsIterator<string> {
+    return new PonyfillIteratorObject(this._keys(), 'URLSearchParamsIterator');
+  }
+
+  *_entries(): IterableIterator<[string, string]> {
     for (const key of this.keys()) {
       const value = this.params[key];
       if (Array.isArray(value)) {
@@ -94,13 +99,21 @@ export class PonyfillURLSearchParams implements URLSearchParams {
     }
   }
 
-  *values(): IterableIterator<string> {
+  entries(): URLSearchParamsIterator<[string, string]> {
+    return new PonyfillIteratorObject(this._entries(), 'URLSearchParamsIterator');
+  }
+
+  *_values(): IterableIterator<string> {
     for (const [, value] of this) {
       yield value;
     }
   }
 
-  [Symbol.iterator](): IterableIterator<[string, string]> {
+  values(): URLSearchParamsIterator<string> {
+    return new PonyfillIteratorObject(this._values(), 'URLSearchParamsIterator');
+  }
+
+  [Symbol.iterator](): URLSearchParamsIterator<[string, string]> {
     return this.entries();
   }
 

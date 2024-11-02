@@ -1,6 +1,6 @@
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
 import { isPromise } from '../utils.js';
-import { ServerAdapterPlugin } from './types.js';
+import type { ServerAdapterPlugin } from './types.js';
 
 export function createDefaultErrorHandler<TServerContext = {}>(
   ResponseCtor: typeof Response = DefaultResponseCtor,

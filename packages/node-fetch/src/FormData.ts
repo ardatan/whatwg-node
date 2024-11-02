@@ -1,5 +1,6 @@
 import { PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
+import { PonyfillIteratorObject } from './IteratorObject.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
 
 export class PonyfillFormData implements FormData {
@@ -45,7 +46,11 @@ export class PonyfillFormData implements FormData {
     this.map.set(name, [entry]);
   }
 
-  *[Symbol.iterator](): IterableIterator<[string, FormDataEntryValue]> {
+  [Symbol.iterator](): FormDataIterator<[string, FormDataEntryValue]> {
+    return this._entries();
+  }
+
+  *_entries(): FormDataIterator<[string, FormDataEntryValue]> {
     for (const [key, values] of this.map) {
       for (const value of values) {
         yield [key, value];
@@ -53,20 +58,28 @@ export class PonyfillFormData implements FormData {
     }
   }
 
-  entries(): IterableIterator<[string, FormDataEntryValue]> {
-    return this[Symbol.iterator]();
+  entries(): FormDataIterator<[string, FormDataEntryValue]> {
+    return new PonyfillIteratorObject(this._entries(), 'FormDataIterator');
   }
 
-  keys(): IterableIterator<string> {
+  _keys(): IterableIterator<string> {
     return this.map.keys();
   }
 
-  *values(): IterableIterator<FormDataEntryValue> {
+  keys(): FormDataIterator<string> {
+    return new PonyfillIteratorObject(this._keys(), 'FormDataIterator');
+  }
+
+  *_values(): IterableIterator<FormDataEntryValue> {
     for (const values of this.map.values()) {
       for (const value of values) {
         yield value;
       }
     }
+  }
+
+  values(): FormDataIterator<FormDataEntryValue> {
+    return new PonyfillIteratorObject(this._values(), 'FormDataIterator');
   }
 
   forEach(callback: (value: FormDataEntryValue, key: string, parent: this) => void): void {

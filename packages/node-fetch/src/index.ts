@@ -18,3 +18,4 @@ export { PonyfillWritableStream as WritableStream } from './WritableStream.js';
 export { PonyfillTransformStream as TransformStream } from './TransformStream.js';
 export { PonyfillCompressionStream as CompressionStream } from './CompressionStream.js';
 export { PonyfillDecompressionStream as DecompressionStream } from './DecompressionStream.js';
+export { PonyfillIteratorObject as IteratorObject } from './IteratorObject.js';
