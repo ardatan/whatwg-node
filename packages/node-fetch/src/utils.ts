@@ -98,3 +98,7 @@ export function createDeferredPromise<T = void>(): DeferredPromise<T> {
     },
   };
 }
+
+export function isIterable(value: any): value is Iterable<unknown> {
+  return value?.[Symbol.iterator] != null;
+}

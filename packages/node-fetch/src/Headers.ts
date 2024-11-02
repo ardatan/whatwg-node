@@ -1,4 +1,5 @@
 import { inspect } from 'util';
+import { PonyfillIteratorObject } from './IteratorObject';
 
 export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;
 
@@ -177,7 +178,7 @@ export class PonyfillHeaders implements Headers {
     });
   }
 
-  *keys(): IterableIterator<string> {
+  *_keys(): IterableIterator<string> {
     if (this._setCookies.length) {
       yield 'set-cookie';
     }
@@ -198,7 +199,11 @@ export class PonyfillHeaders implements Headers {
     yield* this.getMap().keys();
   }
 
-  *values(): IterableIterator<string> {
+  keys(): HeadersIterator<string> {
+    return new PonyfillIteratorObject(this._keys());
+  }
+
+  *_values(): IterableIterator<string> {
     yield* this._setCookies;
     if (!this._map) {
       if (this.headersInit) {
@@ -217,7 +222,11 @@ export class PonyfillHeaders implements Headers {
     yield* this.getMap().values();
   }
 
-  *entries(): IterableIterator<[string, string]> {
+  values(): HeadersIterator<string> {
+    return new PonyfillIteratorObject(this._values());
+  }
+
+  *_entries(): IterableIterator<[string, string]> {
     yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
     if (!this._map) {
       if (this.headersInit) {
@@ -236,11 +245,15 @@ export class PonyfillHeaders implements Headers {
     yield* this.getMap().entries();
   }
 
+  entries(): HeadersIterator<[string, string]> {
+    return new PonyfillIteratorObject(this._entries());
+  }
+
   getSetCookie() {
     return this._setCookies;
   }
 
-  [Symbol.iterator](): IterableIterator<[string, string]> {
+  [Symbol.iterator](): HeadersIterator<[string, string]> {
     return this.entries();
   }
 
