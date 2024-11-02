@@ -59,7 +59,7 @@ export class PonyfillFormData implements FormData {
   }
 
   entries(): FormDataIterator<[string, FormDataEntryValue]> {
-    return new PonyfillIteratorObject(this._entries());
+    return new PonyfillIteratorObject(this._entries(), 'FormDataIterator');
   }
 
   _keys(): IterableIterator<string> {
@@ -67,7 +67,7 @@ export class PonyfillFormData implements FormData {
   }
 
   keys(): FormDataIterator<string> {
-    return new PonyfillIteratorObject(this._keys());
+    return new PonyfillIteratorObject(this._keys(), 'FormDataIterator');
   }
 
   *_values(): IterableIterator<FormDataEntryValue> {
@@ -79,7 +79,7 @@ export class PonyfillFormData implements FormData {
   }
 
   values(): FormDataIterator<FormDataEntryValue> {
-    return new PonyfillIteratorObject(this._values());
+    return new PonyfillIteratorObject(this._values(), 'FormDataIterator');
   }
 
   forEach(callback: (value: FormDataEntryValue, key: string, parent: this) => void): void {

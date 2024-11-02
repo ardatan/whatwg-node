@@ -1,5 +1,5 @@
 import { inspect } from 'util';
-import { PonyfillIteratorObject } from './IteratorObject';
+import { PonyfillIteratorObject } from './IteratorObject.js';
 
 export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;
 
@@ -200,7 +200,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   keys(): HeadersIterator<string> {
-    return new PonyfillIteratorObject(this._keys());
+    return new PonyfillIteratorObject(this._keys(), 'HeadersIterator');
   }
 
   *_values(): IterableIterator<string> {
@@ -223,7 +223,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   values(): HeadersIterator<string> {
-    return new PonyfillIteratorObject(this._values());
+    return new PonyfillIteratorObject(this._values(), 'HeadersIterator');
   }
 
   *_entries(): IterableIterator<[string, string]> {
@@ -246,7 +246,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   entries(): HeadersIterator<[string, string]> {
-    return new PonyfillIteratorObject(this._entries());
+    return new PonyfillIteratorObject(this._entries(), 'HeadersIterator');
   }
 
   getSetCookie() {

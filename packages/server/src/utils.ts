@@ -2,7 +2,6 @@ import type { IncomingMessage, ServerResponse } from 'http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
 import type { Socket } from 'net';
 import type { Readable } from 'stream';
-import { URL } from '@whatwg-node/fetch';
 import type { FetchAPI, FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
@@ -122,14 +121,11 @@ let bunNodeCompatModeWarned = false;
 
 export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
 
-export function normalizeNodeRequest(
-  nodeRequest: NodeRequest,
-  RequestCtor: typeof Request,
-): Request {
+export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
-    const url = new URL(fullUrl);
+    const url = new fetchAPI.URL(fullUrl);
     for (const key in nodeRequest.query) {
       url.searchParams.set(key, nodeRequest.query[key]);
     }
@@ -153,7 +149,7 @@ export function normalizeNodeRequest(
     let sendAbortSignal: VoidFunction;
 
     // If ponyfilled
-    if (RequestCtor !== globalThis.Request) {
+    if (fetchAPI.Request !== globalThis.Request) {
       signal = new ServerAdapterRequestAbortSignal();
       sendAbortSignal = () => (signal as ServerAdapterRequestAbortSignal).sendAbort();
     } else {
@@ -178,7 +174,7 @@ export function normalizeNodeRequest(
   }
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
-    return new RequestCtor(fullUrl, {
+    return new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
       headers: normalizedHeaders,
       signal,
@@ -194,14 +190,14 @@ export function normalizeNodeRequest(
   const maybeParsedBody = nodeRequest.body;
   if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
     if (isRequestBody(maybeParsedBody)) {
-      return new RequestCtor(fullUrl, {
+      return new fetchAPI.Request(fullUrl, {
         method: nodeRequest.method,
         headers: normalizedHeaders,
         body: maybeParsedBody,
         signal,
       });
     }
-    const request = new RequestCtor(fullUrl, {
+    const request = new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
       headers: normalizedHeaders,
       signal,
@@ -232,7 +228,7 @@ export function normalizeNodeRequest(
 It will affect your performance. Please check our Bun integration recipe, and avoid using 'http' for your server implementation.`,
       );
     }
-    return new RequestCtor(fullUrl, {
+    return new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
       headers: normalizedHeaders,
       duplex: 'half',
@@ -257,7 +253,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
   }
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
-  return new RequestCtor(fullUrl, {
+  return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
     headers: normalizedHeaders,
     body: rawRequest as any,

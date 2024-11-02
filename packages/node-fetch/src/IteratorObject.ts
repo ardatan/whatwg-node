@@ -1,7 +1,15 @@
+import { inspect } from 'node:util';
 import { isIterable } from './utils.js';
 
 export class PonyfillIteratorObject<T> implements IteratorObject<T, undefined, unknown> {
-  constructor(private iterableIterator: IterableIterator<T>) {}
+  [Symbol.toStringTag] = 'IteratorObject';
+  constructor(
+    private iterableIterator: IterableIterator<T>,
+    className: string,
+  ) {
+    this[Symbol.toStringTag] = className;
+  }
+
   *map<U>(callbackfn: (value: T, index: number) => U) {
     let index = 0;
     for (const value of this.iterableIterator) {
@@ -126,12 +134,22 @@ export class PonyfillIteratorObject<T> implements IteratorObject<T, undefined, u
     }
   }
 
-  [Symbol.toStringTag] = 'URLSearchParamsIterator';
   next(...[value]: [] | [unknown]): IteratorResult<T, undefined> {
     return this.iterableIterator.next(value);
   }
 
   [Symbol.iterator](): URLSearchParamsIterator<T> {
     return this;
+  }
+
+  [Symbol.for('nodejs.util.inspect.custom')]() {
+    const record: Record<string, string[] | string> = {};
+    this.forEach((value, key) => {
+      const inspectedValue = inspect(value);
+      record[key] = inspectedValue.includes(',')
+        ? inspectedValue.split(',').map(el => el.trim())
+        : inspectedValue;
+    });
+    return `${this[Symbol.toStringTag]} ${inspect(record)}`;
   }
 }

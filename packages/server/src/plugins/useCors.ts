@@ -1,4 +1,4 @@
-import { ServerAdapterPlugin } from './types.js';
+import type { ServerAdapterPlugin } from './types.js';
 
 export type CORSOptions =
   | {
