@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.52
+
+### Patch Changes
+
+- [`323a519`](https://github.com/ardatan/whatwg-node/commit/323a5191a93c8a0a614077f89a2197b9c087a969)
+  Thanks [@ardatan](https://github.com/ardatan)! - Allow other libs to redefine `Request`'s
+  properties
+
 ## 0.9.51
 
 ### Patch Changes
