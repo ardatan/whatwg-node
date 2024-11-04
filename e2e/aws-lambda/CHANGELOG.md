@@ -1,5 +1,12 @@
 # @e2e/aws-lambda
 
+## 0.0.33
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @whatwg-node/fetch@0.9.23
+
 ## 0.0.32
 
 ### Patch Changes

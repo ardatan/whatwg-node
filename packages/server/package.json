@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/server",
-  "version": "0.9.50",
+  "version": "0.9.51",
   "type": "module",
   "description": "Fetch API compliant HTTP Server adapter",
   "repository": {
@@ -34,7 +34,7 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
-    "@whatwg-node/fetch": "^0.9.22",
+    "@whatwg-node/fetch": "^0.9.23",
     "tslib": "^2.6.3"
   },
   "devDependencies": {
