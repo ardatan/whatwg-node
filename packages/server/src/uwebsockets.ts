@@ -154,6 +154,8 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
       get() {
         return getBody();
       },
+      configurable: true,
+      enumerable: true,
     },
     json: {
       value() {
@@ -161,16 +163,22 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
           .then(b => b.toString('utf8'))
           .then(t => JSON.parse(t));
       },
+      configurable: true,
+      enumerable: true,
     },
     text: {
       value() {
         return collectBuffer().then(b => b.toString('utf8'));
       },
+      configurable: true,
+      enumerable: true,
     },
     arrayBuffer: {
       value() {
         return collectBuffer();
       },
+      configurable: true,
+      enumerable: true,
     },
   });
   return request;
