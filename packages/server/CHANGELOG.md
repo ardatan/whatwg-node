@@ -1,5 +1,16 @@
 # @whatwg-node/server
 
+## 0.9.51
+
+### Patch Changes
+
+- [#1644](https://github.com/ardatan/whatwg-node/pull/1644)
+  [`637185f`](https://github.com/ardatan/whatwg-node/commit/637185f5c992ccabff13b185d4e14f09680228da)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Respect given fetchAPI
+
+- Updated dependencies []:
+  - @whatwg-node/fetch@0.9.23
+
 ## 0.9.50
 
 ### Patch Changes

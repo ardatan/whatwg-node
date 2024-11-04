@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.6.0
+
+### Minor Changes
+
+- [#1644](https://github.com/ardatan/whatwg-node/pull/1644)
+  [`637185f`](https://github.com/ardatan/whatwg-node/commit/637185f5c992ccabff13b185d4e14f09680228da)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Support `IteratorObject<T>`
+
 ## 0.5.27
 
 ### Patch Changes
