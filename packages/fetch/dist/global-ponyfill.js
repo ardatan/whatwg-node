@@ -1,4 +1,4 @@
-module.exports.fetch = globalThis.fetch; // To enable: import {fetch} from 'cross-fetch'
+module.exports.fetch = globalThis.fetch;
 module.exports.Headers = globalThis.Headers;
 module.exports.Request = globalThis.Request;
 module.exports.Response = globalThis.Response;
@@ -8,6 +8,8 @@ module.exports.WritableStream = globalThis.WritableStream;
 module.exports.TransformStream = globalThis.TransformStream;
 module.exports.CompressionStream = globalThis.CompressionStream;
 module.exports.DecompressionStream = globalThis.DecompressionStream;
+module.exports.TextDecoderStream = globalThis.TextDecoderStream;
+module.exports.TextEncoderStream = globalThis.TextEncoderStream;
 module.exports.Blob = globalThis.Blob;
 module.exports.File = globalThis.File;
 module.exports.crypto = globalThis.crypto;

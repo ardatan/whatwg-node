@@ -9499,7 +9499,6 @@ typescript@5.6.3:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.49.0:
   version "20.49.0"
-  uid "442087c0a01bf146acb7386910739ec81df06700"
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/442087c0a01bf146acb7386910739ec81df06700"
 
 ufo@^1.5.4:

@@ -210,6 +210,27 @@ export class PonyfillBlob implements Blob {
     });
   }
 
+  _json: any = null;
+
+  json() {
+    if (this._json) {
+      return fakePromise(this._json);
+    }
+    return this.text().then(text => {
+      this._json = JSON.parse(text);
+      return this._json;
+    });
+  }
+
+  _formData: FormData | null = null;
+
+  formData() {
+    if (this._formData) {
+      return fakePromise(this._formData);
+    }
+    throw new Error('Not implemented');
+  }
+
   get size() {
     if (this._size == null) {
       this._size = 0;
