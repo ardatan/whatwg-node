@@ -1,5 +1,19 @@
 # @whatwg-node/fetch
 
+## 0.10.0
+
+### Minor Changes
+
+- [#1782](https://github.com/ardatan/whatwg-node/pull/1782)
+  [`6c006e1`](https://github.com/ardatan/whatwg-node/commit/6c006e12eaa6705cdf20b7b43cccc44a1f7ea185)
+  Thanks [@ardatan](https://github.com/ardatan)! - \`TextDecoderStream\` and \`TextEncoderStream\`
+
+### Patch Changes
+
+- Updated dependencies
+  [[`6c006e1`](https://github.com/ardatan/whatwg-node/commit/6c006e12eaa6705cdf20b7b43cccc44a1f7ea185)]:
+  - @whatwg-node/node-fetch@0.7.0
+
 ## 0.9.23
 
 ### Patch Changes
