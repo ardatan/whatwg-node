@@ -23,6 +23,8 @@ module.exports = function createNodePonyfill(opts = {}) {
       TransformStream: globalThis.TransformStream,
       CompressionStream: globalThis.CompressionStream,
       DecompressionStream: globalThis.DecompressionStream,
+      TextDecoderStream: globalThis.TextDecoderStream,
+      TextEncoderStream: globalThis.TextEncoderStream,
       Blob: globalThis.Blob,
       File: globalThis.File,
       crypto: globalThis.crypto,
@@ -51,6 +53,8 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.TransformStream = newNodeFetch.TransformStream;
   ponyfills.CompressionStream = newNodeFetch.CompressionStream;
   ponyfills.DecompressionStream = newNodeFetch.DecompressionStream;
+  ponyfills.TextDecoderStream = newNodeFetch.TextDecoderStream;
+  ponyfills.TextEncoderStream = newNodeFetch.TextEncoderStream;
 
   ponyfills.Blob = newNodeFetch.Blob;
   ponyfills.File = newNodeFetch.File;

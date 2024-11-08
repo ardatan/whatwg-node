@@ -8,6 +8,8 @@ const WritableStream = globalThis.WritableStream;
 const TransformStream = globalThis.TransformStream;
 const CompressionStream = globalThis.CompressionStream;
 const DecompressionStream = globalThis.DecompressionStream;
+const TextDecoderStream = globalThis.TextDecoderStream;
+const TextEncoderStream = globalThis.TextEncoderStream;
 const Blob = globalThis.Blob;
 const File = globalThis.File;
 const crypto = globalThis.crypto;
@@ -29,6 +31,8 @@ export {
     TransformStream,
     CompressionStream,
     DecompressionStream,
+    TextDecoderStream,
+    TextEncoderStream,
     Blob,
     File,
     crypto,

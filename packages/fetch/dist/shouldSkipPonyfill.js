@@ -4,11 +4,10 @@ function isNextJs() {
 }
 
 module.exports = function shouldSkipPonyfill() {
-  // Bun and Deno already have a Fetch API
   if (globalThis.Deno) {
     return true
   }
-  if (process.versions.bun) {
+  if (globalThis.Bun) {
     return true
   }
   if (isNextJs()) {
