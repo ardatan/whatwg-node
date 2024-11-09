@@ -1,5 +1,15 @@
 # @whatwg-node/node-fetch
 
+## 0.7.1
+
+### Patch Changes
+
+- [`c68f5ad`](https://github.com/ardatan/whatwg-node/commit/c68f5ad0782476b4b4facf490600b5f3341a4886)
+  Thanks [@ardatan](https://github.com/ardatan)! - Pass errors to ReadableStream's cancel method
+  properly when it is piped, and piped stream is cancelled
+
+  Implement `ReadableStream.from`
+
 ## 0.7.0
 
 ### Minor Changes
