@@ -216,6 +216,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   static [Symbol.hasInstance](instance: unknown): instance is PonyfillReadableStream<unknown> {
     return isReadableStream(instance);
   }
+
+  static from<T>(iterable: AsyncIterable<T> | Iterable<T>): PonyfillReadableStream<T> {
+    return new PonyfillReadableStream(Readable.from(iterable));
+  }
 }
 
 function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> {

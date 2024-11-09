@@ -5,3 +5,5 @@
 
 Pass errors to ReadableStream's cancel method properly when it is piped, and piped stream is
 cancelled
+
+Implement `ReadableStream.from`
