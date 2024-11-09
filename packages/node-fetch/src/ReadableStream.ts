@@ -203,13 +203,23 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     writable: WritableStream<T>;
     readable: ReadableStream<T2>;
   }): ReadableStream<T2> {
-    this.pipeTo(writable);
+    this.pipeTo(writable).catch(err => {
+      this.readable.destroy(err);
+    });
+    if (isPonyfillReadableStream(readable)) {
+      readable.readable.once('error', err => this.readable.destroy(err));
+      readable.readable.once('finish', () => this.readable.push(null));
+    }
     return readable;
   }
 
   static [Symbol.hasInstance](instance: unknown): instance is PonyfillReadableStream<unknown> {
     return isReadableStream(instance);
   }
+}
+
+function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> {
+  return obj?.readable != null;
 }
 
 function isPonyfillWritableStream(obj: any): obj is PonyfillWritableStream {

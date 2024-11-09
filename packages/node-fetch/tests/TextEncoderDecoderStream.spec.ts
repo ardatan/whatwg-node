@@ -50,4 +50,15 @@ describe('TextEncoderDecoderStream', () => {
     }
     expect(chunks.join('')).toBe('Hello, world!');
   });
+  it('piped cancellation works', done => {
+    expect.assertions(1);
+    const readableStream = new PonyfillReadableStream({
+      cancel(error) {
+        expect(error).toBe('test error');
+        done();
+      },
+    });
+    const pipedStream = readableStream.pipeThrough(new PonyfillTextEncoderStream());
+    pipedStream.cancel('test error').finally(() => {});
+  });
 });
