@@ -9826,10 +9826,10 @@ workerd@1.20241106.1:
     "@cloudflare/workerd-linux-arm64" "1.20241106.1"
     "@cloudflare/workerd-windows-64" "1.20241106.1"
 
-wrangler@3.86.0:
-  version "3.86.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.86.0.tgz#cc6e3ca42afc7c0681c8177b570fd58ac6377819"
-  integrity sha512-jL670AFVPLTILvEjAL165aYM/ZqtZCqT+e6LKiniflRZxSGKu4o/wyHeOmOM6i5kYJHSmF40E4lOZqapDtkF8g==
+wrangler@3.86.1:
+  version "3.86.1"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.86.1.tgz#69b1599397d7e26d2e5a41ddce5c385f73b2e6eb"
+  integrity sha512-ujN74lPQCQRsMcvf48WLLZUqOqUbJJzt5+Xm5T3tGrpRJLW+dTB0ffvT/e2DBBvHZ7R52ZzZdm1akyLPsZmZ9Q==
   dependencies:
     "@cloudflare/kv-asset-handler" "0.3.4"
     "@cloudflare/workers-shared" "0.7.1"
