@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.54
+
+### Patch Changes
+
+- [#1790](https://github.com/ardatan/whatwg-node/pull/1790)
+  [`c7d49b1`](https://github.com/ardatan/whatwg-node/commit/c7d49b1dad95412b99126c289a44b1fbf3473a65)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle request abort correctly with AbortSignal
+
 ## 0.9.53
 
 ### Patch Changes
