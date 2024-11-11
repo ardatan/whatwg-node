@@ -209,6 +209,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     if (isPonyfillReadableStream(readable)) {
       readable.readable.once('error', err => this.readable.destroy(err));
       readable.readable.once('finish', () => this.readable.push(null));
+      readable.readable.once('close', () => this.readable.push(null));
     }
     return readable;
   }

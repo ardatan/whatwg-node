@@ -184,21 +184,14 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
   return request;
 }
 
-async function forwardResponseBodyToUWSResponse(
-  uwsResponse: UWSResponse,
-  fetchResponse: Response,
-  signal: ServerAdapterRequestAbortSignal,
-) {
-  for await (const chunk of fetchResponse.body as any as AsyncIterable<Uint8Array>) {
-    if (signal.aborted) {
-      return;
-    }
-    uwsResponse.cork(() => {
+export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
+  return new fetchAPI.WritableStream({
+    write(chunk) {
       uwsResponse.write(chunk);
-    });
-  }
-  uwsResponse.cork(() => {
-    uwsResponse.end();
+    },
+    close() {
+      uwsResponse.end();
+    },
   });
 }
 
@@ -206,6 +199,7 @@ export function sendResponseToUwsOpts(
   uwsResponse: UWSResponse,
   fetchResponse: Response,
   signal: ServerAdapterRequestAbortSignal,
+  fetchAPI: FetchAPI,
 ) {
   if (!fetchResponse) {
     uwsResponse.writeStatus('404 Not Found');
@@ -244,7 +238,21 @@ export function sendResponseToUwsOpts(
     uwsResponse.end();
     return;
   }
-  return forwardResponseBodyToUWSResponse(uwsResponse, fetchResponse, signal);
+  signal.addEventListener('abort', () => {
+    if (!fetchResponse.body?.locked) {
+      fetchResponse.body?.cancel(signal.reason);
+    }
+  });
+  return fetchResponse.body
+    .pipeTo(createWritableFromUWS(uwsResponse, fetchAPI), {
+      signal,
+    })
+    .catch(err => {
+      if (signal.aborted) {
+        return;
+      }
+      throw err;
+    });
 }
 
 export function fakePromise<T>(value: T): Promise<T> {

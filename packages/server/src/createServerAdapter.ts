@@ -293,7 +293,7 @@ function createServerAdapter<
         .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => {
           if (!signal.aborted && !resEnded) {
-            return sendResponseToUwsOpts(res, response, signal);
+            return sendResponseToUwsOpts(res, response, signal, fetchAPI);
           }
         })
         .catch(err => {
@@ -304,7 +304,7 @@ function createServerAdapter<
     }
     try {
       if (!signal.aborted && !resEnded) {
-        return sendResponseToUwsOpts(res, response$, signal);
+        return sendResponseToUwsOpts(res, response$, signal, fetchAPI);
       }
     } catch (err: any) {
       console.error(
