@@ -342,7 +342,7 @@ export function sendNodeResponse(
   }
   if (!fetchResponse) {
     serverResponse.statusCode = 404;
-    serverResponse.end();
+    endResponse(serverResponse);
     return;
   }
   serverResponse.statusCode = fetchResponse.status;
@@ -398,9 +398,37 @@ export function sendNodeResponse(
     return;
   }
 
+  if (isReadableStream(fetchBody)) {
+    return sendReadableStream(serverResponse, fetchBody);
+  }
+
   if (isAsyncIterable(fetchBody)) {
     return sendAsyncIterable(serverResponse, fetchBody);
   }
+}
+
+async function sendReadableStream(
+  serverResponse: NodeResponse,
+  readableStream: ReadableStream<Uint8Array>,
+) {
+  const reader = readableStream.getReader();
+  serverResponse.req.once('error', err => {
+    reader.cancel(err);
+  });
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) {
+      break;
+    }
+    if (
+      !serverResponse
+        // @ts-expect-error http and http2 writes are actually compatible
+        .write(value)
+    ) {
+      await new Promise(resolve => serverResponse.once('drain', resolve));
+    }
+  }
+  endResponse(serverResponse);
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {
