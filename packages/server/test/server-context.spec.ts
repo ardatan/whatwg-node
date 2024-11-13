@@ -31,6 +31,40 @@ describe('Server Context', () => {
         expect(res.status).toBe(200);
         expect(await res.json()).toEqual({ foo: 'bar', bar: 'baz' });
       });
+      it('Do not pollute the original object in case of `Object.create`', async () => {
+        const serverAdapter = createServerAdapter((_req, context0: any) => {
+          context0.i = 0;
+          const context1 = Object.create(context0);
+          context1.i = 1;
+          const context2 = Object.create(context0);
+          context2.i = 2;
+          return Response.json({
+            i0: context0.i,
+            i1: context1.i,
+            i2: context2.i,
+          });
+        });
+        const res = await serverAdapter.fetch('http://localhost');
+        const resJson = await res.json();
+        expect(resJson).toEqual({
+          i0: 0,
+          i1: 1,
+          i2: 2,
+        });
+      });
+      it('retains the prototype in case of `Object.create`', async () => {
+        class MyContext {}
+        const serverAdapter = createServerAdapter((_req, context0: MyContext) => {
+          return Response.json({
+            isMyContext: context0 instanceof MyContext,
+          });
+        });
+        const res = await serverAdapter.fetch('http://localhost', new MyContext());
+        const resJson = await res.json();
+        expect(resJson).toEqual({
+          isMyContext: true,
+        });
+      });
     },
     { noLibCurl: true },
   );

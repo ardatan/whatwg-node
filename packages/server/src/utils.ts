@@ -527,75 +527,17 @@ export function isolateObject<TIsolatedObject extends object>(
     if (waitUntilPromises == null) {
       return {} as TIsolatedObject;
     }
-    originalCtx = {} as TIsolatedObject;
+    return {
+      waitUntil(promise: Promise<unknown>) {
+        waitUntilPromises?.push(promise.catch(err => console.error(err)));
+      },
+    } as TIsolatedObject;
   }
-  const extraProps: Partial<TIsolatedObject> = {};
-  const deletedProps = new Set<string | symbol>();
-  return new Proxy(originalCtx, {
-    get(originalCtx, prop) {
-      if (waitUntilPromises != null && prop === 'waitUntil') {
-        return function waitUntil(promise: Promise<unknown>) {
-          waitUntilPromises.push(promise.catch(err => console.error(err)));
-        };
-      }
-      const extraPropVal = (extraProps as any)[prop];
-      if (extraPropVal != null) {
-        if (typeof extraPropVal === 'function') {
-          return extraPropVal.bind(extraProps);
-        }
-        return extraPropVal;
-      }
-      if (deletedProps.has(prop)) {
-        return undefined;
-      }
-      return (originalCtx as any)[prop];
-    },
-    set(_originalCtx, prop, value) {
-      (extraProps as any)[prop] = value;
-      return true;
-    },
-    has(originalCtx, prop) {
-      if (waitUntilPromises != null && prop === 'waitUntil') {
-        return true;
-      }
-      if (deletedProps.has(prop)) {
-        return false;
-      }
-      if (prop in extraProps) {
-        return true;
-      }
-      return prop in originalCtx;
-    },
-    defineProperty(_originalCtx, prop, descriptor) {
-      return Reflect.defineProperty(extraProps, prop, descriptor);
-    },
-    deleteProperty(_originalCtx, prop) {
-      if (prop in extraProps) {
-        return Reflect.deleteProperty(extraProps, prop);
-      }
-      deletedProps.add(prop);
-      return true;
-    },
-    ownKeys(originalCtx) {
-      const extraKeys = Reflect.ownKeys(extraProps);
-      const originalKeys = Reflect.ownKeys(originalCtx);
-      const deletedKeys = Array.from(deletedProps);
-      const allKeys = new Set(
-        extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys))),
-      );
-      if (waitUntilPromises != null) {
-        allKeys.add('waitUntil');
-      }
-      return Array.from(allKeys);
-    },
-    getOwnPropertyDescriptor(originalCtx, prop) {
-      if (prop in extraProps) {
-        return Reflect.getOwnPropertyDescriptor(extraProps, prop);
-      }
-      if (deletedProps.has(prop)) {
-        return undefined;
-      }
-      return Reflect.getOwnPropertyDescriptor(originalCtx, prop);
+  return Object.create(originalCtx, {
+    waitUntil: {
+      value(promise: Promise<unknown>) {
+        waitUntilPromises?.push(promise.catch(err => console.error(err)));
+      },
     },
   });
 }
