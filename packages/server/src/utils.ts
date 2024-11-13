@@ -531,13 +531,11 @@ export function isolateObject<TIsolatedObject extends object>(
       waitUntil: waitUntilFn,
     } as TIsolatedObject;
   }
-  return completeAssign(
-    Object.create(originalCtx),
-    {
-      waitUntil: waitUntilFn,
+  return Object.create(originalCtx, {
+    waitUntil: {
+      value: waitUntilFn,
     },
-    originalCtx,
-  );
+  });
 }
 
 export interface DeferredPromise<T = void> {
