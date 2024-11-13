@@ -2,6 +2,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { setTimeout } from 'timers/promises';
 import { HttpResponse } from 'uWebSockets.js';
 import { createDeferredPromise } from '@whatwg-node/server';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
@@ -354,6 +355,24 @@ describe('Node Specific Cases', () => {
           const resJson = await response.json();
           expect(resJson.textFromClonedReq).toBe('TEST');
           expect(resJson.textFromOriginalReq).toBe('TEST');
+        });
+
+        it('waits for the sent promises to waitUntil', async () => {
+          const deferred = createDeferredPromise<void>();
+          const serverAdapter = createServerAdapter((_req, ctx) => {
+            ctx.waitUntil(deferred.promise);
+            return Response.json({ message: 'Hello World' });
+          });
+          testServer.addOnceHandler(serverAdapter);
+          const response = await fetch(testServer.url);
+          const responseJson = await response.json();
+          expect(responseJson).toEqual({ message: 'Hello World' });
+          const disposedThen = jest.fn();
+          serverAdapter[DisposableSymbols.asyncDispose]().then(disposedThen);
+          expect(disposedThen).not.toHaveBeenCalled();
+          deferred.resolve();
+          await setTimeout(100);
+          expect(disposedThen).toHaveBeenCalled();
         });
       });
     },

@@ -521,24 +521,20 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
 
 export function isolateObject<TIsolatedObject extends object>(
   originalCtx: TIsolatedObject,
-  waitUntilPromises?: Promise<unknown>[],
+  waitUntilFn?: (promiseLike: PromiseLike<unknown>) => void,
 ): TIsolatedObject {
   if (originalCtx == null) {
-    if (waitUntilPromises == null) {
+    if (waitUntilFn == null) {
       return {} as TIsolatedObject;
     }
     return {
-      waitUntil(promise: Promise<unknown>) {
-        waitUntilPromises.push(promise.catch(err => console.error(err)));
-      },
+      waitUntil: waitUntilFn,
     } as TIsolatedObject;
   }
   return completeAssign(
     Object.create(originalCtx),
     {
-      waitUntil(promise: Promise<unknown>) {
-        waitUntilPromises?.push(promise.catch(err => console.error(err)));
-      },
+      waitUntil: waitUntilFn,
     },
     originalCtx,
   );
@@ -657,4 +653,29 @@ export function handleResponseDecompression(response: Response, fetchAPI: FetchA
     decompressedResponseMap.set(response, decompressedResponse);
   }
   return decompressedResponse;
+}
+
+const terminateEvents = ['SIGINT', 'SIGTERM'] as const;
+const disposableStacks = new Set<AsyncDisposableStack>();
+
+let eventListenerRegistered = false;
+
+function ensureEventListenerForDisposableStacks() {
+  if (eventListenerRegistered) {
+    return;
+  }
+  eventListenerRegistered = true;
+  for (const event of terminateEvents) {
+    globalThis.process.once(event, function terminateHandler() {
+      return Promise.allSettled([...disposableStacks].map(stack => stack.disposeAsync()));
+    });
+  }
+}
+
+export function registerDisposableStackForTerminateEvents(disposableStack: AsyncDisposableStack) {
+  ensureEventListenerForDisposableStacks();
+  disposableStacks.add(disposableStack);
+  disposableStack.defer(() => {
+    disposableStacks.delete(disposableStack);
+  });
 }

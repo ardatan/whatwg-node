@@ -20,7 +20,7 @@ export interface ServerAdapterBaseObject<
   handle: THandleRequest;
 }
 
-export interface ServerAdapterObject<TServerContext> extends EventListenerObject {
+export interface ServerAdapterObject<TServerContext> extends EventListenerObject, AsyncDisposable {
   /**
    * A basic request listener that takes a `Request` with the server context and returns a `Response`.
    */
@@ -99,6 +99,8 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
     container: { request: Request } & Partial<TServerContext & ServerAdapterInitialContext>,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
   ): Promise<Response> | Response;
+
+  disposableStack: AsyncDisposableStack;
 }
 
 export interface RequestLike {
