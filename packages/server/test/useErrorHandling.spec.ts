@@ -23,7 +23,9 @@ describe('useErrorHandling', () => {
         expect(response.statusText).toBe(errRes.statusText);
         const text = await response.text();
         expect(text).toHaveLength(0);
-        expect(errorHandler).toHaveBeenCalledWith(new Error('Unexpected error'), request, {});
+        expect(errorHandler).toHaveBeenCalledWith(new Error('Unexpected error'), request, {
+          waitUntil: expect.any(Function),
+        });
       });
     },
     { noLibCurl: true },

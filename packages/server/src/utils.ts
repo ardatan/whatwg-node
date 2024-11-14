@@ -533,114 +533,15 @@ export function isolateObject<TIsolatedObject extends object>(
       },
     } as TIsolatedObject;
   }
-  if (
-    Object.getPrototypeOf(originalCtx) === null ||
-    Object.getPrototypeOf(originalCtx).toString() === '[object Object]'
-  ) {
-    Object.defineProperty(originalCtx, 'waitUntil', {
-      value(promise: Promise<unknown>) {
+  return completeAssign(
+    Object.create(originalCtx),
+    {
+      waitUntil(promise: Promise<unknown>) {
         waitUntilPromises?.push(promise.catch(err => console.error(err)));
       },
-    });
-    return originalCtx;
-  }
-  const extraPropsByReceiver = new WeakMap<TIsolatedObject, Partial<TIsolatedObject>>();
-  const deletedPropsByReceiver = new WeakMap<TIsolatedObject, Set<string | symbol>>();
-  function getExtraProps(receiver: TIsolatedObject): any {
-    let extraProps = extraPropsByReceiver.get(receiver);
-    if (!extraProps) {
-      extraProps = {};
-      extraPropsByReceiver.set(receiver, extraProps);
-    }
-    return extraProps;
-  }
-  function getDeletedProps(receiver: TIsolatedObject) {
-    let deletedProps = deletedPropsByReceiver.get(receiver);
-    if (!deletedProps) {
-      deletedProps = new Set<string | symbol>();
-      deletedPropsByReceiver.set(receiver, deletedProps);
-    }
-    return deletedProps;
-  }
-  return new Proxy(originalCtx, {
-    get(originalCtx, prop, receiver) {
-      if (waitUntilPromises != null && prop === 'waitUntil') {
-        return function waitUntil(promise: Promise<unknown>) {
-          waitUntilPromises.push(promise.catch(err => console.error(err)));
-        };
-      }
-      const extraProps = getExtraProps(receiver);
-      const extraPropVal = extraProps[prop];
-      if (extraPropVal != null) {
-        if (typeof extraPropVal === 'function') {
-          return extraPropVal.bind(extraProps);
-        }
-        return extraPropVal;
-      }
-      const deletedProps = getDeletedProps(receiver);
-      if (deletedProps.has(prop)) {
-        return undefined;
-      }
-      return (originalCtx as any)[prop];
     },
-    set(_originalCtx, prop, value, receiver) {
-      const extraProps = getExtraProps(receiver);
-      extraProps[prop] = value;
-      return true;
-    },
-    has(originalCtx, prop) {
-      if (waitUntilPromises != null && prop === 'waitUntil') {
-        return true;
-      }
-      const deletedProps = getDeletedProps(originalCtx);
-      if (deletedProps.has(prop)) {
-        return false;
-      }
-      const extraProps = getExtraProps(originalCtx);
-      if (prop in extraProps) {
-        return true;
-      }
-      return prop in originalCtx;
-    },
-    defineProperty(originalCtx, prop, descriptor) {
-      const extraProps = getExtraProps(originalCtx);
-      return Reflect.defineProperty(extraProps, prop, descriptor);
-    },
-    deleteProperty(originalCtx, prop) {
-      const extraProps = getExtraProps(originalCtx);
-      if (prop in extraProps) {
-        return Reflect.deleteProperty(extraProps, prop);
-      }
-      const deletedProps = getDeletedProps(originalCtx);
-      deletedProps.add(prop);
-      return true;
-    },
-    ownKeys(originalCtx) {
-      const extraProps = getExtraProps(originalCtx);
-      const extraKeys = Reflect.ownKeys(extraProps);
-      const originalKeys = Reflect.ownKeys(originalCtx);
-      const deletedProps = getDeletedProps(originalCtx);
-      const deletedKeys = Array.from(deletedProps);
-      const allKeys = new Set(
-        extraKeys.concat(originalKeys.filter(keys => !deletedKeys.includes(keys))),
-      );
-      if (waitUntilPromises != null) {
-        allKeys.add('waitUntil');
-      }
-      return Array.from(allKeys);
-    },
-    getOwnPropertyDescriptor(originalCtx, prop) {
-      const extraProps = getExtraProps(originalCtx);
-      if (prop in extraProps) {
-        return Reflect.getOwnPropertyDescriptor(extraProps, prop);
-      }
-      const deletedProps = getDeletedProps(originalCtx);
-      if (deletedProps.has(prop)) {
-        return undefined;
-      }
-      return Reflect.getOwnPropertyDescriptor(originalCtx, prop);
-    },
-  });
+    originalCtx,
+  );
 }
 
 export interface DeferredPromise<T = void> {

@@ -131,7 +131,7 @@ export type ServerAdapterNodeContext = {
   res: NodeResponse;
 };
 
-export type WaitUntilFn = (promise: Promise<unknown>) => void;
+export type WaitUntilFn = (promise: Promise<void> | void) => void;
 
 export type FetchAPI = ReturnType<typeof import('@whatwg-node/fetch').createFetch>;
 
