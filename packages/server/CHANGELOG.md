@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.9.55
+
+### Patch Changes
+
+- [#1799](https://github.com/ardatan/whatwg-node/pull/1799)
+  [`7d1f0ff`](https://github.com/ardatan/whatwg-node/commit/7d1f0ff4675911ecb249d609d200fd69f77e8d94)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid polluting the original object in case of
+  \`Object.create\`
+
 ## 0.9.54
 
 ### Patch Changes
