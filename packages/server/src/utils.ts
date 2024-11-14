@@ -527,7 +527,22 @@ export function isolateObject<TIsolatedObject extends object>(
     if (waitUntilPromises == null) {
       return {} as TIsolatedObject;
     }
-    originalCtx = {} as TIsolatedObject;
+    return {
+      waitUntil(promise: Promise<unknown>) {
+        waitUntilPromises.push(promise.catch(err => console.error(err)));
+      },
+    } as TIsolatedObject;
+  }
+  if (
+    Object.getPrototypeOf(originalCtx) === null ||
+    Object.getPrototypeOf(originalCtx).toString() === '[object Object]'
+  ) {
+    Object.defineProperty(originalCtx, 'waitUntil', {
+      value(promise: Promise<unknown>) {
+        waitUntilPromises?.push(promise.catch(err => console.error(err)));
+      },
+    });
+    return originalCtx;
   }
   const extraPropsByReceiver = new WeakMap<TIsolatedObject, Partial<TIsolatedObject>>();
   const deletedPropsByReceiver = new WeakMap<TIsolatedObject, Set<string | symbol>>();
