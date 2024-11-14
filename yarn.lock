@@ -7377,7 +7377,7 @@ mvdan-sh@^0.10.1:
   resolved "https://registry.yarnpkg.com/mvdan-sh/-/mvdan-sh-0.10.1.tgz#5b3a4462a89cf20739b12d851589342c875f4d1f"
   integrity sha512-kMbrH0EObaKmK3nVRKUIIya1dpASHIEusM13S4V1ViHFuxuNxCo+arxoa6j/dbV22YBGjl7UKJm9QQKJ2Crzhg==
 
-nan@^2.20.0:
+nan@^2.22.0:
   version "2.22.0"
   resolved "https://registry.yarnpkg.com/nan/-/nan-2.22.0.tgz#31bc433fc33213c97bad36404bb68063de604de3"
   integrity sha512-nbajikzWTMwsW+eSsNm3QwlOs7het9gGJU5dDZzRTQGk03vyBOauxgI4VakDzE0PtsGTmXPsXTbbjVhRwR5mpw==
@@ -7453,14 +7453,14 @@ node-int64@^0.4.0:
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
   integrity sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==
 
-"node-libcurl@npm:@ardatan/node-libcurl@4.0.2":
-  version "4.0.2"
-  resolved "https://registry.yarnpkg.com/@ardatan/node-libcurl/-/node-libcurl-4.0.2.tgz#c7ee83254e73b277420869d4b59dd5e2fda7bd01"
-  integrity sha512-H1XB1bFiAxA5dc8vRnQEGC4hsbVVATAdhR8trUcG+MivG98aPB3BrkE2j3qEE3RMHoo3uWx5tzctTnoCXIM8fA==
+"node-libcurl@npm:@ardatan/node-libcurl@4.0.4":
+  version "4.0.4"
+  resolved "https://registry.yarnpkg.com/@ardatan/node-libcurl/-/node-libcurl-4.0.4.tgz#29dba7ba123140c4c461ac9f04930ff3a7a27c72"
+  integrity sha512-xQAlBogs1EW8fe53HxI0ja7iHJLizwvKeC599ORgacAEM9Vq44CaPNEhl0Fj37eZlSrZj5J+CnIJvq8JkhlCPw==
   dependencies:
     "@mapbox/node-pre-gyp" "^1.0.11"
     env-paths "2.2.0"
-    nan "^2.20.0"
+    nan "^2.22.0"
     node-gyp "^10.2.0"
     npmlog "^7.0.1"
     rimraf "^5.0.5"
