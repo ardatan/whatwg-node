@@ -1,5 +1,16 @@
 import { CustomEvent } from '@whatwg-node/events';
+import { FetchEvent } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
+
+class PonyfillFetchEvent extends CustomEvent<{}> implements FetchEvent {
+  constructor(
+    public request: Request,
+    public respondWith: FetchEvent['respondWith'],
+    public waitUntil: FetchEvent['waitUntil'],
+  ) {
+    super('fetch');
+  }
+}
 
 describe('FetchEvent listener', () => {
   runTestsForEachFetchImpl(
@@ -10,12 +21,12 @@ describe('FetchEvent listener', () => {
         const adapter = createServerAdapter(() => response$);
         const respondWith = jest.fn();
         const waitUntil = jest.fn();
-        const fetchEvent = Object.assign(new CustomEvent('fetch'), {
-          request: new Request('http://localhost:8080'),
+        const fetchEvent = new PonyfillFetchEvent(
+          new Request('http://localhost:8080'),
           respondWith,
           waitUntil,
-        });
-        const returnValue = await adapter(fetchEvent);
+        );
+        const returnValue = adapter(fetchEvent);
         expect(returnValue).toBeUndefined();
         const returnedResponse = await respondWith.mock.calls[0][0];
         expect(returnedResponse).toBe(response);
@@ -25,12 +36,12 @@ describe('FetchEvent listener', () => {
         const adapter = createServerAdapter(handleRequest);
         const respondWith = jest.fn();
         const waitUntil = jest.fn();
-        const fetchEvent = Object.assign(new CustomEvent('fetch'), {
-          request: new Request('http://localhost:8080'),
+        const fetchEvent = new PonyfillFetchEvent(
+          new Request('http://localhost:8080'),
           respondWith,
           waitUntil,
-        });
-        await adapter(fetchEvent);
+        );
+        adapter(fetchEvent);
         expect(handleRequest).toHaveBeenCalledWith(fetchEvent.request, fetchEvent);
       });
       it('should accept additional parameters as server context', async () => {
@@ -40,13 +51,13 @@ describe('FetchEvent listener', () => {
         }>(handleRequest);
         const respondWith = jest.fn();
         const waitUntil = jest.fn();
-        const fetchEvent = Object.assign(new CustomEvent('fetch'), {
-          request: new Request('http://localhost:8080'),
+        const fetchEvent = new PonyfillFetchEvent(
+          new Request('http://localhost:8080'),
           respondWith,
           waitUntil,
-        });
+        );
         const additionalCtx = { foo: 'bar' };
-        await adapter(fetchEvent, additionalCtx);
+        adapter(fetchEvent, additionalCtx);
         expect(handleRequest).toHaveBeenCalledWith(
           fetchEvent.request,
           expect.objectContaining(additionalCtx),

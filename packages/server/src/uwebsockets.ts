@@ -187,10 +187,14 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
   return new fetchAPI.WritableStream({
     write(chunk) {
-      uwsResponse.write(chunk);
+      uwsResponse.cork(() => {
+        uwsResponse.write(chunk);
+      });
     },
     close() {
-      uwsResponse.end();
+      uwsResponse.cork(() => {
+        uwsResponse.end();
+      });
     },
   });
 }
@@ -229,13 +233,11 @@ export function sendResponseToUwsOpts(
     }
     if (bufferOfRes) {
       uwsResponse.end(bufferOfRes);
+    } else if (!fetchResponse.body) {
+      uwsResponse.end();
     }
   });
-  if (bufferOfRes) {
-    return;
-  }
-  if (!fetchResponse.body) {
-    uwsResponse.end();
+  if (bufferOfRes || !fetchResponse.body) {
     return;
   }
   signal.addEventListener('abort', () => {
