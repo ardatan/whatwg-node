@@ -12,10 +12,7 @@ module.exports = function createNodePonyfill(opts = {}) {
     ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
-  if (
-    (opts.skipPonyfill || shouldSkipPonyfill())
-    && opts.skipPonyfill !== false
-  ) {
+  if (opts.skipPonyfill || shouldSkipPonyfill()) {
     return {
       fetch: globalThis.fetch,
       Headers: globalThis.Headers,

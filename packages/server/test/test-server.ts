@@ -29,7 +29,7 @@ export async function createBunServer(): Promise<TestServer> {
   let handler: any;
   const server = Bun.serve({
     port: 0,
-    fetch(...args) {
+    fetch(...args: any[]) {
       return handler(...args);
     },
   });

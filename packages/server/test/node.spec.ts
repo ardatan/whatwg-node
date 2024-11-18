@@ -95,6 +95,7 @@ describe('Node Specific Cases', () => {
 
           let i = 0;
           const reader = response.body!.getReader();
+          reader.closed.catch(() => {});
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
