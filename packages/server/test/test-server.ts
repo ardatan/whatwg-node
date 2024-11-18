@@ -77,7 +77,9 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
   });
 }
 
-export const serverImplMap: Record<string, () => Promise<TestServer>> = {};
+export const serverImplMap: Record<string, () => Promise<TestServer>> = {
+  'node:http': createNodeHttpTestServer,
+};
 
 if ((globalThis as any)['createUWS']) {
   serverImplMap.uWebSockets = createUWSTestServer;
@@ -85,8 +87,6 @@ if ((globalThis as any)['createUWS']) {
 
 if (globalThis.Bun) {
   serverImplMap.Bun = createBunServer;
-} else {
-  serverImplMap['node:http'] = createNodeHttpTestServer;
 }
 
 export function runTestsForEachServerImpl(
