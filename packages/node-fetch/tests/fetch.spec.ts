@@ -2,7 +2,7 @@ import { Blob as NodeBlob } from 'buffer';
 import { Readable } from 'stream';
 import { setTimeout } from 'timers/promises';
 import { URL as NodeURL } from 'url';
-import { runTestsForEachFetchImpl } from '../../server/tests/test-fetch.js';
+import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
 
 function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);

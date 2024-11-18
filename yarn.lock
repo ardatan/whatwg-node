@@ -2916,13 +2916,6 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/bun@1.1.13":
-  version "1.1.13"
-  resolved "https://registry.yarnpkg.com/@types/bun/-/bun-1.1.13.tgz#a53b3a64c8f539bbe33ceb0a9f3b98c6a79a3407"
-  integrity sha512-KmQxSBgVWCl6RSuerlLGZlIWfdxkKqat0nxN61+qu4y1KDn0Ll3j7v1Pl8GnaL3a/U6GGWVTJh75ap62kR1E8Q==
-  dependencies:
-    bun-types "1.1.34"
-
 "@types/busboy@1.5.4":
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/@types/busboy/-/busboy-1.5.4.tgz#0038c31102ca90f2a7f0d8bc27ee5ebf1088e230"

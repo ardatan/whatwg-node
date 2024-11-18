@@ -28,7 +28,7 @@ describe('Node Specific Cases', () => {
           const callOrder: string[] = [];
           const serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
             waitUntil(
-              setTimeout(300).then(() => {
+              setTimeout(100).then(() => {
                 callOrder.push('waitUntil');
               }),
             );
@@ -41,7 +41,7 @@ describe('Node Specific Cases', () => {
           const response$ = fetch(testServer.url);
           const response = await response$;
           await response.text();
-          await setTimeout(100);
+          await setTimeout(300);
           expect(callOrder).toEqual(['response', 'waitUntil']);
         });
 

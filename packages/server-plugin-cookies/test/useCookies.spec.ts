@@ -1,4 +1,4 @@
-import { runTestsForEachFetchImpl } from '../../server/tests/test-fetch.js';
+import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
 import { useCookies } from '../src/useCookies.js';
 
 describe('Cookie Management', () => {

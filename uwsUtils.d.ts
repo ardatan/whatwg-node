@@ -8,3 +8,7 @@ declare global {
     port?: number;
   };
 }
+
+declare global {
+  var Bun: any;
+}

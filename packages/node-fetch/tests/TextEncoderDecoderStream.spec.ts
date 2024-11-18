@@ -1,4 +1,4 @@
-import { runTestsForEachFetchImpl } from '../../server/tests/test-fetch';
+import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 
 describe('TextEncoderDecoderStream', () => {
   runTestsForEachFetchImpl((_, { fetchAPI }) => {
