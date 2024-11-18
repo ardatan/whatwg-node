@@ -30,7 +30,7 @@ describe('ReadableStream', () => {
       }
       chunksStr += (value as Buffer).toString('utf-8');
     }
-    expect(chunksStr).toMatchInlineSnapshot(`"{"cnt":0}{"cnt":1}{"cnt":2}{"cnt":3}"`);
+    expect(chunksStr).toBe(`{"cnt":0}{"cnt":1}{"cnt":2}{"cnt":3}`);
   });
   it('should send data from start and push lazily', async () => {
     let interval: any;
@@ -73,28 +73,26 @@ describe('ReadableStream', () => {
         break;
       }
     }
-    expect(chunksStr).toMatchInlineSnapshot(`
-      "startCount: 0
-      startCount: 1
-      startCount: 2
-      pullCount: 0
-      startCount: 3
-      startCount: 4
-      startCount: 5
-      startCount: 6
-      pullCount: 1
-      startCount: 7
-      startCount: 8
-      startCount: 9
-      startCount: 10
-      pullCount: 2
-      startCount: 11
-      startCount: 12
-      startCount: 13
-      startCount: 14
-      pullCount: 3
-      "
-    `);
+    expect(chunksStr).toBe(`startCount: 0
+startCount: 1
+startCount: 2
+pullCount: 0
+startCount: 3
+startCount: 4
+startCount: 5
+startCount: 6
+pullCount: 1
+startCount: 7
+startCount: 8
+startCount: 9
+startCount: 10
+pullCount: 2
+startCount: 11
+startCount: 12
+startCount: 13
+startCount: 14
+pullCount: 3
+`);
   });
   it('should send data from start without pull lazily', async () => {
     let interval: any;
@@ -122,15 +120,13 @@ describe('ReadableStream', () => {
         break;
       }
     }
-    expect(chunks).toMatchInlineSnapshot(`
-      [
-        "startCount: 0",
-        "startCount: 1",
-        "startCount: 2",
-        "startCount: 3",
-        "startCount: 4",
-        "startCount: 5",
-      ]
-    `);
+    expect(chunks).toEqual([
+      'startCount: 0',
+      'startCount: 1',
+      'startCount: 2',
+      'startCount: 3',
+      'startCount: 4',
+      'startCount: 5',
+    ]);
   });
 });

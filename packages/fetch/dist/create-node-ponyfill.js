@@ -1,4 +1,5 @@
 const shouldSkipPonyfill = require('./shouldSkipPonyfill');
+let newNodeFetch;
 
 module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
@@ -11,7 +12,10 @@ module.exports = function createNodePonyfill(opts = {}) {
     ponyfills.URLPattern = urlPatternModule.URLPattern;
   }
 
-  if (opts.skipPonyfill || shouldSkipPonyfill()) {
+  if (
+    (opts.skipPonyfill || shouldSkipPonyfill())
+    && opts.skipPonyfill !== false
+  ) {
     return {
       fetch: globalThis.fetch,
       Headers: globalThis.Headers,
@@ -37,7 +41,7 @@ module.exports = function createNodePonyfill(opts = {}) {
     };
   }
 
-  const newNodeFetch = require('@whatwg-node/node-fetch');
+  newNodeFetch ||= require('@whatwg-node/node-fetch');
 
   ponyfills.fetch = newNodeFetch.fetch;
   ponyfills.Request = newNodeFetch.Request;

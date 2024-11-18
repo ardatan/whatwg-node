@@ -7,8 +7,9 @@ import { PonyfillURLSearchParams } from './URLSearchParams.js';
 
 FastUrl.queryString = FastQuerystring;
 
-export class PonyfillURL extends FastUrl implements URL {
-  constructor(url: string, base?: string | URL) {
+class PonyfillURL extends FastUrl {
+  constructor(url: string | URL, base?: string | URL | undefined) {
+    url = url.toString();
     super();
     if (url.startsWith('data:')) {
       this.protocol = 'data:';
@@ -21,6 +22,16 @@ export class PonyfillURL extends FastUrl implements URL {
       this.protocol = this.protocol || baseParsed.protocol;
       this.host = this.host || baseParsed.host;
       this.pathname = this.pathname || baseParsed.pathname;
+    }
+  }
+
+  canParse(url: string, base?: string): boolean {
+    try {
+      // eslint-disable-next-line no-new
+      new PonyfillURL(url, base);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -63,6 +74,14 @@ export class PonyfillURL extends FastUrl implements URL {
 
   private static blobRegistry = new Map<string, Blob>();
 
+  createObjectURL(obj: Blob): string {
+    return PonyfillURL.createObjectURL(obj);
+  }
+
+  revokeObjectURL(url: string): void {
+    PonyfillURL.resolveObjectURL(url);
+  }
+
   static createObjectURL(blob: Blob): string {
     const blobUrl = `blob:whatwgnode:${randomUUID()}`;
     this.blobRegistry.set(blobUrl, blob);
@@ -81,3 +100,7 @@ export class PonyfillURL extends FastUrl implements URL {
     return (this.blobRegistry.get(url) || resolveObjectURL(url)) as Blob | PonyfillBlob | undefined;
   }
 }
+
+const URLCtor = PonyfillURL as unknown as typeof URL;
+
+export { URLCtor as PonyfillURL };

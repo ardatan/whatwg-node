@@ -1,5 +1,5 @@
+import { createDeferredPromise } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
-import { createDeferred } from './test-utils.js';
 
 describe('adapter.fetch', () => {
   runTestsForEachFetchImpl(
@@ -213,7 +213,7 @@ describe('adapter.fetch', () => {
         expect(adapter.returnThis()).toBe(adapter);
       });
       it('handles AbortSignal', async () => {
-        const adapterResponseDeferred = createDeferred<Response>();
+        const adapterResponseDeferred = createDeferredPromise<Response>();
         const adapter = createServerAdapter(req => {
           req.signal.addEventListener('abort', () => {
             adapterResponseDeferred.resolve(
@@ -228,7 +228,7 @@ describe('adapter.fetch', () => {
         const signal = controller.signal;
         const promise = adapter.fetch('http://localhost', { signal });
         controller.abort();
-        await expect(promise).rejects.toThrow('This operation was aborted');
+        await expect(promise).rejects.toThrow(/operation was aborted/);
       });
 
       it('should provide a unique context for each request', async () => {

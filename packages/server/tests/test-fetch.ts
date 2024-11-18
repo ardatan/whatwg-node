@@ -1,7 +1,9 @@
 /* eslint-disable n/no-callback-literal */
 import { globalAgent as httpGlobalAgent } from 'http';
 import { globalAgent as httpsGlobalAgent } from 'https';
+import { setTimeout } from 'timers/promises';
 import type { Dispatcher } from 'undici';
+import { afterAll, afterEach, beforeAll, describe } from '@jest/globals';
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
@@ -17,23 +19,11 @@ export function runTestsForEachFetchImpl(
   ) => void,
   opts: { noLibCurl?: boolean; noNativeFetch?: boolean } = {},
 ) {
-  describe('Ponyfill', () => {
-    if (opts.noLibCurl) {
-      const fetchAPI = createFetch({ skipPonyfill: false });
-      callback('ponyfill', {
-        fetchAPI,
-        createServerAdapter: (baseObj: any, opts?: any) =>
-          createServerAdapter(baseObj, {
-            fetchAPI,
-            ...opts,
-          }),
-      });
-      return;
-    }
-    if (libcurl) {
-      describe('libcurl', () => {
+  if (!globalThis.Bun) {
+    describe('Ponyfill', () => {
+      if (opts.noLibCurl) {
         const fetchAPI = createFetch({ skipPonyfill: false });
-        callback('libcurl', {
+        callback('ponyfill', {
           fetchAPI,
           createServerAdapter: (baseObj: any, opts?: any) =>
             createServerAdapter(baseObj, {
@@ -41,31 +31,45 @@ export function runTestsForEachFetchImpl(
               ...opts,
             }),
         });
+        return;
+      }
+      if (libcurl) {
+        describe('libcurl', () => {
+          const fetchAPI = createFetch({ skipPonyfill: false });
+          callback('libcurl', {
+            fetchAPI,
+            createServerAdapter: (baseObj: any, opts?: any) =>
+              createServerAdapter(baseObj, {
+                fetchAPI,
+                ...opts,
+              }),
+          });
+          afterAll(() => {
+            libcurl.Curl.globalCleanup();
+          });
+        });
+      }
+      describe('node-http', () => {
+        beforeAll(() => {
+          (globalThis.libcurl as any) = null;
+        });
         afterAll(() => {
-          libcurl.Curl.globalCleanup();
+          httpGlobalAgent.destroy();
+          httpsGlobalAgent.destroy();
+          globalThis.libcurl = libcurl;
+        });
+        const fetchAPI = createFetch({ skipPonyfill: false });
+        callback('node-http', {
+          fetchAPI,
+          createServerAdapter: (baseObj: any, opts?: any) =>
+            createServerAdapter(baseObj, {
+              fetchAPI,
+              ...opts,
+            }),
         });
       });
-    }
-    describe('node-http', () => {
-      beforeAll(() => {
-        (globalThis.libcurl as any) = null;
-      });
-      afterAll(() => {
-        httpGlobalAgent.destroy();
-        httpsGlobalAgent.destroy();
-        globalThis.libcurl = libcurl;
-      });
-      const fetchAPI = createFetch({ skipPonyfill: false });
-      callback('node-http', {
-        fetchAPI,
-        createServerAdapter: (baseObj: any, opts?: any) =>
-          createServerAdapter(baseObj, {
-            fetchAPI,
-            ...opts,
-          }),
-      });
     });
-  });
+  }
   let noNative = opts.noNativeFetch;
   if (
     process.env.LEAK_TEST &&
@@ -74,7 +78,7 @@ export function runTestsForEachFetchImpl(
   ) {
     noNative = true;
   }
-  if (!noNative) {
+  if (!noNative || globalThis.Bun) {
     describe('Native', () => {
       const fetchAPI = createFetch({ skipPonyfill: true });
       callback('native', {
@@ -91,11 +95,7 @@ export function runTestsForEachFetchImpl(
           globalThis[Symbol.for('undici.globalDispatcher.1')];
         await undiciGlobalDispatcher?.close();
         await undiciGlobalDispatcher?.destroy();
-        return new Promise<void>(resolve => {
-          setTimeout(() => {
-            resolve();
-          }, 300);
-        });
+        return setTimeout(300);
       });
     });
   }

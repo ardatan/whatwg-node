@@ -1,5 +1,5 @@
-import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
-import { runTestsForEachServerImpl } from '../../server/test/test-server';
+import { runTestsForEachFetchImpl } from '../../server/tests/test-fetch';
+import { runTestsForEachServerImpl } from '../../server/tests/test-server';
 
 describe('Cleanup Resources', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI: { Response, fetch } }) => {

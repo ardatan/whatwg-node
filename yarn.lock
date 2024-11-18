@@ -2527,6 +2527,46 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.27.0.tgz#1a857dcc95a5ab30122e04417148211e6f945e6c"
   integrity sha512-sAay1RrB+ONOem0OZanAR1ZI/k7yDpnOQSQmTMuGImUQb2y8EbSaCJ94FQluM74xoU03vlb2d2U90hZluL6nQg==
 
+"@oven/bun-darwin-aarch64@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-aarch64/-/bun-darwin-aarch64-1.1.34.tgz#7cd59dbc7fbcb60c4081768694efd40dfb491ccd"
+  integrity sha512-p+E2CkJhCYsQyzRcuUsTA5HIHSRMq0J+aX6fiPo5iheFQAZCrhdfeAWmlU8cjZmIBvmZYbNZ96g1VVlx+ooJkg==
+
+"@oven/bun-darwin-x64-baseline@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-x64-baseline/-/bun-darwin-x64-baseline-1.1.34.tgz#870fb7356e9c1e25b5ad52dbfffac876334f9e36"
+  integrity sha512-Uugg1eANnEfdma6TDZt5T2A3cHcOjnxSoGnQp8AY300olImd6QGvx5NfWMbo86/mvnFqfCN5YFR+behhHqekWQ==
+
+"@oven/bun-darwin-x64@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-x64/-/bun-darwin-x64-1.1.34.tgz#cf1fb08274be52eb9c262efbb284ab9659544664"
+  integrity sha512-B6FC7EjRCEMMs7DxAEULqCgr8Td+A1ZI8YHWpBGhHZ2+Th/3QTM0IbfWg1cbBkgipKokiyVS/lx15iBAN4njFA==
+
+"@oven/bun-linux-aarch64@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-aarch64/-/bun-linux-aarch64-1.1.34.tgz#c1c52dfab17d1f85327ddef23277734eefc74cd1"
+  integrity sha512-A81KHRU+8CRFrbyIGikxS+VZO5E0LW4V6a5gRBuK4gJUZ4CsC9uEeXNfHtSwT288dnfwnlR3dtOTwI4kUSsIVQ==
+
+"@oven/bun-linux-x64-baseline@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.1.34.tgz#390302818001589cb8f2d0b69607e15d1f0443f1"
+  integrity sha512-BosC6W9WWU8rBsxpvCrs59LQ2DAjqafxZ5dXbP3MSzNn6HyN496Cj+jcYzM8UUkYnzkQJDXOPIJhvto69mQ2VQ==
+
+"@oven/bun-linux-x64@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64/-/bun-linux-x64-1.1.34.tgz#493a2ee5d6552c59d2352064766a44e4f3eae15a"
+  integrity sha512-3J3G/BVolxO/YFC8Q9PvhjtQvT5VSbK2qqxXwZbgvUug1GxaEHc4KxV6ZSRZRmdadCoPfhcljQdoPCePbT4WrQ==
+
+"@oven/bun-windows-x64-baseline@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-windows-x64-baseline/-/bun-windows-x64-baseline-1.1.34.tgz#c14597041b66372af9895b11463c7bdc311a0510"
+  integrity sha512-kPtszE3NUM9Rd3GTJKD2TugoyjwPjMjbiMRX3wZE/YQBFRyATLGzKmxThwN1d2JPwTQGENrttpb15Qf95doSbA==
+
+"@oven/bun-windows-x64@1.1.34":
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/@oven/bun-windows-x64/-/bun-windows-x64-1.1.34.tgz#c182e77d57577ae14ba69acf2659b765e99d27ab"
+  integrity sha512-wJOsC5mB1qBLmRwV61F1KHL0MOjEHtK/xJ7ddktcWc05+W2U4Y60j100VwdUVcCaRh0wCcehLilCnUpjjGng3Q==
+
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
@@ -2875,6 +2915,13 @@
   dependencies:
     "@types/connect" "*"
     "@types/node" "*"
+
+"@types/bun@1.1.13":
+  version "1.1.13"
+  resolved "https://registry.yarnpkg.com/@types/bun/-/bun-1.1.13.tgz#a53b3a64c8f539bbe33ceb0a9f3b98c6a79a3407"
+  integrity sha512-KmQxSBgVWCl6RSuerlLGZlIWfdxkKqat0nxN61+qu4y1KDn0Ll3j7v1Pl8GnaL3a/U6GGWVTJh75ap62kR1E8Q==
+  dependencies:
+    bun-types "1.1.34"
 
 "@types/busboy@1.5.4":
   version "1.5.4"
@@ -3834,6 +3881,20 @@ bun-types@1.1.34:
   dependencies:
     "@types/node" "~20.12.8"
     "@types/ws" "~8.5.10"
+
+bun@1.1.34:
+  version "1.1.34"
+  resolved "https://registry.yarnpkg.com/bun/-/bun-1.1.34.tgz#2d76ce168f3051165ba1db60e01d09dbe8f641dd"
+  integrity sha512-ULiiLQG+bQC6YHW6u9jisGtwVn8msgqvDvurwsEs26mKtcAl7lRS+5yKfo/xxxnrcSIqx1QFM4vqki42s6GDVw==
+  optionalDependencies:
+    "@oven/bun-darwin-aarch64" "1.1.34"
+    "@oven/bun-darwin-x64" "1.1.34"
+    "@oven/bun-darwin-x64-baseline" "1.1.34"
+    "@oven/bun-linux-aarch64" "1.1.34"
+    "@oven/bun-linux-x64" "1.1.34"
+    "@oven/bun-linux-x64-baseline" "1.1.34"
+    "@oven/bun-windows-x64" "1.1.34"
+    "@oven/bun-windows-x64-baseline" "1.1.34"
 
 busboy@1.6.0, busboy@^1.6.0:
   version "1.6.0"
@@ -9472,7 +9533,6 @@ typescript@5.6.3:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.49.0:
   version "20.49.0"
-  uid "442087c0a01bf146acb7386910739ec81df06700"
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/442087c0a01bf146acb7386910739ec81df06700"
 
 ufo@^1.5.4:

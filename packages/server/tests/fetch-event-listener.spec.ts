@@ -42,7 +42,10 @@ describe('FetchEvent listener', () => {
           waitUntil,
         );
         adapter(fetchEvent);
-        expect(handleRequest).toHaveBeenCalledWith(fetchEvent.request, fetchEvent);
+        expect(handleRequest.mock.calls[0][0]).toBe(fetchEvent.request);
+        expect(handleRequest.mock.calls[0][1].request).toBe(fetchEvent.request);
+        expect(handleRequest.mock.calls[0][1].respondWith).toBe(fetchEvent.respondWith);
+        expect(handleRequest.mock.calls[0][1].waitUntil).toBe(fetchEvent.waitUntil);
       });
       it('should accept additional parameters as server context', async () => {
         const handleRequest = jest.fn();

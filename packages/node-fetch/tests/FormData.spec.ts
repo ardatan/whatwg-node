@@ -133,9 +133,12 @@ describe('Form Data', () => {
         fileSize: 1,
       },
     });
-    await expect(() => requestWillParse.formData()).rejects.toThrowError(
-      'File size limit exceeded: 1 bytes',
-    );
+    try {
+      await requestWillParse.formData();
+      expect(true).toBe(false);
+    } catch (error: any) {
+      expect(error.message).toBe('File size limit exceeded: 1 bytes');
+    }
   });
   it('support native Blob', async () => {
     const formData = new PonyfillFormData();

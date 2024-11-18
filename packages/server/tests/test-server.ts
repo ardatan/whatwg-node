@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
+import { afterAll, beforeAll, describe } from '@jest/globals';
 
 export interface TestServer {
   name: string;
@@ -20,6 +21,26 @@ export async function createUWSTestServer(): Promise<TestServer> {
     },
     addOnceHandler(newHandler) {
       uwsUtils.addOnceHandler(newHandler);
+    },
+  };
+}
+
+export async function createBunServer(): Promise<TestServer> {
+  let handler: any;
+  const server = Bun.serve({
+    port: 0,
+    fetch(...args) {
+      return handler(...args);
+    },
+  });
+  return {
+    name: 'Bun',
+    url: server.url.toString(),
+    close() {
+      return server.stop();
+    },
+    addOnceHandler(newHandler) {
+      handler = newHandler;
     },
   };
 }
@@ -56,12 +77,16 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
   });
 }
 
-export const serverImplMap: Record<string, () => Promise<TestServer>> = {
-  nodeHttp: createNodeHttpTestServer,
-};
+export const serverImplMap: Record<string, () => Promise<TestServer>> = {};
 
 if ((globalThis as any)['createUWS']) {
   serverImplMap.uWebSockets = createUWSTestServer;
+}
+
+if (globalThis.Bun) {
+  serverImplMap.Bun = createBunServer;
+} else {
+  serverImplMap['node:http'] = createNodeHttpTestServer;
 }
 
 export function runTestsForEachServerImpl(

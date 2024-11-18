@@ -43,7 +43,7 @@ describe('FormData', () => {
           expect(response.status).toBe(204);
           expect(receivedFieldContent).toBe('bar');
           expect(receivedFileName).toBe('baz.txt');
-          expect(receivedFileType).toBe('text/plain');
+          expect(receivedFileType).toContain('text/plain');
           expect(receivedFileContent).toBe('baz');
         });
       },

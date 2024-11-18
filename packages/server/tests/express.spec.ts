@@ -48,6 +48,10 @@ describe('express', () => {
           // 407 Proxy Authentication Required is not supported by fetch in this way
           continue;
         }
+        if (status === 509) {
+          // 509 Bandwidth Limit Exceeded is not supported by fetch in this way
+          continue;
+        }
         it(`should respond with ${statusCodeStr}`, async () => {
           const res = await fetch(`http://localhost:${port}/my-path`, {
             method: 'POST',
