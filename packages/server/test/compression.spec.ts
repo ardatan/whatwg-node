@@ -22,7 +22,8 @@ describe('Compression', () => {
               });
               res = handleResponseDecompression(res, fetchAPI);
               expect(res.status).toEqual(200);
-              await expect(res.text()).resolves.toEqual(exampleData);
+              const resText = await res.text();
+              expect(resText).toEqual(exampleData);
             });
             it('from the client to the server', async () => {
               const adapter = createServerAdapter(
@@ -45,7 +46,8 @@ describe('Compression', () => {
                     'content-length': String(Buffer.byteLength(exampleData)),
                   },
                 });
-                await expect(res.json()).resolves.toEqual({
+                const resJson = await res.json();
+                expect(resJson).toEqual({
                   body: exampleData,
                   contentLength: String(Buffer.byteLength(exampleData)),
                 });
@@ -100,7 +102,8 @@ describe('Compression', () => {
                     'content-length': String(Buffer.byteLength(exampleData)),
                   },
                 });
-                await expect(res.json()).resolves.toEqual({
+                const resJson = await res.json();
+                expect(resJson).toEqual({
                   body: exampleData,
                   contentLength: String(Buffer.byteLength(exampleData)),
                 });
@@ -156,7 +159,10 @@ describe('Compression', () => {
         );
         server.addOnceHandler(adapter);
         const res = await fetchAPI.fetch(server.url);
-        expect(res.headers.get('content-encoding')).toBeTruthy();
+        const encodingSupported = encodings.some(e => e !== 'none');
+        if (encodingSupported) {
+          expect(res.headers.get('content-encoding')).toBeTruthy();
+        }
         expect(res.status).toEqual(200);
         const acceptedEncodings = req?.headers.get('accept-encoding');
         expect(acceptedEncodings).toBeTruthy();
@@ -164,9 +170,11 @@ describe('Compression', () => {
         expect(acceptedEncodings).toContain('deflate');
         const returnedData = await res.text();
         expect(returnedData).toEqual(exampleData);
-        expect(Number(res.headers.get('content-length'))).toBeLessThan(
-          Buffer.byteLength(exampleData),
-        );
+        if (encodingSupported) {
+          expect(Number(res.headers.get('content-length'))).toBeLessThan(
+            Buffer.byteLength(exampleData),
+          );
+        }
       });
       const encodings = [...getSupportedEncodings(fetchAPI), 'none'];
       for (const encoding of encodings) {

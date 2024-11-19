@@ -1,4 +1,5 @@
 const shouldSkipPonyfill = require('./shouldSkipPonyfill');
+let newNodeFetch;
 
 module.exports = function createNodePonyfill(opts = {}) {
   const ponyfills = {};
@@ -37,7 +38,7 @@ module.exports = function createNodePonyfill(opts = {}) {
     };
   }
 
-  const newNodeFetch = require('@whatwg-node/node-fetch');
+  newNodeFetch ||= require('@whatwg-node/node-fetch');
 
   ponyfills.fetch = newNodeFetch.fetch;
   ponyfills.Request = newNodeFetch.Request;

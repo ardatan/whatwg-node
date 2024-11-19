@@ -9,6 +9,11 @@ import { AddressInfo } from 'net';
 import { runTestsForEachFetchImpl } from './test-fetch';
 
 describe('http2', () => {
+  // HTTP2 is not supported fully on Bun
+  if (globalThis.Bun) {
+    it.skip('skipping test on Bun', () => {});
+    return;
+  }
   let server: Http2Server;
   let client: ClientHttp2Session;
 

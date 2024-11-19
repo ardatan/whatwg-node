@@ -597,7 +597,7 @@ export function getSupportedEncodings(fetchAPI: FetchAPI) {
   let supportedEncodings = supportedEncodingsByFetchAPI.get(fetchAPI);
   if (!supportedEncodings) {
     const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
-    if ((fetchAPI.DecompressionStream as any)['supportedFormats']) {
+    if ((fetchAPI.DecompressionStream as any)?.['supportedFormats']) {
       supportedEncodings = (fetchAPI.DecompressionStream as any)[
         'supportedFormats'
       ] as CompressionFormat[];

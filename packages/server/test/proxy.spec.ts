@@ -4,6 +4,11 @@ import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
 describe('Proxy', () => {
+  if (globalThis.Bun) {
+    // Bun does not support streams on Request body
+    it.skip('skipping test on Bun', () => {});
+    return;
+  }
   runTestsForEachFetchImpl(
     (_, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;
@@ -69,15 +74,13 @@ describe('Proxy', () => {
               body: requestBody,
             },
           );
-          const resJson = await response.json();
-          expect(resJson).toMatchObject({
-            method: 'POST',
-            headers: {
-              'content-type': 'application/json',
-            },
-            body: requestBody,
-          });
           expect(response.status).toBe(200);
+          const resJson = await response.json();
+          expect(resJson.method).toBe('POST');
+          expect(resJson.headers).toMatchObject({
+            'content-type': 'application/json',
+          });
+          expect(resJson.body).toBe(requestBody);
         });
         it('handles aborted requests', async () => {
           const response = fetch(
@@ -106,7 +109,8 @@ describe('Proxy', () => {
     },
     {
       // TODO: Flakey on native fetch
-      noNativeFetch: !!process.env.LEAK_TEST,
+      // TODO: Readable streams for fetch() are not available on Bun
+      noNativeFetch: !!process.env.LEAK_TEST || !!globalThis.Bun,
     },
   );
 });

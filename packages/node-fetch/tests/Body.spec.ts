@@ -78,6 +78,11 @@ describe('Body', () => {
         type: 'multipart/form-data; boundary=Boundary_with_capital_letters',
       }),
     );
-    await expect(() => body.formData()).rejects.toThrow(TypeError);
+    try {
+      await body.formData();
+      expect(true).toBe(false);
+    } catch (e) {
+      expect(e).toBeInstanceOf(TypeError);
+    }
   });
 });

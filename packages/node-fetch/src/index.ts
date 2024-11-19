@@ -1,8 +1,11 @@
 export { fetchPonyfill as fetch } from './fetch.js';
 export { PonyfillHeaders as Headers } from './Headers.js';
 export { PonyfillBody as Body } from './Body.js';
-export { PonyfillRequest as Request, RequestPonyfillInit as RequestInit } from './Request.js';
-export { PonyfillResponse as Response, ResponsePonyfilInit as ResponseInit } from './Response.js';
+export { PonyfillRequest as Request, type RequestPonyfillInit as RequestInit } from './Request.js';
+export {
+  PonyfillResponse as Response,
+  type ResponsePonyfilInit as ResponseInit,
+} from './Response.js';
 export { PonyfillReadableStream as ReadableStream } from './ReadableStream.js';
 export { PonyfillFile as File } from './File.js';
 export { PonyfillFormData as FormData } from './FormData.js';

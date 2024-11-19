@@ -1,12 +1,13 @@
 import { request } from 'http';
 import { AddressInfo } from 'net';
+import { setTimeout } from 'timers/promises';
 import React from 'react';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 // @ts-expect-error Types are not available yet
 import { renderToReadableStream } from 'react-dom/server.edge';
+import { createDeferredPromise } from '@whatwg-node/server';
 import { ServerAdapter, ServerAdapterBaseObject } from '../src/types.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
-import { createDeferred, sleep } from './test-utils.js';
 
 interface FastifyServerContext {
   req: FastifyRequest;
@@ -37,7 +38,8 @@ async function handleFastify(
 }
 
 describe('Fastify', () => {
-  if (process.env.LEAK_TEST) {
+  // No need to test Fastify on Bun
+  if (process.env.LEAK_TEST || globalThis.Bun) {
     it('noop', () => {});
     return;
   }
@@ -67,7 +69,7 @@ describe('Fastify', () => {
                     ),
                   );
                   cnt++;
-                  await new Promise(resolve => setTimeout(resolve, 300));
+                  await setTimeout(300);
                   if (cnt > 3) {
                     controller.close();
                   }
@@ -136,7 +138,7 @@ describe('Fastify', () => {
 
       it('handles AbortSignal', async () => {
         const abortListener = jest.fn();
-        const adapterDeferred = createDeferred<Response>();
+        const adapterDeferred = createDeferredPromise<Response>();
         serverAdapter = createServerAdapter((request: Request) => {
           request.signal.addEventListener('abort', abortListener);
           return adapterDeferred.promise;
@@ -162,7 +164,7 @@ describe('Fastify', () => {
       it('handles AbortSignal with body', async () => {
         const abortListener = jest.fn();
         let reqText: string | undefined;
-        const adapterDeferred = createDeferred<Response>();
+        const adapterDeferred = createDeferredPromise<Response>();
         serverAdapter = createServerAdapter<FastifyServerContext>((request: Request) => {
           request.signal.addEventListener('abort', abortListener);
           request.text().then(text => {
@@ -183,9 +185,9 @@ describe('Fastify', () => {
         res.write('TEST');
         res.end();
         expect(abortListener).toHaveBeenCalledTimes(0);
-        await sleep(300);
+        await setTimeout(300);
         abortCtrl.abort();
-        await sleep(300);
+        await setTimeout(300);
         expect(reqText).toEqual('TEST');
         expect(abortListener).toHaveBeenCalledTimes(1);
       });

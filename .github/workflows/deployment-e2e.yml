@@ -9,15 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plan:
-          [
-            'aws-lambda',
-            'azure-function',
-            'cloudflare-workers',
-            'cloudflare-modules',
-            'deno',
-            'bun',
-          ]
+        plan: ['aws-lambda', 'azure-function', 'cloudflare-workers', 'cloudflare-modules', 'deno']
         # TODO: Add vercel
     name: e2e / ${{ matrix.plan }}
 
@@ -40,10 +32,6 @@ jobs:
         uses: denoland/setup-deno@v1
         with:
           deno-version: vx.x.x
-
-      - name: Use Bun
-        if: matrix.plan == 'bun'
-        uses: oven-sh/setup-bun@v2
 
       - name: Cache Node Modules
         uses: actions/cache@v4

@@ -89,6 +89,35 @@ jobs:
           max_attempts: 5
           command: yarn test --ci
 
+  unit-bun:
+    name: unit / bun ${{matrix.node-version}}
+    runs-on: ubuntu-latest
+    services:
+      httpbin:
+        image: kennethreitz/httpbin
+        ports:
+          - 8888:80
+    strategy:
+      fail-fast: false
+    steps:
+      - name: Checkout Master
+        uses: actions/checkout@v4
+      - name: Install Required Libraries
+        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@main
+        with:
+          nodeVersion: 22
+      - name: Cache Jest
+        uses: actions/cache@v4
+        with:
+          path: .cache/jest
+          key: ${{ runner.os }}-${{matrix.node-version}}-jest-${{ hashFiles('yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{matrix.node-version}}-jest-
+      - name: Test
+        run: yarn test:bun --ci
+
   unit-leaks:
     name: unit / leaks / node ${{matrix.node-version}}
     runs-on: ubuntu-latest
