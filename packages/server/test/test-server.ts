@@ -37,7 +37,7 @@ export async function createBunServer(): Promise<TestServer> {
     name: 'Bun',
     url: server.url.toString(),
     close() {
-      return server.stop();
+      return server.stop(true);
     },
     addOnceHandler(newHandler) {
       handler = newHandler;
@@ -68,6 +68,9 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
           connections.forEach(socket => {
             socket.destroy();
           });
+          if (!globalThis.Bun) {
+            server.closeAllConnections();
+          }
           return new Promise<any>(resolve => {
             server.close(resolve);
           });
@@ -77,9 +80,7 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
   });
 }
 
-export const serverImplMap: Record<string, () => Promise<TestServer>> = {
-  'node:http': createNodeHttpTestServer,
-};
+export const serverImplMap: Record<string, () => Promise<TestServer>> = {};
 
 if ((globalThis as any)['createUWS']) {
   serverImplMap.uWebSockets = createUWSTestServer;
@@ -87,6 +88,8 @@ if ((globalThis as any)['createUWS']) {
 
 if (globalThis.Bun) {
   serverImplMap.Bun = createBunServer;
+} else {
+  serverImplMap['node:http'] = createNodeHttpTestServer;
 }
 
 export function runTestsForEachServerImpl(
