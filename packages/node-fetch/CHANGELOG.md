@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.7.3
+
+### Patch Changes
+
+- [#1814](https://github.com/ardatan/whatwg-node/pull/1814)
+  [`54c244d`](https://github.com/ardatan/whatwg-node/commit/54c244d99757c1469ee226e54baffe7b5b0924c7)
+  Thanks [@ardatan](https://github.com/ardatan)! - Small improvements for Bun support
+
 ## 0.7.2
 
 ### Patch Changes
