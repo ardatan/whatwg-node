@@ -2,24 +2,29 @@
 import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
 import { afterAll, beforeAll, describe } from '@jest/globals';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 
 export interface TestServer {
   name: string;
   url: string;
-  addOnceHandler(handler: any): void;
+  addOnceHandler(handler: any): Promise<void> | void;
   close(): Promise<void> | void;
 }
 
 export async function createUWSTestServer(): Promise<TestServer> {
   const uwsUtils = createUWS();
   await uwsUtils.start();
+  let handler: any;
   return {
     name: 'uWebSockets.js',
     url: `http://localhost:${uwsUtils.port}/`,
-    close() {
+    async close() {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
       return uwsUtils.stop();
     },
-    addOnceHandler(newHandler) {
+    async addOnceHandler(newHandler) {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
+      handler = newHandler;
       uwsUtils.addOnceHandler(newHandler);
     },
   };
@@ -36,10 +41,12 @@ export async function createBunServer(): Promise<TestServer> {
   return {
     name: 'Bun',
     url: server.url.toString(),
-    close() {
+    async close() {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
       return server.stop(true);
     },
-    addOnceHandler(newHandler) {
+    async addOnceHandler(newHandler) {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
       handler = newHandler;
     },
   };
@@ -62,6 +69,7 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
         name: 'Node.js http',
         url,
         addOnceHandler(handler) {
+          server.once('request', () => handler?.[Symbol.asyncDispose]?.());
           server.once('request', handler);
         },
         close() {

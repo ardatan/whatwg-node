@@ -31,7 +31,7 @@ describe('FormData', () => {
               status: 204,
             });
           });
-          testServer.addOnceHandler(adapter);
+          await testServer.addOnceHandler(adapter);
           const formData = new FormData();
           formData.append('foo', 'bar');
           formData.append('baz', new File(['baz'], 'baz.txt', { type: 'text/plain' }));

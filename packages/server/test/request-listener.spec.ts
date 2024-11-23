@@ -185,7 +185,7 @@ describe('Request Listener', () => {
         }
         return expectedResponse;
       });
-      testServer.addOnceHandler(adapter);
+      await testServer.addOnceHandler(adapter);
       const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
       const returnedResponse = await fetchAPI.fetch(expectedRequest);
       await compareResponse(returnedResponse, expectedResponse);

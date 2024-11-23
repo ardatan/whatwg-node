@@ -1,8 +1,8 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { setTimeout } from 'timers/promises';
 import { HttpResponse } from 'uWebSockets.js';
-import { createDeferredPromise } from '@whatwg-node/server';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { createDeferredPromise } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
@@ -18,7 +18,7 @@ describe('Node Specific Cases', () => {
             const serverAdapter = createServerAdapter(() => {
               return undefined as any;
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             await response.text();
             expect(response.status).toBe(404);
@@ -38,7 +38,7 @@ describe('Node Specific Cases', () => {
               status: 204,
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response$ = fetch(testServer.url);
           const response = await response$;
           await response.text();
@@ -58,7 +58,7 @@ describe('Node Specific Cases', () => {
             foo: string;
           }>(handleRequest);
           const additionalCtx = { foo: 'bar' };
-          testServer.addOnceHandler((...args: any[]) =>
+          await testServer.addOnceHandler((...args: any[]) =>
             (serverAdapter as any)(...args, additionalCtx),
           );
           const response = await fetch(testServer.url);
@@ -86,7 +86,7 @@ describe('Node Specific Cases', () => {
               }),
             );
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const ctrl = new AbortController();
           const response = await fetch(testServer.url, {
             signal: ctrl.signal,
@@ -131,7 +131,7 @@ describe('Node Specific Cases', () => {
             });
             return new Response(stream, { status: 200 });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url);
 
           let result: string | null = '';
@@ -155,7 +155,7 @@ describe('Node Specific Cases', () => {
                 status: 200,
               });
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             const resText = await response.text();
             expect(resText).toBe('This should reach the client.');
@@ -165,7 +165,7 @@ describe('Node Specific Cases', () => {
             const serverAdapter = createServerAdapter(() => {
               throw new Error('This is an error.');
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             expect(response.status).toBe(500);
             expect(await response.text()).toContain('This is an error.');
@@ -175,7 +175,7 @@ describe('Node Specific Cases', () => {
             const serverAdapter = createServerAdapter(async () => {
               throw new Error('This is an error.');
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             expect(response.status).toBe(500);
             expect(await response.text()).toContain('This is an error.');
@@ -187,7 +187,7 @@ describe('Node Specific Cases', () => {
               (error as any).status = 418;
               throw error;
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             await response.text();
             expect(response.status).toBe(418);
@@ -200,7 +200,7 @@ describe('Node Specific Cases', () => {
             const reqText = await request.text();
             return new Response(reqText, { status: 200 });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: 'Hello World',
@@ -229,7 +229,7 @@ describe('Node Specific Cases', () => {
               });
               return adapterResponseDeferred.promise;
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const controller = new AbortController();
             const response$ = fetch(testServer.url, { signal: controller.signal });
             expect(abortListener).toHaveBeenCalledTimes(0);
@@ -262,7 +262,7 @@ describe('Node Specific Cases', () => {
                 return adapterResponseDeferred.promise;
               });
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             let error: Error | undefined;
             try {
               await fetch(testServer.url, {
@@ -285,7 +285,7 @@ describe('Node Specific Cases', () => {
             const urlObj = new URL(req.url);
             return new Response(urlObj.search, { status: 200 });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(`${testServer.url}?foo=bar`);
           expect(response.status).toBe(200);
           expect(await response.text()).toBe('?foo=bar');
@@ -297,7 +297,7 @@ describe('Node Specific Cases', () => {
               contentLength: req.headers.get('content-length'),
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: 'Hello World',
@@ -312,7 +312,7 @@ describe('Node Specific Cases', () => {
               contentLength: req.headers.get('content-length'),
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
           });
@@ -327,7 +327,7 @@ describe('Node Specific Cases', () => {
               contentLength: req.headers.get('content-length'),
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: '',
@@ -347,7 +347,7 @@ describe('Node Specific Cases', () => {
               textFromOriginalReq,
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: 'TEST',
@@ -363,7 +363,7 @@ describe('Node Specific Cases', () => {
             ctx.waitUntil(deferred.promise);
             return Response.json({ message: 'Hello World' });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url);
           const responseJson = await response.json();
           expect(responseJson).toEqual({ message: 'Hello World' });

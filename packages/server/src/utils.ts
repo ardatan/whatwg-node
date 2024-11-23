@@ -121,7 +121,11 @@ let bunNodeCompatModeWarned = false;
 
 export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
 
-export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
+export function normalizeNodeRequest(
+  nodeRequest: NodeRequest,
+  fetchAPI: FetchAPI,
+  registerSignal?: (signal: ServerAdapterRequestAbortSignal) => void,
+): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
@@ -150,7 +154,9 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
 
     // If ponyfilled
     if (fetchAPI.Request !== globalThis.Request) {
-      signal = new ServerAdapterRequestAbortSignal();
+      const newSignal = new ServerAdapterRequestAbortSignal();
+      registerSignal?.(newSignal);
+      signal = newSignal;
       sendAbortSignal = () => (signal as ServerAdapterRequestAbortSignal).sendAbort();
     } else {
       const controller = new AbortController();
@@ -531,11 +537,13 @@ export function isolateObject<TIsolatedObject extends object>(
       waitUntil: waitUntilFn,
     } as TIsolatedObject;
   }
-  return Object.create(originalCtx, {
-    waitUntil: {
-      value: waitUntilFn,
+  return completeAssign(
+    Object.create(originalCtx),
+    {
+      waitUntil: waitUntilFn,
     },
-  });
+    originalCtx,
+  );
 }
 
 export interface DeferredPromise<T = void> {

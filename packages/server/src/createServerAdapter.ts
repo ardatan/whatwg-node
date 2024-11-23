@@ -101,6 +101,20 @@ function createServerAdapter<
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const waitUntilPromises = new Set<PromiseLike<unknown>>();
   const disposableStack = new AsyncDisposableStack();
+  const signals = new Set<ServerAdapterRequestAbortSignal>();
+
+  function registerSignal(signal: ServerAdapterRequestAbortSignal) {
+    signals.add(signal);
+    signal.addEventListener('abort', () => {
+      signals.delete(signal);
+    });
+  }
+
+  disposableStack.defer(() => {
+    for (const signal of signals) {
+      signal.sendAbort();
+    }
+  });
 
   function handleWaitUntils() {
     return Promise.allSettled(waitUntilPromises).then(
@@ -220,7 +234,7 @@ function createServerAdapter<
   // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, registerSignal);
     return handleRequest(request, serverContext);
   }
 
@@ -284,6 +298,7 @@ function createServerAdapter<
         : defaultServerContext;
 
     const signal = new ServerAdapterRequestAbortSignal();
+    registerSignal(signal);
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
     res.end = function (data: any) {
