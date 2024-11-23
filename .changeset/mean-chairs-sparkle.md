@@ -1,11 +1,14 @@
 ---
-'@whatwg-node/server': patch
+'@whatwg-node/server': minor
 ---
 
-Disposal logic for server adapter;
-
-For long running environments such as Node etc, all promises passed to `ctx.waitUntil` should be awaited to prevent memory leaks in case of process termination.
-
-Server Adapter is now `AsyncDisposable` which awaits all promises passed to `ctx.waitUntil` before disposing.
-
-Server Adapter also provides `disposableStack` which is a stack of disposables that are disposed when the server adapter is disposed.
+New Explicit Resource Management feature for the server adapters;
+[Learn more](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
+- `Symbol.dispose` and `Symbol.asyncDispose` hooks
+When the server adapter plugin has these hooks, it is added to the disposable stack of the server adapter. When the server adapter is disposed, those hooks are triggered
+- `disposableStack` in the server adapter
+The shared disposable stack that will be triggered when `Symbol.asyncDispose` is called.
+- Automatic disposal on Node and Node-compatible environments
+Even if the server adapter is not disposed explicitly, the disposal logic will be triggered on the process termination (SIGINT, SIGTERM etc)
+- ctx.waitUntil relation
+If it is an environment does not natively provide `waitUntil`, the unresolved passed promises will be resolved by the disposable stack.

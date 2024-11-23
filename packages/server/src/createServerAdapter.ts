@@ -449,6 +449,9 @@ function createServerAdapter<
     [DisposableSymbols.asyncDispose]() {
       return disposableStack.disposeAsync();
     },
+    dispose() {
+      return disposableStack.disposeAsync();
+    },
   };
 
   const serverAdapter = new Proxy(genericRequestHandler, {
