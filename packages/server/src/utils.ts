@@ -653,7 +653,7 @@ export function handleResponseDecompression(response: Response, fetchAPI: FetchA
   return decompressedResponse;
 }
 
-const terminateEvents = ['SIGINT', 'SIGTERM'] as const;
+const terminateEvents = ['SIGINT', 'SIGTERM', 'exit'] as const;
 const disposableStacks = new Set<AsyncDisposableStack>();
 
 let eventListenerRegistered = false;
@@ -665,15 +665,27 @@ function ensureEventListenerForDisposableStacks() {
   eventListenerRegistered = true;
   for (const event of terminateEvents) {
     globalThis.process.once(event, function terminateHandler() {
-      return Promise.allSettled([...disposableStacks].map(stack => stack.disposeAsync()));
+      return Promise.allSettled(
+        [...disposableStacks].map(stack =>
+          stack.disposeAsync().catch(e => {
+            console.error('Error while disposing:', e);
+          }),
+        ),
+      );
     });
   }
 }
 
-export function registerDisposableStackForTerminateEvents(disposableStack: AsyncDisposableStack) {
-  ensureEventListenerForDisposableStacks();
-  disposableStacks.add(disposableStack);
-  disposableStack.defer(() => {
-    disposableStacks.delete(disposableStack);
-  });
+export function ensureDisposableStackRegisteredForTerminateEvents(
+  disposableStack: AsyncDisposableStack,
+) {
+  if (globalThis.process) {
+    ensureEventListenerForDisposableStacks();
+    if (!disposableStacks.has(disposableStack)) {
+      disposableStacks.add(disposableStack);
+      disposableStack.defer(() => {
+        disposableStacks.delete(disposableStack);
+      });
+    }
+  }
 }

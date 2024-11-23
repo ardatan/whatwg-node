@@ -18,6 +18,7 @@ import {
 } from './types.js';
 import {
   completeAssign,
+  ensureDisposableStackRegisteredForTerminateEvents,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
   isFetchEvent,
@@ -31,7 +32,6 @@ import {
   nodeRequestResponseMap,
   NodeResponse,
   normalizeNodeRequest,
-  registerDisposableStackForTerminateEvents,
   sendNodeResponse,
   ServerAdapterRequestAbortSignal,
 } from './utils.js';
@@ -111,18 +111,21 @@ function createServerAdapter<
 
   disposableStack.defer(handleWaitUntils);
 
-  registerDisposableStackForTerminateEvents(disposableStack);
-
   function waitUntil(promiseLike: PromiseLike<unknown>) {
-    waitUntilPromises.add(promiseLike);
-    promiseLike.then(
-      () => {
-        waitUntilPromises.delete(promiseLike);
-      },
-      err => {
-        console.error(`Unexpected error while waiting: ${err.message || err}`);
-        waitUntilPromises.delete(promiseLike);
-      },
+    // If it is a Node.js environment, we should register the disposable stack to handle process termination events
+    if (globalThis.process) {
+      ensureDisposableStackRegisteredForTerminateEvents(disposableStack);
+    }
+    waitUntilPromises.add(
+      promiseLike.then(
+        () => {
+          waitUntilPromises.delete(promiseLike);
+        },
+        err => {
+          console.error(`Unexpected error while waiting: ${err.message || err}`);
+          waitUntilPromises.delete(promiseLike);
+        },
+      ),
     );
   }
 
