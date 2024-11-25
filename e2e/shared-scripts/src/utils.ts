@@ -1,6 +1,5 @@
 import { exec } from 'child_process';
 import { promises as fsPromises } from 'fs';
-import { setTimeout } from 'timers/promises';
 import { promisify } from 'util';
 
 export { fsPromises };
@@ -49,7 +48,7 @@ export async function waitForEndpoint(
         e.message,
       );
 
-      await setTimeout(timeout);
+      await new Promise(resolve => setTimeout(resolve, timeout));
     }
   }
 
