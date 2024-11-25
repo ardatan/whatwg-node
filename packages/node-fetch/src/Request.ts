@@ -125,7 +125,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   get parsedUrl(): URL {
     if (this._parsedUrl == null) {
       if (this._url != null) {
-        this._parsedUrl = new PonyfillURL(this._url);
+        this._parsedUrl = new PonyfillURL(this._url, 'http://localhost');
       } else {
         throw new TypeError('Invalid URL');
       }

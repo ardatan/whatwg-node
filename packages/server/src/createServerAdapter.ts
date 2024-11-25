@@ -163,12 +163,14 @@ function createServerAdapter<
           if (onRequestHooks.length === 0) {
             return handleEarlyResponse();
           }
-          let url = new Proxy(EMPTY_OBJECT as URL, {
-            get(_target, prop, _receiver) {
-              url = new fetchAPI.URL(request.url, 'http://localhost');
-              return Reflect.get(url, prop, url);
-            },
-          }) as URL;
+          let url =
+            (request as any)['parsedUrl'] ||
+            (new Proxy(EMPTY_OBJECT as URL, {
+              get(_target, prop, _receiver) {
+                url = new fetchAPI.URL(request.url, 'http://localhost');
+                return Reflect.get(url, prop, url);
+              },
+            }) as URL);
           const onRequestHooksIteration$ = iterateAsyncVoid(
             onRequestHooks,
             (onRequestHook, stopEarly) =>
