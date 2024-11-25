@@ -2,13 +2,15 @@
 import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
 import { afterAll, beforeAll, describe } from '@jest/globals';
-import { DisposableSymbols } from '@whatwg-node/disposablestack';
+import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
 
 export interface TestServer extends AsyncDisposable {
   name: string;
   url: string;
   addOnceHandler(handler: any): Promise<void> | void;
 }
+
+patchSymbols();
 
 export async function createUWSTestServer(): Promise<TestServer> {
   const uwsUtils = createUWS();

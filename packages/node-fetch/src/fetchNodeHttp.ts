@@ -92,7 +92,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
           if (fetchRequest.redirect === 'follow') {
-            const redirectedUrl = new PonyfillURL(nodeResponse.headers.location, fetchRequest.url);
+            const redirectedUrl = new PonyfillURL(
+              nodeResponse.headers.location,
+              fetchRequest.parsedUrl || fetchRequest.url,
+            );
             const redirectResponse$ = fetchNodeHttp(
               new PonyfillRequest(redirectedUrl, fetchRequest),
             );

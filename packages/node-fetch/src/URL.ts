@@ -21,6 +21,7 @@ export class PonyfillURL extends FastUrl implements URL {
       this.protocol = this.protocol || baseParsed.protocol;
       this.host = this.host || baseParsed.host;
       this.pathname = this.pathname || baseParsed.pathname;
+      this.port = this.port || baseParsed.port;
     }
   }
 
