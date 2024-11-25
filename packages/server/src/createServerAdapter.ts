@@ -149,18 +149,15 @@ function createServerAdapter<
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
-      if (plugin != null) {
-        if (plugin.onRequest) {
-          onRequestHooks.push(plugin.onRequest);
-        }
-        if (plugin.onResponse) {
-          onResponseHooks.push(plugin.onResponse);
-        }
-        const disposeFn =
-          plugin[DisposableSymbols.asyncDispose] || plugin[DisposableSymbols.dispose];
-        if (disposeFn != null) {
-          disposableStack.defer(disposeFn);
-        }
+      if (plugin.onRequest) {
+        onRequestHooks.push(plugin.onRequest);
+      }
+      if (plugin.onResponse) {
+        onResponseHooks.push(plugin.onResponse);
+      }
+      const disposeFn = plugin[DisposableSymbols.asyncDispose] || plugin[DisposableSymbols.dispose];
+      if (disposeFn != null) {
+        disposableStack.defer(disposeFn);
       }
     }
   }
