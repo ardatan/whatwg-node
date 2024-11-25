@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.59
+
+### Patch Changes
+
+- [`b4ab548`](https://github.com/ardatan/whatwg-node/commit/b4ab548cf11a0ec641e1800690684176eecad74b)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove SIGTERM from termination events to prevent
+  hangs, and always add disposable stack to the termination events
+
 ## 0.9.58
 
 ### Patch Changes
