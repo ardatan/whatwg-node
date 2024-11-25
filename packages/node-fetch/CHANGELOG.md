@@ -1,5 +1,16 @@
 # @whatwg-node/node-fetch
 
+## 0.7.4
+
+### Patch Changes
+
+- [#1830](https://github.com/ardatan/whatwg-node/pull/1830)
+  [`9cb09da`](https://github.com/ardatan/whatwg-node/commit/9cb09da346fe5ddc974c9f1bd85e57dab8860b4d)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Added dependency
+    [`@whatwg-node/disposablestack@^0.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.5)
+    (to `dependencies`)
+
 ## 0.7.3
 
 ### Patch Changes

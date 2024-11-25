@@ -1,5 +1,34 @@
 # @whatwg-node/server
 
+## 0.10.0
+
+### Minor Changes
+
+- [#1830](https://github.com/ardatan/whatwg-node/pull/1830)
+  [`9cb09da`](https://github.com/ardatan/whatwg-node/commit/9cb09da346fe5ddc974c9f1bd85e57dab8860b4d)
+  Thanks [@ardatan](https://github.com/ardatan)! - New Explicit Resource Management feature for the
+  server adapters;
+  [Learn more](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
+  - `Symbol.dispose` and `Symbol.asyncDispose` hooks When the server adapter plugin has these hooks,
+    it is added to the disposable stack of the server adapter. When the server adapter is disposed,
+    those hooks are triggered
+  - `disposableStack` in the server adapter The shared disposable stack that will be triggered when
+    `Symbol.asyncDispose` is called.
+  - Automatic disposal on Node and Node-compatible environments Even if the server adapter is not
+    disposed explicitly, the disposal logic will be triggered on the process termination (SIGINT,
+    SIGTERM etc)
+  - ctx.waitUntil relation If it is an environment does not natively provide `waitUntil`, the
+    unresolved passed promises will be resolved by the disposable stack.
+
+### Patch Changes
+
+- [#1830](https://github.com/ardatan/whatwg-node/pull/1830)
+  [`9cb09da`](https://github.com/ardatan/whatwg-node/commit/9cb09da346fe5ddc974c9f1bd85e57dab8860b4d)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Added dependency
+    [`@whatwg-node/disposablestack@^0.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.5)
+    (to `dependencies`)
+
 ## 0.9.56
 
 ### Patch Changes
