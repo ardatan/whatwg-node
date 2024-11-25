@@ -98,7 +98,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
               nodeResponse.headers.location,
               fetchRequest.parsedUrl || fetchRequest.url,
             );
-            console.log('Redirecting to', nodeResponse.headers.location, redirectedUrl.toString());
             const redirectResponse$ = fetchNodeHttp(
               new PonyfillRequest(redirectedUrl, fetchRequest),
             );
