@@ -43,6 +43,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       if (fetchRequest.parsedUrl) {
         nodeRequest = requestFn({
+          auth: fetchRequest.parsedUrl.username
+            ? `${fetchRequest.parsedUrl.username}:${fetchRequest.parsedUrl.password}`
+            : undefined,
           host: fetchRequest.parsedUrl.host,
           hostname: fetchRequest.parsedUrl.hostname,
           method: fetchRequest.method,

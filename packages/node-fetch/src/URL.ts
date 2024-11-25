@@ -26,7 +26,7 @@ export class PonyfillURL extends FastUrl implements URL {
   }
 
   get origin(): string {
-    return `${this.protocol}//${this.host}`;
+    return `${this.protocol}//${this.host}${this.port ? `:${this.port}` : ''}`;
   }
 
   private _searchParams?: PonyfillURLSearchParams;

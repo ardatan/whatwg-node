@@ -120,8 +120,12 @@ function createServerAdapter<
   disposableStack.defer(() => {
     if (waitUntilPromises.size > 0) {
       return Promise.allSettled(waitUntilPromises).then(
-        () => {},
-        () => {},
+        () => {
+          waitUntilPromises.clear();
+        },
+        () => {
+          waitUntilPromises.clear();
+        },
       );
     }
   });
@@ -131,16 +135,15 @@ function createServerAdapter<
     if (globalThis.process) {
       ensureDisposableStackRegisteredForTerminateEvents(disposableStack);
     }
-    waitUntilPromises.add(
-      promiseLike.then(
-        () => {
-          waitUntilPromises.delete(promiseLike);
-        },
-        err => {
-          console.error(`Unexpected error while waiting: ${err.message || err}`);
-          waitUntilPromises.delete(promiseLike);
-        },
-      ),
+    waitUntilPromises.add(promiseLike);
+    promiseLike.then(
+      () => {
+        waitUntilPromises.delete(promiseLike);
+      },
+      err => {
+        console.error(`Unexpected error while waiting: ${err.message || err}`);
+        waitUntilPromises.delete(promiseLike);
+      },
     );
   }
 

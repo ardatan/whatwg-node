@@ -9,7 +9,7 @@ import { runTestsForEachServerImpl } from './test-server.js';
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
     (
-      _fetchImplName,
+      fetchImplName,
       { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } },
     ) => {
       runTestsForEachServerImpl(testServer => {
@@ -210,8 +210,8 @@ describe('Node Specific Cases', () => {
         });
 
         // TODO: Flakey on native fetch
-        if (!process.env.LEAK_TEST) {
-          it('handles Request.signal inside adapter correctly', async () => {
+        if (!process.env.LEAK_TEST || fetchImplName.toLowerCase() !== 'native') {
+          it.only('handles Request.signal inside adapter correctly', async () => {
             const abortListener = jest.fn();
             const abortDeferred = createDeferredPromise<void>();
             const adapterResponseDeferred = createDeferredPromise<Response>();
