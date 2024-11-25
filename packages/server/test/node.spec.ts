@@ -15,7 +15,7 @@ describe('Node Specific Cases', () => {
       runTestsForEachServerImpl(testServer => {
         if (!globalThis.Bun) {
           it('should handle empty responses', async () => {
-            const serverAdapter = createServerAdapter(() => {
+            await using serverAdapter = createServerAdapter(() => {
               return undefined as any;
             });
             await testServer.addOnceHandler(serverAdapter);
@@ -27,7 +27,7 @@ describe('Node Specific Cases', () => {
 
         it('should handle waitUntil properly', async () => {
           const callOrder: string[] = [];
-          const serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
+          await using serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
             waitUntil(
               setTimeout(100).then(() => {
                 callOrder.push('waitUntil');
@@ -52,7 +52,7 @@ describe('Node Specific Cases', () => {
               status: 204,
             });
           });
-          const serverAdapter = createServerAdapter<{
+          await using serverAdapter = createServerAdapter<{
             req: IncomingMessage;
             res: ServerResponse;
             foo: string;
@@ -72,7 +72,7 @@ describe('Node Specific Cases', () => {
         it('should handle cancellation of incremental responses', async () => {
           const deferred = createDeferredPromise<void>();
           let cancellation = 0;
-          const serverAdapter = createServerAdapter(() => {
+          await using serverAdapter = createServerAdapter(() => {
             return new Response(
               new ReadableStream({
                 async pull(controller) {
@@ -115,7 +115,7 @@ describe('Node Specific Cases', () => {
         });
         it('should handle large streaming responses', async () => {
           const successFn = jest.fn();
-          const serverAdapter = createServerAdapter(() => {
+          await using serverAdapter = createServerAdapter(() => {
             let i = 0;
             const t = 5;
             const stream = new ReadableStream({
@@ -147,7 +147,7 @@ describe('Node Specific Cases', () => {
 
         if (!globalThis.Bun) {
           it('should not kill the server if response is ended on low level', async () => {
-            const serverAdapter = createServerAdapter<{
+            await using serverAdapter = createServerAdapter<{
               res: HttpResponse | ServerResponse;
             }>((_req, { res }) => {
               res.end('This should reach the client.');
@@ -162,7 +162,7 @@ describe('Node Specific Cases', () => {
           });
 
           it('should handle sync errors', async () => {
-            const serverAdapter = createServerAdapter(() => {
+            await using serverAdapter = createServerAdapter(() => {
               throw new Error('This is an error.');
             });
             await testServer.addOnceHandler(serverAdapter);
@@ -172,7 +172,7 @@ describe('Node Specific Cases', () => {
           });
 
           it('should handle async errors', async () => {
-            const serverAdapter = createServerAdapter(async () => {
+            await using serverAdapter = createServerAdapter(async () => {
               throw new Error('This is an error.');
             });
             await testServer.addOnceHandler(serverAdapter);
@@ -182,7 +182,7 @@ describe('Node Specific Cases', () => {
           });
 
           it('should respect the status code', async () => {
-            const serverAdapter = createServerAdapter(() => {
+            await using serverAdapter = createServerAdapter(() => {
               const error = new Error('This is an error.');
               (error as any).status = 418;
               throw error;
@@ -195,7 +195,7 @@ describe('Node Specific Cases', () => {
         }
 
         it('should handle async body read streams', async () => {
-          const serverAdapter = createServerAdapter(async request => {
+          await using serverAdapter = createServerAdapter(async request => {
             await setTimeout(10);
             const reqText = await request.text();
             return new Response(reqText, { status: 200 });
@@ -222,7 +222,7 @@ describe('Node Specific Cases', () => {
                 }),
               );
             }
-            const serverAdapter = createServerAdapter(req => {
+            await using serverAdapter = createServerAdapter(req => {
               req.signal.addEventListener('abort', () => {
                 abortListener();
                 abortDeferred.resolve();
@@ -253,7 +253,7 @@ describe('Node Specific Cases', () => {
               );
             }
             const controller = new AbortController();
-            const serverAdapter = createServerAdapter(req => {
+            await using serverAdapter = createServerAdapter(req => {
               req.signal.addEventListener('abort', () => {
                 abortDeferred.resolve();
               });
@@ -281,7 +281,7 @@ describe('Node Specific Cases', () => {
         }
 
         it('handles query parameters correctly', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             const urlObj = new URL(req.url);
             return new Response(urlObj.search, { status: 200 });
           });
@@ -292,7 +292,7 @@ describe('Node Specific Cases', () => {
         });
 
         it('sends content-length correctly', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             return Response.json({
               contentLength: req.headers.get('content-length'),
             });
@@ -307,7 +307,7 @@ describe('Node Specific Cases', () => {
         });
 
         it('sends content-length correctly if body is nullish', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             return Response.json({
               contentLength: req.headers.get('content-length'),
             });
@@ -322,7 +322,7 @@ describe('Node Specific Cases', () => {
         });
 
         it('sends content-length correctly if body is empty', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             return Response.json({
               contentLength: req.headers.get('content-length'),
             });
@@ -338,7 +338,7 @@ describe('Node Specific Cases', () => {
         });
 
         it('clones the request correctly', async () => {
-          const serverAdapter = createServerAdapter(async req => {
+          await using serverAdapter = createServerAdapter(async req => {
             const clonedReq = req.clone();
             const textFromClonedReq = await req.text();
             const textFromOriginalReq = await clonedReq.text();
@@ -359,7 +359,7 @@ describe('Node Specific Cases', () => {
 
         it('waits for the sent promises to waitUntil', async () => {
           const deferred = createDeferredPromise<void>();
-          const serverAdapter = createServerAdapter((_req, ctx) => {
+          await using serverAdapter = createServerAdapter((_req, ctx) => {
             ctx.waitUntil(deferred.promise);
             return Response.json({ message: 'Hello World' });
           });
