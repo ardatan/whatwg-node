@@ -80,4 +80,6 @@ export class PonyfillURL extends FastUrl implements URL {
   static getBlobFromURL(url: string): Blob | PonyfillBlob | undefined {
     return (this.blobRegistry.get(url) || resolveObjectURL(url)) as Blob | PonyfillBlob | undefined;
   }
+
+  [Symbol.toStringTag] = 'URL';
 }

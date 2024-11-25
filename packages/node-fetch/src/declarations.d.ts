@@ -23,7 +23,7 @@ declare module '@kamilkisiela/fast-url-parser' {
     path: string;
     pathname: string;
     protocol: string;
-    search: string;
+    readonly search: string;
     slashes: boolean;
     port: string;
     query: string | any;

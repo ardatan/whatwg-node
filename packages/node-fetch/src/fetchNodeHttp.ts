@@ -21,7 +21,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 ): Promise<PonyfillResponse<TResponseJSON>> {
   return new Promise((resolve, reject) => {
     try {
-      const requestFn = getRequestFnForProtocol(fetchRequest.url);
+      const requestFn = getRequestFnForProtocol(
+        fetchRequest.parsedUrl?.protocol || fetchRequest.url,
+      );
 
       const nodeReadable = (
         fetchRequest.body != null
@@ -37,12 +39,28 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         nodeHeaders['accept-encoding'] = 'gzip, deflate, br';
       }
 
-      const nodeRequest = requestFn(fetchRequest.url, {
-        method: fetchRequest.method,
-        headers: nodeHeaders,
-        signal: fetchRequest['_signal'] ?? undefined,
-        agent: fetchRequest.agent,
-      });
+      let nodeRequest: ReturnType<typeof requestFn>;
+
+      if (fetchRequest.parsedUrl) {
+        nodeRequest = requestFn({
+          host: fetchRequest.parsedUrl.host,
+          hostname: fetchRequest.parsedUrl.hostname,
+          method: fetchRequest.method,
+          path: fetchRequest.parsedUrl.pathname + (fetchRequest.parsedUrl.search || ''),
+          port: fetchRequest.parsedUrl.port,
+          protocol: fetchRequest.parsedUrl.protocol,
+          headers: nodeHeaders,
+          signal: fetchRequest['_signal'] ?? undefined,
+          agent: fetchRequest.agent,
+        });
+      } else {
+        nodeRequest = requestFn(fetchRequest.url, {
+          method: fetchRequest.method,
+          headers: nodeHeaders,
+          signal: fetchRequest['_signal'] ?? undefined,
+          agent: fetchRequest.agent,
+        });
+      }
 
       nodeRequest.once('response', nodeResponse => {
         let outputStream: PassThrough;
@@ -74,7 +92,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
           if (fetchRequest.redirect === 'follow') {
-            const redirectedUrl = new PonyfillURL(nodeResponse.headers.location, fetchRequest.url);
+            const redirectedUrl = new PonyfillURL(
+              nodeResponse.headers.location,
+              fetchRequest.parsedUrl || fetchRequest.url,
+            );
             const redirectResponse$ = fetchNodeHttp(
               new PonyfillRequest(redirectedUrl, fetchRequest),
             );

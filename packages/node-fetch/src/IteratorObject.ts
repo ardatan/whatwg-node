@@ -1,4 +1,5 @@
 import { inspect } from 'node:util';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { isIterable } from './utils.js';
 
 export class PonyfillIteratorObject<T> implements IteratorObject<T, undefined, unknown> {
@@ -128,10 +129,8 @@ export class PonyfillIteratorObject<T> implements IteratorObject<T, undefined, u
     return Array.from(this.iterableIterator);
   }
 
-  [Symbol.dispose](): void {
-    if (typeof (this.iterableIterator as any).return === 'function') {
-      (this.iterableIterator as any).return();
-    }
+  [DisposableSymbols.dispose](): void {
+    this.iterableIterator.return?.();
   }
 
   next(...[value]: [] | [unknown]): IteratorResult<T, undefined> {

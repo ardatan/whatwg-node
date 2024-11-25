@@ -102,7 +102,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
 
   disposableStack: AsyncDisposableStack;
 
-  dispose(): Promise<void>;
+  dispose(): Promise<void> | void;
 }
 
 export interface RequestLike {

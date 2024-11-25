@@ -36,6 +36,7 @@ import {
   ServerAdapterRequestAbortSignal,
 } from './utils.js';
 import {
+  fakePromise,
   getRequestFromUWSRequest,
   isUWSResponse,
   sendResponseToUwsOpts,
@@ -116,14 +117,14 @@ function createServerAdapter<
     }
   });
 
-  function handleWaitUntils() {
-    return Promise.allSettled(waitUntilPromises).then(
-      () => {},
-      () => {},
-    );
-  }
-
-  disposableStack.defer(handleWaitUntils);
+  disposableStack.defer(() => {
+    if (waitUntilPromises.size > 0) {
+      return Promise.allSettled(waitUntilPromises).then(
+        () => {},
+        () => {},
+      );
+    }
+  });
 
   function waitUntil(promiseLike: PromiseLike<unknown>) {
     // If it is a Node.js environment, we should register the disposable stack to handle process termination events
@@ -447,10 +448,16 @@ function createServerAdapter<
     handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
     disposableStack,
     [DisposableSymbols.asyncDispose]() {
-      return disposableStack.disposeAsync();
+      if (!disposableStack.disposed) {
+        return disposableStack.disposeAsync();
+      }
+      return fakePromise(undefined);
     },
     dispose() {
-      return disposableStack.disposeAsync();
+      if (!disposableStack.disposed) {
+        return disposableStack.disposeAsync();
+      }
+      return fakePromise(undefined);
     },
   };
 
