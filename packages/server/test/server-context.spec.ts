@@ -33,7 +33,7 @@ describe('Server Context', () => {
       });
       it('retains the prototype in case of `Object.create`', async () => {
         class MyContext {}
-        const serverAdapter = createServerAdapter((_req, context0: MyContext) => {
+        await using serverAdapter = createServerAdapter((_req, context0: MyContext) => {
           return Response.json({
             isMyContext: context0 instanceof MyContext,
           });
@@ -45,7 +45,7 @@ describe('Server Context', () => {
         });
       });
       it('Do not pollute the original object in case of `Object.create`', async () => {
-        const serverAdapter = createServerAdapter((_req, context0: any) => {
+        await using serverAdapter = createServerAdapter((_req, context0: any) => {
           context0.i = 0;
           const context1 = Object.create(context0);
           context1.i = 1;
@@ -66,7 +66,7 @@ describe('Server Context', () => {
         });
       });
       it('Do not pollute the original object in case of `Object.create` and `Object.defineProperty`', async () => {
-        const serverAdapter = createServerAdapter((_req, context0: any) => {
+        await using serverAdapter = createServerAdapter((_req, context0: any) => {
           const context1 = Object.create(context0);
           Object.defineProperty(context1, 'i', { value: 1, configurable: true });
           const context2 = Object.create(context0);

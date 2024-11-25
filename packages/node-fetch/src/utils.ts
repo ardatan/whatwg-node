@@ -8,11 +8,7 @@ export function getHeadersObj(headers: Headers): Record<string, string> {
   if (headers == null || !isHeadersInstance(headers)) {
     return headers as any;
   }
-  const obj: Record<string, string> = {};
-  headers.forEach((value, key) => {
-    obj[key] = value;
-  });
-  return obj;
+  return Object.fromEntries(headers.entries());
 }
 
 export function defaultHeadersSerializer(

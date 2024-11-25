@@ -4,7 +4,7 @@ import { useCookies } from '../src/useCookies.js';
 describe('Cookie Management', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI: { Response } }) => {
     it('should receive a cookie', async () => {
-      const serverAdapter = createServerAdapter(
+      await using serverAdapter = createServerAdapter(
         async request => {
           const fooCookie = await request.cookieStore?.get('foo');
           return Response.json({ foo: fooCookie?.value });
@@ -22,7 +22,7 @@ describe('Cookie Management', () => {
       expect(json).toMatchObject({ foo: 'bar' });
     });
     it('should set a cookie', async () => {
-      const serverAdapter = createServerAdapter(
+      await using serverAdapter = createServerAdapter(
         async request => {
           await request.cookieStore?.set('foo', 'bar');
           return new Response('OK');
@@ -36,7 +36,7 @@ describe('Cookie Management', () => {
       expect(response.headers.getSetCookie?.()).toEqual(['foo=bar; Path=/; SameSite=Strict']);
     });
     it('should set a cookie with options', async () => {
-      const serverAdapter = createServerAdapter(
+      await using serverAdapter = createServerAdapter(
         async request => {
           await request.cookieStore?.set({
             name: 'foo',
@@ -60,7 +60,7 @@ describe('Cookie Management', () => {
       ]);
     });
     it('should delete a cookie', async () => {
-      const serverAdapter = createServerAdapter(
+      await using serverAdapter = createServerAdapter(
         async request => {
           await request.cookieStore?.delete('foo');
           return new Response('OK');
@@ -76,7 +76,7 @@ describe('Cookie Management', () => {
       ]);
     });
     it('should change a cookie', async () => {
-      const serverAdapter = createServerAdapter(
+      await using serverAdapter = createServerAdapter(
         async request => {
           await request.cookieStore?.set('foo', 'baz');
           return new Response('OK');
@@ -94,7 +94,7 @@ describe('Cookie Management', () => {
       expect(response.headers.getSetCookie?.()).toEqual(['foo=baz; Path=/; SameSite=Strict']);
     });
     it('should set multiple cookies', async () => {
-      const serverAdapter = createServerAdapter(
+      await using serverAdapter = createServerAdapter(
         async request => {
           await request.cookieStore?.set('foo', 'bar');
           await request.cookieStore?.set('baz', 'qux');
@@ -112,7 +112,7 @@ describe('Cookie Management', () => {
       ]);
     });
     it('should not set set-cookie header if no cookie is set', async () => {
-      const serverAdapter = createServerAdapter(() => {
+      await using serverAdapter = createServerAdapter(() => {
         return new Response('OK');
       });
       const response = await serverAdapter.fetch('http://localhost');

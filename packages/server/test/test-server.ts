@@ -2,24 +2,30 @@
 import { createServer, globalAgent } from 'http';
 import { AddressInfo, Socket } from 'net';
 import { afterAll, beforeAll, describe } from '@jest/globals';
+import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
 
-export interface TestServer {
+export interface TestServer extends AsyncDisposable {
   name: string;
   url: string;
-  addOnceHandler(handler: any): void;
-  close(): Promise<void> | void;
+  addOnceHandler(handler: any): Promise<void> | void;
 }
+
+patchSymbols();
 
 export async function createUWSTestServer(): Promise<TestServer> {
   const uwsUtils = createUWS();
   await uwsUtils.start();
+  let handler: any;
   return {
     name: 'uWebSockets.js',
     url: `http://localhost:${uwsUtils.port}/`,
-    close() {
+    async [DisposableSymbols.asyncDispose]() {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
       return uwsUtils.stop();
     },
-    addOnceHandler(newHandler) {
+    async addOnceHandler(newHandler) {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
+      handler = newHandler;
       uwsUtils.addOnceHandler(newHandler);
     },
   };
@@ -36,17 +42,22 @@ export async function createBunServer(): Promise<TestServer> {
   return {
     name: 'Bun',
     url: server.url.toString(),
-    close() {
+    async [DisposableSymbols.asyncDispose]() {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
       return server.stop(true);
     },
-    addOnceHandler(newHandler) {
+    async addOnceHandler(newHandler) {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
       handler = newHandler;
     },
   };
 }
 
 export function createNodeHttpTestServer(): Promise<TestServer> {
-  const server = createServer();
+  let handler: any;
+  const server = createServer(function handlerWrapper(req, res) {
+    return handler(req, res);
+  });
   const connections = new Set<Socket>();
   server.on('connection', socket => {
     connections.add(socket);
@@ -61,18 +72,25 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
       resolve({
         name: 'Node.js http',
         url,
-        addOnceHandler(handler) {
-          server.once('request', handler);
+        async addOnceHandler(newHandler) {
+          await handler?.[DisposableSymbols.asyncDispose]?.();
+          handler = newHandler;
         },
-        close() {
+        [DisposableSymbols.asyncDispose]() {
           connections.forEach(socket => {
             socket.destroy();
           });
           if (!globalThis.Bun) {
             server.closeAllConnections();
           }
-          return new Promise<any>(resolve => {
-            server.close(resolve);
+          return new Promise<void>((resolve, reject) => {
+            server.close(err => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
           });
         },
       });
@@ -92,20 +110,49 @@ if (globalThis.Bun) {
   serverImplMap['node:http'] = createNodeHttpTestServer;
 }
 
+const globalServerMap: Record<string, TestServer> = {};
+
+async function ensureTestImpl(serverImplName: string) {
+  globalServerMap[serverImplName] ||= await serverImplMap[serverImplName]();
+}
+
+afterAll(async () => {
+  const jobs = new Set<PromiseLike<void>>();
+  for (const serverImplName in globalServerMap) {
+    const job = globalServerMap[serverImplName][DisposableSymbols.asyncDispose]();
+    if (job?.then != null) {
+      jobs.add(
+        job.then(() => {
+          delete globalServerMap[serverImplName];
+          jobs.delete(job);
+        }),
+      );
+    }
+  }
+  await Promise.all(jobs);
+  globalAgent.destroy();
+});
+
 export function runTestsForEachServerImpl(
   callback: (server: TestServer, serverImplName: string) => void,
 ) {
   for (const serverImplName in serverImplMap) {
     describe(serverImplName, () => {
-      const server: TestServer = {} as TestServer;
-      beforeAll(async () => {
-        Object.assign(server, await serverImplMap[serverImplName as keyof typeof serverImplMap]());
-      });
-      afterAll(async () => {
-        await server.close();
-        globalAgent.destroy();
-      });
-      callback(server, serverImplName);
+      beforeAll(() => ensureTestImpl(serverImplName));
+      callback(
+        {
+          get name() {
+            return globalServerMap[serverImplName].name;
+          },
+          get url() {
+            return globalServerMap[serverImplName].url;
+          },
+          addOnceHandler: handler => globalServerMap[serverImplName].addOnceHandler(handler),
+          [DisposableSymbols.asyncDispose]: () =>
+            globalServerMap[serverImplName][DisposableSymbols.asyncDispose](),
+        },
+        serverImplName,
+      );
     });
   }
 }

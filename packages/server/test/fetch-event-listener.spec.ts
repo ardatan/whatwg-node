@@ -1,5 +1,5 @@
 import { CustomEvent } from '@whatwg-node/events';
-import { FetchEvent } from '@whatwg-node/server';
+import { fakePromise, FetchEvent } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 class PonyfillFetchEvent extends CustomEvent<{}> implements FetchEvent {
@@ -17,7 +17,7 @@ describe('FetchEvent listener', () => {
     (_, { createServerAdapter, fetchAPI: { Request, Response } }) => {
       it('should not return a promise to event listener', async () => {
         const response = new Response();
-        const response$ = Promise.resolve(response);
+        const response$ = fakePromise(response);
         const adapter = createServerAdapter(() => response$);
         const respondWith = jest.fn();
         const waitUntil = jest.fn();

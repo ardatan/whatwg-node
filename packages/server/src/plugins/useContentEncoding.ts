@@ -60,7 +60,6 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
       }
     },
     onResponse({ request, response, setResponse, fetchAPI, serverContext }) {
-      const waitUntil = serverContext.waitUntil?.bind(serverContext) || (() => {});
       // Hack for avoiding to create whatwg-node to create a readable stream until it's needed
       if ((response as any)['bodyInit'] || response.body) {
         const encodings = encodingMap.get(request);
@@ -78,8 +77,10 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
               const bufOfRes = (response as any)._buffer;
               if (bufOfRes) {
                 const writer = compressionStream.writable.getWriter();
-                waitUntil(writer.write(bufOfRes));
-                waitUntil(writer.close());
+                const write$ = writer.write(bufOfRes);
+                serverContext.waitUntil?.(write$);
+                const close$ = writer.close();
+                serverContext.waitUntil?.(close$);
                 const uint8Arrays$ = isReadable((compressionStream.readable as any)['readable'])
                   ? collectReadableValues((compressionStream.readable as any)['readable'])
                   : isAsyncIterable(compressionStream.readable)
@@ -97,7 +98,8 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
                   });
                   decompressedResponseMap.set(compressedResponse, response);
                   setResponse(compressedResponse);
-                  waitUntil(compressionStream.writable.close());
+                  const close$ = compressionStream.writable.close();
+                  serverContext.waitUntil?.(close$);
                 });
               }
             }

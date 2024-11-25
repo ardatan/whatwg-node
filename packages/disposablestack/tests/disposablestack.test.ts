@@ -80,6 +80,8 @@ const stacks: Record<
   },
 };
 
+patchSymbols();
+
 for (const stackName in stacks) {
   describe(stackName, () => {
     const StackCtor = stacks[stackName].ctor;
@@ -87,7 +89,6 @@ for (const stackName in stacks) {
     const disposeMethod = stacks[stackName].disposeMethod;
     const testCases = createTestCases(disposeFnSymbol);
     describe('using syntax', () => {
-      patchSymbols();
       for (const testCaseName in testCases) {
         const testCase = testCases[testCaseName];
         it(testCaseName, async () => {

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-types */
+import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import {
   OnRequestHook,
@@ -17,6 +18,7 @@ import {
 } from './types.js';
 import {
   completeAssign,
+  ensureDisposableStackRegisteredForTerminateEvents,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
   isFetchEvent,
@@ -34,16 +36,13 @@ import {
   ServerAdapterRequestAbortSignal,
 } from './utils.js';
 import {
+  fakePromise,
   getRequestFromUWSRequest,
   isUWSResponse,
   sendResponseToUwsOpts,
   type UWSRequest,
   type UWSResponse,
 } from './uwebsockets.js';
-
-async function handleWaitUntils(waitUntilPromises: Promise<unknown>[]) {
-  await Promise.allSettled(waitUntilPromises);
-}
 
 type RequestContainer = { request: Request };
 
@@ -101,14 +100,67 @@ function createServerAdapter<
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
+  const waitUntilPromises = new Set<PromiseLike<unknown>>();
+  const disposableStack = new AsyncDisposableStack();
+  const signals = new Set<ServerAdapterRequestAbortSignal>();
+
+  function registerSignal(signal: ServerAdapterRequestAbortSignal) {
+    signals.add(signal);
+    signal.addEventListener('abort', () => {
+      signals.delete(signal);
+    });
+  }
+
+  disposableStack.defer(() => {
+    for (const signal of signals) {
+      signal.sendAbort();
+    }
+  });
+
+  disposableStack.defer(() => {
+    if (waitUntilPromises.size > 0) {
+      return Promise.allSettled(waitUntilPromises).then(
+        () => {
+          waitUntilPromises.clear();
+        },
+        () => {
+          waitUntilPromises.clear();
+        },
+      );
+    }
+  });
+
+  function waitUntil(promiseLike: PromiseLike<unknown>) {
+    // If it is a Node.js environment, we should register the disposable stack to handle process termination events
+    if (globalThis.process) {
+      ensureDisposableStackRegisteredForTerminateEvents(disposableStack);
+    }
+    waitUntilPromises.add(promiseLike);
+    promiseLike.then(
+      () => {
+        waitUntilPromises.delete(promiseLike);
+      },
+      err => {
+        console.error(`Unexpected error while waiting: ${err.message || err}`);
+        waitUntilPromises.delete(promiseLike);
+      },
+    );
+  }
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
-      if (plugin.onRequest) {
-        onRequestHooks.push(plugin.onRequest);
-      }
-      if (plugin.onResponse) {
-        onResponseHooks.push(plugin.onResponse);
+      if (plugin != null) {
+        if (plugin.onRequest) {
+          onRequestHooks.push(plugin.onRequest);
+        }
+        if (plugin.onResponse) {
+          onResponseHooks.push(plugin.onResponse);
+        }
+        const disposeFn =
+          plugin[DisposableSymbols.asyncDispose] || plugin[DisposableSymbols.dispose];
+        if (disposeFn != null) {
+          disposableStack.defer(disposeFn);
+        }
       }
     }
   }
@@ -121,12 +173,14 @@ function createServerAdapter<
           if (onRequestHooks.length === 0) {
             return handleEarlyResponse();
           }
-          let url = new Proxy(EMPTY_OBJECT as URL, {
-            get(_target, prop, _receiver) {
-              url = new fetchAPI.URL(request.url, 'http://localhost');
-              return Reflect.get(url, prop, url);
-            },
-          }) as URL;
+          let url =
+            (request as any)['parsedUrl'] ||
+            (new Proxy(EMPTY_OBJECT as URL, {
+              get(_target, prop, _receiver) {
+                url = new fetchAPI.URL(request.url, 'http://localhost');
+                return Reflect.get(url, prop, url);
+              },
+            }) as URL);
           const onRequestHooksIteration$ = iterateAsyncVoid(
             onRequestHooks,
             (onRequestHook, stopEarly) =>
@@ -193,7 +247,7 @@ function createServerAdapter<
   // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, registerSignal);
     return handleRequest(request, serverContext);
   }
 
@@ -213,13 +267,10 @@ function createServerAdapter<
     nodeResponse: NodeResponse,
     ...ctx: Partial<TServerContext>[]
   ) {
-    const waitUntilPromises: Promise<unknown>[] = [];
     const defaultServerContext = {
       req: nodeRequest,
       res: nodeResponse,
-      waitUntil(cb: Promise<unknown>) {
-        waitUntilPromises.push(cb.catch(err => console.error(err)));
-      },
+      waitUntil,
     };
     let response$: Response | Promise<Response> | undefined;
     try {
@@ -248,13 +299,10 @@ function createServerAdapter<
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
-    const waitUntilPromises: Promise<unknown>[] = [];
     const defaultServerContext = {
       res,
       req,
-      waitUntil(cb: Promise<unknown>) {
-        waitUntilPromises.push(cb.catch(err => console.error(err)));
-      },
+      waitUntil,
     };
     const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
     const serverContext =
@@ -263,6 +311,7 @@ function createServerAdapter<
         : defaultServerContext;
 
     const signal = new ServerAdapterRequestAbortSignal();
+    registerSignal(signal);
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
     res.end = function (data: any) {
@@ -328,21 +377,16 @@ function createServerAdapter<
 
   function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
     const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
-    let waitUntilPromises: Promise<unknown>[] | undefined;
     const serverContext =
       filteredCtxParts.length > 1
         ? completeAssign({}, ...filteredCtxParts)
         : isolateObject(
             filteredCtxParts[0],
             filteredCtxParts[0] == null || filteredCtxParts[0].waitUntil == null
-              ? (waitUntilPromises = [])
+              ? waitUntil
               : undefined,
           );
-    const response$ = handleRequest(request, serverContext);
-    if (waitUntilPromises?.length) {
-      return handleWaitUntils(waitUntilPromises).then(() => response$);
-    }
-    return response$;
+    return handleRequest(request, serverContext);
   }
 
   const fetchFn: ServerAdapterObject<TServerContext>['fetch'] = (
@@ -414,6 +458,19 @@ function createServerAdapter<
     handleEvent,
     handleUWS,
     handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
+    disposableStack,
+    [DisposableSymbols.asyncDispose]() {
+      if (!disposableStack.disposed) {
+        return disposableStack.disposeAsync();
+      }
+      return fakePromise(undefined);
+    },
+    dispose() {
+      if (!disposableStack.disposed) {
+        return disposableStack.disposeAsync();
+      }
+      return fakePromise(undefined);
+    },
   };
 
   const serverAdapter = new Proxy(genericRequestHandler, {
@@ -460,7 +517,7 @@ function createServerAdapter<
       return genericRequestHandler(...args);
     },
   });
-  return serverAdapter as any;
+  return serverAdapter as ServerAdapter<TServerContext, TBaseObject>;
 }
 
 export { createServerAdapter };
