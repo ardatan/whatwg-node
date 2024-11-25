@@ -661,7 +661,7 @@ export function handleResponseDecompression(response: Response, fetchAPI: FetchA
   return decompressedResponse;
 }
 
-const terminateEvents = ['SIGINT', 'exit'] as const;
+const terminateEvents = ['SIGINT', 'exit', 'SIGTERM'] as const;
 const disposableStacks = new Set<AsyncDisposableStack>();
 
 let eventListenerRegistered = false;
