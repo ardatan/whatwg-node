@@ -101,40 +101,28 @@ function createServerAdapter<
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const waitUntilPromises = new Set<PromiseLike<unknown>>();
-  const disposableStack = new AsyncDisposableStack();
-  const signals = new Set<ServerAdapterRequestAbortSignal>();
-
-  function registerSignal(signal: ServerAdapterRequestAbortSignal) {
-    signals.add(signal);
-    signal.addEventListener('abort', () => {
-      signals.delete(signal);
-    });
+  let _disposableStack: AsyncDisposableStack | undefined;
+  function ensureDisposableStack() {
+    if (!_disposableStack) {
+      _disposableStack = new AsyncDisposableStack();
+      ensureDisposableStackRegisteredForTerminateEvents(_disposableStack);
+      _disposableStack.defer(() => {
+        if (waitUntilPromises.size > 0) {
+          return Promise.allSettled(waitUntilPromises).then(
+            () => {
+              waitUntilPromises.clear();
+            },
+            () => {
+              waitUntilPromises.clear();
+            },
+          );
+        }
+      });
+    }
+    return _disposableStack;
   }
 
-  disposableStack.defer(() => {
-    for (const signal of signals) {
-      signal.sendAbort();
-    }
-  });
-
-  disposableStack.defer(() => {
-    if (waitUntilPromises.size > 0) {
-      return Promise.allSettled(waitUntilPromises).then(
-        () => {
-          waitUntilPromises.clear();
-        },
-        () => {
-          waitUntilPromises.clear();
-        },
-      );
-    }
-  });
-
   function waitUntil(promiseLike: PromiseLike<unknown>) {
-    // If it is a Node.js environment, we should register the disposable stack to handle process termination events
-    if (globalThis.process) {
-      ensureDisposableStackRegisteredForTerminateEvents(disposableStack);
-    }
     waitUntilPromises.add(promiseLike);
     promiseLike.then(
       () => {
@@ -157,7 +145,7 @@ function createServerAdapter<
       }
       const disposeFn = plugin[DisposableSymbols.asyncDispose] || plugin[DisposableSymbols.dispose];
       if (disposeFn != null) {
-        disposableStack.defer(disposeFn);
+        ensureDisposableStack().defer(disposeFn);
       }
     }
   }
@@ -244,7 +232,7 @@ function createServerAdapter<
   // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI, registerSignal);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI);
     return handleRequest(request, serverContext);
   }
 
@@ -308,7 +296,6 @@ function createServerAdapter<
         : defaultServerContext;
 
     const signal = new ServerAdapterRequestAbortSignal();
-    registerSignal(signal);
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
     res.end = function (data: any) {
@@ -455,16 +442,18 @@ function createServerAdapter<
     handleEvent,
     handleUWS,
     handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
-    disposableStack,
+    get disposableStack() {
+      return ensureDisposableStack();
+    },
     [DisposableSymbols.asyncDispose]() {
-      if (!disposableStack.disposed) {
-        return disposableStack.disposeAsync();
+      if (_disposableStack && !_disposableStack.disposed) {
+        return _disposableStack.disposeAsync();
       }
       return fakePromise(undefined);
     },
     dispose() {
-      if (!disposableStack.disposed) {
-        return disposableStack.disposeAsync();
+      if (_disposableStack && !_disposableStack.disposed) {
+        return _disposableStack.disposeAsync();
       }
       return fakePromise(undefined);
     },
