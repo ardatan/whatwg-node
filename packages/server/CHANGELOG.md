@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.60
+
+### Patch Changes
+
+- [#1838](https://github.com/ardatan/whatwg-node/pull/1838)
+  [`8947888`](https://github.com/ardatan/whatwg-node/commit/894788854a212932fffde7a52e88c21cd696c6db)
+  Thanks [@ardatan](https://github.com/ardatan)! - Respect SIGTERM as termination event
+
 ## 0.9.59
 
 ### Patch Changes
