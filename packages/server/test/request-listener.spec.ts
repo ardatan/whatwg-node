@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl, TestServer } from './test-server.js';
 
@@ -185,7 +186,7 @@ describe('Request Listener', () => {
         }
         return expectedResponse;
       });
-      testServer.addOnceHandler(adapter);
+      await testServer.addOnceHandler(adapter);
       const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
       const returnedResponse = await fetchAPI.fetch(expectedRequest);
       await compareResponse(returnedResponse, expectedResponse);
@@ -204,7 +205,7 @@ describe('Request Listener', () => {
       let i = 5;
       return new fetchAPI.ReadableStream({
         async pull(controller) {
-          await new Promise(resolve => setTimeout(resolve, 30));
+          await setTimeout(30);
           if (i > 0) {
             controller.enqueue(`data: request_${i.toString()}\n`);
             i--;
@@ -219,7 +220,7 @@ describe('Request Listener', () => {
       let i = 5;
       return new fetchAPI.ReadableStream({
         async pull(controller) {
-          await new Promise(resolve => setTimeout(resolve, 30));
+          await setTimeout(30);
           if (i > 0) {
             controller.enqueue(`data: response_${i.toString()}\n`);
             i--;

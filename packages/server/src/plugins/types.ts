@@ -4,10 +4,14 @@ import {
   type ServerAdapterInitialContext,
 } from '../types.js';
 
-export interface ServerAdapterPlugin<TServerContext = {}> {
-  onRequest?: OnRequestHook<TServerContext & ServerAdapterInitialContext>;
-  onResponse?: OnResponseHook<TServerContext & ServerAdapterInitialContext>;
-}
+export type ServerAdapterPlugin<TServerContext = {}> =
+  | {
+      onRequest?: OnRequestHook<TServerContext & ServerAdapterInitialContext>;
+      onResponse?: OnResponseHook<TServerContext & ServerAdapterInitialContext>;
+      [Symbol.dispose]?: () => void;
+      [Symbol.asyncDispose]?: () => PromiseLike<void> | void;
+    }
+  | undefined;
 
 export type OnRequestHook<TServerContext> = (
   payload: OnRequestEventPayload<TServerContext>,

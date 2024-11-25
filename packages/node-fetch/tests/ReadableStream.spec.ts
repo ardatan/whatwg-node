@@ -1,3 +1,4 @@
+import { setTimeout } from 'timers/promises';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('ReadableStream', () => {
@@ -16,9 +17,7 @@ describe('ReadableStream', () => {
         if (cnt > 3) {
           controller.close();
         }
-        await new Promise(resolve => {
-          setTimeout(resolve, 300);
-        });
+        await setTimeout(300);
       },
     });
     const reader = readableStream.getReader();
@@ -34,7 +33,7 @@ describe('ReadableStream', () => {
   });
   it('should send data from start and push lazily', async () => {
     let interval: any;
-    let timeout: any;
+    const timeoutSignal = new AbortController();
     let pullCount = 0;
     let active: boolean;
     const rs = new PonyfillReadableStream({
@@ -49,17 +48,17 @@ describe('ReadableStream', () => {
           throw new Error('There is still a timeout running');
         }
         active = true;
-        return new Promise(resolve => {
-          timeout = setTimeout(() => {
+        return setTimeout(1200, undefined, { signal: timeoutSignal.signal }).then(
+          () => {
             controller.enqueue(Buffer.from(`pullCount: ${pullCount++}\n`));
-            resolve();
             active = false;
-          }, 1200);
-        });
+          },
+          () => {},
+        );
       },
       cancel() {
         clearInterval(interval);
-        clearTimeout(timeout);
+        timeoutSignal.abort();
       },
     });
     const reader = rs.getReader();

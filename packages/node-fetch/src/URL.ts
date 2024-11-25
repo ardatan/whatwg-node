@@ -18,14 +18,15 @@ export class PonyfillURL extends FastUrl implements URL {
     this.parse(url, false);
     if (base) {
       const baseParsed = typeof base === 'string' ? new PonyfillURL(base) : base;
-      this.protocol = this.protocol || baseParsed.protocol;
-      this.host = this.host || baseParsed.host;
-      this.pathname = this.pathname || baseParsed.pathname;
+      this.protocol ||= baseParsed.protocol;
+      this.host ||= baseParsed.host;
+      this.pathname ||= baseParsed.pathname;
+      this.port ||= baseParsed.port;
     }
   }
 
   get origin(): string {
-    return `${this.protocol}//${this.host}`;
+    return `${this.protocol}//${this.host}${this.port ? `:${this.port}` : ''}`;
   }
 
   private _searchParams?: PonyfillURLSearchParams;
@@ -80,4 +81,6 @@ export class PonyfillURL extends FastUrl implements URL {
   static getBlobFromURL(url: string): Blob | PonyfillBlob | undefined {
     return (this.blobRegistry.get(url) || resolveObjectURL(url)) as Blob | PonyfillBlob | undefined;
   }
+
+  [Symbol.toStringTag] = 'URL';
 }

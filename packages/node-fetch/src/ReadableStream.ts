@@ -72,27 +72,28 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     } else {
       let started = false;
       let ongoing = false;
+      const readImpl = async (desiredSize: number) => {
+        if (!started) {
+          const controller = createController(desiredSize, this.readable);
+          started = true;
+          await underlyingSource?.start?.(controller);
+          controller._flush();
+          if (controller._closed) {
+            return;
+          }
+        }
+        const controller = createController(desiredSize, this.readable);
+        await underlyingSource?.pull?.(controller);
+        controller._flush();
+        ongoing = false;
+      };
       this.readable = new Readable({
         read(desiredSize) {
           if (ongoing) {
             return;
           }
           ongoing = true;
-          return Promise.resolve().then(async () => {
-            if (!started) {
-              const controller = createController(desiredSize, this);
-              started = true;
-              await underlyingSource?.start?.(controller);
-              controller._flush();
-              if (controller._closed) {
-                return;
-              }
-            }
-            const controller = createController(desiredSize, this);
-            await underlyingSource?.pull?.(controller);
-            controller._flush();
-            ongoing = false;
-          });
+          return readImpl(desiredSize);
         },
         destroy(err, callback) {
           if (underlyingSource?.cancel) {
@@ -174,6 +175,17 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     throw new Error('Not implemented');
   }
 
+  private async pipeToWriter(writer: WritableStreamDefaultWriter<T>): Promise<void> {
+    try {
+      for await (const chunk of this) {
+        await writer.write(chunk);
+      }
+      await writer.close();
+    } catch (err) {
+      await writer.abort(err);
+    }
+  }
+
   pipeTo(destination: WritableStream<T>): Promise<void> {
     if (isPonyfillWritableStream(destination)) {
       return new Promise((resolve, reject) => {
@@ -183,16 +195,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       });
     } else {
       const writer = destination.getWriter();
-      return Promise.resolve().then(async () => {
-        try {
-          for await (const chunk of this) {
-            await writer.write(chunk);
-          }
-          await writer.close();
-        } catch (err) {
-          await writer.abort(err);
-        }
-      });
+      return this.pipeToWriter(writer);
     }
   }
 

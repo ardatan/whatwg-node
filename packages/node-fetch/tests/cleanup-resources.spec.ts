@@ -5,8 +5,10 @@ describe('Cleanup Resources', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI: { Response, fetch } }) => {
     describe('internal calls', () => {
       runTestsForEachServerImpl(testServer => {
-        beforeEach(() => {
-          testServer.addOnceHandler(createServerAdapter(() => Response.json({ test: 'test' })));
+        beforeEach(async () => {
+          await testServer.addOnceHandler(
+            createServerAdapter(() => Response.json({ test: 'test' })),
+          );
         });
         it('should free resources when body is not consumed', async () => {
           const response = await fetch(testServer.url);

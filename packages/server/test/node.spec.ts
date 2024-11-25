@@ -1,6 +1,7 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { setTimeout } from 'timers/promises';
 import { HttpResponse } from 'uWebSockets.js';
+import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { createDeferredPromise } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
@@ -8,16 +9,16 @@ import { runTestsForEachServerImpl } from './test-server.js';
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
     (
-      _fetchImplName,
+      fetchImplName,
       { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } },
     ) => {
       runTestsForEachServerImpl(testServer => {
         if (!globalThis.Bun) {
           it('should handle empty responses', async () => {
-            const serverAdapter = createServerAdapter(() => {
+            await using serverAdapter = createServerAdapter(() => {
               return undefined as any;
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             await response.text();
             expect(response.status).toBe(404);
@@ -26,7 +27,7 @@ describe('Node Specific Cases', () => {
 
         it('should handle waitUntil properly', async () => {
           const callOrder: string[] = [];
-          const serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
+          await using serverAdapter = createServerAdapter((_request, { waitUntil }: any) => {
             waitUntil(
               setTimeout(100).then(() => {
                 callOrder.push('waitUntil');
@@ -37,7 +38,7 @@ describe('Node Specific Cases', () => {
               status: 204,
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response$ = fetch(testServer.url);
           const response = await response$;
           await response.text();
@@ -51,13 +52,13 @@ describe('Node Specific Cases', () => {
               status: 204,
             });
           });
-          const serverAdapter = createServerAdapter<{
+          await using serverAdapter = createServerAdapter<{
             req: IncomingMessage;
             res: ServerResponse;
             foo: string;
           }>(handleRequest);
           const additionalCtx = { foo: 'bar' };
-          testServer.addOnceHandler((...args: any[]) =>
+          await testServer.addOnceHandler((...args: any[]) =>
             (serverAdapter as any)(...args, additionalCtx),
           );
           const response = await fetch(testServer.url);
@@ -71,7 +72,7 @@ describe('Node Specific Cases', () => {
         it('should handle cancellation of incremental responses', async () => {
           const deferred = createDeferredPromise<void>();
           let cancellation = 0;
-          const serverAdapter = createServerAdapter(() => {
+          await using serverAdapter = createServerAdapter(() => {
             return new Response(
               new ReadableStream({
                 async pull(controller) {
@@ -85,7 +86,7 @@ describe('Node Specific Cases', () => {
               }),
             );
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const ctrl = new AbortController();
           const response = await fetch(testServer.url, {
             signal: ctrl.signal,
@@ -114,7 +115,7 @@ describe('Node Specific Cases', () => {
         });
         it('should handle large streaming responses', async () => {
           const successFn = jest.fn();
-          const serverAdapter = createServerAdapter(() => {
+          await using serverAdapter = createServerAdapter(() => {
             let i = 0;
             const t = 5;
             const stream = new ReadableStream({
@@ -130,7 +131,7 @@ describe('Node Specific Cases', () => {
             });
             return new Response(stream, { status: 200 });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url);
 
           let result: string | null = '';
@@ -146,7 +147,7 @@ describe('Node Specific Cases', () => {
 
         if (!globalThis.Bun) {
           it('should not kill the server if response is ended on low level', async () => {
-            const serverAdapter = createServerAdapter<{
+            await using serverAdapter = createServerAdapter<{
               res: HttpResponse | ServerResponse;
             }>((_req, { res }) => {
               res.end('This should reach the client.');
@@ -154,39 +155,39 @@ describe('Node Specific Cases', () => {
                 status: 200,
               });
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             const resText = await response.text();
             expect(resText).toBe('This should reach the client.');
           });
 
           it('should handle sync errors', async () => {
-            const serverAdapter = createServerAdapter(() => {
+            await using serverAdapter = createServerAdapter(() => {
               throw new Error('This is an error.');
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             expect(response.status).toBe(500);
             expect(await response.text()).toContain('This is an error.');
           });
 
           it('should handle async errors', async () => {
-            const serverAdapter = createServerAdapter(async () => {
+            await using serverAdapter = createServerAdapter(async () => {
               throw new Error('This is an error.');
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             expect(response.status).toBe(500);
             expect(await response.text()).toContain('This is an error.');
           });
 
           it('should respect the status code', async () => {
-            const serverAdapter = createServerAdapter(() => {
+            await using serverAdapter = createServerAdapter(() => {
               const error = new Error('This is an error.');
               (error as any).status = 418;
               throw error;
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const response = await fetch(testServer.url);
             await response.text();
             expect(response.status).toBe(418);
@@ -194,12 +195,12 @@ describe('Node Specific Cases', () => {
         }
 
         it('should handle async body read streams', async () => {
-          const serverAdapter = createServerAdapter(async request => {
+          await using serverAdapter = createServerAdapter(async request => {
             await setTimeout(10);
             const reqText = await request.text();
             return new Response(reqText, { status: 200 });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: 'Hello World',
@@ -209,8 +210,8 @@ describe('Node Specific Cases', () => {
         });
 
         // TODO: Flakey on native fetch
-        if (!process.env.LEAK_TEST) {
-          it('handles Request.signal inside adapter correctly', async () => {
+        if (!process.env.LEAK_TEST || fetchImplName.toLowerCase() !== 'native') {
+          it.only('handles Request.signal inside adapter correctly', async () => {
             const abortListener = jest.fn();
             const abortDeferred = createDeferredPromise<void>();
             const adapterResponseDeferred = createDeferredPromise<Response>();
@@ -221,14 +222,14 @@ describe('Node Specific Cases', () => {
                 }),
               );
             }
-            const serverAdapter = createServerAdapter(req => {
+            await using serverAdapter = createServerAdapter(req => {
               req.signal.addEventListener('abort', () => {
                 abortListener();
                 abortDeferred.resolve();
               });
               return adapterResponseDeferred.promise;
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             const controller = new AbortController();
             const response$ = fetch(testServer.url, { signal: controller.signal });
             expect(abortListener).toHaveBeenCalledTimes(0);
@@ -252,7 +253,7 @@ describe('Node Specific Cases', () => {
               );
             }
             const controller = new AbortController();
-            const serverAdapter = createServerAdapter(req => {
+            await using serverAdapter = createServerAdapter(req => {
               req.signal.addEventListener('abort', () => {
                 abortDeferred.resolve();
               });
@@ -261,7 +262,7 @@ describe('Node Specific Cases', () => {
                 return adapterResponseDeferred.promise;
               });
             });
-            testServer.addOnceHandler(serverAdapter);
+            await testServer.addOnceHandler(serverAdapter);
             let error: Error | undefined;
             try {
               await fetch(testServer.url, {
@@ -280,23 +281,23 @@ describe('Node Specific Cases', () => {
         }
 
         it('handles query parameters correctly', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             const urlObj = new URL(req.url);
             return new Response(urlObj.search, { status: 200 });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(`${testServer.url}?foo=bar`);
           expect(response.status).toBe(200);
           expect(await response.text()).toBe('?foo=bar');
         });
 
         it('sends content-length correctly', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             return Response.json({
               contentLength: req.headers.get('content-length'),
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: 'Hello World',
@@ -306,12 +307,12 @@ describe('Node Specific Cases', () => {
         });
 
         it('sends content-length correctly if body is nullish', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             return Response.json({
               contentLength: req.headers.get('content-length'),
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
           });
@@ -321,12 +322,12 @@ describe('Node Specific Cases', () => {
         });
 
         it('sends content-length correctly if body is empty', async () => {
-          const serverAdapter = createServerAdapter(req => {
+          await using serverAdapter = createServerAdapter(req => {
             return Response.json({
               contentLength: req.headers.get('content-length'),
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: '',
@@ -337,7 +338,7 @@ describe('Node Specific Cases', () => {
         });
 
         it('clones the request correctly', async () => {
-          const serverAdapter = createServerAdapter(async req => {
+          await using serverAdapter = createServerAdapter(async req => {
             const clonedReq = req.clone();
             const textFromClonedReq = await req.text();
             const textFromOriginalReq = await clonedReq.text();
@@ -346,7 +347,7 @@ describe('Node Specific Cases', () => {
               textFromOriginalReq,
             });
           });
-          testServer.addOnceHandler(serverAdapter);
+          await testServer.addOnceHandler(serverAdapter);
           const response = await fetch(testServer.url, {
             method: 'POST',
             body: 'TEST',
@@ -354,6 +355,24 @@ describe('Node Specific Cases', () => {
           const resJson = await response.json();
           expect(resJson.textFromClonedReq).toBe('TEST');
           expect(resJson.textFromOriginalReq).toBe('TEST');
+        });
+
+        it('waits for the sent promises to waitUntil', async () => {
+          const deferred = createDeferredPromise<void>();
+          await using serverAdapter = createServerAdapter((_req, ctx) => {
+            ctx.waitUntil(deferred.promise);
+            return Response.json({ message: 'Hello World' });
+          });
+          await testServer.addOnceHandler(serverAdapter);
+          const response = await fetch(testServer.url);
+          const responseJson = await response.json();
+          expect(responseJson).toEqual({ message: 'Hello World' });
+          const disposedThen = jest.fn();
+          serverAdapter[DisposableSymbols.asyncDispose]().then(disposedThen);
+          expect(disposedThen).not.toHaveBeenCalled();
+          deferred.resolve();
+          await setTimeout(100);
+          expect(disposedThen).toHaveBeenCalled();
         });
       });
     },

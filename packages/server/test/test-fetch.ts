@@ -4,10 +4,12 @@ import { globalAgent as httpsGlobalAgent } from 'https';
 import { setTimeout } from 'timers/promises';
 import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, beforeAll, describe } from '@jest/globals';
+import { patchSymbols } from '@whatwg-node/disposablestack';
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
 
+patchSymbols();
 const libcurl = globalThis.libcurl;
 export function runTestsForEachFetchImpl(
   callback: (
