@@ -674,13 +674,7 @@ function ensureEventListenerForDisposableStacks() {
   for (const event of terminateEvents) {
     globalThis.process.once(event, function terminateHandler() {
       return Promise.allSettled(
-        [...disposableStacks].map(
-          stack =>
-            !stack.disposed &&
-            stack.disposeAsync().catch(e => {
-              console.error('Error while disposing:', e);
-            }),
-        ),
+        [...disposableStacks].map(stack => !stack.disposed && stack.disposeAsync()),
       );
     });
   }
