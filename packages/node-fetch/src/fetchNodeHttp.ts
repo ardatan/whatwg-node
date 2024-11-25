@@ -46,7 +46,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           auth: fetchRequest.parsedUrl.username
             ? `${fetchRequest.parsedUrl.username}:${fetchRequest.parsedUrl.password}`
             : undefined,
-          host: fetchRequest.parsedUrl.host,
           hostname: fetchRequest.parsedUrl.hostname,
           method: fetchRequest.method,
           path: fetchRequest.parsedUrl.pathname + (fetchRequest.parsedUrl.search || ''),
@@ -99,6 +98,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
               nodeResponse.headers.location,
               fetchRequest.parsedUrl || fetchRequest.url,
             );
+            console.log('Redirecting to', nodeResponse.headers.location, redirectedUrl.toString());
             const redirectResponse$ = fetchNodeHttp(
               new PonyfillRequest(redirectedUrl, fetchRequest),
             );

@@ -33,6 +33,7 @@ describe('ReadableStream', () => {
   });
   it('should send data from start and push lazily', async () => {
     let interval: any;
+    const timeoutSignal = new AbortController();
     let pullCount = 0;
     let active: boolean;
     const rs = new PonyfillReadableStream({
@@ -42,17 +43,22 @@ describe('ReadableStream', () => {
           controller.enqueue(Buffer.from(`startCount: ${startCount++}\n`));
         }, 300);
       },
-      async pull(controller) {
+      pull(controller) {
         if (active) {
           throw new Error('There is still a timeout running');
         }
         active = true;
-        await setTimeout(1200);
-        controller.enqueue(Buffer.from(`pullCount: ${pullCount++}\n`));
-        active = false;
+        return setTimeout(1200, undefined, { signal: timeoutSignal.signal }).then(
+          () => {
+            controller.enqueue(Buffer.from(`pullCount: ${pullCount++}\n`));
+            active = false;
+          },
+          () => {},
+        );
       },
       cancel() {
         clearInterval(interval);
+        timeoutSignal.abort();
       },
     });
     const reader = rs.getReader();
