@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.9.58
+
+### Patch Changes
+
+- [`5a9098c`](https://github.com/ardatan/whatwg-node/commit/5a9098cdc2984c4ad80e136fc93250a97145852e)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix on plugin types
+
 ## 0.9.57
 
 ### Patch Changes
