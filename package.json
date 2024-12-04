@@ -59,7 +59,7 @@
     "lint-staged": "15.2.10",
     "node-libcurl": "npm:@ardatan/node-libcurl@4.0.4",
     "patch-package": "8.0.0",
-    "prettier": "3.4.1",
+    "prettier": "3.4.2",
     "rimraf": "6.0.1",
     "ts-jest": "29.2.5",
     "typescript": "5.6.3"
