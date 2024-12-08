@@ -311,6 +311,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   arrayBuffer(): Promise<ArrayBuffer> {
+    // @ts-expect-error - `Buffer` and `ArrayBuffer` are compatible
     return this.buffer();
   }
 

@@ -35,7 +35,9 @@ export function hasBufferMethod(obj: any): obj is { buffer(): Promise<Buffer> } 
   return obj != null && obj.buffer != null && typeof obj.buffer === 'function';
 }
 
-export function hasArrayBufferMethod(obj: any): obj is { arrayBuffer(): Promise<ArrayBuffer> } {
+export function hasArrayBufferMethod(
+  obj: any,
+): obj is { arrayBuffer(): Promise<ArrayBuffer>; size?: number } {
   return obj != null && obj.arrayBuffer != null && typeof obj.arrayBuffer === 'function';
 }
 
@@ -146,6 +148,7 @@ export class PonyfillBlob implements Blob {
 
   arrayBuffer(): Promise<ArrayBuffer> {
     if (this._buffer) {
+      // @ts-expect-error - `Buffer` and `ArrayBuffer` are compatible
       return fakePromise(this._buffer);
     }
     if (this.blobParts.length === 1) {
@@ -156,6 +159,7 @@ export class PonyfillBlob implements Blob {
         return this.blobParts[0].arrayBuffer();
       }
     }
+    // @ts-expect-error - `Buffer` and `ArrayBuffer` are compatible
     return this.buffer();
   }
 
