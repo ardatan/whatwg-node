@@ -1,5 +1,6 @@
-const guildConfig = require('@theguild/prettier-config');
-module.exports = {
+import guildConfig from '@theguild/prettier-config';
+
+export default {
   ...guildConfig,
   importOrderParserPlugins: ['explicitResourceManagement', ...guildConfig.importOrderParserPlugins],
 };
