@@ -3,6 +3,6 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "e2e": "deno run --unstable --import-map import-map.json --allow-net e2e.ts"
+    "e2e": "deno run --unstable-byonm --unstable-sloppy-imports --unstable-detect-cjs --allow-net --allow-read e2e.ts"
   }
 }

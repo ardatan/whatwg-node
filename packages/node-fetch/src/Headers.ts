@@ -1,4 +1,4 @@
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 import { PonyfillIteratorObject } from './IteratorObject.js';
 
 export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;

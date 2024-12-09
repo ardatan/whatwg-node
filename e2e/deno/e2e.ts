@@ -1,15 +1,17 @@
-import { assertDeployedEndpoint } from '@e2e/shared-scripts';
-import { createTestServerAdapter } from '@e2e/shared-server';
+import { assertDeployedEndpoint } from '../shared-scripts/src/utils';
+import { createTestServerAdapter } from '../shared-server/src/index';
 
 const abortCtrl = new AbortController();
-const url = await new Promise(resolve => {
-  Deno.serve({
-    handler: createTestServerAdapter(),
-    onListen({ hostname, port }) {
-      resolve(`http://${hostname}:${port}`);
+const url = await new Promise<string>(resolve => {
+  Deno.serve(
+    {
+      onListen({ hostname, port }) {
+        resolve(`http://${hostname}:${port}`);
+      },
+      signal: abortCtrl.signal,
     },
-    signal: abortCtrl.signal,
-  });
+    createTestServerAdapter(),
+  );
 });
 
 try {

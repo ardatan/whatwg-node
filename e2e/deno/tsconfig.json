@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
     "allowJs": true,
+    "checkJs": true,
     "esModuleInterop": true,
     "experimentalDecorators": false,
     "inlineSourceMap": true,
     "isolatedModules": true,
     "jsx": "react",
-    "lib": ["deno.window"],
     "module": "esnext",
+    "moduleResolution": "node",
     "moduleDetection": "force",
     "strict": true,
     "target": "esnext",
     "useDefineForClassFields": true
-  }
+  },
+  "include": ["e2e.ts", "lib.deno.d.ts"]
 }
