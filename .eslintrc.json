@@ -34,6 +34,7 @@
     "@typescript-eslint/naming-convention": "off",
     "@typescript-eslint/interface-name-prefix": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/no-empty-object-type": "off",
     "default-param-last": "off",
     "@typescript-eslint/ban-types": "off",
     "import/no-extraneous-dependencies": [

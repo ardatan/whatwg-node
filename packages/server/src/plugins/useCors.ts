@@ -114,7 +114,6 @@ async function getCORSResponseHeaders<TServerContext>(
 
 export function useCORS<TServerContext>(
   options?: CORSPluginOptions<TServerContext>,
-  // eslint-disable-next-line @typescript-eslint/ban-types
 ): ServerAdapterPlugin<TServerContext> {
   let corsOptionsFactory: CORSOptionsFactory<TServerContext> = () => ({});
   if (options != null) {
