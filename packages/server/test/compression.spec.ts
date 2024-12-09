@@ -55,7 +55,7 @@ describe('Compression', () => {
               }
               const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
               const writer = stream.writable.getWriter();
-              writer.write(exampleData);
+              writer.write(Buffer.from(exampleData));
               writer.close();
               const chunks: number[] = [];
               const reader = stream.readable.getReader();
@@ -111,7 +111,7 @@ describe('Compression', () => {
               }
               const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
               const writer = stream.writable.getWriter();
-              writer.write(exampleData);
+              writer.write(Buffer.from(exampleData));
               writer.close();
               const chunks: number[] = [];
               const reader = stream.readable.getReader();
@@ -251,7 +251,7 @@ describe('Compression', () => {
             }
             const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
             const writer = stream.writable.getWriter();
-            writer.write(exampleData);
+            writer.write(Buffer.from(exampleData));
             writer.close();
             const chunks: number[] = [];
             const reader = stream.readable.getReader();
