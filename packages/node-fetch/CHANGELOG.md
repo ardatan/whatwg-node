@@ -1,5 +1,34 @@
 # @whatwg-node/node-fetch
 
+## 0.7.5
+
+### Patch Changes
+
+- [#1872](https://github.com/ardatan/whatwg-node/pull/1872)
+  [`7fb47d8`](https://github.com/ardatan/whatwg-node/commit/7fb47d8e6a988658089315970d5662f5bf6bcb1f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the error thrown \`ENOTFOUND\` when a parsed
+  URL with IPV6 hostname is given
+
+  Instead of using the parsed URL passed to the `fetch` function, let `node:http` parse it again.
+  This way, the IPV6 hostname is correctly resolved.
+
+- [#1872](https://github.com/ardatan/whatwg-node/pull/1872)
+  [`7fb47d8`](https://github.com/ardatan/whatwg-node/commit/7fb47d8e6a988658089315970d5662f5bf6bcb1f)
+  Thanks [@ardatan](https://github.com/ardatan)! - `url.searchParams` parameter should reflect the
+  changes in `toString()`
+
+  ```ts
+  const url = new URL('http://example.com/?a=b')
+  url.searchParams.set('a', 'c')
+  console.log(url.toString()) // http://example.com/?a=c
+  ```
+
+- [#1872](https://github.com/ardatan/whatwg-node/pull/1872)
+  [`7fb47d8`](https://github.com/ardatan/whatwg-node/commit/7fb47d8e6a988658089315970d5662f5bf6bcb1f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix IPV6 parsing in \`URL\`;
+
+  `new URL('http://[::1]')` should parse the host as \`[::1]\` not \`::1\`.
+
 ## 0.7.4
 
 ### Patch Changes
