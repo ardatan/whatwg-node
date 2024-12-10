@@ -122,6 +122,8 @@ function createServerAdapter<
   }
 
   function waitUntil(promiseLike: PromiseLike<unknown>) {
+    // Ensure that the disposable stack is created
+    ensureDisposableStack();
     waitUntilPromises.add(promiseLike);
     promiseLike.then(
       () => {

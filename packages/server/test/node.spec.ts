@@ -211,7 +211,7 @@ describe('Node Specific Cases', () => {
 
         // TODO: Flakey on native fetch
         if (!process.env.LEAK_TEST || fetchImplName.toLowerCase() !== 'native') {
-          it.only('handles Request.signal inside adapter correctly', async () => {
+          it('handles Request.signal inside adapter correctly', async () => {
             const abortListener = jest.fn();
             const abortDeferred = createDeferredPromise<void>();
             const adapterResponseDeferred = createDeferredPromise<Response>();
@@ -373,6 +373,18 @@ describe('Node Specific Cases', () => {
           deferred.resolve();
           await setTimeout(100);
           expect(disposedThen).toHaveBeenCalled();
+        });
+
+        it('handles ipv6 addresses correctly', async () => {
+          await using serverAdapter = createServerAdapter(req => {
+            return new Response(req.url, { status: 200 });
+          });
+          await testServer.addOnceHandler(serverAdapter);
+          const port = new URL(testServer.url).port;
+          const ipv6Url = new URL(`http://[::1]:${port}/`);
+          const response = await fetch(ipv6Url);
+          expect(response.status).toBe(200);
+          expect(await response.text()).toBe(ipv6Url.toString());
         });
       });
     },
