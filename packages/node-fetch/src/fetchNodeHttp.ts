@@ -42,7 +42,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       let nodeRequest: ReturnType<typeof requestFn>;
 
       // Skip using parsed URL if it's an IPv6 address (starting with brackets)
-      if (fetchRequest.parsedUrl && !fetchRequest.parsedUrl.hostname.startsWith('[')) {
+      if (fetchRequest.parsedUrl && !fetchRequest.parsedUrl.hostname?.startsWith('[')) {
         nodeRequest = requestFn({
           auth: fetchRequest.parsedUrl.username
             ? `${fetchRequest.parsedUrl.username}:${fetchRequest.parsedUrl.password}`

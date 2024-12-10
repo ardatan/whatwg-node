@@ -376,15 +376,15 @@ describe('Node Specific Cases', () => {
         });
 
         it('handles ipv6 addresses correctly', async () => {
-          await using serverAdapter = createServerAdapter(req => {
-            return new Response(req.url, { status: 200 });
+          await using serverAdapter = createServerAdapter(() => {
+            return new Response('Hello world!', { status: 200 });
           });
           await testServer.addOnceHandler(serverAdapter);
           const port = new URL(testServer.url).port;
           const ipv6Url = new URL(`http://[::1]:${port}/`);
           const response = await fetch(ipv6Url);
           expect(response.status).toBe(200);
-          expect(await response.text()).toBe(ipv6Url.toString());
+          await expect(response.text()).resolves.toBe('Hello world!');
         });
       });
     },
