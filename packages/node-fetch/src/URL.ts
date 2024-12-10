@@ -16,6 +16,9 @@ export class PonyfillURL extends FastUrl implements URL {
       return;
     }
     this.parse(url, false);
+    if (url.startsWith('http://[') || url.startsWith('https://[')) {
+      this.hostname = `[${this.hostname}]`;
+    }
     if (base) {
       const baseParsed = typeof base === 'string' ? new PonyfillURL(base) : base;
       this.protocol ||= baseParsed.protocol;
@@ -55,6 +58,9 @@ export class PonyfillURL extends FastUrl implements URL {
   }
 
   toString(): string {
+    if (this._searchParams) {
+      this.search = this._searchParams.toString();
+    }
     return this.format();
   }
 
