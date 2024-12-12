@@ -21,9 +21,9 @@
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
-    "test": "jest",
+    "test": "jest --runInBand --forceExit",
     "test:bun": "bun test --bail",
-    "test:leaks": "LEAK_TEST=1 jest --detectOpenHandles --detectLeaks",
+    "test:leaks": "LEAK_TEST=1 jest --detectOpenHandles --detectLeaks --runInBand --forceExit",
     "ts:check": "tsc --noEmit"
   },
   "optionalDependencies": {
