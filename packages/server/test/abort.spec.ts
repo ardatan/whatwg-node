@@ -16,7 +16,7 @@ describe('Request Abort', () => {
             ),
         );
         server.addOnceHandler(adapter);
-        const abortCtrl = new AbortController();
+        const abortCtrl = new fetchAPI.AbortController();
         fetchAPI.fetch(server.url, { signal: abortCtrl.signal }).then(
           () => {},
           () => {},

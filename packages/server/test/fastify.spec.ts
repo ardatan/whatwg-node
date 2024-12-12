@@ -44,7 +44,13 @@ describe('Fastify', () => {
     return;
   }
   runTestsForEachFetchImpl(
-    (_, { fetchAPI: { ReadableStream, Response, TextEncoder, URL }, createServerAdapter }) => {
+    (
+      _,
+      {
+        fetchAPI: { ReadableStream, Response, TextEncoder, URL, AbortController },
+        createServerAdapter,
+      },
+    ) => {
       let serverAdapter: FastifyServerAdapter;
       const fastifyServer = fastify();
       fastifyServer.route({

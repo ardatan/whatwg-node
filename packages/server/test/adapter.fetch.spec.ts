@@ -3,7 +3,7 @@ import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('adapter.fetch', () => {
   runTestsForEachFetchImpl(
-    (_, { fetchAPI: { Request, Response, URL }, createServerAdapter }) => {
+    (_, { fetchAPI: { Request, Response, URL, AbortController }, createServerAdapter }) => {
       // Request as first parameter
       it('should accept Request as a first argument', async () => {
         const handleRequest = jest.fn();

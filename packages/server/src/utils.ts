@@ -115,7 +115,7 @@ export function normalizeNodeRequest(
     }
   }
   if (nodeResponse?.once) {
-    const controller = new AbortController();
+    const controller = new fetchAPI.AbortController();
     signal = controller.signal;
     registerAbortCtrl?.(controller);
 

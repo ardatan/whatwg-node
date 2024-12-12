@@ -9,8 +9,8 @@ import { runTestsForEachServerImpl } from './test-server.js';
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
     (
-      fetchImplName,
-      { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } },
+      _fetchImplName,
+      { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL, AbortController } },
     ) => {
       runTestsForEachServerImpl(testServer => {
         if (!globalThis.Bun) {
@@ -209,76 +209,70 @@ describe('Node Specific Cases', () => {
           expect(await response.text()).toContain('Hello World');
         });
 
-        // TODO: Flakey on native fetch
-        if (!process.env.LEAK_TEST || fetchImplName.toLowerCase() !== 'native') {
-          it('handles Request.signal inside adapter correctly', async () => {
-            const abortListener = jest.fn();
-            const abortDeferred = createDeferredPromise<void>();
-            const adapterResponseDeferred = createDeferredPromise<Response>();
-            function resolveAdapter() {
-              adapterResponseDeferred.resolve(
-                Response.json({
-                  message: "You're so late!",
-                }),
-              );
-            }
-            await using serverAdapter = createServerAdapter(req => {
-              req.signal.addEventListener('abort', () => {
-                abortListener();
-                abortDeferred.resolve();
-              });
+        it('handles Request.signal inside adapter correctly', async () => {
+          const abortListener = jest.fn();
+          const abortDeferred = createDeferredPromise<void>();
+          const adapterResponseDeferred = createDeferredPromise<Response>();
+          function resolveAdapter() {
+            adapterResponseDeferred.resolve(
+              Response.json({
+                message: "You're so late!",
+              }),
+            );
+          }
+          await using serverAdapter = createServerAdapter(req => {
+            req.signal.addEventListener('abort', () => {
+              abortListener();
+              abortDeferred.resolve();
+            });
+            return adapterResponseDeferred.promise;
+          });
+          await testServer.addOnceHandler(serverAdapter);
+          const signal = AbortSignal.timeout(300);
+          const response$ = fetch(testServer.url, { signal });
+          expect(abortListener).toHaveBeenCalledTimes(0);
+          await expect(response$).rejects.toThrow();
+          await abortDeferred.promise;
+          expect(abortListener).toHaveBeenCalledTimes(1);
+          resolveAdapter();
+        });
+
+        it('handles Request.signal inside adapter with streaming bodies', async () => {
+          const abortDeferred = createDeferredPromise<void>();
+          const adapterResponseDeferred = createDeferredPromise<Response>();
+          function resolveAdapter() {
+            adapterResponseDeferred.resolve(
+              Response.json({
+                message: "You're so late!",
+              }),
+            );
+          }
+          const controller = new AbortController();
+          await using serverAdapter = createServerAdapter(req => {
+            req.signal.addEventListener('abort', () => {
+              abortDeferred.resolve();
+            });
+            return req.text().then(() => {
+              controller.abort();
               return adapterResponseDeferred.promise;
             });
-            await testServer.addOnceHandler(serverAdapter);
-            const controller = new AbortController();
-            const response$ = fetch(testServer.url, { signal: controller.signal });
-            expect(abortListener).toHaveBeenCalledTimes(0);
-            globalThis.setTimeout(() => {
-              controller.abort();
-            }, 300);
-            await expect(response$).rejects.toThrow();
-            await abortDeferred.promise;
-            expect(abortListener).toHaveBeenCalledTimes(1);
-            resolveAdapter();
           });
-
-          it('handles Request.signal inside adapter with streaming bodies', async () => {
-            const abortDeferred = createDeferredPromise<void>();
-            const adapterResponseDeferred = createDeferredPromise<Response>();
-            function resolveAdapter() {
-              adapterResponseDeferred.resolve(
-                Response.json({
-                  message: "You're so late!",
-                }),
-              );
-            }
-            const controller = new AbortController();
-            await using serverAdapter = createServerAdapter(req => {
-              req.signal.addEventListener('abort', () => {
-                abortDeferred.resolve();
-              });
-              return req.text().then(() => {
-                controller.abort();
-                return adapterResponseDeferred.promise;
-              });
+          await testServer.addOnceHandler(serverAdapter);
+          let error: Error | undefined;
+          try {
+            await fetch(testServer.url, {
+              method: 'POST',
+              signal: controller.signal,
+              body: 'Hello world!',
             });
-            await testServer.addOnceHandler(serverAdapter);
-            let error: Error | undefined;
-            try {
-              await fetch(testServer.url, {
-                method: 'POST',
-                signal: controller.signal,
-                body: 'Hello world!',
-              });
-            } catch (e: any) {
-              error = e;
-            }
-            expect(error).toBeDefined();
-            await setTimeout(100);
-            await abortDeferred.promise;
-            resolveAdapter();
-          });
-        }
+          } catch (e: any) {
+            error = e;
+          }
+          expect(error).toBeDefined();
+          await setTimeout(100);
+          await abortDeferred.promise;
+          resolveAdapter();
+        });
 
         it('handles query parameters correctly', async () => {
           await using serverAdapter = createServerAdapter(req => {

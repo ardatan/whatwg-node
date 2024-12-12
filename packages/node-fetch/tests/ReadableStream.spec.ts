@@ -1,4 +1,5 @@
 import { setTimeout } from 'timers/promises';
+import { PonyfillAbortController } from '../src/AbortController.js';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('ReadableStream', () => {
@@ -33,7 +34,7 @@ describe('ReadableStream', () => {
   });
   it('should send data from start and push lazily', async () => {
     let interval: any;
-    const timeoutSignal = new AbortController();
+    const timeoutSignal = new PonyfillAbortController();
     let pullCount = 0;
     let active: boolean;
     const rs = new PonyfillReadableStream({
