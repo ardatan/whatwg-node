@@ -1,5 +1,5 @@
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
-import { PonyfillAbortError } from './AbortError';
+import { PonyfillAbortError } from './AbortError.js';
 
 export class PonyfillAbortSignal extends EventTarget implements AbortSignal {
   aborted = false;
