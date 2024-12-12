@@ -42,16 +42,22 @@ export class PonyfillAbortSignal extends EventTarget implements AbortSignal {
   }
 
   any(signals: Iterable<PonyfillAbortSignal>): PonyfillAbortSignal {
-    function onAbort(this: PonyfillAbortSignal, ev: Event) {
-      const signal = (ev.target as AbortSignal) || this;
-      this.sendAbort(signal.reason);
-      for (const signal of signals) {
-        signal.removeEventListener('abort', onAbort);
-        signal.reason = this.reason;
-        if (signal.sendAbort) {
-          signal.sendAbort(this.reason);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const thisSignal = this;
+    function onAbort(ev: Event) {
+      const signal = ev.target as AbortSignal;
+      thisSignal.sendAbort(signal.reason);
+      thisSignal.reason = signal.reason;
+      thisSignal.aborted = true;
+      for (const otherSignal of signals) {
+        otherSignal.removeEventListener('abort', onAbort);
+        if (otherSignal !== signal && !otherSignal.aborted) {
+          if (otherSignal.sendAbort) {
+            otherSignal.sendAbort(signal.reason);
+          }
+          otherSignal.reason = signal.reason;
+          otherSignal.aborted = true;
         }
-        signal.aborted = true;
       }
     }
     for (const signal of signals) {
