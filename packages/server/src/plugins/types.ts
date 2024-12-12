@@ -24,7 +24,17 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
    * For example, the `node:http` server crashes the entire process on uncaught exceptions.
    */
   onResponse?: OnResponseHook<TServerContext & ServerAdapterInitialContext>;
+  /**
+   * This hook is invoked when the server is being disposed.
+   * The server disposal is triggered either by the request termination or the explicit server disposal.
+   * @see https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html
+   */
   [Symbol.dispose]?: () => void;
+  /**
+   * This hook is invoked when the server is being disposed.
+   * The server disposal is triggered either by the request termination or the explicit server disposal.
+   * @see https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html
+   */
   [Symbol.asyncDispose]?: () => PromiseLike<void> | void;
 }
 export type OnRequestHook<TServerContext> = (
