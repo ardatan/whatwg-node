@@ -1,5 +1,6 @@
 import { Agent as HTTPAgent } from 'http';
 import { Agent as HTTPSAgent } from 'https';
+import { PonyfillAbortController } from './AbortController.js';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 import { PonyfillURL } from './URL.js';
@@ -143,7 +144,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     // Create a new signal only if needed
     // Because the creation of signal is expensive
     if (!this._signal) {
-      this._signal = new AbortController().signal;
+      this._signal = new PonyfillAbortController().signal;
     }
     return this._signal!;
   }
