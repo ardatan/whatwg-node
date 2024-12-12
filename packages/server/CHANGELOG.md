@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.62
+
+### Patch Changes
+
+- [#1880](https://github.com/ardatan/whatwg-node/pull/1880)
+  [`95e5ce4`](https://github.com/ardatan/whatwg-node/commit/95e5ce4a32e51b8727b31ea711903e7924c8e47e)
+  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Docs for hooks
+
 ## 0.9.61
 
 ### Patch Changes
