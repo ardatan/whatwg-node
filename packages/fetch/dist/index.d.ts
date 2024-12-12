@@ -28,6 +28,8 @@ declare module '@whatwg-node/fetch' {
   export const URL: typeof globalThis.URL;
   export const URLSearchParams: typeof globalThis.URLSearchParams;
   export const URLPattern: _URLPattern;
+  export const AbortController: typeof globalThis.AbortController;
+  export const AbortSignal: typeof globalThis.AbortSignal;
   export interface FormDataLimits {
     /* Max field name size (in bytes). Default: 100. */
     fieldNameSize?: number;
@@ -70,5 +72,7 @@ declare module '@whatwg-node/fetch' {
     URLPattern: typeof URLPattern;
     URL: typeof URL;
     URLSearchParams: typeof URLSearchParams;
+    AbortController: typeof AbortController;
+    AbortSignal: typeof AbortSignal;
   };
 }

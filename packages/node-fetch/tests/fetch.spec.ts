@@ -9,6 +9,22 @@ function testIf(condition: boolean, name: string, fn: () => void) {
 }
 
 describe('Node Fetch Ponyfill', () => {
+  let baseUrl: string;
+  beforeAll(async () => {
+    try {
+      const res = await fetch('http://localhost:8888');
+      const body = await res.text();
+      if (!body.includes('httpbin')) {
+        throw new Error('Server not running');
+      }
+      if (!res.ok) {
+        throw new Error('Server not running');
+      }
+      baseUrl = 'http://localhost:8888';
+    } catch (err) {
+      baseUrl = 'https://httpbin.org';
+    }
+  });
   runTestsForEachFetchImpl(
     (
       implName,
@@ -19,10 +35,11 @@ describe('Node Fetch Ponyfill', () => {
           ReadableStream: PonyfillReadableStream,
           FormData: PonyfillFormData,
           Blob: PonyfillBlob,
+          AbortController,
+          AbortSignal,
         },
       },
     ) => {
-      const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
       it('should fetch', async () => {
         const response = await fetchPonyfill(baseUrl + '/get');
         expect(response.status).toBe(200);

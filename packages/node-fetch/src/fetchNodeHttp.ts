@@ -124,6 +124,24 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           })
           .catch(reject);
 
+        if (fetchRequest['_signal']) {
+          outputStream.once('error', () => {
+            if (!fetchRequest['_signal']?.aborted) {
+              (fetchRequest['_signal'] as any)?.sendAbort?.();
+            }
+          });
+          outputStream.once('close', () => {
+            if (!fetchRequest['_signal']?.aborted) {
+              (fetchRequest['_signal'] as any)?.sendAbort?.();
+            }
+          });
+          outputStream.once('destroy', () => {
+            if (!fetchRequest['_signal']?.aborted) {
+              (fetchRequest['_signal'] as any)?.sendAbort?.();
+            }
+          });
+        }
+
         const ponyfillResponse = new PonyfillResponse(outputStream, {
           status: nodeResponse.statusCode,
           statusText: nodeResponse.statusMessage,

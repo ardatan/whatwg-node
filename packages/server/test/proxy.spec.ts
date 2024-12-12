@@ -10,7 +10,7 @@ describe('Proxy', () => {
     return;
   }
   runTestsForEachFetchImpl(
-    (_, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
+    (_, { createServerAdapter, fetchAPI: { fetch, Response, URL, AbortSignal } }) => {
       let aborted: boolean = false;
       const originalAdapter = createServerAdapter(async request => {
         if (request.url.endsWith('/delay')) {

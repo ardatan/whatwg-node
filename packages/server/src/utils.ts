@@ -82,41 +82,6 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
-  aborted = false;
-  private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason: any;
-
-  throwIfAborted(): void {
-    if (this.aborted) {
-      throw this.reason;
-    }
-  }
-
-  sendAbort() {
-    this.reason = new DOMException('This operation was aborted', 'AbortError');
-    this.aborted = true;
-    this.dispatchEvent(new Event('abort'));
-  }
-
-  get onabort() {
-    return this._onabort;
-  }
-
-  set onabort(value) {
-    this._onabort = value;
-    if (value) {
-      this.addEventListener('abort', value);
-    } else {
-      this.removeEventListener('abort', value);
-    }
-  }
-
-  any(signals: Iterable<AbortSignal>): AbortSignal {
-    return AbortSignal.any([...signals]);
-  }
-}
-
 let bunNodeCompatModeWarned = false;
 
 export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
@@ -124,7 +89,7 @@ export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   fetchAPI: FetchAPI,
-  registerSignal?: (signal: ServerAdapterRequestAbortSignal) => void,
+  registerAbortCtrl?: (ctrl: AbortController) => void,
 ): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
@@ -150,24 +115,14 @@ export function normalizeNodeRequest(
     }
   }
   if (nodeResponse?.once) {
-    let sendAbortSignal: VoidFunction;
-
-    // If ponyfilled
-    if (fetchAPI.Request !== globalThis.Request) {
-      const newSignal = new ServerAdapterRequestAbortSignal();
-      registerSignal?.(newSignal);
-      signal = newSignal;
-      sendAbortSignal = () => (signal as ServerAdapterRequestAbortSignal).sendAbort();
-    } else {
-      const controller = new AbortController();
-      signal = controller.signal;
-      sendAbortSignal = () => controller.abort();
-    }
+    const controller = new AbortController();
+    signal = controller.signal;
+    registerAbortCtrl?.(controller);
 
     const closeEventListener: EventListener = () => {
       if (signal && !signal.aborted) {
         (rawRequest as any).aborted = true;
-        sendAbortSignal();
+        controller.abort();
       }
     };
 

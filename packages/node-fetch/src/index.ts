@@ -26,3 +26,6 @@ export {
   PonyfillTextDecoderStream as TextDecoderStream,
   PonyfillTextEncoderStream as TextEncoderStream,
 } from './TextEncoderDecoderStream.js';
+export { PonyfillAbortController as AbortController } from './AbortController.js';
+export { PonyfillAbortSignal as AbortSignal } from './AbortSignal.js';
+export { PonyfillAbortError as AbortError } from './AbortError.js';

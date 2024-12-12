@@ -19,6 +19,8 @@ const TextDecoder = globalThis.TextDecoder;
 const URLPattern = globalThis.URLPattern;
 const URL = globalThis.URL;
 const URLSearchParams = globalThis.URLSearchParams;
+const AbortController = globalThis.AbortController;
+const AbortSignal = globalThis.AbortSignal;
 
 export {
     fetch,
@@ -41,7 +43,9 @@ export {
     TextDecoder,
     URLPattern,
     URL,
-    URLSearchParams
+    URLSearchParams,
+    AbortController,
+        AbortSignal,
 }
 
 export function createFetch() {
@@ -64,6 +68,8 @@ export function createFetch() {
         TextDecoder,
         URLPattern,
         URL,
-        URLSearchParams
+        URLSearchParams,
+        AbortController,
+        AbortSignal,
     };
 }

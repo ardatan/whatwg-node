@@ -31,5 +31,7 @@ module.exports.TextDecoder = ponyfills.TextDecoder;
 module.exports.URLPattern = ponyfills.URLPattern;
 module.exports.URL = ponyfills.URL;
 module.exports.URLSearchParams = ponyfills.URLSearchParams;
+module.exports.AbortController = ponyfills.AbortController;
+module.exports.AbortSignal = ponyfills.AbortSignal;
 
 exports.createFetch = createNodePonyfill;

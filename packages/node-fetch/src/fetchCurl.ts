@@ -130,6 +130,24 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
           }
         })
         .catch(deferredPromise.reject);
+
+      if (fetchRequest['_signal']) {
+        outputStream.once('error', () => {
+          if (!fetchRequest['_signal']?.aborted) {
+            (fetchRequest['_signal'] as any)?.sendAbort?.();
+          }
+        });
+        outputStream.once('close', () => {
+          if (!fetchRequest['_signal']?.aborted) {
+            (fetchRequest['_signal'] as any)?.sendAbort?.();
+          }
+        });
+        outputStream.once('destroy', () => {
+          if (!fetchRequest['_signal']?.aborted) {
+            (fetchRequest['_signal'] as any)?.sendAbort?.();
+          }
+        });
+      }
       const headersFlat = headersBuf
         .toString('utf8')
         .split(/\r?\n|\r/g)

@@ -19,4 +19,6 @@ module.exports.TextDecoder = globalThis.TextDecoder;
 module.exports.URLPattern = globalThis.URLPattern;
 module.exports.URL = globalThis.URL;
 module.exports.URLSearchParams = globalThis.URLSearchParams;
+module.exports.AbortController = globalThis.AbortController;
+module.exports.AbortSignal = globalThis.AbortSignal;
 module.exports.createFetch = () => globalThis;

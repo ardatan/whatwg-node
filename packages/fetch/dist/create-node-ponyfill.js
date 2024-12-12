@@ -34,7 +34,9 @@ module.exports = function createNodePonyfill(opts = {}) {
       TextDecoder: globalThis.TextDecoder,
       URLPattern: ponyfills.URLPattern,
       URL: globalThis.URL,
-      URLSearchParams: globalThis.URLSearchParams
+      URLSearchParams: globalThis.URLSearchParams,
+      AbortController: globalThis.AbortController,
+      AbortSignal: globalThis.AbortSignal,
     };
   }
 
@@ -63,6 +65,8 @@ module.exports = function createNodePonyfill(opts = {}) {
   ponyfills.btoa = newNodeFetch.btoa;
   ponyfills.TextEncoder = newNodeFetch.TextEncoder;
   ponyfills.TextDecoder = newNodeFetch.TextDecoder;
+  ponyfills.AbortController = newNodeFetch.AbortController;
+  ponyfills.AbortSignal = newNodeFetch.AbortSignal;
 
   if (opts.formDataLimits) {
     ponyfills.Body = class Body extends newNodeFetch.Body {

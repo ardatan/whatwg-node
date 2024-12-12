@@ -1,13 +1,11 @@
-export class PonyfillAbortError extends Error {
+export class PonyfillAbortError extends DOMException {
   constructor(reason?: any) {
     let message = 'The operation was aborted';
     if (reason) {
       message += ` reason: ${reason}`;
     }
-    super(message, {
-      cause: reason,
-    });
-    this.name = 'AbortError';
+    super(message, 'AbortError');
+    this.cause = reason;
   }
 
   get reason() {
