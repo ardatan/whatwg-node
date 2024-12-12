@@ -307,7 +307,7 @@ function createServerAdapter<
       ctrl.abort();
     });
     res.onAborted = function (cb: () => void) {
-      ctrl.signal.addEventListener('abort', cb);
+      ctrl.signal.addEventListener('abort', cb, { once: true });
     };
     const request = getRequestFromUWSRequest({
       req,

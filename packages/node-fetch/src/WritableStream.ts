@@ -77,7 +77,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
             }
             onabort = value;
             if (onabort) {
-              this.addEventListener('abort', onabort);
+              this.addEventListener('abort', onabort, { once: true });
             }
           },
           throwIfAborted() {

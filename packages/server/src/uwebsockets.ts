@@ -70,9 +70,13 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, ctrl }: GetReques
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
-    ctrl.signal.addEventListener('abort', () => {
-      stop();
-    });
+    ctrl.signal.addEventListener(
+      'abort',
+      () => {
+        stop();
+      },
+      { once: true },
+    );
     let readableStream: ReadableStream;
     getReadableStream = () => {
       if (!readableStream) {
@@ -240,11 +244,15 @@ export function sendResponseToUwsOpts(
   if (bufferOfRes || !fetchResponse.body) {
     return;
   }
-  ctrl.signal.addEventListener('abort', () => {
-    if (!fetchResponse.body?.locked) {
-      fetchResponse.body?.cancel(ctrl.signal.reason);
-    }
-  });
+  ctrl.signal.addEventListener(
+    'abort',
+    () => {
+      if (!fetchResponse.body?.locked) {
+        fetchResponse.body?.cancel(ctrl.signal.reason);
+      }
+    },
+    { once: true },
+  );
   return fetchResponse.body
     .pipeTo(createWritableFromUWS(uwsResponse, fetchAPI), {
       signal: ctrl.signal,

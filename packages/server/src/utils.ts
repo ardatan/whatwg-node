@@ -531,9 +531,13 @@ export function handleAbortSignalAndPromiseResponse(
 ) {
   if (isPromise(response$) && abortSignal) {
     const deferred$ = createDeferredPromise<Response>();
-    abortSignal.addEventListener('abort', function abortSignalFetchErrorHandler() {
-      deferred$.reject(abortSignal.reason);
-    });
+    abortSignal.addEventListener(
+      'abort',
+      function abortSignalFetchErrorHandler() {
+        deferred$.reject(abortSignal.reason);
+      },
+      { once: true },
+    );
     response$
       .then(function fetchSuccessHandler(res) {
         deferred$.resolve(res);

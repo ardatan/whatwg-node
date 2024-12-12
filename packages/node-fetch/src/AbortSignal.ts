@@ -35,7 +35,7 @@ export class PonyfillAbortSignal extends EventTarget implements AbortSignal {
   set onabort(value) {
     this._onabort = value;
     if (value) {
-      this.addEventListener('abort', value);
+      this.addEventListener('abort', value, { once: true });
     } else {
       this.removeEventListener('abort', value);
     }
@@ -61,6 +61,12 @@ export class PonyfillAbortSignal extends EventTarget implements AbortSignal {
       }
     }
     for (const signal of signals) {
+      if (signal.aborted) {
+        thisSignal.sendAbort(signal.reason);
+        thisSignal.reason = signal.reason;
+        thisSignal.aborted = true;
+        return signal;
+      }
       signal.addEventListener('abort', onAbort, { once: true });
     }
     return this;
@@ -69,7 +75,8 @@ export class PonyfillAbortSignal extends EventTarget implements AbortSignal {
   static timeout(ms: number): AbortSignal {
     const signal = new PonyfillAbortSignal();
     const timeout = setTimeout(() => {
-      signal.sendAbort();
+      const timeoutError = new DOMException('The operation timed out.', 'TimeoutError');
+      signal.sendAbort(timeoutError);
       signal.removeEventListener('abort', onAbort);
     }, ms);
     function onAbort() {
