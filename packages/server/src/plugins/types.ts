@@ -7,7 +7,7 @@ import {
 export interface ServerAdapterPlugin<TServerContext = {}> {
   /**
    * This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request,
-   * create a short circuit before Yoga handles the request.
+   * create a short circuit before the request handler takes it over.
    *
    * Warning: Exceptions thrown by this hook are not caught.
    * This means they will buble up to the HTTP server underlying implementation.
