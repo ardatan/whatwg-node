@@ -22,6 +22,7 @@ try {
 }
 
 module.exports = {
+  displayName: process.env.LEAK_TEST ? 'Leak Tests' : 'Unit Tests',
   testEnvironment: 'node',
   rootDir: ROOT_DIR,
   restoreMocks: true,
