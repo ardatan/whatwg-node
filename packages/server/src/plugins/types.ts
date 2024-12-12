@@ -5,7 +5,24 @@ import {
 } from '../types.js';
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
+  /**
+   * This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request,
+   * create a short circuit before Yoga handles the request.
+   *
+   * Warning: Exceptions thrown by this hook are not caught.
+   * This means they will buble up to the HTTP server underlying implementation.
+   * For example, the `node:http` server crashes the entire process on uncaught exceptions.
+   */
   onRequest?: OnRequestHook<TServerContext & ServerAdapterInitialContext>;
+  /**
+   * This hook is invoked after a HTTP request (both GraphQL and NON GraphQL) has been processed
+   * and after the response has been forwarded to the client. Here you can perform any cleanup
+   * or logging operations, or you can manipulate the outgoing response object.
+   *
+   * Warning: Exceptions thrown by this hook are not caught.
+   * This means they will buble up to the HTTP server underlying implementation.
+   * For example, the `node:http` server crashes the entire process on uncaught exceptions.
+   */
   onResponse?: OnResponseHook<TServerContext & ServerAdapterInitialContext>;
   [Symbol.dispose]?: () => void;
   [Symbol.asyncDispose]?: () => PromiseLike<void> | void;
