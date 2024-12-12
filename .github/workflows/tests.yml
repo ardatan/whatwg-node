@@ -65,7 +65,7 @@ jobs:
           - 8888:80
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [18, 20, 22, 23]
       fail-fast: false
     steps:
       - name: Checkout Master
