@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.9.63
+
+### Patch Changes
+
+- [`c75e6e3`](https://github.com/ardatan/whatwg-node/commit/c75e6e39207664c7a33fcb1ba0f211774e0c7c97)
+  Thanks [@ardatan](https://github.com/ardatan)! - Export \`DisposableSymbols\` for disposable
+  plugins
+
 ## 0.9.62
 
 ### Patch Changes
