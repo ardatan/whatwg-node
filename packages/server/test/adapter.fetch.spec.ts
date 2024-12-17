@@ -1,4 +1,4 @@
-import { createDeferredPromise } from '@whatwg-node/server';
+import { createDeferredPromise, DisposableSymbols } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('adapter.fetch', () => {
@@ -250,6 +250,55 @@ describe('adapter.fetch', () => {
         expect(response2Body).toEqual({ hello: 'world' });
         expect(requestHandler).toHaveBeenCalledTimes(2);
         expect(requestHandler.mock.calls[0][1]).not.toBe(requestHandler.mock.calls[1][1]);
+      });
+
+      describe('Disposal', () => {
+        const hookNames = [
+          DisposableSymbols.asyncDispose,
+          DisposableSymbols.dispose,
+          'onDispose',
+        ] as const;
+        it('handles explicit resource management (await using)', async () => {
+          for (const disposalHookName of hookNames) {
+            const disposeFn = jest.fn();
+            {
+              await using serverAdapter = createServerAdapter(() => new Response('Hello world!'), {
+                plugins: [
+                  {
+                    [disposalHookName]: disposeFn,
+                  },
+                ],
+              });
+              await serverAdapter.fetch('http://localhost:8080/');
+            }
+            expect(disposeFn).toHaveBeenCalledTimes(1);
+          }
+        });
+        const methodNames = [DisposableSymbols.asyncDispose, 'dispose'] as const;
+        hookNames.forEach(hookName => {
+          methodNames.forEach(methodName => {
+            it(`handles ${hookName.toString()} hook (with ${methodName.toString()} method)`, async () => {
+              const hookNames = [
+                DisposableSymbols.asyncDispose,
+                DisposableSymbols.dispose,
+                'onDispose',
+              ];
+              for (const disposalHookName of hookNames) {
+                const disposeFn = jest.fn();
+                const serverAdapter = createServerAdapter(() => new Response('Hello world!'), {
+                  plugins: [
+                    {
+                      [disposalHookName]: disposeFn,
+                    },
+                  ],
+                });
+                await serverAdapter.fetch('http://localhost:8080/');
+                await serverAdapter[methodName]();
+                expect(disposeFn).toHaveBeenCalledTimes(1);
+              }
+            });
+          });
+        });
       });
     },
     { noLibCurl: true },
