@@ -1,4 +1,4 @@
-import { createDeferredPromise, DisposableSymbols, ServerAdapterPlugin } from '@whatwg-node/server';
+import { createDeferredPromise, DisposableSymbols } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('adapter.fetch', () => {
