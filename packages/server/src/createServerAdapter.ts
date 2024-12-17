@@ -57,6 +57,14 @@ function isRequestAccessible(serverContext: any): serverContext is RequestContai
 export interface ServerAdapterOptions<TServerContext> {
   plugins?: ServerAdapterPlugin<TServerContext>[];
   fetchAPI?: Partial<FetchAPI>;
+  /**
+   * Node.js only!
+   *
+   * If true, the server adapter will dispose itself when the process is terminated.
+   * If false, you have to dispose the server adapter by using the `dispose` method,
+   * or [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
+   */
+  disposeOnProcessTerminate?: boolean;
 }
 
 const EMPTY_OBJECT = {};
@@ -104,7 +112,9 @@ function createServerAdapter<
   function ensureDisposableStack() {
     if (!_disposableStack) {
       _disposableStack = new AsyncDisposableStack();
-      ensureDisposableStackRegisteredForTerminateEvents(_disposableStack);
+      if (options?.disposeOnProcessTerminate) {
+        ensureDisposableStackRegisteredForTerminateEvents(_disposableStack);
+      }
       _disposableStack.defer(() => {
         if (waitUntilPromises.size > 0) {
           return Promise.allSettled(waitUntilPromises).then(
@@ -144,9 +154,16 @@ function createServerAdapter<
       if (plugin.onResponse) {
         onResponseHooks.push(plugin.onResponse);
       }
-      const disposeFn = plugin[DisposableSymbols.asyncDispose] || plugin[DisposableSymbols.dispose];
-      if (disposeFn != null) {
+      const disposeFn = plugin[DisposableSymbols.dispose];
+      if (disposeFn) {
         ensureDisposableStack().defer(disposeFn);
+      }
+      const asyncDisposeFn = plugin[DisposableSymbols.asyncDispose];
+      if (asyncDisposeFn) {
+        ensureDisposableStack().defer(asyncDisposeFn);
+      }
+      if (plugin.onDispose) {
+        ensureDisposableStack().defer(plugin.onDispose);
       }
     }
   }
