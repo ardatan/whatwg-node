@@ -1,5 +1,35 @@
 # @whatwg-node/server
 
+## 0.9.64
+
+### Patch Changes
+
+- [#1899](https://github.com/ardatan/whatwg-node/pull/1899)
+  [`a84e84a`](https://github.com/ardatan/whatwg-node/commit/a84e84aa5c14f23c30637ccd290a099a39c445a1)
+  Thanks [@ardatan](https://github.com/ardatan)! - - New `onDispose` hook which is alias of
+  `Symbol.asyncDispose` for Explicit Resource Management
+
+  - Registration of the server adapter's disposal to the global process termination listener is now
+    opt-in and configurable.
+
+  ```ts
+  const plugin: ServerAdapterPlugin = {
+    onDispose() {
+      console.log('Server adapter is disposed')
+    }
+  }
+
+  const serverAdapter = createServerAdapter(() => new Response('Hello world!'), {
+    plugins: [plugin],
+    // Register the server adapter's disposal to the global process termination listener
+    // Then the server adapter will be disposed when the process exit signals only in Node.js!
+    disposeOnProcessTerminate: true
+  })
+
+  await serverAdapter.dispose()
+  // Prints 'Server adapter is disposed'
+  ```
+
 ## 0.9.63
 
 ### Patch Changes
