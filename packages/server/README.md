@@ -40,7 +40,7 @@ nodeServer.listen(4000)
 ### AWS Lambda
 
 AWS Lambda is a serverless computing platform that makes it easy to build applications that run on
-the AWS cloud. Our adaoter is platform agnostic so they can fit together easily. In order to reduce
+the AWS cloud. Our adapter is platform agnostic so they can fit together easily. In order to reduce
 the boilerplate we prefer to use
 [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
