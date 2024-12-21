@@ -2507,60 +2507,60 @@
   resolved "https://registry.yarnpkg.com/@opentelemetry/semantic-conventions/-/semantic-conventions-1.28.0.tgz#337fb2bca0453d0726696e745f50064411f646d6"
   integrity sha512-lp4qAiMTD4sNWW4DbKLBkfiMZ4jbAboJIGOQr5DvciMRI494OapieI9qiODpOt0XBr1LjIDy1xAGAnVs5supTA==
 
-"@oven/bun-darwin-aarch64@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-aarch64/-/bun-darwin-aarch64-1.1.41.tgz#0c3f51ad7979096012b6a0de830b6009b5a02848"
-  integrity sha512-iae2QIce1dIbqwZU9Lfa2KLNjT0F9vdwIPESOT3CPkLfkRkj7dag0gAmawNHrXuJ/7t7/EQcbevmwEZeasCo4g==
+"@oven/bun-darwin-aarch64@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-aarch64/-/bun-darwin-aarch64-1.1.42.tgz#41228bbb5991ef42291f5f9a41a22ec23091bede"
+  integrity sha512-7kQkTVr99ndcU72xlIzA2QLavvT/DnEhvwTAq7LKi9/P3GtSAkhoA6UWZUa7pYw7OYHpUrEGXlV+PR3LllkGnw==
 
-"@oven/bun-darwin-x64-baseline@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-x64-baseline/-/bun-darwin-x64-baseline-1.1.41.tgz#f6fe06ad87ae432d72f461a18c9cab9476baef5c"
-  integrity sha512-jMslfpBGzwAS8xWrgdDcSXiLcH21UnHKF6UvFEC6HWTs6EgN5QFxSakDKsouPJvAyEY5isuPuwxI+mnW9d4IDg==
+"@oven/bun-darwin-x64-baseline@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-x64-baseline/-/bun-darwin-x64-baseline-1.1.42.tgz#4d3e9194ef6e8976a6dd4e90fdb0e061dfd0af06"
+  integrity sha512-26mtzVRLp/x89s27fXExG1vCCBOOFHLdqVYg/lHZMdDNHSh7Q7UiUhDRa+aVBlbsaGfw1LzoXdhh7Zy2hlF/6w==
 
-"@oven/bun-darwin-x64@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-x64/-/bun-darwin-x64-1.1.41.tgz#ffc846777cb38093ec40d0a39d90da59154f1429"
-  integrity sha512-RCbxPVxYA0cM3Ozl+E22vsOT/fwGclUJVf6XElEL2GaCVG5Yc7M4L0P8tev4lBJqtlIY649ON+KGatlOp3eNVQ==
+"@oven/bun-darwin-x64@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-darwin-x64/-/bun-darwin-x64-1.1.42.tgz#2196cbb61df64d0555688a1e0424103f64f59b4e"
+  integrity sha512-2IPJnLvwLlD8YaXPbWwlpw2UvVrZE6/0uRbcSJNzZQAAZjEfN8AodqNRhggptn0A9vDmAw6q1U07QbiE4ilofw==
 
-"@oven/bun-linux-aarch64-musl@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-linux-aarch64-musl/-/bun-linux-aarch64-musl-1.1.41.tgz#14a83c341fc393edaead1ccb3f0a2b1536ab3aad"
-  integrity sha512-843CYq2LuDnDdfpt/IJffuFPnozi2FIvAuKBsjCfUlgfGB1QIIpFSvCnrImBNaxkaBYJ16m+piJBbq40951QhA==
+"@oven/bun-linux-aarch64-musl@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-aarch64-musl/-/bun-linux-aarch64-musl-1.1.42.tgz#1d1bb7163244e33944d28591386901ee6e63006a"
+  integrity sha512-PwbNLoirazjTYTSydn2AnId0jBJexZ99cwftOfdzIGCF5anEWvNEZ8PL4o79jHIhE0t01qGc8br9fQbiQ+iArw==
 
-"@oven/bun-linux-aarch64@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-linux-aarch64/-/bun-linux-aarch64-1.1.41.tgz#87c68ed56f2861d99f885eb9d2f00ae5481e14e5"
-  integrity sha512-LHupCSaFKHX9A2fsJsboqUKJZghpktvNiOlDCYtfL+V67uKI2yyCVZ9EqxPXz23hNWwxFXZzJR/cRWOp6IbxYA==
+"@oven/bun-linux-aarch64@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-aarch64/-/bun-linux-aarch64-1.1.42.tgz#d6e9304efe9bb56a5e701757a3bbedc4286fc0b9"
+  integrity sha512-qkoqI+oMcQ8GUej71qkAVj/VLlVpoBRyiYBQYq4yWsy+FU2jr2KWTeNZWrsY2crDiZj38AMNXJiKBr/EMy4MRg==
 
-"@oven/bun-linux-x64-baseline@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.1.41.tgz#a8ae27a986b76428d69d720c666318bf348aca56"
-  integrity sha512-/gn3EdSMduws446MdFBCKcp/3yvSn2rv5YxFYGxV1n/Hx9eLb0rWIoFW/cxNQ22S+IMwwnWYVfDxKYq0Jp1MLw==
+"@oven/bun-linux-x64-baseline@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-baseline/-/bun-linux-x64-baseline-1.1.42.tgz#29b12f30374f6546b978f37b2a27d43446ee29b2"
+  integrity sha512-UzRNXgHEARFECgz30eot23OnPzd0J2L5SEsGhnGRhfJ706kjz0XmuGMnb9nmnoyHBcd2iSjk4nci1BlGmu4wCA==
 
-"@oven/bun-linux-x64-musl-baseline@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-musl-baseline/-/bun-linux-x64-musl-baseline-1.1.41.tgz#09db836fab785c7d7488effff1e7f86e117b7a2c"
-  integrity sha512-eXMaNvevUwchxciEBivhl2lLt++SWmYnQqHro6eHaYUzXSXWQOEHygP13eUvo/4HgiWImhKutRmARuA0H+dGcw==
+"@oven/bun-linux-x64-musl-baseline@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-musl-baseline/-/bun-linux-x64-musl-baseline-1.1.42.tgz#d53f6399bdbea845609411c7510f4a9e598f1c7f"
+  integrity sha512-zgeiYJRGO3K4uK6Qdj1B5ZbU9NJxLwF9YGDFu9MtqEplyGNq7SpeuamvcP6SlZGgrVnc3AWrHFEYrVlv5Lqt+w==
 
-"@oven/bun-linux-x64-musl@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-musl/-/bun-linux-x64-musl-1.1.41.tgz#8add72e3f708beb994df4d4572fc8802383c7f0b"
-  integrity sha512-mjvOl6rW8+pHUk8MzBWzSJ8YrChtDr7OIf/kHlYBmL9HiUKexvQYjpxp0NHlDArt+ASf4SKqbZKMMvphtHIT7w==
+"@oven/bun-linux-x64-musl@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64-musl/-/bun-linux-x64-musl-1.1.42.tgz#5cb1991e5750fdd3742aec80cfe951351ca26365"
+  integrity sha512-Djye8lPlhVNXdGbMF4bShVop8qvqPhPuPrhxEHfYJ8qhudSs2MiOWR5stvBWe8KLKahqDAWfWXuxByAXVhqb2Q==
 
-"@oven/bun-linux-x64@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64/-/bun-linux-x64-1.1.41.tgz#182969c33d1df0483058c88f76c8903f3ac0d31b"
-  integrity sha512-i7r4zT0aWUfdPkSPU7fb/7T8KnbpfMy9nmaouB+Q+EjGbLAenP0RbS5cPO05GhNGLB3ZyMa+yLkadE5clfKeZQ==
+"@oven/bun-linux-x64@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-linux-x64/-/bun-linux-x64-1.1.42.tgz#b63c1c34316a68bd4b6e491f71c6202742802ca2"
+  integrity sha512-rV8Eqnvo/1z0nwYSiLrbl0F4G8uFQxlGA4P0zggW9W4PSiSHSRhG1aazG/8esBLzJI9CdFNncrtmiRTmWl1mIg==
 
-"@oven/bun-windows-x64-baseline@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-windows-x64-baseline/-/bun-windows-x64-baseline-1.1.41.tgz#1011204e91dbde37a4b812ff512df4f08962b6d8"
-  integrity sha512-atRrwLeTUTzmEA160MIFR03bPNZYq77rxo8LtA4JEtcT4ripqA9uoKXdktBTdw4/ajEtVT+peyz0selaIxX6rQ==
+"@oven/bun-windows-x64-baseline@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-windows-x64-baseline/-/bun-windows-x64-baseline-1.1.42.tgz#990a7fdf80e0eb81003a6ae56ca8b5aa3b8edc9e"
+  integrity sha512-xnlYa1jKknImCw7xmSD91H8e+w3BC6mIShOfHhFWfNhdyvEtundXhIu7VddwxKBMs5S/iiFJiutnZ2EyLq4CAQ==
 
-"@oven/bun-windows-x64@1.1.41":
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/@oven/bun-windows-x64/-/bun-windows-x64-1.1.41.tgz#a870d2bad3687ce1d7286185745d27d993dd05d5"
-  integrity sha512-ueZdLNEvF3nAeLIu+dT9sV6RZL1Pl/EOB2K6VEcCAnZCNnrZp/BbvCevdw8K/Sv2LWX3hlVYk9jqx1OX6W1F+w==
+"@oven/bun-windows-x64@1.1.42":
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/@oven/bun-windows-x64/-/bun-windows-x64-1.1.42.tgz#1f0d3788eb217c8af98389097875e8f663996069"
+  integrity sha512-6eyHs6fVRCy0ujltYTwSX3bug+PqlgZRBv8x0PPekviaCJWYrFKVpHodA2972+Mih2pATurBSX2sLVq5uJUU7Q==
 
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
@@ -3831,22 +3831,22 @@ builtin-modules@3.0.0:
   resolved "https://registry.yarnpkg.com/builtin-modules/-/builtin-modules-3.0.0.tgz#1e587d44b006620d90286cc7a9238bbc6129cab1"
   integrity sha512-hMIeU4K2ilbXV6Uv93ZZ0Avg/M91RaKXucQ+4me2Do1txxBDyDZWCBa5bJSLqoNTRpXTLwEzIk1KmloenDDjhg==
 
-bun@1.1.41:
-  version "1.1.41"
-  resolved "https://registry.yarnpkg.com/bun/-/bun-1.1.41.tgz#cebe0a51b78aca4dd61a32e9b8330627313d7540"
-  integrity sha512-8vzPBOZRs1q1d3knp2zWZrjhIU3ZF5+muOLnZUBvkorfUlEshx57vrnYtN6eQ2mOVAGrU3tr39UJh6Cb87Q/bw==
+bun@1.1.42:
+  version "1.1.42"
+  resolved "https://registry.yarnpkg.com/bun/-/bun-1.1.42.tgz#bf825467f037d6c5cc0c1c4673e1f68d9ab9a355"
+  integrity sha512-PckeNolMEBaBEzixTMvp0jJD9r/9lly8AfctILi1ve14zwwChFjsxI4TJLQO2yezzOjVeG0u7xf8WQFbS7GjAA==
   optionalDependencies:
-    "@oven/bun-darwin-aarch64" "1.1.41"
-    "@oven/bun-darwin-x64" "1.1.41"
-    "@oven/bun-darwin-x64-baseline" "1.1.41"
-    "@oven/bun-linux-aarch64" "1.1.41"
-    "@oven/bun-linux-aarch64-musl" "1.1.41"
-    "@oven/bun-linux-x64" "1.1.41"
-    "@oven/bun-linux-x64-baseline" "1.1.41"
-    "@oven/bun-linux-x64-musl" "1.1.41"
-    "@oven/bun-linux-x64-musl-baseline" "1.1.41"
-    "@oven/bun-windows-x64" "1.1.41"
-    "@oven/bun-windows-x64-baseline" "1.1.41"
+    "@oven/bun-darwin-aarch64" "1.1.42"
+    "@oven/bun-darwin-x64" "1.1.42"
+    "@oven/bun-darwin-x64-baseline" "1.1.42"
+    "@oven/bun-linux-aarch64" "1.1.42"
+    "@oven/bun-linux-aarch64-musl" "1.1.42"
+    "@oven/bun-linux-x64" "1.1.42"
+    "@oven/bun-linux-x64-baseline" "1.1.42"
+    "@oven/bun-linux-x64-musl" "1.1.42"
+    "@oven/bun-linux-x64-musl-baseline" "1.1.42"
+    "@oven/bun-windows-x64" "1.1.42"
+    "@oven/bun-windows-x64-baseline" "1.1.42"
 
 busboy@1.6.0, busboy@^1.6.0:
   version "1.6.0"
