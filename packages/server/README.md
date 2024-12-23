@@ -404,6 +404,33 @@ export const useMyPlugin = () => {
 
 [You can learn more about Explicit Resource Management below](#explicit-resource-management)
 
+## `Request.signal` for awareness of client disconnection
+
+In the real world, a lot of HTTP requests are dropped or canceled. This can happen due to a flakey
+internet connection, navigation to a new view or page within a web or native app or the user simply
+closing the app. In this case, the server can stop processing the request and save resources.
+
+You can utilize `request.signal` to cancel pending asynchronous operations when the client
+disconnects.
+
+```ts
+import { createServerAdapter } from '@whatwg-node/server'
+
+const myServerAdapter = createServerAdapter(async request => {
+  const upstreamRes = await fetch('https://api.example.com/data', {
+    // When the client disconnects, the fetch request will be canceled
+    signal: request.signal
+  })
+  return Response.json({
+    data: await upstreamRes.json()
+  })
+})
+```
+
+The execution cancelation API is built on top of the AbortController and AbortSignal APIs.
+
+[Learn more about AbortController and AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
+
 ## Explicit Resource Management
 
 While implementing your server with `@whatwg-node/server`, you need to control over the lifecycle of
@@ -542,22 +569,22 @@ But the adapter handles `waitUntil` even if it is not provided by the environmen
 
 ```ts
 const adapter = createServerAdapter(async (request, context) => {
-    const args = await request.json()
-    if (!args.name) {
-      return Response.json({ error: 'Name is required' }, { status: 400 })
-    }
-    // This does not block the response
-    context.waitUntil(
-      fetch('http://my-analytics.com/analytics', {
-        method: 'POST',
-        body: JSON.stringify({
-          name : args.name,
-          userAgent: request.headers.get('User-Agent')
-        })
+  const args = await request.json()
+  if (!args.name) {
+    return Response.json({ error: 'Name is required' }, { status: 400 })
+  }
+  // This does not block the response
+  context.waitUntil(
+    fetch('http://my-analytics.com/analytics', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: args.name,
+        userAgent: request.headers.get('User-Agent')
       })
-    )
-    return Response.json({ greetings: `Hello, ${args.name}` })
-}
+    })
+  )
+  return Response.json({ greetings: `Hello, ${args.name}` })
+})
 
 const res = await adapter.fetch('http://localhost:4000/graphql', {
   method: 'POST',
