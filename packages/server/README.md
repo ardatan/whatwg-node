@@ -346,7 +346,7 @@ Possible usage examples of this hook are:
 | Payload field   | Description                                                                                                                                     |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `request`       | The incoming HTTP request as WHATWG `Request` object. [Learn more about the request](https://developer.mozilla.org/en-US/docs/Web/API/Request). |
-| `serverContext` | The early context object that is shared between all hooks and the GraphQL execution. [Learn more about the context](/docs/features/context).    |
+| `serverContext` | The early context object that is shared between all hooks and the entire execution. [Learn more about the context](/docs/features/context).     |
 | `fetchAPI`      | WHATWG Fetch API implementation. [Learn more about the fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).                  |
 | `url`           | WHATWG URL object of the incoming request. [Learn more about the URL object](https://developer.mozilla.org/en-US/docs/Web/API/URL).             |
 | `endResponse`   | A function that allows you to end the request early and send a response to the client.                                                          |
@@ -491,7 +491,7 @@ const adapter = createServerAdapter(/* ... */)
 
 const server = createServer(adapter)
 server.listen(4000, () => {
-  console.info('Server is running on http://localhost:4000/graphql')
+  console.info('Server is running on http://localhost:4000')
 })
 server.once('close', async () => {
   await adapter.dispose()
@@ -514,7 +514,7 @@ createServer(
     plugins: [/* ... */]
   })
 ).listen(4000, () => {
-  console.info('Server is running on http://localhost:4000/graphql')
+  console.info('Server is running on http://localhost:4000')
 })
 ```
 
@@ -586,7 +586,7 @@ const adapter = createServerAdapter(async (request, context) => {
   return Response.json({ greetings: `Hello, ${args.name}` })
 })
 
-const res = await adapter.fetch('http://localhost:4000/graphql', {
+const res = await adapter.fetch('http://localhost:4000', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json'
