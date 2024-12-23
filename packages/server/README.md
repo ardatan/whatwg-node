@@ -597,5 +597,5 @@ const res = await adapter.fetch('http://localhost:4000', {
 console.log(await res.json()) // { greetings: "Hello, John" }
 
 await adapter.dispose()
-// The fetch request for \`analytics\` will be awaited here
+// The fetch request for `analytics` will be awaited here
 ```
