@@ -411,37 +411,48 @@ your resources. This is especially important when you are dealing with resources
 cleaned up when they are no longer needed, or clean up the operations in a queue when the server is
 shutting down.
 
-## Dispose the Server Adapter
+### Dispose the Server Adapter
 
 The server adapter supports
 [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management)
 approach that allows you to dispose of resources when they are no longer needed. This can be done in
 two ways shown below;
 
-### `await using` syntax
+#### `await using` syntax
 
 We use the `await using` syntax to create a new instance of `adapter` and dispose of it when the
 block is exited. Notice that we are using a block to limit the scope of `adapter` within `{ }`. So
 resources will be disposed of when the block is exited.
-`ts {2,7}     console.log('Adapter is starting')     {         await using adapter = createServerAdapter(/* ... */);     }     console.log('Adapter is disposed')     `
 
-### `dispose` method
+```ts
+console.log('Adapter is starting')
+{
+  await using adapter = createServerAdapter(/* ... */)
+}
+console.log('Adapter is disposed')
+```
 
-    We create a new instance of `adapter` and
+#### `dispose` method
 
-dispose of it using the `dispose` method.
-`ts     console.log('Adapter is starting')     const adapter = createServerAdapter(/* ... */);     await adapter.dispose();     console.log('Adapter is disposed')     `
+We create a new instance of `adapter` and dispose of it using the `dispose` method.
+
+```ts
+console.log('Adapter is starting')
+const adapter = createServerAdapter(/* ... */)
+await adapter.dispose()
+console.log('Adapter is disposed')
+```
 
 In the first example, we use the `await using` syntax to create a new instance of `adapter` and
 dispose of it when the block is exited. In the second example,
 
-### Dispose on Node.js
+#### Dispose on Node.js
 
 When running your adapter on Node.js, you can use process event listeners or server's `close` event
 to trigger the adapter's disposal. Or you can configure the adapter to handle this automatically by
 listening `process` exit signals.
 
-#### Explicit disposal
+##### Explicit disposal
 
 We can dispose of the adapter instance when the server is closed like below.
 
@@ -461,7 +472,7 @@ server.once('close', async () => {
 })
 ```
 
-#### Automatic disposal
+##### Automatic disposal
 
 `disposeOnProcessTerminate` option will register an event listener for `process` termination in
 Node.js
@@ -480,7 +491,7 @@ createServer(
 })
 ```
 
-## Plugin Disposal
+### Plugin Disposal
 
 If you have plugins that need some internal resources to be disposed of, you can use the `onDispose`
 hook to dispose of them. This hook will be invoked when the adapter instance is disposed like above.
@@ -520,7 +531,7 @@ const plugin = {
 
 But for this kind of purposes, `waitUntil` can be a better choice.
 
-## Background jobs
+### Background jobs
 
 If you have background jobs that need to be completed before the environment is shut down.
 `waitUntil` is better choice than `onDispose`. In this case, those jobs will keep running in the
