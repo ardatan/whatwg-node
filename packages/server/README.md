@@ -258,9 +258,7 @@ as a first class citizen. So the configuration is really simple like any other J
 ```ts
 import myServerAdapter from './myServerAdapter'
 
-Bun.serve(myServerAdapter)
-
-const server = Bun.serve(yoga)
+const server = Bun.serve(myServerAdapter)
 
 console.info(`Server is running on ${server.hostname}`)
 ```
@@ -299,3 +297,267 @@ We'd recommend to use `fets` to handle routing and middleware approach. It uses
 `@whatwg-node/server` under the hood.
 
 > Learn more about `fets` [here](https://github.com/ardatan/fets)
+
+## Plugin System
+
+You can create your own plugins to extend the functionality of your server adapter.
+
+### `onRequest`
+
+This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request or create a
+short circuit before the server adapter handles the request.
+
+For example, you can shortcut the manually handle an HTTP request, short-circuiting the HTTP
+handler:
+
+```ts
+import { createServerAdapter, type ServerAdapterPlugin } from '@whatwg-node/server'
+
+const myPlugin: ServerAdapterPlugin = {
+  onRequest({ request, endResponse, fetchAPI }) {
+    if (!request.headers.get('authorization')) {
+      endResponse(
+        new fetchAPI.Response(null, {
+          status: 401,
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+      )
+    }
+  }
+}
+
+const myServerAdapter = createServerAdapter(
+  async request => {
+    return new Response(`Hello World!`, { status: 200 })
+  },
+  {
+    plugins: [myPlugin]
+  }
+)
+```
+
+Possible usage examples of this hook are:
+
+- Manipulate the request
+- Short circuit before the adapter handles the request
+
+| Payload field   | Description                                                                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `request`       | The incoming HTTP request as WHATWG `Request` object. [Learn more about the request](https://developer.mozilla.org/en-US/docs/Web/API/Request). |
+| `serverContext` | The early context object that is shared between all hooks and the GraphQL execution. [Learn more about the context](/docs/features/context).    |
+| `fetchAPI`      | WHATWG Fetch API implementation. [Learn more about the fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API).                  |
+| `url`           | WHATWG URL object of the incoming request. [Learn more about the URL object](https://developer.mozilla.org/en-US/docs/Web/API/URL).             |
+| `endResponse`   | A function that allows you to end the request early and send a response to the client.                                                          |
+
+### `onResponse`
+
+This hook is invoked after a HTTP request has been processed and after the response has been
+forwarded to the client. Here you can perform any cleanup or logging operations, or you can
+manipulate the outgoing response object.
+
+```ts
+import { createServerAdapter, type ServerAdapterPlugin } from '@whatwg-node/server'
+
+const requestTimeMap = new WeakMap<Request, number>()
+
+const myPlugin: ServerAdapterPlugin = {
+  onRequest({ request }) {
+    requestTimeMap.set(request, Date.now())
+  },
+  onResponse({ request, serverContext, response }) {
+    console.log(`Request to ${request.url} has been processed with status ${response.status}`)
+    // Add some headers
+    response.headers.set('X-Server-Name', 'My Server')
+    console.log(`Request to ${request.url} took ${Date.now() - requestTimeMap.get(request)}ms`)
+  }
+}
+```
+
+**Example actions in this hook:**
+
+- Specify custom response format
+- Logging/Metrics
+
+| Field Name      | Description                                                                                                                                                   |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `request`       | The incoming HTTP request as WHATWG `Request` object. [Learn more about the request](https://developer.mozilla.org/en-US/docs/Web/API/Request).               |
+| `serverContext` | The final context object that is shared between all hooks and the execution. [Learn more about the context](/docs/features/context).                          |
+| `response`      | The outgoing HTTP response as WHATWG `Response` object. [Learn more about the response interface](https://developer.mozilla.org/en-US/docs/Web/API/Response). |
+
+### `onDispose`
+
+In order to clean up resources when the server is shut down, you can use `onDispose`,
+`Symbol.asyncDispose` or `Symbol.syncDispose` to clean up resources.
+
+```ts
+export const useMyPlugin = () => {
+  return {
+    async onDispose() {
+      // Clean up resources
+      await stopConnection()
+    }
+  }
+}
+```
+
+[You can learn more about Explicit Resource Management below](#explicit-resource-management)
+
+## Explicit Resource Management
+
+While implementing your server with `@whatwg-node/server`, you need to control over the lifecycle of
+your resources. This is especially important when you are dealing with resources that need to be
+cleaned up when they are no longer needed, or clean up the operations in a queue when the server is
+shutting down.
+
+## Dispose the Server Adapter
+
+The server adapter supports
+[Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html#using-declarations-and-explicit-resource-management)
+approach that allows you to dispose of resources when they are no longer needed. This can be done in
+two ways shown below;
+
+### `await using` syntax
+
+We use the `await using` syntax to create a new instance of `adapter` and dispose of it when the
+block is exited. Notice that we are using a block to limit the scope of `adapter` within `{ }`. So
+resources will be disposed of when the block is exited.
+`ts {2,7}     console.log('Adapter is starting')     {         await using adapter = createServerAdapter(/* ... */);     }     console.log('Adapter is disposed')     `
+
+### `dispose` method
+
+    We create a new instance of `adapter` and
+
+dispose of it using the `dispose` method.
+`ts     console.log('Adapter is starting')     const adapter = createServerAdapter(/* ... */);     await adapter.dispose();     console.log('Adapter is disposed')     `
+
+In the first example, we use the `await using` syntax to create a new instance of `adapter` and
+dispose of it when the block is exited. In the second example,
+
+### Dispose on Node.js
+
+When running your adapter on Node.js, you can use process event listeners or server's `close` event
+to trigger the adapter's disposal. Or you can configure the adapter to handle this automatically by
+listening `process` exit signals.
+
+#### Explicit disposal
+
+We can dispose of the adapter instance when the server is closed like below.
+
+```ts
+import { createServer } from 'http'
+import { createServerAdapter } from '@whatwg-node/server'
+
+const adapter = createServerAdapter(/* ... */)
+
+const server = createServer(adapter)
+server.listen(4000, () => {
+  console.info('Server is running on http://localhost:4000/graphql')
+})
+server.once('close', async () => {
+  await adapter.dispose()
+  console.info('Server is disposed so is adapter')
+})
+```
+
+#### Automatic disposal
+
+`disposeOnProcessTerminate` option will register an event listener for `process` termination in
+Node.js
+
+```ts
+import { createServer } from 'http'
+import { createServerAdapter } from '@whatwg-node/server'
+
+createServer(
+  createServerAdapter(/* ... */, {
+    disposeOnProcessTerminate: true,
+    plugins: [/* ... */]
+  })
+).listen(4000, () => {
+  console.info('Server is running on http://localhost:4000/graphql')
+})
+```
+
+## Plugin Disposal
+
+If you have plugins that need some internal resources to be disposed of, you can use the `onDispose`
+hook to dispose of them. This hook will be invoked when the adapter instance is disposed like above.
+
+```ts
+let dbConnection: Connection
+const plugin = {
+  onPluginInit: async () => {
+    dbConnection = await createConnection()
+  },
+  onDispose: async () => {
+    // Dispose of resources
+    await dbConnection.close()
+  }
+}
+```
+
+Or you can flush a queue of operations when the server is shutting down.
+
+```ts
+const backgroundJobs: Promise<void>[] = []
+
+const plugin = {
+  onRequest() {
+    backgroundJobs.push(
+      sendAnalytics({
+        /* ... */
+      })
+    )
+  },
+  onDispose: async () => {
+    // Flush the queue of background jobs
+    await Promise.all(backgroundJobs)
+  }
+}
+```
+
+But for this kind of purposes, `waitUntil` can be a better choice.
+
+## Background jobs
+
+If you have background jobs that need to be completed before the environment is shut down.
+`waitUntil` is better choice than `onDispose`. In this case, those jobs will keep running in the
+background but in case of disposal, they will be awaited. `waitUntil` works so similar to
+[Cloudflare Workers' `waitUntil` function](https://developers.cloudflare.com/workers/runtime-apis/handlers/fetch/#parameters).
+
+But the adapter handles `waitUntil` even if it is not provided by the environment.
+
+```ts
+const adapter = createServerAdapter(async (request, context) => {
+    const args = await request.json()
+    if (!args.name) {
+      return Response.json({ error: 'Name is required' }, { status: 400 })
+    }
+    // This does not block the response
+    context.waitUntil(
+      fetch('http://my-analytics.com/analytics', {
+        method: 'POST',
+        body: JSON.stringify({
+          name : args.name,
+          userAgent: request.headers.get('User-Agent')
+        })
+      })
+    )
+    return Response.json({ greetings: `Hello, ${args.name}` })
+}
+
+const res = await adapter.fetch('http://localhost:4000/graphql', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ name: 'John' })
+})
+
+console.log(await res.json()) // { greetings: "Hello, John" }
+
+await adapter.dispose()
+// The fetch request for \`analytics\` will be awaited here
+```
