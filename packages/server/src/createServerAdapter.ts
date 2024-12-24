@@ -133,17 +133,19 @@ function createServerAdapter<
 
   function waitUntil(promiseLike: PromiseLike<unknown>) {
     // Ensure that the disposable stack is created
-    ensureDisposableStack();
-    waitUntilPromises.add(promiseLike);
-    promiseLike.then(
-      () => {
-        waitUntilPromises.delete(promiseLike);
-      },
-      err => {
-        console.error(`Unexpected error while waiting: ${err.message || err}`);
-        waitUntilPromises.delete(promiseLike);
-      },
-    );
+    if (isPromise(promiseLike)) {
+      ensureDisposableStack();
+      waitUntilPromises.add(promiseLike);
+      promiseLike.then(
+        () => {
+          waitUntilPromises.delete(promiseLike);
+        },
+        err => {
+          console.error(`Unexpected error while waiting: ${err.message || err}`);
+          waitUntilPromises.delete(promiseLike);
+        },
+      );
+    }
   }
 
   if (options?.plugins != null) {
@@ -250,6 +252,10 @@ function createServerAdapter<
   // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
     const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
+    // Ensure `waitUntil` is available in the server context
+    if (!serverContext.waitUntil) {
+      serverContext.waitUntil = waitUntil;
+    }
     const request = normalizeNodeRequest(nodeRequest, fetchAPI);
     return handleRequest(request, serverContext);
   }

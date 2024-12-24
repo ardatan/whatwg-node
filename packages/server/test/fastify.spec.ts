@@ -212,6 +212,33 @@ describe('Fastify', () => {
           reqBody: 'TEST',
         });
       });
+
+      it('handles waitUntil', async () => {
+        const backgroundJob$ = createDeferredPromise<void>();
+        let backgroundJobDone = false;
+        backgroundJob$.promise.finally(() => {
+          backgroundJobDone = true;
+        });
+        serverAdapter = createServerAdapter((_request: Request, ctx) => {
+          ctx.waitUntil(backgroundJob$.promise);
+          return new Response('OK');
+        });
+        const res = await fastifyServer.inject({
+          url: '/mypath',
+        });
+        expect(res.body).toEqual('OK');
+        const dispose$ = Promise.resolve(serverAdapter.dispose());
+        let disposeDone = false;
+        dispose$.then(() => {
+          disposeDone = true;
+        });
+        expect(backgroundJobDone).toBe(false);
+        expect(disposeDone).toBe(false);
+        backgroundJob$.resolve();
+        await dispose$;
+        expect(backgroundJobDone).toBe(true);
+        expect(disposeDone).toBe(true);
+      });
     },
   );
 });
