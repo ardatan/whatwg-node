@@ -1,5 +1,17 @@
 # @whatwg-node/server
 
+## 0.9.65
+
+### Patch Changes
+
+- [#1926](https://github.com/ardatan/whatwg-node/pull/1926)
+  [`bae5de1`](https://github.com/ardatan/whatwg-node/commit/bae5de158dd2fa3472d69ca7486ea68940d43c74)
+  Thanks [@ardatan](https://github.com/ardatan)! - While calling `handleNodeRequest` or
+  `handleNodeRequestAndResponse`, `waitUntil` is not added automatically as in `requestListener` for
+  Node.js integration. This change adds `waitUntil` into the `serverContext` if not present.
+
+  Fixes the issue with Fastify integration that uses the mentioned methods
+
 ## 0.9.64
 
 ### Patch Changes
