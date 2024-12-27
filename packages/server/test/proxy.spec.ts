@@ -6,6 +6,7 @@ import { runTestsForEachServerImpl } from './test-server';
 describe('Proxy', () => {
   if (globalThis.Bun) {
     // Bun does not support streams on Request body
+    // TODO: Readable streams for fetch() are not available on Bun
     it.skip('skipping test on Bun', () => {});
     return;
   }
@@ -112,8 +113,7 @@ describe('Proxy', () => {
     },
     {
       // TODO: Flakey on native fetch
-      // TODO: Readable streams for fetch() are not available on Bun
-      noNativeFetch: !!process.env.LEAK_TEST || !!globalThis.Bun,
+      noNativeFetch: !!process.env.LEAK_TEST,
     },
   );
 });
