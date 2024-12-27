@@ -19,12 +19,21 @@ export class PonyfillURL extends FastUrl implements URL {
       return;
     }
     this.parse(url, false);
-    // `fast-url-parser` cannot handle ipv6 hosts correctly
+    // `fast-url-parser` incorrectly removes `[IPV6]` in the hostname
+    // Then `hostname` doesn't include `[` and `]` for IPv6 URLs
+    // This breaks implementations that rely on `hostname` to include `[` and `]`
     if (
       (url.startsWith('http://[') || url.startsWith('https://[')) &&
       IPV6_REGEX.test(this.hostname)
     ) {
       this.hostname = `[${this.hostname}]`;
+    }
+    // `fast-url-parser` incorrectly handle URLs with ports without pathnames correctly like
+    // `http://localhost:8080?foo=bar` -> `http://localhost/:8080?foo=bar`
+    if (url.includes(`${this.hostname}:`) && !this.port && this.pathname.startsWith('/:')) {
+      this.port = this.pathname.slice(2);
+      this.pathname = '/';
+      this.host = `${this.hostname}:${this.port}`;
     }
     if (base) {
       const baseParsed = typeof base === 'string' ? new PonyfillURL(base) : base;
@@ -36,7 +45,7 @@ export class PonyfillURL extends FastUrl implements URL {
   }
 
   get origin(): string {
-    return `${this.protocol}//${this.host}${this.port ? `:${this.port}` : ''}`;
+    return `${this.protocol}//${this.hostname}${this.port ? `:${this.port}` : ''}`;
   }
 
   private _searchParams?: PonyfillURLSearchParams;

@@ -167,10 +167,15 @@ app.route({
   url: '/mypath',
   method: ['GET', 'POST', 'OPTIONS'],
   handler: async (req, reply) => {
-    const response = await myServerAdapter.handleNodeRequestAndResponse(req, reply, {
+    const response: Response = await myServerAdapter.handleNodeRequestAndResponse(req, reply, {
       req,
       reply
     })
+
+    if (!response) {
+      return reply.status(404).send('Not Found')
+    }
+
     response.headers.forEach((value, key) => {
       reply.header(key, value)
     })
@@ -200,7 +205,7 @@ import myServerAdapter from './myServerAdapter'
 const app = new Koa()
 
 app.use(async ctx => {
-  const response = await myServerAdapter.handleNodeRequest(ctx.req)
+  const response = await myServerAdapter.handleNodeRequestAndResponse(ctx.request, ctx.res, ctx)
 
   // Set status code
   ctx.status = response.status

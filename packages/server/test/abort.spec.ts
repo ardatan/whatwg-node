@@ -2,7 +2,7 @@ import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
 describe('Request Abort', () => {
-  runTestsForEachServerImpl((server, _) => {
+  runTestsForEachServerImpl(server => {
     runTestsForEachFetchImpl((_, { fetchAPI, createServerAdapter }) => {
       it('calls body.cancel on request abort', done => {
         const adapter = createServerAdapter(
@@ -24,7 +24,7 @@ describe('Request Abort', () => {
         setTimeout(() => {
           abortCtrl.abort();
         }, 300);
-      });
+      }, 1000);
     });
   });
 });

@@ -1,4 +1,5 @@
 import { setTimeout } from 'timers/promises';
+import { getHeadersObj } from '../../node-fetch/src/utils.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl, TestServer } from './test-server.js';
 
@@ -13,22 +14,23 @@ describe('Request Listener', () => {
         // PATCH is buggy in Native
         if (impl === 'native' && method === 'PATCH') return;
         it(`should handle regular requests with ${method}`, () => {
+          const headers: Record<string, string> = {
+            accept: 'application/json; charset=utf-8',
+            'x-random-header': Date.now().toString(),
+          };
           const requestInit: RequestInit = {
             method,
-            headers: {
-              accept: 'application/json;charset=utf-8',
-              'content-type': 'application/json;charset=utf-8',
-              'random-header': Date.now().toString(),
-            },
+            headers,
           };
           if (methodsWithBody.includes(method)) {
             requestInit.body = getRegularRequestBody();
+            headers['content-type'] = 'application/json; charset=utf-8';
           }
           const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
             status: 200,
             headers: {
-              accept: 'application/json;charset=utf-8',
-              'random-header': Date.now().toString(),
+              'content-type': 'application/json; charset=utf-8',
+              'x-random-header': Date.now().toString(),
             },
           });
           return runTestForRequestAndResponse({
@@ -44,8 +46,8 @@ describe('Request Listener', () => {
           const requestInit: RequestInit = {
             method,
             headers: {
-              accept: 'application/json;charset=utf-8',
-              'random-header': Date.now().toString(),
+              accept: 'application/json; charset=utf-8',
+              'x-random-header': Date.now().toString(),
             },
           };
           if (methodsWithBody.includes(method)) {
@@ -54,8 +56,8 @@ describe('Request Listener', () => {
           const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
             status: 200,
             headers: {
-              accept: 'application/json;charset=utf-8',
-              'random-header': Date.now().toString(),
+              'content-type': 'application/json; charset=utf-8',
+              'x-random-header': Date.now().toString(),
             },
           });
           return runTestForRequestAndResponse({
@@ -71,8 +73,8 @@ describe('Request Listener', () => {
           const requestInit: RequestInit = {
             method,
             headers: {
-              accept: 'application/json;charset=utf-8',
-              'random-header': Date.now().toString(),
+              'x-random-header': Date.now().toString(),
+              'content-type': 'text/event-stream',
             },
             // @ts-expect-error duplex is not part of the RequestInit type yet
             duplex: 'half',
@@ -83,8 +85,8 @@ describe('Request Listener', () => {
           const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
             status: 200,
             headers: {
-              'content-type': 'application/json;charset=utf-8',
-              'random-header': Date.now().toString(),
+              'content-type': 'application/json; charset=utf-8',
+              'x-random-header': Date.now().toString(),
             },
           });
           return runTestForRequestAndResponse({
@@ -97,32 +99,22 @@ describe('Request Listener', () => {
         });
       });
     });
-    async function compareRequest(toBeChecked: Request, expected: Request) {
+    function compareRequest(toBeChecked: Request, expected: Request) {
       expect(toBeChecked.method).toBe(expected.method);
       // expect(toBeChecked.url).toBe(expected.url);
-      expected.headers.forEach((value, key) => {
-        const toBeCheckedValue = toBeChecked.headers.get(key);
-        expect({
-          key,
-          value: toBeCheckedValue,
-        }).toMatchObject({
-          key,
-          value,
-        });
-      });
+      const { 'content-length': contentLength1, ...toBeCheckedObj } = getHeadersObj(
+        toBeChecked.headers,
+      );
+      const { 'content-length': contentLength2, ...expectedObj } = getHeadersObj(expected.headers);
+      expect(toBeCheckedObj).toMatchObject(expectedObj);
     }
 
-    async function compareResponse(toBeChecked: Response, expected: Response) {
-      expected.headers.forEach((value, key) => {
-        const toBeCheckedValue = toBeChecked.headers.get(key);
-        expect({
-          key,
-          value: toBeCheckedValue,
-        }).toMatchObject({
-          key,
-          value,
-        });
-      });
+    function compareResponse(toBeChecked: Response, expected: Response) {
+      const { 'content-length': contentLength1, ...toBeCheckedObj } = getHeadersObj(
+        toBeChecked.headers,
+      );
+      const { 'content-length': contentLength2, ...expectedObj } = getHeadersObj(expected.headers);
+      expect(toBeCheckedObj).toMatchObject(expectedObj);
       expect(toBeChecked.status).toBe(expected.status);
     }
     async function compareReadableStream(
@@ -180,7 +172,7 @@ describe('Request Listener', () => {
       testServer: TestServer;
     }) {
       const adapter = createServerAdapter(async (request: Request) => {
-        await compareRequest(request, expectedRequest);
+        compareRequest(request, expectedRequest);
         if (methodsWithBody.includes(expectedRequest.method)) {
           await compareReadableStream(request.body, getRequestBody());
         }
@@ -189,7 +181,7 @@ describe('Request Listener', () => {
       await testServer.addOnceHandler(adapter);
       const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
       const returnedResponse = await fetchAPI.fetch(expectedRequest);
-      await compareResponse(returnedResponse, expectedResponse);
+      compareResponse(returnedResponse, expectedResponse);
       await compareReadableStream(returnedResponse.body, getResponseBody());
     }
 

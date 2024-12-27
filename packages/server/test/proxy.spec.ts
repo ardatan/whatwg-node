@@ -10,7 +10,7 @@ describe('Proxy', () => {
     return;
   }
   runTestsForEachFetchImpl(
-    (_, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
+    (fetchImplName, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;
       const originalAdapter = createServerAdapter(async request => {
         if (request.url.endsWith('/delay')) {
@@ -36,10 +36,13 @@ describe('Proxy', () => {
       beforeEach(() => {
         aborted = false;
       });
-      runTestsForEachServerImpl(originalServer => {
-        beforeEach(() => {
-          originalServer.addOnceHandler(originalAdapter);
-        });
+      runTestsForEachServerImpl((originalServer, serverImplName) => {
+        if (serverImplName === 'hapi' && fetchImplName.toLowerCase() === 'native') {
+          // Hapi does not work well with native streams
+          it.skip('skipping test on Hapi with native fetch', () => {});
+          return;
+        }
+        beforeEach(() => originalServer.addOnceHandler(originalAdapter));
         const proxyAdapter = createServerAdapter(request => {
           const proxyUrl = new URL(request.url);
           return fetch(`${originalServer.url}${proxyUrl.pathname}`, {

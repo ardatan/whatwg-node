@@ -39,10 +39,13 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
+    "@hapi/hapi": "^21.3.12",
     "@types/express": "5.0.0",
+    "@types/koa": "^2.15.0",
     "@types/node": "22.10.5",
     "express": "4.21.2",
     "fastify": "5.2.1",
+    "koa": "^2.15.3",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },
