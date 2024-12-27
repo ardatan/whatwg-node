@@ -130,331 +130,329 @@ if (globalThis.Bun) {
 } else {
   serverImplMap['node:http'] = createNodeHttpTestServer;
 
-  if (!process.env.LEAK_TEST) {
-    serverImplMap['fastify'] = async function createFastifyTestServer() {
-      let adapter: ServerAdapter<
-        {
-          req: FastifyRequest;
-          res: ServerResponse;
-          reply: FastifyReply;
-        },
-        ServerAdapterBaseObject<{}>
-      >;
+  serverImplMap['fastify'] = async function createFastifyTestServer() {
+    let adapter: ServerAdapter<
+      {
+        req: FastifyRequest;
+        res: ServerResponse;
+        reply: FastifyReply;
+      },
+      ServerAdapterBaseObject<{}>
+    >;
 
-      const fastifyApp = fastify().route({
-        method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
-        url: '*',
-        async handler(req: FastifyRequest, reply: FastifyReply) {
-          const response: Response = await adapter.handleNodeRequestAndResponse(req, reply, {
-            req,
-            res: reply.raw,
-            reply,
-          });
-
-          if (!response) {
-            return reply.status(404).send('Not Found');
-          }
-
-          response.headers.forEach((value, key) => {
-            reply.header(key, value);
-          });
-
-          reply.status(response.status);
-
-          reply.send(response.body || '');
-
-          return reply;
-        },
-      });
-      const sockets = new Set<Socket>();
-      fastifyApp.server.on('connection', socket => {
-        sockets.add(socket);
-        socket.once('close', () => {
-          sockets.delete(socket);
+    const fastifyApp = fastify().route({
+      method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
+      url: '*',
+      async handler(req: FastifyRequest, reply: FastifyReply) {
+        const response: Response = await adapter.handleNodeRequestAndResponse(req, reply, {
+          req,
+          res: reply.raw,
+          reply,
         });
+
+        if (!response) {
+          return reply.status(404).send('Not Found');
+        }
+
+        response.headers.forEach((value, key) => {
+          reply.header(key, value);
+        });
+
+        reply.status(response.status);
+
+        reply.send(response.body || '');
+
+        return reply;
+      },
+    });
+    const sockets = new Set<Socket>();
+    fastifyApp.server.on('connection', socket => {
+      sockets.add(socket);
+      socket.once('close', () => {
+        sockets.delete(socket);
       });
+    });
 
-      fastifyApp.addContentTypeParser(/(.*)/, {}, (_req, _payload, done) => done(null));
+    fastifyApp.addContentTypeParser(/(.*)/, {}, (_req, _payload, done) => done(null));
 
-      let url = await fastifyApp.listen({ port: 0, host: '::1' });
-      url = url.replace('127.0.0.1', 'localhost');
-      return {
-        name: 'fastify',
-        url,
-        async [DisposableSymbols.asyncDispose]() {
-          await adapter?.[DisposableSymbols.asyncDispose]?.();
-          sockets.forEach(socket => {
-            socket.destroy();
+    let url = await fastifyApp.listen({ port: 0, host: '::1' });
+    url = url.replace('127.0.0.1', 'localhost');
+    return {
+      name: 'fastify',
+      url,
+      async [DisposableSymbols.asyncDispose]() {
+        await adapter?.[DisposableSymbols.asyncDispose]?.();
+        sockets.forEach(socket => {
+          socket.destroy();
+        });
+        if (!globalThis.Bun) {
+          fastifyApp.server.closeAllConnections();
+        }
+        await new Promise<void>((resolve, reject) => {
+          fastifyApp.server.close(err => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
           });
-          if (!globalThis.Bun) {
-            fastifyApp.server.closeAllConnections();
-          }
-          await new Promise<void>((resolve, reject) => {
-            fastifyApp.server.close(err => {
+        });
+        return fastifyApp.close();
+      },
+      async addOnceHandler(newHandler, ...ctxParts) {
+        await adapter?.[DisposableSymbols.asyncDispose]?.();
+        adapter = newHandler;
+        if (ctxParts.length) {
+          adapter = {
+            ...newHandler,
+            handleNodeRequestAndResponse(...args: any[]) {
+              return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
+            },
+          };
+        }
+      },
+    };
+  };
+
+  serverImplMap['express'] = async function createExpressTestServer() {
+    let handler: any;
+    const app = express().use((...args) => handler(...args));
+    const sockets = new Set<Socket>();
+    let server: Server | undefined;
+    await new Promise<void>((resolve, reject) => {
+      server = app
+        .listen(0, () => {
+          resolve();
+        })
+        .once('error', reject)
+        .on('connection', socket => {
+          sockets.add(socket);
+          socket.once('close', () => {
+            sockets.delete(socket);
+          });
+        });
+    });
+
+    return {
+      name: 'express',
+      url: `http://localhost:${(server?.address() as AddressInfo).port}`,
+      async [DisposableSymbols.asyncDispose]() {
+        await handler?.[DisposableSymbols.asyncDispose]?.();
+        sockets.forEach(socket => {
+          socket.destroy();
+        });
+        return new Promise((resolve, reject) => {
+          if (server) {
+            server.close(err => {
               if (err) {
                 reject(err);
               } else {
                 resolve();
               }
             });
-          });
-          return fastifyApp.close();
-        },
-        async addOnceHandler(newHandler, ...ctxParts) {
-          await adapter?.[DisposableSymbols.asyncDispose]?.();
-          adapter = newHandler;
-          if (ctxParts.length) {
-            adapter = {
-              ...newHandler,
-              handleNodeRequestAndResponse(...args: any[]) {
-                return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
-              },
-            };
-          }
-        },
-      };
-    };
-
-    serverImplMap['express'] = async function createExpressTestServer() {
-      let handler: any;
-      const app = express().use((...args) => handler(...args));
-      const sockets = new Set<Socket>();
-      let server: Server | undefined;
-      await new Promise<void>((resolve, reject) => {
-        server = app
-          .listen(0, () => {
+          } else {
             resolve();
-          })
-          .once('error', reject)
-          .on('connection', socket => {
-            sockets.add(socket);
-            socket.once('close', () => {
-              sockets.delete(socket);
-            });
-          });
-      });
-
-      return {
-        name: 'express',
-        url: `http://localhost:${(server?.address() as AddressInfo).port}`,
-        async [DisposableSymbols.asyncDispose]() {
-          await handler?.[DisposableSymbols.asyncDispose]?.();
-          sockets.forEach(socket => {
-            socket.destroy();
-          });
-          return new Promise((resolve, reject) => {
-            if (server) {
-              server.close(err => {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve();
-                }
-              });
-            } else {
-              resolve();
-            }
-          });
-        },
-        async addOnceHandler(newHandler, ...ctxParts) {
-          await handler?.[DisposableSymbols.asyncDispose]?.();
-          handler = newHandler;
-          if (ctxParts.length) {
-            handler = function (...args: any[]) {
-              return newHandler(...args, ...ctxParts);
-            };
           }
-        },
-      };
+        });
+      },
+      async addOnceHandler(newHandler, ...ctxParts) {
+        await handler?.[DisposableSymbols.asyncDispose]?.();
+        handler = newHandler;
+        if (ctxParts.length) {
+          handler = function (...args: any[]) {
+            return newHandler(...args, ...ctxParts);
+          };
+        }
+      },
     };
+  };
 
-    serverImplMap['koa'] = async function createKoaTestServer() {
-      let adapter: ServerAdapter<Context, ServerAdapterBaseObject<{}>>;
-      const app = new Koa();
-      app.use(async ctx => {
+  serverImplMap['koa'] = async function createKoaTestServer() {
+    let adapter: ServerAdapter<Context, ServerAdapterBaseObject<{}>>;
+    const app = new Koa();
+    app.use(async ctx => {
+      try {
+        const response: Response = await adapter.handleNodeRequestAndResponse(
+          ctx.request,
+          ctx.res,
+          ctx,
+        );
+
+        if (!response) {
+          ctx.status = 404;
+          ctx.body = 'Not Found';
+          return;
+        }
+        // Set status code
+        ctx.status = response.status;
+
+        // Set headers
+        response.headers.forEach((value, key) => {
+          ctx.append(key, value);
+        });
+
+        ctx.body =
+          response.body instanceof globalThis.ReadableStream
+            ? Readable.fromWeb(response.body as any)
+            : response.body || '';
+      } catch (err: any) {
+        ctx.status = 500;
+        ctx.body = err.message;
+      }
+    });
+
+    let server: Server | undefined;
+    const sockets = new Set<Socket>();
+    await new Promise<void>((resolve, reject) => {
+      server = app
+        .listen(0, resolve)
+        .once('error', reject)
+        .on('connection', socket => {
+          sockets.add(socket);
+          socket.once('close', () => {
+            sockets.delete(socket);
+          });
+        });
+    });
+
+    return {
+      name: 'koa',
+      get url() {
+        return `http://localhost:${(server?.address() as AddressInfo).port}`;
+      },
+      [DisposableSymbols.asyncDispose]() {
+        for (const socket of sockets) {
+          socket.destroy();
+        }
+        if (!globalThis.Bun) {
+          server?.closeAllConnections();
+        }
+        return new Promise<void>((resolve, reject) => {
+          if (server) {
+            server.close(err => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          } else {
+            resolve();
+          }
+        });
+      },
+      async addOnceHandler(newHandler, ...ctxParts) {
+        await adapter?.[DisposableSymbols.asyncDispose]?.();
+        adapter = newHandler;
+        if (ctxParts.length) {
+          adapter = {
+            ...newHandler,
+            handleNodeRequestAndResponse(...args: any[]) {
+              return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
+            },
+          };
+        }
+      },
+    };
+  };
+  serverImplMap['hapi'] = async function createKoaTestServer() {
+    interface HapiContext {
+      req: Hapi.Request;
+      res: ServerResponse;
+      h: Hapi.ResponseToolkit;
+    }
+    let adapter: ServerAdapter<HapiContext, ServerAdapterBaseObject<{}>>;
+    const server = Hapi.server({ port: 0 });
+
+    server.route({
+      method: '*',
+      path: '/{any*}',
+      options: {
+        payload: {
+          // allow everything
+          parse: false,
+          // let adapter handle the parsing
+          output: 'stream',
+        },
+      },
+      handler: async (req, h) => {
         try {
-          const response: Response = await adapter.handleNodeRequestAndResponse(
-            ctx.request,
-            ctx.res,
-            ctx,
-          );
+          const response = await adapter.handleNodeRequestAndResponse(req.raw.req, req.raw.res, {
+            req,
+            res: req.raw.res,
+            h,
+          });
+
+          if (req.raw.res.headersSent) {
+            return h.abandon;
+          }
 
           if (!response) {
-            ctx.status = 404;
-            ctx.body = 'Not Found';
-            return;
+            return h.response('Not Found').code(404);
           }
-          // Set status code
-          ctx.status = response.status;
 
-          // Set headers
+          // Hapi stream should not be in object mode
+          let body: Readable | undefined;
+          if (response.body instanceof globalThis.ReadableStream) {
+            // @ts-expect-error - Types are wrong
+            body = Readable.fromWeb(response.body, {
+              objectMode: false,
+            });
+          } else if (response.body) {
+            body = Readable.from(response.body, {
+              objectMode: false,
+              emitClose: true,
+              autoDestroy: true,
+            });
+          }
+          const res = h.response(body);
+
           response.headers.forEach((value, key) => {
-            ctx.append(key, value);
+            res.header(key, value);
           });
 
-          ctx.body =
-            response.body instanceof globalThis.ReadableStream
-              ? Readable.fromWeb(response.body as any)
-              : response.body || '';
-        } catch (err: any) {
-          ctx.status = 500;
-          ctx.body = err.message;
+          return res.code(response.status);
+        } catch (e: any) {
+          return h.response(e.message).code(500);
         }
+      },
+    });
+    await server.start();
+    const sockets = new Set<Socket>();
+    server.listener.on('connection', socket => {
+      sockets.add(socket);
+      socket.once('close', () => {
+        sockets.delete(socket);
       });
-
-      let server: Server | undefined;
-      const sockets = new Set<Socket>();
-      await new Promise<void>((resolve, reject) => {
-        server = app
-          .listen(0, resolve)
-          .once('error', reject)
-          .on('connection', socket => {
-            sockets.add(socket);
-            socket.once('close', () => {
-              sockets.delete(socket);
-            });
-          });
-      });
-
-      return {
-        name: 'koa',
-        get url() {
-          return `http://localhost:${(server?.address() as AddressInfo).port}`;
-        },
-        [DisposableSymbols.asyncDispose]() {
-          for (const socket of sockets) {
-            socket.destroy();
-          }
-          if (!globalThis.Bun) {
-            server?.closeAllConnections();
-          }
-          return new Promise<void>((resolve, reject) => {
-            if (server) {
-              server.close(err => {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve();
-                }
-              });
-            } else {
-              resolve();
-            }
-          });
-        },
-        async addOnceHandler(newHandler, ...ctxParts) {
-          await adapter?.[DisposableSymbols.asyncDispose]?.();
-          adapter = newHandler;
-          if (ctxParts.length) {
-            adapter = {
-              ...newHandler,
-              handleNodeRequestAndResponse(...args: any[]) {
-                return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
-              },
-            };
-          }
-        },
-      };
+    });
+    return {
+      name: 'hapi',
+      get url() {
+        return `http://localhost:${(server.listener.address() as AddressInfo).port}`;
+      },
+      [DisposableSymbols.asyncDispose]() {
+        for (const socket of sockets) {
+          socket.destroy();
+        }
+        if (!globalThis.Bun) {
+          server.listener.closeAllConnections();
+        }
+        return server.stop();
+      },
+      async addOnceHandler(newHandler, ...ctxParts) {
+        await adapter?.[DisposableSymbols.asyncDispose]?.();
+        adapter = newHandler;
+        if (ctxParts.length) {
+          adapter = {
+            ...newHandler,
+            handleNodeRequestAndResponse(...args: any[]) {
+              return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
+            },
+          };
+        }
+      },
     };
-    serverImplMap['hapi'] = async function createKoaTestServer() {
-      interface HapiContext {
-        req: Hapi.Request;
-        res: ServerResponse;
-        h: Hapi.ResponseToolkit;
-      }
-      let adapter: ServerAdapter<HapiContext, ServerAdapterBaseObject<{}>>;
-      const server = Hapi.server({ port: 0 });
-
-      server.route({
-        method: '*',
-        path: '/{any*}',
-        options: {
-          payload: {
-            // allow everything
-            parse: false,
-            // let adapter handle the parsing
-            output: 'stream',
-          },
-        },
-        handler: async (req, h) => {
-          try {
-            const response = await adapter.handleNodeRequestAndResponse(req.raw.req, req.raw.res, {
-              req,
-              res: req.raw.res,
-              h,
-            });
-
-            if (req.raw.res.headersSent) {
-              return h.abandon;
-            }
-
-            if (!response) {
-              return h.response('Not Found').code(404);
-            }
-
-            // Hapi stream should not be in object mode
-            let body: Readable | undefined;
-            if (response.body instanceof globalThis.ReadableStream) {
-              // @ts-expect-error - Types are wrong
-              body = Readable.fromWeb(response.body, {
-                objectMode: false,
-              });
-            } else if (response.body) {
-              body = Readable.from(response.body, {
-                objectMode: false,
-                emitClose: true,
-                autoDestroy: true,
-              });
-            }
-            const res = h.response(body);
-
-            response.headers.forEach((value, key) => {
-              res.header(key, value);
-            });
-
-            return res.code(response.status);
-          } catch (e: any) {
-            return h.response(e.message).code(500);
-          }
-        },
-      });
-      await server.start();
-      const sockets = new Set<Socket>();
-      server.listener.on('connection', socket => {
-        sockets.add(socket);
-        socket.once('close', () => {
-          sockets.delete(socket);
-        });
-      });
-      return {
-        name: 'hapi',
-        get url() {
-          return `http://localhost:${(server.listener.address() as AddressInfo).port}`;
-        },
-        [DisposableSymbols.asyncDispose]() {
-          for (const socket of sockets) {
-            socket.destroy();
-          }
-          if (!globalThis.Bun) {
-            server.listener.closeAllConnections();
-          }
-          return server.stop();
-        },
-        async addOnceHandler(newHandler, ...ctxParts) {
-          await adapter?.[DisposableSymbols.asyncDispose]?.();
-          adapter = newHandler;
-          if (ctxParts.length) {
-            adapter = {
-              ...newHandler,
-              handleNodeRequestAndResponse(...args: any[]) {
-                return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
-              },
-            };
-          }
-        },
-      };
-    };
-  }
+  };
 }
 
 const globalServerMap: Record<string, TestServer> = {};
