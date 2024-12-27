@@ -111,9 +111,5 @@ describe('Proxy', () => {
         });
       });
     },
-    {
-      // TODO: Flakey on native fetch
-      noNativeFetch: !!process.env.LEAK_TEST,
-    },
   );
 });
