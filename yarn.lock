@@ -2381,11 +2381,6 @@
   resolved "https://registry.yarnpkg.com/@js-sdsl/ordered-map/-/ordered-map-4.4.2.tgz#9299f82874bab9e4c7f9c48d865becbfe8d6907c"
   integrity sha512-iUKgm52T8HOE/makSxjqoWhe95ZJA1/G1sYsGev2JDKUSS14KAgg1LHb+Ba+IPow0xflbnSkOsZcO08C7w1gYw==
 
-"@kamilkisiela/fast-url-parser@^1.1.4":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@kamilkisiela/fast-url-parser/-/fast-url-parser-1.1.4.tgz#9d68877a489107411b953c54ea65d0658b515809"
-  integrity sha512-gbkePEBupNydxCelHCESvFSFM8XPh1Zs/OAVRW/rKpEqPAl5PbOM90Si8mv9bvnR53uPD2s/FiRxdvSejpRJew==
-
 "@logdna/tail-file@^2.0.6":
   version "2.2.0"
   resolved "https://registry.yarnpkg.com/@logdna/tail-file/-/tail-file-2.2.0.tgz#158a362d293f940dacfd07c835bf3ae2f9e0455a"
@@ -5574,7 +5569,7 @@ fast-levenshtein@^2.0.6:
   resolved "https://registry.yarnpkg.com/fast-levenshtein/-/fast-levenshtein-2.0.6.tgz#3d8a5c66883a16a30ca8643e851f19baa7797917"
   integrity sha512-DCXu6Ifhqcks7TZKY3Hxp3y6qphY5SJZmrWMDrKcERSOXWQdMhU9Ig/PYrzyw/ul9jOIyh0N4M0tbC5hodg8dw==
 
-fast-querystring@^1.0.0, fast-querystring@^1.1.1:
+fast-querystring@^1.0.0:
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/fast-querystring/-/fast-querystring-1.1.2.tgz#a6d24937b4fc6f791b4ee31dcb6f53aeafb89f53"
   integrity sha512-g6KuKWmFXc0fID8WWH0jit4g0AGBoJhCkJMb1RmbsSEUNvQ+ZC8D6CUZ+GtF8nMzSPXnhiePyyqqipzNNEnHjg==

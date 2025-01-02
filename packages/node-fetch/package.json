@@ -34,10 +34,8 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
-    "@kamilkisiela/fast-url-parser": "^1.1.4",
     "@whatwg-node/disposablestack": "^0.0.5",
     "busboy": "^1.6.0",
-    "fast-querystring": "^1.1.1",
     "tslib": "^2.6.3"
   },
   "devDependencies": {
