@@ -2,30 +2,7 @@
 '@whatwg-node/node-fetch': patch
 ---
 
-- Normalization fixes on `URL`
-
-Normalize the URL if it has a port and query string without a pathname;
-
-```diff
-+ http://example.com:80?query
-- http://example.com:80/?query
-```
-
-Previously, it was normalized like below which was incorrect;
-
-```diff
-- http://example.com:80?query
-+ http://example.com/:80?query
-```
-
-- Fix `URL.origin`
-
-When the URL has a port, `origin` was doubling the port number;
-
-```diff
-- http://example.com:80:80
-+ http://example.com:80
-```
+- Remove URL ponyfill implementation based on `fast-url-parser` and `fast-querystring`, because Node now uses Ada URL parser which is fast enough.
 
 - Fix `ReadableStream[Symbol.asyncIterator]`
 
