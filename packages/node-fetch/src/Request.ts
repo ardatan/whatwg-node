@@ -10,11 +10,11 @@ function isRequest(input: any): input is PonyfillRequest {
 
 export type RequestPonyfillInit = PonyfillBodyOptions &
   Omit<RequestInit, 'body' | 'headers'> & {
-    body?: BodyPonyfillInit | null;
-    duplex?: 'half' | 'full';
-    headers?: PonyfillHeadersInit;
-    headersSerializer?: HeadersSerializer;
-    agent?: HTTPAgent | HTTPSAgent | false;
+    body?: BodyPonyfillInit | null | undefined;
+    duplex?: 'half' | 'full' | undefined;
+    headers?: PonyfillHeadersInit | undefined;
+    headersSerializer?: HeadersSerializer | undefined;
+    agent?: HTTPAgent | HTTPSAgent | false | undefined;
   };
 
 type HeadersSerializer = (
@@ -96,7 +96,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     }
   }
 
-  headersSerializer?: HeadersSerializer;
+  headersSerializer?: HeadersSerializer | undefined;
   cache: RequestCache;
   credentials: RequestCredentials;
   destination: RequestDestination;

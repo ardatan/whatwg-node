@@ -16,21 +16,21 @@ export interface CookieStoreDeleteOptions {
 }
 
 export interface CookieStoreGetOptions {
-  name?: string;
+  name?: string | undefined;
   url?: string;
 }
 
 export type CookieSameSite = 'strict' | 'lax' | 'none';
 
 export interface CookieListItem {
-  name?: string;
-  value?: string;
+  name?: string | undefined;
+  value?: string | undefined;
   domain: string | null;
-  path?: string;
+  path?: string | undefined;
   expires: Date | number | null;
-  secure?: boolean;
-  sameSite?: CookieSameSite;
-  httpOnly?: boolean;
+  secure?: boolean | undefined;
+  sameSite?: CookieSameSite | undefined;
+  httpOnly?: boolean | undefined;
 }
 
 export type CookieList = CookieListItem[];

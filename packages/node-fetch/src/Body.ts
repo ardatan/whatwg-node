@@ -60,11 +60,11 @@ export class PonyfillBody<TJSON = any> implements Body {
     this._buffer = buffer;
   }
 
-  private bodyType?: BodyInitType;
+  private bodyType?: BodyInitType | undefined;
 
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
-  private _buffer?: Buffer;
+  private _buffer?: Buffer | undefined;
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody?.readable?.destroyed && this._buffer) {

@@ -11,19 +11,19 @@ export function isAsyncIterable(body: any): body is AsyncIterable<any> {
 }
 
 export interface NodeRequest {
-  protocol?: string;
-  hostname?: string;
-  body?: any;
-  url?: string;
-  originalUrl?: string;
-  method?: string;
-  headers?: any;
-  req?: IncomingMessage | Http2ServerRequest;
-  raw?: IncomingMessage | Http2ServerRequest;
-  socket?: Socket;
-  query?: any;
+  protocol?: string | undefined;
+  hostname?: string | undefined;
+  body?: any | undefined;
+  url?: string | undefined;
+  originalUrl?: string | undefined;
+  method?: string | undefined;
+  headers?: any | undefined;
+  req?: IncomingMessage | Http2ServerRequest | undefined;
+  raw?: IncomingMessage | Http2ServerRequest | undefined;
+  socket?: Socket | undefined;
+  query?: any | undefined;
   once?(event: string, listener: (...args: any[]) => void): void;
-  aborted?: boolean;
+  aborted?: boolean | undefined;
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
@@ -183,7 +183,7 @@ export function normalizeNodeRequest(
     return new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
       headers: normalizedHeaders,
-      signal,
+      signal: signal || null,
     });
   }
 
@@ -197,16 +197,16 @@ export function normalizeNodeRequest(
   if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
     if (isRequestBody(maybeParsedBody)) {
       return new fetchAPI.Request(fullUrl, {
-        method: nodeRequest.method,
+        method: nodeRequest.method || 'GET',
         headers: normalizedHeaders,
         body: maybeParsedBody,
-        signal,
+        signal: signal || null,
       });
     }
     const request = new fetchAPI.Request(fullUrl, {
-      method: nodeRequest.method,
+      method: nodeRequest.method || 'GET',
       headers: normalizedHeaders,
-      signal,
+      signal: signal || null,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
       request.headers.set('content-type', 'application/json; charset=utf-8');

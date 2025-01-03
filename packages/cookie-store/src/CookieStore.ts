@@ -22,7 +22,7 @@ export class CookieStore extends EventTarget {
   }
 
   async get(
-    init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions,
+    init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions | undefined,
   ): Promise<Cookie | undefined> {
     if (init == null) {
       throw new TypeError('CookieStoreGetOptions must not be empty');
