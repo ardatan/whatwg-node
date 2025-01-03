@@ -1,4 +1,4 @@
-import { request as httpRequest } from 'http';
+import { request as httpRequest, STATUS_CODES } from 'http';
 import { request as httpsRequest } from 'https';
 import { PassThrough, Readable, promises as streamPromises } from 'stream';
 import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'zlib';
@@ -124,9 +124,14 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           })
           .catch(reject);
 
+        const statusCode = nodeResponse.statusCode || 200;
+        let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
+        if (statusText == null) {
+          statusText = '';
+        }
         const ponyfillResponse = new PonyfillResponse(outputStream, {
-          status: nodeResponse.statusCode,
-          statusText: nodeResponse.statusMessage,
+          status: statusCode,
+          statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
         });

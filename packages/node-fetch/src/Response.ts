@@ -4,10 +4,10 @@ import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.j
 
 export type ResponsePonyfilInit = PonyfillBodyOptions &
   Omit<ResponseInit, 'headers'> & {
-    url?: string;
-    redirected?: boolean;
-    headers?: PonyfillHeadersInit;
-    type?: ResponseType;
+    url?: string | undefined;
+    redirected?: boolean | undefined;
+    headers?: PonyfillHeadersInit | undefined;
+    type?: ResponseType | undefined;
   };
 
 const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
@@ -15,7 +15,7 @@ const JSON_CONTENT_TYPE = 'application/json; charset=utf-8';
 export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implements Response {
   headers: Headers;
 
-  constructor(body?: BodyPonyfillInit | null, init?: ResponsePonyfilInit) {
+  constructor(body?: BodyPonyfillInit | null | undefined, init?: ResponsePonyfilInit) {
     super(body || null, init);
     this.headers =
       init?.headers && isHeadersLike(init.headers)

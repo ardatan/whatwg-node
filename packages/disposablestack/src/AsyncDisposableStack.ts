@@ -43,7 +43,7 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
     return this[DisposableSymbols.asyncDispose]();
   }
 
-  private _error?: Error;
+  private _error?: Error | undefined;
 
   private _iterateCallbacks(): MaybePromise<void> {
     const cb = this.callbacks.pop();

@@ -41,7 +41,7 @@ export class PonyfillDisposableStack implements DisposableStack {
     return this[DisposableSymbols.dispose]();
   }
 
-  private _error?: Error;
+  private _error?: Error | undefined;
 
   private _iterateCallbacks(): void {
     const cb = this.callbacks.pop();
