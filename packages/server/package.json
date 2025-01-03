@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@types/express": "5.0.0",
-    "@types/node": "22.10.4",
+    "@types/node": "22.10.5",
     "express": "4.21.2",
     "fastify": "5.2.0",
     "react": "19.0.0",
