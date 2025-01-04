@@ -6,11 +6,12 @@ import { runTestsForEachServerImpl } from './test-server';
 describe('Proxy', () => {
   if (globalThis.Bun) {
     // Bun does not support streams on Request body
+    // TODO: Readable streams for fetch() are not available on Bun
     it.skip('skipping test on Bun', () => {});
     return;
   }
   runTestsForEachFetchImpl(
-    (_, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
+    (fetchImplName, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;
       const originalAdapter = createServerAdapter(async request => {
         if (request.url.endsWith('/delay')) {
@@ -36,10 +37,13 @@ describe('Proxy', () => {
       beforeEach(() => {
         aborted = false;
       });
-      runTestsForEachServerImpl(originalServer => {
-        beforeEach(() => {
-          originalServer.addOnceHandler(originalAdapter);
-        });
+      runTestsForEachServerImpl((originalServer, serverImplName) => {
+        if (serverImplName === 'hapi' && fetchImplName.toLowerCase() === 'native') {
+          // Hapi does not work well with native streams
+          it.skip('skipping test on Hapi with native fetch', () => {});
+          return;
+        }
+        beforeEach(() => originalServer.addOnceHandler(originalAdapter));
         const proxyAdapter = createServerAdapter(request => {
           const proxyUrl = new URL(request.url);
           return fetch(`${originalServer.url}${proxyUrl.pathname}`, {
@@ -106,11 +110,6 @@ describe('Proxy', () => {
           expect(aborted).toBe(false);
         });
       });
-    },
-    {
-      // TODO: Flakey on native fetch
-      // TODO: Readable streams for fetch() are not available on Bun
-      noNativeFetch: !!process.env.LEAK_TEST || !!globalThis.Bun,
     },
   );
 });

@@ -41,17 +41,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       let nodeRequest: ReturnType<typeof requestFn>;
 
-      // Skip using parsed URL if it's an IPv6 address (starting with brackets)
-      if (fetchRequest.parsedUrl && !fetchRequest.parsedUrl.hostname?.startsWith('[')) {
-        nodeRequest = requestFn({
-          auth: fetchRequest.parsedUrl.username
-            ? `${fetchRequest.parsedUrl.username}:${fetchRequest.parsedUrl.password}`
-            : undefined,
-          hostname: fetchRequest.parsedUrl.hostname,
+      // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
+      if (fetchRequest.parsedUrl) {
+        nodeRequest = requestFn(fetchRequest.parsedUrl, {
           method: fetchRequest.method,
-          path: fetchRequest.parsedUrl.pathname + (fetchRequest.parsedUrl.search || ''),
-          port: fetchRequest.parsedUrl.port,
-          protocol: fetchRequest.parsedUrl.protocol,
           headers: nodeHeaders,
           signal: fetchRequest['_signal'] ?? undefined,
           agent: fetchRequest.agent,
