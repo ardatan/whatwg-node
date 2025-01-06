@@ -1,6 +1,7 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import { afterEach } from 'node:test';
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
@@ -56,13 +57,13 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
           });
         });
         const proxyServer = createServer(proxyAdapter);
-        beforeAll(
+        beforeEach(
           () =>
             new Promise<void>(resolve => {
               proxyServer.listen(0, () => resolve());
             }),
         );
-        beforeAll(
+        afterEach(
           () =>
             new Promise<void>(resolve => {
               proxyServer.close(() => resolve());
