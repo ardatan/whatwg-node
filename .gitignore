@@ -76,3 +76,5 @@ junit.xml
 package-lock.json
 
 eslint_report.json
+
+deno.lock
