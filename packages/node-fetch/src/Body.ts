@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import busboy from 'busboy';
@@ -267,7 +268,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       });
       bb.on('error', (err: any = 'An error occurred while parsing the form data') => {
         const errMessage = err.message || err.toString();
-        // @ts-expect-error - `cause` is in `TypeError`in node
+        // @ts-ignore - `cause` is in `TypeError`in node
         reject(new TypeError(errMessage, err.cause));
       });
       _body?.readable.pipe(bb);
@@ -313,6 +314,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   arrayBuffer(): Promise<ArrayBuffer> {
+    // @ts-ignore - Mismatch between Buffer and ArrayBuffer
     return this.buffer();
   }
 
