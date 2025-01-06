@@ -1,4 +1,5 @@
-import { Readable } from 'stream';
+import { Buffer } from 'node:buffer';
+import { Readable } from 'node:stream';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 

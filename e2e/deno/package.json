@@ -1,8 +1,0 @@
-{
-  "name": "@e2e/deno",
-  "version": "0.0.0",
-  "private": true,
-  "scripts": {
-    "e2e": "deno run --unstable-byonm --unstable-sloppy-imports --unstable-detect-cjs --allow-net --allow-read e2e.ts"
-  }
-}

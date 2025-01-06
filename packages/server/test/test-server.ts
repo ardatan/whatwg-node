@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
-import { createServer, globalAgent, Server, ServerResponse } from 'http';
-import { AddressInfo, Socket } from 'net';
-import { Readable } from 'stream';
+import { createServer, globalAgent, Server, ServerResponse } from 'node:http';
+import { AddressInfo, Socket } from 'node:net';
+import { Readable } from 'node:stream';
 import express from 'express';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import Koa, { Context } from 'koa';
@@ -127,6 +127,34 @@ if ((globalThis as any)['createUWS']) {
 
 if (globalThis.Bun) {
   serverImplMap.Bun = createBunServer;
+} else if (globalThis.Deno) {
+  serverImplMap.Deno = async function createDenoTestServer() {
+    let handler: any;
+
+    const server = Deno.serve(
+      {
+        hostname: '::',
+      },
+      (...args) => handler(...args),
+    );
+    return {
+      name: 'Deno',
+      url: `http://localhost:${server.addr.port}`,
+      async [DisposableSymbols.asyncDispose]() {
+        await handler?.[DisposableSymbols.asyncDispose]?.();
+        return server.shutdown();
+      },
+      async addOnceHandler(newHandler, ...ctxParts) {
+        await handler?.[DisposableSymbols.asyncDispose]?.();
+        handler = newHandler;
+        if (ctxParts.length) {
+          handler = function (...args: any[]) {
+            return newHandler(...args, ...ctxParts);
+          };
+        }
+      },
+    };
+  };
 } else {
   serverImplMap['node:http'] = createNodeHttpTestServer;
 

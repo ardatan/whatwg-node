@@ -1,5 +1,5 @@
-import { Blob as BufferBlob } from 'buffer';
-import { createServer, type RequestListener } from 'http';
+import { Blob as BufferBlob } from 'node:buffer';
+import { createServer, type RequestListener } from 'node:http';
 import * as undici from 'undici';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 

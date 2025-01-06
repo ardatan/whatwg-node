@@ -1,4 +1,6 @@
-import { setTimeout } from 'timers/promises';
+import { Buffer } from 'node:buffer';
+import { setTimeout } from 'node:timers/promises';
+import { describe, expect, it } from '@jest/globals';
 import { getHeadersObj } from '../../node-fetch/src/utils.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl, TestServer } from './test-server.js';
@@ -199,7 +201,7 @@ describe('Request Listener', () => {
         async pull(controller) {
           await setTimeout(30);
           if (i > 0) {
-            controller.enqueue(`data: request_${i.toString()}\n`);
+            controller.enqueue(Buffer.from(`data: request_${i.toString()}\n`));
             i--;
           } else {
             controller.close();
@@ -214,7 +216,7 @@ describe('Request Listener', () => {
         async pull(controller) {
           await setTimeout(30);
           if (i > 0) {
-            controller.enqueue(`data: response_${i.toString()}\n`);
+            controller.enqueue(Buffer.from(`data: response_${i.toString()}\n`));
             i--;
           } else {
             controller.close();

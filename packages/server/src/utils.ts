@@ -1,7 +1,7 @@
-import type { IncomingMessage, ServerResponse } from 'http';
-import type { Http2ServerRequest, Http2ServerResponse } from 'http2';
-import type { Socket } from 'net';
-import type { Readable } from 'stream';
+import type { IncomingMessage, ServerResponse } from 'node:http';
+import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
+import type { Socket } from 'node:net';
+import type { Readable } from 'node:stream';
 import type { FetchAPI, FetchEvent } from './types.js';
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
@@ -166,7 +166,7 @@ export function normalizeNodeRequest(
 
     const closeEventListener: EventListener = () => {
       if (signal && !signal.aborted) {
-        (rawRequest as any).aborted = true;
+        Object.defineProperty(rawRequest, 'aborted', { value: true });
         sendAbortSignal();
       }
     };
@@ -324,15 +324,27 @@ async function sendAsyncIterable(
     if (closed) {
       break;
     }
-    if (
-      !serverResponse
-        // @ts-expect-error http and http2 writes are actually compatible
-        .write(chunk)
-    ) {
-      if (closed) {
-        break;
+    const shouldBreak = await new Promise(resolve => {
+      if (
+        !serverResponse
+          // @ts-expect-error http and http2 writes are actually compatible
+          .write(chunk, err => {
+            if (err) {
+              resolve(true);
+            }
+          })
+      ) {
+        if (closed) {
+          resolve(true);
+          return;
+        }
+        serverResponse.once('drain', () => {
+          resolve(false);
+        });
       }
-      await new Promise(resolve => serverResponse.once('drain', resolve));
+    });
+    if (shouldBreak) {
+      break;
     }
   }
   endResponse(serverResponse);
@@ -405,7 +417,7 @@ export function sendNodeResponse(
   }
 
   if (isReadableStream(fetchBody)) {
-    return sendReadableStream(serverResponse, fetchBody);
+    return sendReadableStream(nodeRequest, serverResponse, fetchBody);
   }
 
   if (isAsyncIterable(fetchBody)) {
@@ -414,11 +426,13 @@ export function sendNodeResponse(
 }
 
 async function sendReadableStream(
+  nodeRequest: NodeRequest,
   serverResponse: NodeResponse,
   readableStream: ReadableStream<Uint8Array>,
 ) {
   const reader = readableStream.getReader();
-  serverResponse.req.once('error', err => {
+  nodeRequest?.once?.('error', err => {
+    console.log('geldi');
     reader.cancel(err);
   });
   while (true) {

@@ -1,5 +1,9 @@
-import { createServer as createHttpServer, IncomingMessage, ServerResponse } from 'http';
-import { createServer as createHttp2Server, Http2ServerRequest, Http2ServerResponse } from 'http2';
+import { createServer as createHttpServer, IncomingMessage, ServerResponse } from 'node:http';
+import {
+  createServer as createHttp2Server,
+  Http2ServerRequest,
+  Http2ServerResponse,
+} from 'node:http2';
 import { App } from 'uWebSockets.js';
 import { createServerAdapter } from '../src/createServerAdapter.js';
 

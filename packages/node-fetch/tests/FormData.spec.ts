@@ -1,4 +1,5 @@
-import { Blob as NodeBlob } from 'buffer';
+import { Blob as NodeBlob } from 'node:buffer';
+import { describe, expect, it } from '@jest/globals';
 import { PonyfillBlob } from '../src/Blob.js';
 import { PonyfillFile } from '../src/File.js';
 import { PonyfillFormData } from '../src/FormData.js';

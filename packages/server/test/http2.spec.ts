@@ -4,16 +4,15 @@ import {
   constants as constantsHttp2,
   createServer,
   Http2Server,
-} from 'http2';
-import { AddressInfo } from 'net';
+} from 'node:http2';
+import { AddressInfo } from 'node:net';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 
-describe('http2', () => {
-  // HTTP2 is not supported fully on Bun
-  if (globalThis.Bun) {
-    it.skip('skipping test on Bun', () => {});
-    return;
-  }
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+
+// HTTP2 is not supported fully on Bun and Deno
+describeIf(!globalThis.Bun && !globalThis.Deno)('http2', () => {
   let server: Http2Server;
   let client: ClientHttp2Session;
 
@@ -28,14 +27,14 @@ describe('http2', () => {
 
   runTestsForEachFetchImpl((_, { createServerAdapter }) => {
     it('should support http2 and respond as expected', async () => {
-      const handleRequest: jest.Mock<Response, [Request]> = jest
-        .fn()
-        .mockImplementation((_request: Request) => {
-          return new Response('Hey there!', {
-            status: 418,
-            headers: { 'x-is-this-http2': 'yes', 'content-type': 'text/plain;charset=UTF-8' },
-          });
+      let calledRequest: Request | undefined;
+      const handleRequest = jest.fn((_request: Request) => {
+        calledRequest = _request;
+        return new Response('Hey there!', {
+          status: 418,
+          headers: { 'x-is-this-http2': 'yes', 'content-type': 'text/plain;charset=UTF-8' },
         });
+      });
       const adapter = createServerAdapter(handleRequest);
 
       server = createServer(adapter);
@@ -88,10 +87,8 @@ describe('http2', () => {
 
       await new Promise<void>(resolve => req.end(resolve));
 
-      const calledRequest = handleRequest.mock.calls[0][0];
-
-      expect(calledRequest.method).toBe('POST');
-      expect(calledRequest.url).toMatch(/^http:\/\/localhost:\d+\/hi$/);
+      expect(calledRequest?.method).toBe('POST');
+      expect(calledRequest?.url).toMatch(/^http:\/\/localhost:\d+\/hi$/);
     });
   });
 });

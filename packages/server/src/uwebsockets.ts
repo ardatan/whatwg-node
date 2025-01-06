@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import type { FetchAPI } from './types.js';
 import { isPromise, ServerAdapterRequestAbortSignal } from './utils.js';
 

@@ -1,4 +1,4 @@
-import { STATUS_CODES } from 'http';
+import { STATUS_CODES } from 'node:http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 

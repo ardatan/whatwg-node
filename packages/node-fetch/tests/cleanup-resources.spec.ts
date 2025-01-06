@@ -1,7 +1,10 @@
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 import { runTestsForEachServerImpl } from '../../server/test/test-server';
 
-describe('Cleanup Resources', () => {
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+
+describeIf(!globalThis.Deno)('Cleanup Resources', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI: { Response, fetch } }) => {
     describe('internal calls', () => {
       runTestsForEachServerImpl(testServer => {

@@ -1,5 +1,5 @@
-import { Agent as HTTPAgent } from 'http';
-import { Agent as HTTPSAgent } from 'https';
+import { Agent as HTTPAgent } from 'node:http';
+import { Agent as HTTPSAgent } from 'node:https';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
 import { PonyfillURL } from './URL.js';

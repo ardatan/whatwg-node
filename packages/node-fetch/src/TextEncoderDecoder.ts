@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { isArrayBufferView } from './utils.js';
 
 export class PonyfillTextEncoder implements TextEncoder {

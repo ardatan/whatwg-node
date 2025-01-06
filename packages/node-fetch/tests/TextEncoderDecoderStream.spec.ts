@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+import { describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 
 describe('TextEncoderDecoderStream', () => {
@@ -46,16 +48,18 @@ describe('TextEncoderDecoderStream', () => {
       }
       expect(chunks.join('')).toBe('Hello, world!');
     });
-    it('piped cancellation works', done => {
+    it('piped cancellation works', () => {
       expect.assertions(1);
-      const readableStream = new fetchAPI.ReadableStream({
-        cancel(error) {
-          expect(error).toBe('test error');
-          done();
-        },
+      return new Promise<void>(resolve => {
+        const readableStream = new fetchAPI.ReadableStream({
+          cancel(error) {
+            expect(error).toBe('test error');
+            resolve();
+          },
+        });
+        const pipedStream = readableStream.pipeThrough(new fetchAPI.TextEncoderStream());
+        pipedStream.cancel('test error').finally(() => {});
       });
-      const pipedStream = readableStream.pipeThrough(new fetchAPI.TextEncoderStream());
-      pipedStream.cancel('test error').finally(() => {});
     });
   });
 });

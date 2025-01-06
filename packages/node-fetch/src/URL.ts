@@ -1,5 +1,5 @@
-import { resolveObjectURL } from 'buffer';
-import { randomUUID } from 'crypto';
+import NodeBuffer from 'node:buffer';
+import { randomUUID } from 'node:crypto';
 import { PonyfillBlob } from './Blob.js';
 
 export class PonyfillURL extends URL {
@@ -20,6 +20,9 @@ export class PonyfillURL extends URL {
   }
 
   static getBlobFromURL(url: string): Blob | PonyfillBlob | undefined {
-    return (this.blobRegistry.get(url) || resolveObjectURL(url)) as Blob | PonyfillBlob | undefined;
+    return (this.blobRegistry.get(url) || NodeBuffer?.resolveObjectURL?.(url)) as
+      | Blob
+      | PonyfillBlob
+      | undefined;
   }
 }

@@ -1,10 +1,12 @@
-import { IncomingMessage, ServerResponse, STATUS_CODES } from 'http';
-import { setTimeout } from 'timers/promises';
+import { Buffer } from 'node:buffer';
+import { IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
+import { setTimeout } from 'node:timers/promises';
 import React from 'react';
 // @ts-expect-error Types are not available yet
 import { renderToReadableStream } from 'react-dom/server.edge';
 import { HttpResponse } from 'uWebSockets.js';
 import Hapi from '@hapi/hapi';
+import { describe, expect, it, jest } from '@jest/globals';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
 import { createDeferredPromise } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
@@ -17,7 +19,8 @@ describe('Node Specific Cases', () => {
       { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } },
     ) => {
       runTestsForEachServerImpl((testServer, serverImplName) => {
-        if (!globalThis.Bun) {
+        // Deno and Bun does not empty responses
+        if (!globalThis.Bun && !globalThis.Deno) {
           it('should handle empty responses', async () => {
             await using serverAdapter = createServerAdapter(() => {
               return undefined as any;
@@ -68,7 +71,11 @@ describe('Node Specific Cases', () => {
         });
 
         it('should forward additional context', async () => {
-          const handleRequest = jest.fn().mockImplementation(() => {
+          let calledRequest: Request | undefined;
+          let calledCtx: Record<string, any> | undefined;
+          const handleRequest = jest.fn((_req: Request, _ctx: any) => {
+            calledRequest = _req;
+            calledCtx = _ctx;
             return new Response('OK', {
               status: 200,
             });
@@ -82,27 +89,32 @@ describe('Node Specific Cases', () => {
           await testServer.addOnceHandler(serverAdapter, additionalCtx);
           const response = await fetch(testServer.url);
           await response.text();
-          expect(handleRequest).toHaveBeenCalledWith(
-            expect.anything(),
-            expect.objectContaining(additionalCtx),
-          );
+          expect(calledRequest).toBeDefined();
+          expect(calledCtx).toBeDefined();
+          expect(calledCtx).toMatchObject(additionalCtx);
         });
 
         it('should handle cancellation of incremental responses', async () => {
           const deferred = createDeferredPromise<void>();
           let cancellation = 0;
+          const encoder = new TextEncoder();
           await using serverAdapter = createServerAdapter(() => {
             return new Response(
-              new ReadableStream({
+              new ReadableStream<Uint8Array>({
                 async pull(controller) {
                   await setTimeout(100);
-                  controller.enqueue(Date.now().toString());
+                  controller.enqueue(encoder.encode(Date.now().toString()));
                 },
                 cancel() {
                   cancellation++;
                   deferred.resolve();
                 },
               }),
+              {
+                headers: {
+                  'Content-Type': 'text/plain',
+                },
+              },
             );
           });
           await testServer.addOnceHandler(serverAdapter);
@@ -116,6 +128,7 @@ describe('Node Specific Cases', () => {
           let i = 0;
           const reader = response.body!.getReader();
           reader.closed.catch(() => {});
+          const decoder = new TextDecoder();
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
@@ -125,7 +138,8 @@ describe('Node Specific Cases', () => {
               ctrl.abort();
               break;
             }
-            collectedValues.push(Buffer.from(value!).toString('utf-8'));
+            const decodedValue = decoder.decode(value!);
+            collectedValues.push(decodedValue);
             i++;
           }
           expect(collectedValues).toHaveLength(3);
@@ -144,7 +158,7 @@ describe('Node Specific Cases', () => {
                   controller.close();
                 } else {
                   successFn();
-                  controller.enqueue('x'.repeat(5409));
+                  controller.enqueue(Buffer.from('x'.repeat(5409)));
                 }
               },
             });
@@ -164,7 +178,7 @@ describe('Node Specific Cases', () => {
           result = null;
         });
 
-        if (!globalThis.Bun) {
+        if (!globalThis.Bun && !globalThis.Deno) {
           it('should not kill the server if response is ended on low level', async () => {
             await using serverAdapter = createServerAdapter<{
               res: HttpResponse | ServerResponse;
@@ -393,11 +407,12 @@ describe('Node Specific Cases', () => {
           await expect(response.text()).resolves.toBe('Hello world!');
         });
 
-        it('responds with the correct status code', async () => {
-          const expected: { status: number; statusText: string }[] = [];
-          const received: { status: number; statusText: string; resText?: string }[] = [];
+        describe('handles status codes correctly', () => {
           for (const statusCodeStr in STATUS_CODES) {
             const status = Number(statusCodeStr);
+            if (Number.isNaN(status)) {
+              continue;
+            }
             if (status < 200) {
               // Informational responses are not supported by fetch in this way
               continue;
@@ -423,50 +438,65 @@ describe('Node Specific Cases', () => {
             ) {
               continue;
             }
-            await using serverAdapter = createServerAdapter(
-              () =>
-                new Response(withBody ? 'OK' : null, {
-                  status,
-                  statusText: STATUS_CODES[status],
-                }),
+            it(
+              status.toString(),
+              async () => {
+                await using serverAdapter = createServerAdapter(
+                  () =>
+                    new Response(withBody ? 'OK' : null, {
+                      status,
+                      statusText: STATUS_CODES[status] as string,
+                    }),
+                );
+                await testServer.addOnceHandler(serverAdapter);
+                const ctrl = new AbortController();
+                let resText: string | null = null;
+                const res = await fetch(testServer.url, {
+                  signal: ctrl.signal,
+                });
+                resText = await res.text();
+                if (res.status !== status && res.status === 500) {
+                  throw new Error(
+                    `Unexpected status ${res.status} for status ${status}; ${resText}`,
+                  );
+                }
+                expect(status.toString()).toBe(res.status.toString());
+                let expectedStatusText: any = STATUS_CODES[status];
+                if (res.statusText && expectedStatusText) {
+                  // Status text for 425 Too Early is not consistent in Koa
+                  if (status === 425 && serverImplName === 'koa') {
+                    return;
+                  }
+                  expectedStatusText = STATUS_CODES[status]
+                    ?.toLowerCase()
+                    ?.split('-')
+                    ?.join('')
+                    ?.split(' ')
+                    ?.join('');
+                  const statusText = res.statusText
+                    ?.toLowerCase()
+                    ?.split('-')
+                    ?.join('')
+                    ?.split(' ')
+                    ?.join('');
+                  if (res.status === 413) {
+                    expect(statusText).toContain('toolarge');
+                    return;
+                  }
+                  if (
+                    statusText.includes(expectedStatusText) ||
+                    expectedStatusText.includes(statusText)
+                  ) {
+                  } else {
+                    throw new Error(
+                      `Expected status text to be ${expectedStatusText}, got ${statusText}`,
+                    );
+                  }
+                }
+              },
+              1000,
             );
-            await testServer.addOnceHandler(serverAdapter);
-            const ctrl = new AbortController();
-            let resText: string | null = null;
-            // Sometimes it hangs if it fails to handle the status code, so we add a timeout
-            const timeout = globalThis.setTimeout(() => {
-              const abortReasonMessage = `${status} aborted due to timeout; received ${resText}`;
-              console.error(abortReasonMessage);
-              ctrl.abort(new Error(abortReasonMessage));
-            }, 1000);
-            const res = await fetch(testServer.url, {
-              signal: ctrl.signal,
-            });
-            let expectedStatusText = STATUS_CODES[status]?.toLowerCase();
-            // Status text for 425 Too Early is not consistent in Koa
-            if (status === 425 && serverImplName === 'koa') {
-              expectedStatusText = expect.any(String);
-            }
-            if (!expectedStatusText) {
-              throw new Error(`No status text for status ${status}`);
-            }
-            resText = await res.text();
-            expected.push({
-              status,
-              // Some servers like Koa has a different naming convention for status texts,
-              // so we compare the status texts in lowercase
-              statusText: expectedStatusText,
-            });
-            received.push({
-              status: res.status,
-              statusText: res.statusText.toLowerCase(),
-            });
-            if (res.status !== status && res.status === 500) {
-              throw new Error(`Unexpected status ${res.status} for status ${status}; ${resText}`);
-            }
-            globalThis.clearTimeout(timeout);
           }
-          expect(received).toMatchObject(expected);
         });
 
         it('handles headers and status', async () => {

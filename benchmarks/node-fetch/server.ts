@@ -1,4 +1,4 @@
-import { createServer } from 'http';
+import { createServer } from 'node:http';
 import { isScenario, scenarios } from './scenarios';
 
 const port = 50001;

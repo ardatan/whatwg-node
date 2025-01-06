@@ -1,4 +1,5 @@
-import { Readable } from 'stream';
+import { Buffer } from 'node:buffer';
+import { Readable } from 'node:stream';
 import busboy from 'busboy';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
@@ -266,6 +267,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       });
       bb.on('error', (err: any = 'An error occurred while parsing the form data') => {
         const errMessage = err.message || err.toString();
+        // @ts-expect-error - `cause` is in `TypeError`in node
         reject(new TypeError(errMessage, err.cause));
       });
       _body?.readable.pipe(bb);
@@ -311,7 +313,6 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   arrayBuffer(): Promise<ArrayBuffer> {
-    // @ts-expect-error - `Buffer` and `ArrayBuffer` are compatible
     return this.buffer();
   }
 

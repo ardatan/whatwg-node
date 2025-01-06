@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-declaration-merging */
+import { Buffer } from 'node:buffer';
 import { PonyfillReadableStream } from './ReadableStream.js';
 import { fakePromise, isArrayBufferView } from './utils.js';
 
@@ -148,7 +149,6 @@ export class PonyfillBlob implements Blob {
 
   arrayBuffer(): Promise<ArrayBuffer> {
     if (this._buffer) {
-      // @ts-expect-error - `Buffer` and `ArrayBuffer` are compatible
       return fakePromise(this._buffer);
     }
     if (this.blobParts.length === 1) {
@@ -159,7 +159,6 @@ export class PonyfillBlob implements Blob {
         return this.blobParts[0].arrayBuffer();
       }
     }
-    // @ts-expect-error - `Buffer` and `ArrayBuffer` are compatible
     return this.buffer();
   }
 

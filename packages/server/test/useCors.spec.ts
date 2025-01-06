@@ -1,3 +1,13 @@
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  jest,
+} from '@jest/globals';
 import { CORSOptions, getCORSHeadersByRequestAndOptions, useCORS } from '../src/plugins/useCors.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 

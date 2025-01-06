@@ -1,15 +1,13 @@
-import { createServer } from 'http';
-import { AddressInfo } from 'net';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
+import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
-describe('Proxy', () => {
-  if (globalThis.Bun) {
-    // Bun does not support streams on Request body
-    // TODO: Readable streams for fetch() are not available on Bun
-    it.skip('skipping test on Bun', () => {});
-    return;
-  }
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+// Bun does not support streams on Request body
+// Readable streams for fetch() are not available on Bun
+describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
   runTestsForEachFetchImpl(
     (fetchImplName, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;
@@ -58,12 +56,18 @@ describe('Proxy', () => {
           });
         });
         const proxyServer = createServer(proxyAdapter);
-        beforeAll(done => {
-          proxyServer.listen(0, () => done());
-        });
-        afterAll(done => {
-          proxyServer.close(() => done());
-        });
+        beforeAll(
+          () =>
+            new Promise<void>(resolve => {
+              proxyServer.listen(0, () => resolve());
+            }),
+        );
+        beforeAll(
+          () =>
+            new Promise<void>(resolve => {
+              proxyServer.close(() => resolve());
+            }),
+        );
         it('proxies requests', async () => {
           const requestBody = JSON.stringify({
             test: true,
