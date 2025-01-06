@@ -23,7 +23,7 @@
     "release": "changeset publish",
     "test": "jest --runInBand --forceExit",
     "test:bun": "bun test --bail",
-    "test:deno": "deno test ./packages/**/*.spec.ts --allow-all --fail-fast --no-check --unstable-sloppy-imports",
+    "test:deno": "deno test ./packages/**/*.spec.ts --allow-all --fail-fast --no-check --unstable-sloppy-imports --trace-leaks",
     "test:leaks": "LEAK_TEST=1 jest --detectOpenHandles --detectLeaks --runInBand --forceExit",
     "ts:check": "tsc --noEmit --skipLibCheck"
   },
