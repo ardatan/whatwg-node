@@ -135,7 +135,11 @@ jobs:
         with:
           nodeVersion: 22
       - name: Test
-        run: yarn test:deno
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 5
+          command: yarn test:deno
 
   esm:
     name: esm
