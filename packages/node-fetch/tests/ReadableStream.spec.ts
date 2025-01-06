@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { setTimeout } from 'node:timers/promises';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { describe, expect, it } from '@jest/globals';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
 
 describe('ReadableStream', () => {

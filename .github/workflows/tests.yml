@@ -139,7 +139,7 @@ jobs:
         with:
           deno-version: vx.x.x
       - name: Test
-        run: yarn test:deno --ci
+        run: yarn test:deno
 
   esm:
     name: esm

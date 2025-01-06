@@ -1,13 +1,4 @@
-import {
-  afterAll,
-  afterEach,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  jest,
-} from '@jest/globals';
+import { describe, expect, it, jest } from '@jest/globals';
 import { useErrorHandling } from '../src/plugins/useErrorHandling.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
