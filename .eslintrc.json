@@ -65,7 +65,8 @@
     "website",
     "scripts",
     "e2e",
-    "benchmarks"
+    "benchmarks",
+    "deno-jest.ts"
   ],
   "globals": {
     "BigInt": true
