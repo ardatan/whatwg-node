@@ -3,7 +3,7 @@ import { globalAgent as httpGlobalAgent } from 'node:http';
 import { globalAgent as httpsGlobalAgent } from 'node:https';
 import { setTimeout } from 'node:timers/promises';
 import type { Dispatcher } from 'undici';
-import { afterAll, afterEach, beforeAll, describe, it } from '@jest/globals';
+import { afterAll, afterEach, beforeAll, describe } from '@jest/globals';
 import { patchSymbols } from '@whatwg-node/disposablestack';
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';

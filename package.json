@@ -25,7 +25,7 @@
     "test:bun": "bun test --bail",
     "test:deno": "deno test ./packages/**/*.spec.ts --allow-all --fail-fast --no-check --unstable-sloppy-imports",
     "test:leaks": "LEAK_TEST=1 jest --detectOpenHandles --detectLeaks --runInBand --forceExit",
-    "ts:check": "tsc --noEmit"
+    "ts:check": "tsc --noEmit --skipLibCheck"
   },
   "optionalDependencies": {
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.51.0"
