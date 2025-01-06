@@ -1,7 +1,6 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { afterEach } from 'node:test';
-import { beforeEach, describe, expect, it } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 

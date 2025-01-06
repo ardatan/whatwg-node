@@ -50,6 +50,7 @@
     "bob-the-bundler": "7.0.1",
     "bun": "1.1.42",
     "cross-env": "7.0.3",
+    "deno": "2.1.4",
     "eslint": "9.17.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-config-standard": "17.1.0",

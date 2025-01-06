@@ -134,10 +134,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@main
         with:
           nodeVersion: 22
-      - name: Use Deno
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: vx.x.x
       - name: Test
         run: yarn test:deno
 

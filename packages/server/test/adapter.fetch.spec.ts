@@ -8,10 +8,8 @@ describe('adapter.fetch', () => {
       // Request as first parameter
       it('should accept Request as a first argument', async () => {
         let calledRequest: Request | undefined;
-        let calledContext: any;
         const handleRequest = jest.fn((_req: Request, _ctx: any) => {
           calledRequest = _req;
-          calledContext = _ctx;
           return Response.json({});
         });
         const adapter = createServerAdapter(handleRequest);
