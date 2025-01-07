@@ -417,7 +417,7 @@ export function sendNodeResponse(
   }
 
   if (isReadableStream(fetchBody)) {
-    return sendReadableStream(nodeRequest, serverResponse, fetchBody);
+    return sendReadableStream(serverResponse, fetchBody);
   }
 
   if (isAsyncIterable(fetchBody)) {
@@ -426,12 +426,11 @@ export function sendNodeResponse(
 }
 
 async function sendReadableStream(
-  nodeRequest: NodeRequest,
   serverResponse: NodeResponse,
   readableStream: ReadableStream<Uint8Array>,
 ) {
   const reader = readableStream.getReader();
-  nodeRequest?.once?.('error', err => {
+  serverResponse?.req?.once?.('error', err => {
     reader.cancel(err);
   });
   while (true) {
