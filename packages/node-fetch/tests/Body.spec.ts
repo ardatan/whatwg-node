@@ -1,4 +1,6 @@
-import { Readable } from 'stream';
+import { Buffer } from 'node:buffer';
+import { Readable } from 'node:stream';
+import { describe, expect, it, jest } from '@jest/globals';
 import { PonyfillBlob } from '../src/Blob.js';
 import { PonyfillBody } from '../src/Body.js';
 import { PonyfillTextDecoder } from '../src/TextEncoderDecoder.js';

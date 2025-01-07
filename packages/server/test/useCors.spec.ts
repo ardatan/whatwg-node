@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { CORSOptions, getCORSHeadersByRequestAndOptions, useCORS } from '../src/plugins/useCors.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 

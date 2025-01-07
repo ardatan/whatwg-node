@@ -1,5 +1,8 @@
-import { Agent } from 'http';
+import { Agent } from 'node:http';
+import { describe, expect, it } from '@jest/globals';
 import { PonyfillRequest } from '../src/Request.js';
+
+const skipIf = (condition: boolean) => (condition ? it.skip : it);
 
 describe('Request', () => {
   it('should normalize the method name', () => {
@@ -7,18 +10,21 @@ describe('Request', () => {
     expect(req.method).toBe('GET');
   });
 
-  it('should instatitate PonyfillRequest from a Request correctly', async () => {
-    const req = new Request('http://a', {
-      method: 'put',
-      headers: { 'x-test': '1' },
-      body: 'test',
-    });
+  skipIf(!!globalThis.Deno)(
+    'should instatitate PonyfillRequest from a Request correctly',
+    async () => {
+      const req = new Request('http://a', {
+        method: 'put',
+        headers: { 'x-test': '1' },
+        body: 'test',
+      });
 
-    const ponyReq = new PonyfillRequest(req);
-    expect(ponyReq.method).toBe('PUT');
-    expect(ponyReq.headers.get('x-test')).toBe('1');
-    expect(await ponyReq.text()).toBe('test');
-  });
+      const ponyReq = new PonyfillRequest(req);
+      expect(ponyReq.method).toBe('PUT');
+      expect(ponyReq.headers.get('x-test')).toBe('1');
+      expect(await ponyReq.text()).toBe('test');
+    },
+  );
 
   it('should instatitate PonyfillRequest from another PonyfillRequest correctly', async () => {
     const firstPony = new PonyfillRequest('http://a', {

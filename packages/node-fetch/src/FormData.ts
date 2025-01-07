@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import { PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { PonyfillIteratorObject } from './IteratorObject.js';

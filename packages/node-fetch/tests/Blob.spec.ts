@@ -1,4 +1,5 @@
-import { Blob as NodeBlob } from 'buffer';
+import { Buffer, Blob as NodeBlob } from 'node:buffer';
+import { describe, expect, it } from '@jest/globals';
 import { isArrayBuffer, PonyfillBlob } from '../src/Blob';
 
 describe('Blob', () => {

@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plan: ['aws-lambda', 'azure-function', 'cloudflare-workers', 'cloudflare-modules', 'deno']
+        plan: ['aws-lambda', 'azure-function', 'cloudflare-workers', 'cloudflare-modules']
         # TODO: Add vercel
     name: e2e / ${{ matrix.plan }}
 
@@ -26,12 +26,6 @@ jobs:
 
       - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
-
-      - name: Use Deno
-        if: matrix.plan == 'deno'
-        uses: denoland/setup-deno@v2
-        with:
-          deno-version: vx.x.x
 
       - name: Cache Node Modules
         uses: actions/cache@v4

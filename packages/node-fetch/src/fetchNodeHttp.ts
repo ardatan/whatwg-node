@@ -1,7 +1,8 @@
-import { request as httpRequest, STATUS_CODES } from 'http';
-import { request as httpsRequest } from 'https';
-import { PassThrough, Readable, promises as streamPromises } from 'stream';
-import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'zlib';
+import { request as httpRequest, STATUS_CODES } from 'node:http';
+import { request as httpsRequest } from 'node:https';
+import { PassThrough, Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'node:zlib';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -41,17 +42,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       let nodeRequest: ReturnType<typeof requestFn>;
 
-      // Skip using parsed URL if it's an IPv6 address (starting with brackets)
-      if (fetchRequest.parsedUrl && !fetchRequest.parsedUrl.hostname?.startsWith('[')) {
-        nodeRequest = requestFn({
-          auth: fetchRequest.parsedUrl.username
-            ? `${fetchRequest.parsedUrl.username}:${fetchRequest.parsedUrl.password}`
-            : undefined,
-          hostname: fetchRequest.parsedUrl.hostname,
+      // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
+      if (fetchRequest.parsedUrl) {
+        nodeRequest = requestFn(fetchRequest.parsedUrl, {
           method: fetchRequest.method,
-          path: fetchRequest.parsedUrl.pathname + (fetchRequest.parsedUrl.search || ''),
-          port: fetchRequest.parsedUrl.port,
-          protocol: fetchRequest.parsedUrl.protocol,
           headers: nodeHeaders,
           signal: fetchRequest['_signal'] ?? undefined,
           agent: fetchRequest.agent,
@@ -112,11 +106,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
         }
-        streamPromises
-          .pipeline(nodeResponse, outputStream, {
-            signal: fetchRequest['_signal'] ?? undefined,
-            end: true,
-          })
+        pipeline(nodeResponse, outputStream, {
+          signal: fetchRequest['_signal'] ?? undefined,
+          end: true,
+        })
           .then(() => {
             if (!nodeResponse.destroyed) {
               nodeResponse.resume();

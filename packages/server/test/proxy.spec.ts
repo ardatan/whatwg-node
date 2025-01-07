@@ -1,16 +1,15 @@
-import { createServer } from 'http';
-import { AddressInfo } from 'net';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
-describe('Proxy', () => {
-  if (globalThis.Bun) {
-    // Bun does not support streams on Request body
-    it.skip('skipping test on Bun', () => {});
-    return;
-  }
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+// Bun does not support streams on Request body
+// Readable streams for fetch() are not available on Bun
+describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
   runTestsForEachFetchImpl(
-    (_, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
+    (fetchImplName, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;
       const originalAdapter = createServerAdapter(async request => {
         if (request.url.endsWith('/delay')) {
@@ -36,10 +35,13 @@ describe('Proxy', () => {
       beforeEach(() => {
         aborted = false;
       });
-      runTestsForEachServerImpl(originalServer => {
-        beforeEach(() => {
-          originalServer.addOnceHandler(originalAdapter);
-        });
+      runTestsForEachServerImpl((originalServer, serverImplName) => {
+        if (serverImplName === 'hapi' && fetchImplName.toLowerCase() === 'native') {
+          // Hapi does not work well with native streams
+          it.skip('skipping test on Hapi with native fetch', () => {});
+          return;
+        }
+        beforeEach(() => originalServer.addOnceHandler(originalAdapter));
         const proxyAdapter = createServerAdapter(request => {
           const proxyUrl = new URL(request.url);
           return fetch(`${originalServer.url}${proxyUrl.pathname}`, {
@@ -54,12 +56,18 @@ describe('Proxy', () => {
           });
         });
         const proxyServer = createServer(proxyAdapter);
-        beforeAll(done => {
-          proxyServer.listen(0, () => done());
-        });
-        afterAll(done => {
-          proxyServer.close(() => done());
-        });
+        beforeEach(
+          () =>
+            new Promise<void>(resolve => {
+              proxyServer.listen(0, () => resolve());
+            }),
+        );
+        afterEach(
+          () =>
+            new Promise<void>(resolve => {
+              proxyServer.close(() => resolve());
+            }),
+        );
         it('proxies requests', async () => {
           const requestBody = JSON.stringify({
             test: true,
@@ -106,11 +114,6 @@ describe('Proxy', () => {
           expect(aborted).toBe(false);
         });
       });
-    },
-    {
-      // TODO: Flakey on native fetch
-      // TODO: Readable streams for fetch() are not available on Bun
-      noNativeFetch: !!process.env.LEAK_TEST || !!globalThis.Bun,
     },
   );
 });

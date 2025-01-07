@@ -1,4 +1,5 @@
 import { inspect } from 'node:util';
+import { describe, expect, it } from '@jest/globals';
 import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillHeaders } from '../src/Headers.js';
 

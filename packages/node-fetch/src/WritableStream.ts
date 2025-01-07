@@ -1,4 +1,4 @@
-import { Writable } from 'stream';
+import { Writable } from 'node:stream';
 import { fakePromise } from './utils.js';
 
 export class PonyfillWritableStream<W = any> implements WritableStream<W> {

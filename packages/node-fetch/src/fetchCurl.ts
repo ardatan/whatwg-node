@@ -1,5 +1,7 @@
-import { PassThrough, Readable, promises as streamPromises } from 'stream';
-import { rootCertificates } from 'tls';
+import { Buffer } from 'node:buffer';
+import { PassThrough, Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { rootCertificates } from 'node:tls';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { createDeferredPromise, defaultHeadersSerializer, isNodeReadable } from './utils.js';
@@ -119,11 +121,10 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
       const outputStream = new PassThrough();
 
-      streamPromises
-        .pipeline(stream, outputStream, {
-          end: true,
-          signal: fetchRequest['_signal'] ?? undefined,
-        })
+      pipeline(stream, outputStream, {
+        end: true,
+        signal: fetchRequest['_signal'] ?? undefined,
+      })
         .then(() => {
           if (!stream.destroyed) {
             stream.resume();

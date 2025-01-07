@@ -1,7 +1,8 @@
-import { Blob as NodeBlob } from 'buffer';
-import { Readable } from 'stream';
-import { setTimeout } from 'timers/promises';
-import { URL as NodeURL } from 'url';
+import { Buffer, Blob as NodeBlob } from 'node:buffer';
+import { Readable } from 'node:stream';
+import { setTimeout } from 'node:timers/promises';
+import { URL as NodeURL } from 'node:url';
+import { describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
 
 function testIf(condition: boolean, name: string, fn: () => void) {
@@ -79,8 +80,9 @@ describe('Node Fetch Ponyfill', () => {
         const body = await response.json();
         expect(body.data).toBe('test');
       });
+      // Deno does not support Node.js streams as RequestInit.body yet
       testIf(
-        globalThis.Bun ? implName !== 'native' : true,
+        !globalThis.Deno && (globalThis.Bun ? implName !== 'native' : true),
         'should accept Readable bodies',
         async () => {
           const response = await fetchPonyfill(baseUrl + '/post', {
@@ -176,26 +178,30 @@ describe('Node Fetch Ponyfill', () => {
           expect(err.message).toMatch(/aborted/);
         }
       });
-      it('should respect gzip', async () => {
-        const response = await fetchPonyfill(baseUrl + '/gzip');
-        expect(response.headers.get('content-encoding')).toBe('gzip');
-        expect(response.status).toBe(200);
-        const body = await response.json();
-        expect(body.gzipped).toBe(true);
-      });
-      it('should respect deflate', async () => {
-        const response = await fetchPonyfill(baseUrl + '/deflate');
-        expect(response.headers.get('content-encoding')).toBe('deflate');
-        expect(response.status).toBe(200);
-        const body = await response.json();
-        expect(body.deflated).toBe(true);
-      });
-      it('should respect brotli', async () => {
-        const response = await fetchPonyfill(baseUrl + '/brotli');
-        expect(response.headers.get('content-encoding')).toBe('br');
-        expect(response.status).toBe(200);
-        const body = await response.json();
-        expect(body.brotli).toBe(true);
+      const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+      // Deno does not uncompress responses automatically
+      describeIf(!globalThis.Deno)('Compression', () => {
+        it('should respect gzip', async () => {
+          const response = await fetchPonyfill(baseUrl + '/gzip');
+          expect(response.headers.get('content-encoding')).toBe('gzip');
+          expect(response.status).toBe(200);
+          const body = await response.json();
+          expect(body.gzipped).toBe(true);
+        });
+        it('should respect deflate', async () => {
+          const response = await fetchPonyfill(baseUrl + '/deflate');
+          expect(response.headers.get('content-encoding')).toBe('deflate');
+          expect(response.status).toBe(200);
+          const body = await response.json();
+          expect(body.deflated).toBe(true);
+        });
+        it('should respect brotli', async () => {
+          const response = await fetchPonyfill(baseUrl + '/brotli');
+          expect(response.headers.get('content-encoding')).toBe('br');
+          expect(response.status).toBe(200);
+          const body = await response.json();
+          expect(body.brotli).toBe(true);
+        });
       });
       it.skip('should load correctly', async () => {
         const response = await fetchPonyfill(
@@ -241,7 +247,8 @@ describe('Node Fetch Ponyfill', () => {
         const resJson = await response.json();
         expect(resJson.test).toBe('test');
       });
-      it('handles redirect from http to https', async () => {
+      // No need to test this on Deno
+      testIf(!globalThis.Deno, 'handles redirect from http to https', async () => {
         const response = await fetchPonyfill('http://github.com');
         await response.text();
         expect(response.status).toBe(200);

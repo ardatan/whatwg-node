@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { AsyncDisposableStack, DisposableStack, DisposableSymbols, patchSymbols } from '../src';
 
 function createTestCases<
@@ -27,12 +28,12 @@ function createTestCases<
       },
     },
     adopt: {
-      run(stack: TStack, disposeFn: jest.Mock) {
+      run(stack: TStack, disposeFn: jest.Mock<any>) {
         const value = 'TEST';
         expect(stack.adopt(value, disposeFn)).toBe(value);
       },
       check(disposeFn: jest.Mock) {
-        expect(disposeFn).toBeCalledWith('TEST');
+        expect(disposeFn).toHaveBeenCalledWith('TEST');
       },
     },
     defer: {
@@ -40,7 +41,7 @@ function createTestCases<
         stack.defer(disposeFn);
       },
       check(disposeFn: jest.Mock) {
-        expect(disposeFn).toBeCalled();
+        expect(disposeFn).toHaveBeenCalled();
       },
     },
     move: {

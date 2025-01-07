@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { useErrorHandling } from '../src/plugins/useErrorHandling.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
@@ -5,7 +6,7 @@ describe('useErrorHandling', () => {
   runTestsForEachFetchImpl(
     (_, { createServerAdapter, fetchAPI }) => {
       it('should return error response when error is thrown', async () => {
-        const errorHandler = jest.fn();
+        const errorHandler = jest.fn(() => {});
         let request: Request | undefined;
         const router = createServerAdapter(
           req => {

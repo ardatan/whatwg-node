@@ -1,5 +1,6 @@
-import { createReadStream } from 'fs';
-import { fileURLToPath } from 'url';
+import { Buffer } from 'node:buffer';
+import { createReadStream } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { fetchCurl } from './fetchCurl.js';
 import { fetchNodeHttp } from './fetchNodeHttp.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';

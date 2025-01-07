@@ -1,3 +1,5 @@
+import { Buffer } from 'node:buffer';
+import { describe, expect, it } from '@jest/globals';
 import { useContentEncoding } from '../src/plugins/useContentEncoding';
 import { getSupportedEncodings, handleResponseDecompression } from '../src/utils';
 import { runTestsForEachFetchImpl } from './test-fetch';
@@ -146,36 +148,41 @@ describe('Compression', () => {
   });
   runTestsForEachFetchImpl((implName, { fetchAPI, createServerAdapter }) => {
     runTestsForEachServerImpl(server => {
-      it(`from the server to the client without 'accept-encoding'`, async () => {
-        let req: Request | undefined;
-        const adapter = createServerAdapter(
-          passedReq => {
-            req = passedReq;
-            return new fetchAPI.Response(exampleData);
-          },
-          {
-            plugins: [useContentEncoding()],
-          },
-        );
-        server.addOnceHandler(adapter);
-        const res = await fetchAPI.fetch(server.url);
-        const encodingSupported = encodings.some(e => e !== 'none');
-        if (encodingSupported) {
-          expect(res.headers.get('content-encoding')).toBeTruthy();
-        }
-        expect(res.status).toEqual(200);
-        const acceptedEncodings = req?.headers.get('accept-encoding');
-        expect(acceptedEncodings).toBeTruthy();
-        expect(acceptedEncodings).toContain('gzip');
-        expect(acceptedEncodings).toContain('deflate');
-        const returnedData = await res.text();
-        expect(returnedData).toEqual(exampleData);
-        if (encodingSupported) {
-          expect(Number(res.headers.get('content-length'))).toBeLessThan(
-            Buffer.byteLength(exampleData),
+      const skipIf = (condition: boolean) => (condition ? it.skip : it);
+      // Deno's fetch does not decompress automatically
+      skipIf(!!globalThis.Deno)(
+        `from the server to the client without 'accept-encoding'`,
+        async () => {
+          let req: Request | undefined;
+          const adapter = createServerAdapter(
+            passedReq => {
+              req = passedReq;
+              return new fetchAPI.Response(exampleData);
+            },
+            {
+              plugins: [useContentEncoding()],
+            },
           );
-        }
-      });
+          server.addOnceHandler(adapter);
+          const res = await fetchAPI.fetch(server.url);
+          const encodingSupported = encodings.some(e => e !== 'none');
+          if (encodingSupported) {
+            expect(res.headers.get('content-encoding')).toBeTruthy();
+          }
+          expect(res.status).toEqual(200);
+          const acceptedEncodings = req?.headers.get('accept-encoding');
+          expect(acceptedEncodings).toBeTruthy();
+          expect(acceptedEncodings).toContain('gzip');
+          expect(acceptedEncodings).toContain('deflate');
+          const returnedData = await res.text();
+          expect(returnedData).toEqual(exampleData);
+          if (encodingSupported) {
+            expect(Number(res.headers.get('content-length'))).toBeLessThan(
+              Buffer.byteLength(exampleData),
+            );
+          }
+        },
+      );
       const encodings = [...getSupportedEncodings(fetchAPI), 'none'];
       for (const encoding of encodings) {
         // Skip deflate-raw with libcurl because it doesn't support it
@@ -183,7 +190,8 @@ describe('Compression', () => {
           continue;
         }
         describe(encoding, () => {
-          it(`from the server to the client`, async () => {
+          // Deno's fetch does not decompress automatically
+          skipIf(!!globalThis.Deno)(`from the server to the client`, async () => {
             const adapter = createServerAdapter(
               () =>
                 new fetchAPI.Response(exampleData, {

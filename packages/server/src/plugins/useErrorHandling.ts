@@ -44,7 +44,7 @@ export type ErrorHandler<TServerContext> = (
   e: any,
   request: Request,
   ctx: TServerContext,
-) => Response | Promise<Response>;
+) => Response | Promise<Response> | void;
 
 export function useErrorHandling<TServerContext>(
   onError?: ErrorHandler<TServerContext>,

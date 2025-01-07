@@ -1,3 +1,4 @@
+import { describe, expect, it, jest } from '@jest/globals';
 import { CustomEvent } from '@whatwg-node/events';
 import { fakePromise, FetchEvent } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
@@ -19,7 +20,10 @@ describe('FetchEvent listener', () => {
         const response = new Response();
         const response$ = fakePromise(response);
         const adapter = createServerAdapter(() => response$);
-        const respondWith = jest.fn();
+        let returnedResponse$: Response | Promise<Response> | undefined;
+        const respondWith = jest.fn((response$: Response | Promise<Response>) => {
+          returnedResponse$ = response$;
+        });
         const waitUntil = jest.fn();
         const fetchEvent = new PonyfillFetchEvent(
           new Request('http://localhost:8080'),
@@ -28,11 +32,16 @@ describe('FetchEvent listener', () => {
         );
         const returnValue = adapter(fetchEvent);
         expect(returnValue).toBeUndefined();
-        const returnedResponse = await respondWith.mock.calls[0][0];
-        expect(returnedResponse).toBe(response);
+        expect(await returnedResponse$).toBe(response);
       });
       it('should expose FetchEvent as server context', async () => {
-        const handleRequest = jest.fn();
+        let calledRequest: Request | undefined;
+        let calledContext: any;
+        const handleRequest = jest.fn((_req: Request, _ctx: any) => {
+          calledRequest = _req;
+          calledContext = _ctx;
+          return Response.json({});
+        });
         const adapter = createServerAdapter(handleRequest);
         const respondWith = jest.fn();
         const waitUntil = jest.fn();
@@ -42,13 +51,13 @@ describe('FetchEvent listener', () => {
           waitUntil,
         );
         adapter(fetchEvent);
-        expect(handleRequest.mock.calls[0][0]).toBe(fetchEvent.request);
-        expect(handleRequest.mock.calls[0][1].request).toBe(fetchEvent.request);
-        expect(handleRequest.mock.calls[0][1].respondWith).toBe(fetchEvent.respondWith);
-        expect(handleRequest.mock.calls[0][1].waitUntil).toBe(fetchEvent.waitUntil);
+        expect(calledRequest).toBe(fetchEvent.request);
+        expect(calledContext.request).toBe(fetchEvent.request);
+        expect(calledContext.respondWith).toBe(fetchEvent.respondWith);
+        expect(calledContext.waitUntil).toBe(fetchEvent.waitUntil);
       });
       it('should accept additional parameters as server context', async () => {
-        const handleRequest = jest.fn();
+        const handleRequest = jest.fn((_req: Request, _ctx: any) => Response.json({}));
         const adapter = createServerAdapter<{
           foo: string;
         }>(handleRequest);
