@@ -5,11 +5,9 @@ import { describe, expect, it } from '@jest/globals';
 import { fetchPonyfill } from '../src/fetch.js';
 
 it('should respect file protocol', async () => {
-  const filePath =
-    typeof __dirname === 'string'
-      ? pathToFileURL(join(__dirname, './fixtures/test.json'))
-      : new URL('./fixtures/test.json', import.meta.url);
-  const response = await fetchPonyfill(filePath);
+  const response = await fetchPonyfill(
+    pathToFileURL(join(process.cwd(), './packages/node-fetch/tests/fixtures/test.json')),
+  );
   expect(response.status).toBe(200);
   const body = await response.json();
   expect(body.foo).toBe('bar');

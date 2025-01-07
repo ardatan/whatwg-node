@@ -432,7 +432,6 @@ async function sendReadableStream(
 ) {
   const reader = readableStream.getReader();
   nodeRequest?.once?.('error', err => {
-    console.log('geldi');
     reader.cancel(err);
   });
   while (true) {
