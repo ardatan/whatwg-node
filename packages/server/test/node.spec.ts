@@ -97,24 +97,18 @@ describe('Node Specific Cases', () => {
         it('should handle cancellation of incremental responses', async () => {
           const deferred = createDeferredPromise<void>();
           let cancellation = 0;
-          const encoder = new TextEncoder();
           await using serverAdapter = createServerAdapter(() => {
             return new Response(
-              new ReadableStream<Uint8Array>({
+              new ReadableStream({
                 async pull(controller) {
                   await setTimeout(100);
-                  controller.enqueue(encoder.encode(Date.now().toString()));
+                  controller.enqueue(Buffer.from(Date.now().toString()));
                 },
                 cancel() {
                   cancellation++;
                   deferred.resolve();
                 },
               }),
-              {
-                headers: {
-                  'Content-Type': 'text/plain',
-                },
-              },
             );
           });
           await testServer.addOnceHandler(serverAdapter);
@@ -128,7 +122,6 @@ describe('Node Specific Cases', () => {
           let i = 0;
           const reader = response.body!.getReader();
           reader.closed.catch(() => {});
-          const decoder = new TextDecoder();
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
@@ -138,14 +131,15 @@ describe('Node Specific Cases', () => {
               ctrl.abort();
               break;
             }
-            const decodedValue = decoder.decode(value!);
-            collectedValues.push(decodedValue);
-            i++;
+            if (value) {
+              collectedValues.push(Buffer.from(value).toString('utf-8'));
+              i++;
+            }
           }
           expect(collectedValues).toHaveLength(3);
           await deferred.promise;
           expect(cancellation).toBe(1);
-        });
+        }, 1000);
         it('should handle large streaming responses', async () => {
           const successFn = jest.fn();
           await using serverAdapter = createServerAdapter(() => {
