@@ -254,6 +254,14 @@ describe('Node Fetch Ponyfill', () => {
         expect(response.status).toBe(200);
         expect(response.url === 'https://github.com' || response.redirected).toBeTruthy();
       });
+      it('does not leak when signal is not used', async () => {
+        const res = await fetchPonyfill(baseUrl, { signal: new AbortController().signal });
+        await res.text();
+      });
+      it('does not leak when timeout signal is not used', async () => {
+        const res = await fetchPonyfill(baseUrl, { signal: AbortSignal.timeout(10_000) });
+        await res.text();
+      });
     },
   );
 });

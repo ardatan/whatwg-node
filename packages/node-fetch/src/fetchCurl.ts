@@ -83,22 +83,26 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   const deferredPromise = createDeferredPromise<PonyfillResponse<TResponseJSON>>();
   let streamResolved: Readable | undefined;
-  if (fetchRequest['_signal']) {
-    fetchRequest['_signal'].onabort = () => {
-      if (curlHandle.isOpen) {
-        try {
-          curlHandle.pause(CurlPause.Recv);
-        } catch (e) {
-          deferredPromise.reject(e);
-        }
+  function onAbort() {
+    if (curlHandle.isOpen) {
+      try {
+        curlHandle.pause(CurlPause.Recv);
+      } catch (e) {
+        deferredPromise.reject(e);
       }
-    };
+    }
+  }
+  if (fetchRequest['_signal']) {
+    fetchRequest['_signal'].addEventListener('abort', onAbort, { once: true });
   }
   curlHandle.once('end', function endListener() {
     try {
       curlHandle.close();
     } catch (e) {
       deferredPromise.reject(e);
+    }
+    if (fetchRequest['_signal']) {
+      fetchRequest['_signal'].removeEventListener('abort', onAbort);
     }
   });
   curlHandle.once('error', function errorListener(error: any) {
