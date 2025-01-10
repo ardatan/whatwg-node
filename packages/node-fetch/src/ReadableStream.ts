@@ -171,6 +171,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   [Symbol.asyncIterator]() {
     const iterator = this.readable[Symbol.asyncIterator]();
     return {
+      [Symbol.asyncIterator]() {
+        return this;
+      },
       next: () => iterator.next(),
       return: () => {
         if (!this.readable.destroyed) {
