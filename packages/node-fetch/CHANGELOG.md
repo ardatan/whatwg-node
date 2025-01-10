@@ -1,5 +1,66 @@
 # @whatwg-node/node-fetch
 
+## 0.7.6
+
+### Patch Changes
+
+- [#1929](https://github.com/ardatan/whatwg-node/pull/1929)
+  [`b88b85c`](https://github.com/ardatan/whatwg-node/commit/b88b85c301923719f4722bdfe070728725bcc1b5)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Removed dependency
+    [`@kamilkisiela/fast-url-parser@^1.1.4` ↗︎](https://www.npmjs.com/package/@kamilkisiela/fast-url-parser/v/1.1.4)
+    (from `dependencies`)
+  - Removed dependency
+    [`fast-querystring@^1.1.1` ↗︎](https://www.npmjs.com/package/fast-querystring/v/1.1.1) (from
+    `dependencies`)
+
+- [#1947](https://github.com/ardatan/whatwg-node/pull/1947)
+  [`9b39c3e`](https://github.com/ardatan/whatwg-node/commit/9b39c3e5db616a60e6dd8472fbd651f4905f3673)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove the event listener on the provided
+  `AbortSignal` when `node-libcurl` is used, the connection finishes to prevent potential memory
+  leaks;
+
+  ```ts
+  const res = await fetch(URL, { signal: new AbortController().signal })
+  // AbortController is never aborted, and HTTP request is done as expected successfully
+  ```
+
+- [#1929](https://github.com/ardatan/whatwg-node/pull/1929)
+  [`b88b85c`](https://github.com/ardatan/whatwg-node/commit/b88b85c301923719f4722bdfe070728725bcc1b5)
+  Thanks [@ardatan](https://github.com/ardatan)! - - Remove URL ponyfill implementation based on
+  `fast-url-parser` and `fast-querystring`, because Node now uses Ada URL parser which is fast
+  enough.
+
+  - Fix `ReadableStream[Symbol.asyncIterator]`
+
+  `ReadableStream` uses `Readable` so it uses `Symbol.asyncIterator` method of `Readable` but the
+  returned iterator's `.return` method doesn't handle cancellation correctly. So we need to call
+  `readable.destroy(optionalError)` manually to cancel the stream.
+
+  This allows `ReadableStream` to use implementations relying on `AsyncIterable.cancel` to handle
+  cancellation like `Readable.from`
+
+  Previously the following was not handling cancellation;
+
+  ```ts
+  const res = new ReadableStream({
+    start(controller) {
+      controller.enqueue('Hello')
+      controller.enqueue('World')
+    },
+    cancel(reason) {
+      console.log('cancelled', reason)
+    }
+  })
+
+  const readable = Readable.from(res)
+
+  readable.destroy(new Error('MY REASON'))
+
+  // Should log 'cancelled MY REASON'
+  ```
+
 ## 0.7.5
 
 ### Patch Changes
