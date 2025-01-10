@@ -1,5 +1,16 @@
 # @whatwg-node/node-fetch
 
+## 0.7.7
+
+### Patch Changes
+
+- [#1961](https://github.com/ardatan/whatwg-node/pull/1961)
+  [`2785c80`](https://github.com/ardatan/whatwg-node/commit/2785c80be2c887c581ef0fac8150befeab306eba)
+  Thanks [@ardatan](https://github.com/ardatan)! - `ReadableStream`'s `Symbol.asyncIterator` now
+  returns `AsyncIterableIterator` like before even if it is ok to return `AsyncIterator` right now.
+  It is safer to return `AsyncIterableIterator` because it is a common mistake to use
+  `AsyncIterator` as `AsyncIterable`.
+
 ## 0.7.6
 
 ### Patch Changes
