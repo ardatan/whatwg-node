@@ -10,13 +10,6 @@ import { Trend } from 'k6/metrics';
 const scenarios = ['consumeBody', 'noConsumeBody'];
 const fetchTypes = ['native', 'undici', 'nodeHttp', 'curl'];
 
-const settings = {
-  executor: 'constant-vus',
-  vus: 100,
-  duration: '30s',
-  gracefulStop: '0s',
-};
-
 /** @type{import('k6/options').Options} */
 export const options = {
   thresholds: {
@@ -25,15 +18,23 @@ export const options = {
   scenarios: {},
 };
 
+const DURATION = 30;
+
+let index = 0;
 for (const scenario of scenarios) {
   for (const fetchType of fetchTypes) {
     options.scenarios[`${scenario}-${fetchType}`] = {
-      ...settings,
+      executor: 'constant-vus',
+      vus: 100,
+      duration: DURATION + 's',
+      gracefulStop: '0s',
+      startTime: DURATION * index + 's',
       env: {
         SCENARIO: scenario,
         FETCH_TYPE: fetchType,
       },
     };
+    index++;
   }
 }
 
