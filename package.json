@@ -42,7 +42,7 @@
     "@theguild/prettier-config": "3.0.0",
     "@types/deno": "2.0.0",
     "@types/node": "22.10.9",
-    "@types/react": "19.0.7",
+    "@types/react": "19.0.8",
     "@types/react-dom": "19.0.3",
     "@typescript-eslint/eslint-plugin": "8.21.0",
     "@typescript-eslint/parser": "8.21.0",
