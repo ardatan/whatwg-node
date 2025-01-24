@@ -19,6 +19,10 @@ describe('File protocol', () => {
     );
     expect(response.status).toBe(404);
   });
+  it('returns 403 if file is not accessible', async () => {
+    const response = await fetchPonyfill(pathToFileURL('/etc/shadow'));
+    expect(response.status).toBe(403);
+  });
 });
 
 describe('data uris', () => {
