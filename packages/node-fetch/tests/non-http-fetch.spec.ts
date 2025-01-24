@@ -4,13 +4,21 @@ import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from '@jest/globals';
 import { fetchPonyfill } from '../src/fetch.js';
 
-it('should respect file protocol', async () => {
-  const response = await fetchPonyfill(
-    pathToFileURL(join(process.cwd(), './packages/node-fetch/tests/fixtures/test.json')),
-  );
-  expect(response.status).toBe(200);
-  const body = await response.json();
-  expect(body.foo).toBe('bar');
+describe('File protocol', () => {
+  it('reads', async () => {
+    const response = await fetchPonyfill(
+      pathToFileURL(join(process.cwd(), './packages/node-fetch/tests/fixtures/test.json')),
+    );
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.foo).toBe('bar');
+  });
+  it('returns 404 if file does not exist', async () => {
+    const response = await fetchPonyfill(
+      pathToFileURL(join(process.cwd(), './packages/node-fetch/tests/fixtures/missing.json')),
+    );
+    expect(response.status).toBe(404);
+  });
 });
 
 describe('data uris', () => {
