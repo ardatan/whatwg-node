@@ -10,10 +10,10 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@azure/functions@^4.1.0":
-  version "4.6.0"
-  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.6.0.tgz#eee9ca945b8a2f2d0748c28006e057178cd5f8c9"
-  integrity sha512-vGq9jXlgrJ3KaI8bepgfpk26zVY8vFZsQukF85qjjKTAR90eFOOBNaa+mc/0ViDY2lcdrU2fL/o1pQyZUtTDsw==
+"@azure/functions@^4.6.1":
+  version "4.6.1"
+  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.6.1.tgz#e1e1167ea4b2e29d411b0fef4e4ab300ba488cbf"
+  integrity sha512-Py2Az29yk+A21vHES/rL6iU3ptKB+vVz3sGTjm0jSPFjG4kPbhFLi5vFI7YkCPMGeoD4WMIjHqTAeXvnFrBUBA==
   dependencies:
     cookie "^0.7.0"
     long "^4.0.0"
