@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { createServer, globalAgent, Server, ServerResponse } from 'node:http';
 import { AddressInfo, Socket } from 'node:net';
 import { Readable } from 'node:stream';

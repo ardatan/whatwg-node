@@ -45,7 +45,6 @@ export class CookieStore extends EventTarget {
     };
     if (typeof init === 'string') {
       item.name = init as string;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       item.value = possibleValue!;
     } else {
       Object.assign(item, init);

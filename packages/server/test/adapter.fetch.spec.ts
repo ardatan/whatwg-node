@@ -1,3 +1,4 @@
+/* eslint-disable no-lone-blocks */
 import { describe, expect, it, jest } from '@jest/globals';
 import { createDeferredPromise, DisposableSymbols } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';

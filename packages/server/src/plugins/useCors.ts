@@ -144,7 +144,6 @@ export function useCORS<TServerContext>(
       }
     },
     async onResponse({ request, serverContext, response }) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const headers = await getCORSResponseHeaders<any>(request, corsOptionsFactory, serverContext);
       if (headers != null) {
         for (const headerName in headers) {

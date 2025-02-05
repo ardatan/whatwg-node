@@ -94,6 +94,7 @@ for (const stackName in stacks) {
         const testCase = testCases[testCaseName];
         it(testCaseName, async () => {
           const disposeFn = jest.fn();
+          // eslint-disable-next-line no-lone-blocks
           {
             await using stack = new StackCtor();
             await testCase.run(stack, disposeFn);
