@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.7.8
+
+### Patch Changes
+
+- [`337e605`](https://github.com/ardatan/whatwg-node/commit/337e6051b71270bde7c1e1d38e19aa0e2fd9573f)
+  Thanks [@ardatan](https://github.com/ardatan)! - - Use native AbortSignal and AbortController for
+  Request.signal
+  - Remove custom AbortSignal implementation (ServerAdapterAbortSignal)
+
 ## 0.7.7
 
 ### Patch Changes
