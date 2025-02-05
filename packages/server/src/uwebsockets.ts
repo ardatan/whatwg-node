@@ -75,9 +75,13 @@ export function getRequestFromUWSRequest({
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
-    controller.signal.addEventListener('abort', () => {
-      stop();
-    });
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        stop();
+      },
+      { once: true },
+    );
     let readableStream: ReadableStream;
     getReadableStream = () => {
       if (!readableStream) {
@@ -245,11 +249,15 @@ export function sendResponseToUwsOpts(
   if (bufferOfRes || !fetchResponse.body) {
     return;
   }
-  controller.signal.addEventListener('abort', () => {
-    if (!fetchResponse.body?.locked) {
-      fetchResponse.body?.cancel(controller.signal.reason);
-    }
-  });
+  controller.signal.addEventListener(
+    'abort',
+    () => {
+      if (!fetchResponse.body?.locked) {
+        fetchResponse.body?.cancel(controller.signal.reason);
+      }
+    },
+    { once: true },
+  );
   return fetchResponse.body
     .pipeTo(createWritableFromUWS(uwsResponse, fetchAPI), {
       signal: controller.signal,

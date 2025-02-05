@@ -30,11 +30,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.enable(CurlFeature.StreamResponse);
 
   curlHandle.setStreamProgressCallback(function () {
-    return fetchRequest['_signal']?.aborted
-      ? process.env.DEBUG
-        ? CurlProgressFunc.Continue
-        : 1
-      : 0;
+    return fetchRequest.signal.aborted ? (process.env.DEBUG ? CurlProgressFunc.Continue : 1) : 0;
   });
 
   if (fetchRequest['bodyType'] === 'String') {
@@ -92,8 +88,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       }
     }
   }
-  if (fetchRequest['_signal']) {
-    fetchRequest['_signal'].addEventListener('abort', onAbort, { once: true });
+  if (fetchRequest.signal) {
+    fetchRequest.signal.addEventListener('abort', onAbort, { once: true });
   }
   curlHandle.once('end', function endListener() {
     try {
@@ -101,8 +97,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     } catch (e) {
       deferredPromise.reject(e);
     }
-    if (fetchRequest['_signal']) {
-      fetchRequest['_signal'].removeEventListener('abort', onAbort);
+    if (fetchRequest.signal) {
+      fetchRequest.signal.removeEventListener('abort', onAbort);
     }
   });
   curlHandle.once('error', function errorListener(error: any) {
@@ -127,7 +123,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
       pipeline(stream, outputStream, {
         end: true,
-        signal: fetchRequest['_signal'] ?? undefined,
+        signal: fetchRequest.signal,
       })
         .then(() => {
           if (!stream.destroyed) {

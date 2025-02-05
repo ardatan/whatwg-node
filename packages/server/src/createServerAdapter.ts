@@ -330,7 +330,7 @@ function createServerAdapter<
       controller.abort();
     });
     res.onAborted = function (cb: () => void) {
-      controller.signal.addEventListener('abort', cb);
+      controller.signal.addEventListener('abort', cb, { once: true });
     };
     const request = getRequestFromUWSRequest({
       req,
@@ -411,7 +411,7 @@ function createServerAdapter<
       return handleRequestWithWaitUntil(request, ...maybeCtx);
     }
     const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
-    return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
+    return handleAbortSignalAndPromiseResponse(res$, input.signal);
   };
 
   const genericRequestHandler = (

@@ -44,55 +44,15 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
         },
       });
       this.writable = writable;
-      let onabort: EventListener | null;
-      let reason: any;
+      const abortCtrl = new AbortController();
       const controller: WritableStreamDefaultController = {
-        signal: {
-          any(signals) {
-            return AbortSignal.any([...signals]);
-          },
-          get reason() {
-            return reason;
-          },
-          get aborted() {
-            return writable.destroyed;
-          },
-          addEventListener: (_event: string, eventListener: EventListener) => {
-            writable.once('error', eventListener);
-            writable.once('close', eventListener);
-          },
-          removeEventListener: (_event: string, eventListener: EventListener) => {
-            writable.off('error', eventListener);
-            writable.off('close', eventListener);
-          },
-          dispatchEvent: (_event: Event) => {
-            return false;
-          },
-          get onabort() {
-            return onabort;
-          },
-          set onabort(value) {
-            if (onabort) {
-              this.removeEventListener('abort', onabort);
-            }
-            onabort = value;
-            if (onabort) {
-              this.addEventListener('abort', onabort);
-            }
-          },
-          throwIfAborted() {
-            if (writable.destroyed) {
-              throw reason;
-            }
-          },
-        },
-        error: e => {
-          this.writable.destroy(e);
+        signal: abortCtrl.signal,
+        error(e) {
+          writable.destroy(e);
         },
       };
-      this.writable.once('error', err => {
-        reason = err;
-      });
+      writable.once('error', err => abortCtrl.abort(err));
+      writable.once('close', () => abortCtrl.abort());
     } else {
       this.writable = new Writable();
     }

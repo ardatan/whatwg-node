@@ -113,7 +113,7 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
     const closeEventListener: EventListener = () => {
       if (!controller.signal.aborted) {
         Object.defineProperty(rawRequest, 'aborted', { value: true });
-        controller.abort();
+        controller.abort(nodeResponse.errored ?? undefined);
       }
     };
 
@@ -534,11 +534,18 @@ export function handleAbortSignalAndPromiseResponse(
   response$: Promise<Response> | Response,
   abortSignal?: AbortSignal | null,
 ) {
+  if (abortSignal?.aborted) {
+    throw abortSignal.reason;
+  }
   if (isPromise(response$) && abortSignal) {
     const deferred$ = createDeferredPromise<Response>();
-    abortSignal.addEventListener('abort', function abortSignalFetchErrorHandler() {
-      deferred$.reject(abortSignal.reason);
-    });
+    abortSignal.addEventListener(
+      'abort',
+      function abortSignalFetchErrorHandler() {
+        deferred$.reject(abortSignal.reason);
+      },
+      { once: true },
+    );
     response$
       .then(function fetchSuccessHandler(res) {
         deferred$.resolve(res);
