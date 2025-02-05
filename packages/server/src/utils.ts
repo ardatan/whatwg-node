@@ -82,50 +82,11 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-export class ServerAdapterRequestAbortSignal extends EventTarget implements AbortSignal {
-  aborted = false;
-  private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason: any;
-
-  throwIfAborted(): void {
-    if (this.aborted) {
-      throw this.reason;
-    }
-  }
-
-  sendAbort() {
-    this.reason = new DOMException('This operation was aborted', 'AbortError');
-    this.aborted = true;
-    this.dispatchEvent(new Event('abort'));
-  }
-
-  get onabort() {
-    return this._onabort;
-  }
-
-  set onabort(value) {
-    this._onabort = value;
-    if (value) {
-      this.addEventListener('abort', value);
-    } else {
-      this.removeEventListener('abort', value);
-    }
-  }
-
-  any(signals: Iterable<AbortSignal>): AbortSignal {
-    return AbortSignal.any([...signals]);
-  }
-}
-
 let bunNodeCompatModeWarned = false;
 
 export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
 
-export function normalizeNodeRequest(
-  nodeRequest: NodeRequest,
-  fetchAPI: FetchAPI,
-  registerSignal?: (signal: ServerAdapterRequestAbortSignal) => void,
-): Request {
+export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
@@ -135,8 +96,6 @@ export function normalizeNodeRequest(
     }
     fullUrl = url.toString();
   }
-
-  let signal: AbortSignal | undefined;
 
   const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
   nodeRequestResponseMap.delete(nodeRequest);
@@ -149,25 +108,12 @@ export function normalizeNodeRequest(
       }
     }
   }
+  const controller = new AbortController();
   if (nodeResponse?.once) {
-    let sendAbortSignal: VoidFunction;
-
-    // If ponyfilled
-    if (fetchAPI.Request !== globalThis.Request) {
-      const newSignal = new ServerAdapterRequestAbortSignal();
-      registerSignal?.(newSignal);
-      signal = newSignal;
-      sendAbortSignal = () => (signal as ServerAdapterRequestAbortSignal).sendAbort();
-    } else {
-      const controller = new AbortController();
-      signal = controller.signal;
-      sendAbortSignal = () => controller.abort();
-    }
-
     const closeEventListener: EventListener = () => {
-      if (signal && !signal.aborted) {
+      if (!controller.signal.aborted) {
         Object.defineProperty(rawRequest, 'aborted', { value: true });
-        sendAbortSignal();
+        controller.abort(nodeResponse.errored ?? undefined);
       }
     };
 
@@ -183,7 +129,7 @@ export function normalizeNodeRequest(
     return new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
       headers: normalizedHeaders,
-      signal: signal || null,
+      signal: controller.signal,
     });
   }
 
@@ -200,13 +146,13 @@ export function normalizeNodeRequest(
         method: nodeRequest.method || 'GET',
         headers: normalizedHeaders,
         body: maybeParsedBody,
-        signal: signal || null,
+        signal: controller.signal,
       });
     }
     const request = new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method || 'GET',
       headers: normalizedHeaders,
-      signal: signal || null,
+      signal: controller.signal,
     });
     if (!request.headers.get('content-type')?.includes('json')) {
       request.headers.set('content-type', 'application/json; charset=utf-8');
@@ -254,7 +200,7 @@ It will affect your performance. Please check our Bun integration recipe, and av
           rawRequest.destroy(e);
         },
       }),
-      signal,
+      signal: controller.signal,
     } as RequestInit);
   }
 
@@ -262,10 +208,11 @@ It will affect your performance. Please check our Bun integration recipe, and av
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
     headers: normalizedHeaders,
-    body: rawRequest as any,
+    signal: controller.signal,
+    // @ts-expect-error - AsyncIterable is supported as body
+    body: rawRequest,
     duplex: 'half',
-    signal,
-  } as RequestInit);
+  });
 }
 
 export function isReadable(stream: any): stream is Readable {
@@ -585,19 +532,26 @@ export function createDeferredPromise<T = void>(): DeferredPromise<T> {
 
 export function handleAbortSignalAndPromiseResponse(
   response$: Promise<Response> | Response,
-  abortSignal?: AbortSignal | null,
+  abortSignal: AbortSignal,
 ) {
+  if (abortSignal?.aborted) {
+    throw abortSignal.reason;
+  }
   if (isPromise(response$) && abortSignal) {
     const deferred$ = createDeferredPromise<Response>();
-    abortSignal.addEventListener('abort', function abortSignalFetchErrorHandler() {
+    function abortSignalFetchErrorHandler() {
       deferred$.reject(abortSignal.reason);
-    });
+    }
+    abortSignal.addEventListener('abort', abortSignalFetchErrorHandler, { once: true });
     response$
       .then(function fetchSuccessHandler(res) {
         deferred$.resolve(res);
       })
       .catch(function fetchErrorHandler(err) {
         deferred$.reject(err);
+      })
+      .finally(() => {
+        abortSignal.removeEventListener('abort', abortSignalFetchErrorHandler);
       });
     return deferred$.promise;
   }

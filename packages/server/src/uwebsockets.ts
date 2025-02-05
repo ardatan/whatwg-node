@@ -1,5 +1,5 @@
 import type { FetchAPI } from './types.js';
-import { isPromise, ServerAdapterRequestAbortSignal } from './utils.js';
+import { isPromise } from './utils.js';
 
 export interface UWSRequest {
   getMethod(): string;
@@ -31,10 +31,15 @@ interface GetRequestFromUWSOpts {
   req: UWSRequest;
   res: UWSResponse;
   fetchAPI: FetchAPI;
-  signal: AbortSignal;
+  controller: AbortController;
 }
 
-export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequestFromUWSOpts) {
+export function getRequestFromUWSRequest({
+  req,
+  res,
+  fetchAPI,
+  controller,
+}: GetRequestFromUWSOpts) {
   const method = req.getMethod();
 
   let duplex: 'half' | undefined;
@@ -70,9 +75,13 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
-    signal.addEventListener('abort', () => {
-      stop();
-    });
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        stop();
+      },
+      { once: true },
+    );
     let readableStream: ReadableStream;
     getReadableStream = () => {
       if (!readableStream) {
@@ -124,7 +133,7 @@ export function getRequestFromUWSRequest({ req, res, fetchAPI, signal }: GetRequ
     get body() {
       return getBody();
     },
-    signal,
+    signal: controller.signal,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - not in the TS types yet
     duplex,
@@ -202,7 +211,7 @@ export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchA
 export function sendResponseToUwsOpts(
   uwsResponse: UWSResponse,
   fetchResponse: Response,
-  signal: ServerAdapterRequestAbortSignal,
+  controller: AbortController,
   fetchAPI: FetchAPI,
 ) {
   if (!fetchResponse) {
@@ -211,7 +220,7 @@ export function sendResponseToUwsOpts(
     return;
   }
   const bufferOfRes: Uint8Array = (fetchResponse as any)._buffer;
-  if (signal.aborted) {
+  if (controller.signal.aborted) {
     return;
   }
   uwsResponse.cork(() => {
@@ -240,17 +249,21 @@ export function sendResponseToUwsOpts(
   if (bufferOfRes || !fetchResponse.body) {
     return;
   }
-  signal.addEventListener('abort', () => {
-    if (!fetchResponse.body?.locked) {
-      fetchResponse.body?.cancel(signal.reason);
-    }
-  });
+  controller.signal.addEventListener(
+    'abort',
+    () => {
+      if (!fetchResponse.body?.locked) {
+        fetchResponse.body?.cancel(controller.signal.reason);
+      }
+    },
+    { once: true },
+  );
   return fetchResponse.body
     .pipeTo(createWritableFromUWS(uwsResponse, fetchAPI), {
-      signal,
+      signal: controller.signal,
     })
     .catch(err => {
-      if (signal.aborted) {
+      if (controller.signal.aborted) {
         return;
       }
       throw err;

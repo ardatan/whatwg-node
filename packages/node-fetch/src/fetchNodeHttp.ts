@@ -47,14 +47,14 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         nodeRequest = requestFn(fetchRequest.parsedUrl, {
           method: fetchRequest.method,
           headers: nodeHeaders,
-          signal: fetchRequest['_signal'] ?? undefined,
+          signal: fetchRequest.signal,
           agent: fetchRequest.agent,
         });
       } else {
         nodeRequest = requestFn(fetchRequest.url, {
           method: fetchRequest.method,
           headers: nodeHeaders,
-          signal: fetchRequest['_signal'] ?? undefined,
+          signal: fetchRequest.signal,
           agent: fetchRequest.agent,
         });
       }
@@ -107,7 +107,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
         pipeline(nodeResponse, outputStream, {
-          signal: fetchRequest['_signal'] ?? undefined,
+          signal: fetchRequest.signal,
           end: true,
         })
           .then(() => {

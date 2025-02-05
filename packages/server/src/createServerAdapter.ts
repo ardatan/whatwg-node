@@ -32,7 +32,6 @@ import {
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
-  ServerAdapterRequestAbortSignal,
 } from './utils.js';
 import {
   fakePromise,
@@ -319,7 +318,7 @@ function createServerAdapter<
         ? completeAssign(defaultServerContext, ...ctx)
         : defaultServerContext;
 
-    const signal = new ServerAdapterRequestAbortSignal();
+    const controller = new AbortController();
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
     res.end = function (data: any) {
@@ -328,16 +327,16 @@ function createServerAdapter<
     };
     const originalOnAborted = res.onAborted.bind(res);
     originalOnAborted(function () {
-      signal.sendAbort();
+      controller.abort();
     });
     res.onAborted = function (cb: () => void) {
-      signal.addEventListener('abort', cb);
+      controller.signal.addEventListener('abort', cb, { once: true });
     };
     const request = getRequestFromUWSRequest({
       req,
       res,
       fetchAPI,
-      signal,
+      controller,
     });
     let response$: Response | Promise<Response> | undefined;
     try {
@@ -349,8 +348,8 @@ function createServerAdapter<
       return response$
         .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
         .then(response => {
-          if (!signal.aborted && !resEnded) {
-            return sendResponseToUwsOpts(res, response, signal, fetchAPI);
+          if (!controller.signal.aborted && !resEnded) {
+            return sendResponseToUwsOpts(res, response, controller, fetchAPI);
           }
         })
         .catch(err => {
@@ -360,8 +359,8 @@ function createServerAdapter<
         });
     }
     try {
-      if (!signal.aborted && !resEnded) {
-        return sendResponseToUwsOpts(res, response$, signal, fetchAPI);
+      if (!controller.signal.aborted && !resEnded) {
+        return sendResponseToUwsOpts(res, response$, controller, fetchAPI);
       }
     } catch (err: any) {
       console.error(
@@ -406,13 +405,17 @@ function createServerAdapter<
       if (isRequestInit(initOrCtx)) {
         const request = new fetchAPI.Request(input, initOrCtx);
         const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
-        return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
+        const signal = (initOrCtx as RequestInit).signal;
+        if (signal) {
+          return handleAbortSignalAndPromiseResponse(res$, signal);
+        }
+        return res$;
       }
       const request = new fetchAPI.Request(input);
       return handleRequestWithWaitUntil(request, ...maybeCtx);
     }
     const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
-    return handleAbortSignalAndPromiseResponse(res$, (input as any)._signal);
+    return handleAbortSignalAndPromiseResponse(res$, input.signal);
   };
 
   const genericRequestHandler = (
