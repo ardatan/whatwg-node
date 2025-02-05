@@ -532,26 +532,26 @@ export function createDeferredPromise<T = void>(): DeferredPromise<T> {
 
 export function handleAbortSignalAndPromiseResponse(
   response$: Promise<Response> | Response,
-  abortSignal?: AbortSignal | null,
+  abortSignal: AbortSignal,
 ) {
   if (abortSignal?.aborted) {
     throw abortSignal.reason;
   }
   if (isPromise(response$) && abortSignal) {
     const deferred$ = createDeferredPromise<Response>();
-    abortSignal.addEventListener(
-      'abort',
-      function abortSignalFetchErrorHandler() {
-        deferred$.reject(abortSignal.reason);
-      },
-      { once: true },
-    );
+    function abortSignalFetchErrorHandler() {
+      deferred$.reject(abortSignal.reason);
+    }
+    abortSignal.addEventListener('abort', abortSignalFetchErrorHandler, { once: true });
     response$
       .then(function fetchSuccessHandler(res) {
         deferred$.resolve(res);
       })
       .catch(function fetchErrorHandler(err) {
         deferred$.reject(err);
+      })
+      .finally(() => {
+        abortSignal.removeEventListener('abort', abortSignalFetchErrorHandler);
       });
     return deferred$.promise;
   }

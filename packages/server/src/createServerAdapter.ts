@@ -405,7 +405,11 @@ function createServerAdapter<
       if (isRequestInit(initOrCtx)) {
         const request = new fetchAPI.Request(input, initOrCtx);
         const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
-        return handleAbortSignalAndPromiseResponse(res$, (initOrCtx as RequestInit)?.signal);
+        const signal = (initOrCtx as RequestInit).signal;
+        if (signal) {
+          return handleAbortSignalAndPromiseResponse(res$, signal);
+        }
+        return res$;
       }
       const request = new fetchAPI.Request(input);
       return handleRequestWithWaitUntil(request, ...maybeCtx);
