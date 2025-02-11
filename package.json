@@ -52,7 +52,7 @@
     "bob-the-bundler": "7.0.1",
     "bun": "1.2.2",
     "deno": "2.1.9",
-    "eslint": "9.20.0",
+    "eslint": "9.20.1",
     "eslint-config-prettier": "10.0.1",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.31.0",
