@@ -13,6 +13,7 @@ const BASE64_SUFFIX = ';base64';
 async function getResponseForFile(url: string) {
   const path = fileURLToPath(url);
   try {
+    await fsPromises.access(path, fsPromises.constants.R_OK);
     const stats = await fsPromises.stat(path, {
       bigint: true,
     });

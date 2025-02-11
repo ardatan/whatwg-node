@@ -1,4 +1,6 @@
 import { Buffer } from 'node:buffer';
+import { unlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { describe, expect, it } from '@jest/globals';
@@ -20,8 +22,15 @@ describe('File protocol', () => {
     expect(response.status).toBe(404);
   });
   it('returns 403 if file is not accessible', async () => {
-    const response = await fetchPonyfill(pathToFileURL('/etc/shadow'));
-    expect(response.status).toBe(403);
+    const tmpDir = tmpdir();
+    const path = join(tmpDir, 'forbidden.json');
+    writeFileSync(path, '{ "test": 1 }', { mode: 0o000 });
+    try {
+      const response = await fetchPonyfill(pathToFileURL(path));
+      expect(response.status).toBe(403);
+    } finally {
+      unlinkSync(path);
+    }
   });
 });
 
