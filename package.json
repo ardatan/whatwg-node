@@ -63,7 +63,7 @@
     "husky": "9.1.7",
     "jest": "29.7.0",
     "lint-staged": "15.4.3",
-    "node-libcurl": "npm:@ardatan/node-libcurl@4.0.4",
+    "node-libcurl": "4.1.0",
     "patch-package": "8.0.0",
     "prettier": "3.5.0",
     "rimraf": "6.0.1",

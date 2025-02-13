@@ -4,7 +4,12 @@ import { pipeline } from 'node:stream/promises';
 import { rootCertificates } from 'node:tls';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import { createDeferredPromise, defaultHeadersSerializer, isNodeReadable } from './utils.js';
+import {
+  createDeferredPromise,
+  defaultHeadersSerializer,
+  isNodeReadable,
+  shouldRedirect,
+} from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
@@ -138,7 +143,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
           if (headerFilter && !headerFilter.startsWith('HTTP/')) {
             if (
               fetchRequest.redirect === 'error' &&
-              (headerFilter.includes('location') || headerFilter.includes('Location'))
+              headerFilter.toLowerCase().includes('location') &&
+              shouldRedirect(status)
             ) {
               if (!stream.destroyed) {
                 stream.resume();

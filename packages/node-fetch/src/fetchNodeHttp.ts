@@ -6,7 +6,7 @@ import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw }
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { getHeadersObj, isNodeReadable } from './utils.js';
+import { getHeadersObj, isNodeReadable, shouldRedirect } from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
   if (url.startsWith('http:')) {
@@ -81,7 +81,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           default:
             outputStream = new PassThrough();
         }
-        if (nodeResponse.headers.location) {
+        if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
           if (fetchRequest.redirect === 'error') {
             const redirectError = new Error('Redirects are not allowed');
             reject(redirectError);

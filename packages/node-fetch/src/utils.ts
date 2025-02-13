@@ -98,3 +98,7 @@ export function createDeferredPromise<T = void>(): DeferredPromise<T> {
 export function isIterable(value: any): value is Iterable<unknown> {
   return value?.[Symbol.iterator] != null;
 }
+
+export function shouldRedirect(status?: number): boolean {
+  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
+}
