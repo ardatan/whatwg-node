@@ -169,22 +169,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       streamResolved = outputStream;
     },
   );
-  let count = 0;
-  try {
-    count = Curl.getCount();
-  } catch {}
-  if (count > 0) {
-    setImmediate(() => {
-      curlHandle.perform();
-    });
-  } else {
-    try {
-      curlHandle.perform();
-    } catch (e) {
-      setImmediate(() => {
-        curlHandle.perform();
-      });
-    }
-  }
+  setImmediate(() => {
+    curlHandle.perform();
+  });
   return deferredPromise.promise;
 }
