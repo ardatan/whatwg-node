@@ -1,5 +1,5 @@
-import { createServer, IncomingMessage, ServerResponse } from 'http';
-import { AddressInfo } from 'net';
+import { createServer, IncomingMessage, ServerResponse } from 'node:http';
+import { AddressInfo } from 'node:net';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 
