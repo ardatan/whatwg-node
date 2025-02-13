@@ -56,4 +56,9 @@ describe('Headers', () => {
       ['set-cookie', 'bar'],
     ]);
   });
+  it('inspect correctly with null header values', () => {
+    const headers = new PonyfillHeaders();
+    headers.set('X-Header', null!);
+    expect(inspect(headers)).toBe("Headers { 'x-header': null }");
+  });
 });

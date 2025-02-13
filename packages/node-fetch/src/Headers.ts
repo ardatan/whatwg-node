@@ -263,7 +263,7 @@ export class PonyfillHeaders implements Headers {
       if (key === 'set-cookie') {
         record['set-cookie'] = this._setCookies;
       } else {
-        record[key] = value.includes(',') ? value.split(',').map(el => el.trim()) : value;
+        record[key] = value?.includes(',') ? value.split(',').map(el => el.trim()) : value;
       }
     });
     return `Headers ${inspect(record)}`;
