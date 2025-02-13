@@ -143,7 +143,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
           if (headerFilter && !headerFilter.startsWith('HTTP/')) {
             if (
               fetchRequest.redirect === 'error' &&
-              (headerFilter.includes('location') || headerFilter.includes('Location')) &&
+              headerFilter.toLowerCase().includes('location') &&
               shouldRedirect(status)
             ) {
               if (!stream.destroyed) {
