@@ -1,36 +1,36 @@
-import { createServer, IncomingMessage, ServerResponse } from 'node:http';
+import { createServer, IncomingMessage, RequestListener, Server, ServerResponse } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { afterEach, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 
 describe('Redirections', () => {
   runTestsForEachFetchImpl((_, { fetchAPI }) => {
     const redirectionStatusCodes = [301, 302, 303, 307, 308];
     const nonRedirectionLocationStatusCodes = [200, 201, 204];
-    const requestListener = jest.fn((req: IncomingMessage, res: ServerResponse) => {
-      if (req.url?.startsWith('/status-')) {
-        const [_, statusCode] = req.url.split('-');
-        res.writeHead(Number(statusCode), {
-          Location: '/redirected',
-        });
-        res.end();
-      } else if (req.url === '/redirected') {
-        res.writeHead(200);
-        res.end('redirected');
-      }
-    });
-    const server = createServer(requestListener);
+    let requestListener: RequestListener;
+    let server: Server;
     let addressInfo: AddressInfo;
     beforeEach(() => {
-      requestListener.mockClear();
-    });
-    beforeAll(done => {
-      server.listen(0, () => {
-        addressInfo = server.address() as AddressInfo;
-        done();
+      requestListener = jest.fn((req: IncomingMessage, res: ServerResponse) => {
+        if (req.url?.startsWith('/status-')) {
+          const [_, statusCode] = req.url.split('-');
+          res.writeHead(Number(statusCode), {
+            Location: '/redirected',
+          });
+          res.end();
+        } else if (req.url === '/redirected') {
+          res.writeHead(200);
+          res.end('redirected');
+        }
+      });
+      return new Promise<void>(resolve => {
+        server = createServer(requestListener).listen(0, () => {
+          addressInfo = server.address() as AddressInfo;
+          resolve();
+        });
       });
     });
-    afterAll(done => {
+    afterEach(done => {
       server.close(done);
     });
     for (const statusCode of redirectionStatusCodes) {
