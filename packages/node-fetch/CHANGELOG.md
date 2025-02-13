@@ -1,5 +1,24 @@
 # @whatwg-node/node-fetch
 
+## 0.7.9
+
+### Patch Changes
+
+- [#2049](https://github.com/ardatan/whatwg-node/pull/2049)
+  [`7c95998`](https://github.com/ardatan/whatwg-node/commit/7c959987495a5d1d16e976e4119015c057bb9467)
+  Thanks [@ardatan](https://github.com/ardatan)! - Redirect with correct status codes
+
+- [#2051](https://github.com/ardatan/whatwg-node/pull/2051)
+  [`252f68b`](https://github.com/ardatan/whatwg-node/commit/252f68b11d7b5f546172dbf8b734a35adcd4df3a)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix crash on null header values during inspect
+
+- [#2009](https://github.com/ardatan/whatwg-node/pull/2009)
+  [`5b5ae5f`](https://github.com/ardatan/whatwg-node/commit/5b5ae5f84511bb8966a683e49a3f7790549208a4)
+  Thanks [@ardatan](https://github.com/ardatan)! - When `fetch('file:///...')` is used to read
+  files;
+  - 404 is returned if the file is missing
+  - 403 is returned if the file is not accessible
+
 ## 0.7.8
 
 ### Patch Changes
