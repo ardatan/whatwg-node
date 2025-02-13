@@ -178,7 +178,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       curlHandle.perform();
     });
   } else {
-    curlHandle.perform();
+    try {
+      curlHandle.perform();
+    } catch (e) {
+      setImmediate(() => {
+        curlHandle.perform();
+      });
+    }
   }
   return deferredPromise.promise;
 }
