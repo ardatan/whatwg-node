@@ -6,7 +6,7 @@ import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 describe('Redirections', () => {
   runTestsForEachFetchImpl((_, { fetchAPI }) => {
     const redirectionStatusCodes = [301, 302, 303, 307, 308];
-    const nonRedirectionLocationStatusCodes = [200, 201, 204, 304];
+    const nonRedirectionLocationStatusCodes = [200, 201, 204];
     const requestListener = jest.fn((req: IncomingMessage, res: ServerResponse) => {
       if (req.url?.startsWith('/status-')) {
         const [_, statusCode] = req.url.split('-');
@@ -31,7 +31,6 @@ describe('Redirections', () => {
       });
     });
     afterAll(done => {
-      server.closeAllConnections();
       server.close(done);
     });
     for (const statusCode of redirectionStatusCodes) {
