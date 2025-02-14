@@ -1,11 +1,6 @@
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import {
-  OnRequestHook,
-  OnResponseEventPayload,
-  OnResponseHook,
-  ServerAdapterPlugin,
-} from './plugins/types.js';
+import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
   FetchAPI,
   FetchEvent,
@@ -212,19 +207,16 @@ function createServerAdapter<
             if (onResponseHooks.length === 0) {
               return response;
             }
-            const onResponseHookPayload: OnResponseEventPayload<
-              TServerContext & ServerAdapterInitialContext
-            > = {
-              request,
-              response,
-              serverContext,
-              setResponse(newResponse) {
-                response = newResponse;
-              },
-              fetchAPI,
-            };
             const onResponseHooksIteration$ = iterateAsyncVoid(onResponseHooks, onResponseHook =>
-              onResponseHook(onResponseHookPayload),
+              onResponseHook({
+                request,
+                response,
+                serverContext,
+                setResponse(newResponse) {
+                  response = newResponse;
+                },
+                fetchAPI,
+              }),
             );
             if (isPromise(onResponseHooksIteration$)) {
               return onResponseHooksIteration$.then(() => response);
