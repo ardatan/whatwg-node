@@ -1,5 +1,36 @@
 # @whatwg-node/server
 
+## 0.9.67
+
+### Patch Changes
+
+- [#2057](https://github.com/ardatan/whatwg-node/pull/2057)
+  [`7d28669`](https://github.com/ardatan/whatwg-node/commit/7d2866920a7439d93073dec15f5c2321e9e6be71)
+  Thanks [@ardatan](https://github.com/ardatan)! - When two plugins use the `onResponse` hook and
+  the first one modifies the response, the second one should get the modified one;
+
+  ```ts
+  ;[
+    {
+      onResponse({ setResponse, fetchAPI }) {
+        setResponse(
+          fetchAPI.Response.json(
+            {
+              foo: 'bar'
+            },
+            { status: 418 }
+          )
+        )
+      }
+    },
+    {
+      onResponse({ response }) {
+        console.log(response.status) // 418
+      }
+    }
+  ]
+  ```
+
 ## 0.9.66
 
 ### Patch Changes
