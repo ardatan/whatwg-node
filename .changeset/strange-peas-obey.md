@@ -2,8 +2,7 @@
 '@whatwg-node/server': patch
 ---
 
-When two plugins uses `onResponse` hook and first one modifies the response, the second one should
-get the modified one;
+When two plugins use the `onResponse` hook and the first one modifies the response, the second one should get the modified one;
 
 ```ts
 [
