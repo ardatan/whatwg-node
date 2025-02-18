@@ -1,4 +1,3 @@
-import { MaybePromise } from 'packages/disposablestack/src/utils.js';
 import {
   FetchAPI,
   ServerAdapterRequestHandler,
