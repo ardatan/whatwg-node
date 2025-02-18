@@ -251,7 +251,7 @@ function createServerAdapter<
     const originalRequestHandler = handleRequest;
     handleRequest = (request, initialContext) => {
       let response: Promise<Response> | Response;
-      const tracerPromise = tracer.request({ request }, () => {
+      const tracerPromise = tracer!.request!({ request }, () => {
         response = originalRequestHandler(request, initialContext);
         return isPromise(response) ? response.then(() => undefined) : undefined;
       });
