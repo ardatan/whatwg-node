@@ -1,7 +1,7 @@
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
+import { OnRequestHook, OnResponseHook, ServerAdapterPlugin, Tracer } from './plugins/types.js';
 import {
   FetchAPI,
   FetchEvent,
@@ -102,6 +102,7 @@ function createServerAdapter<
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
+  let tracer: Tracer | undefined;
   const waitUntilPromises = new Set<PromiseLike<unknown>>();
   let _disposableStack: AsyncDisposableStack | undefined;
   function ensureDisposableStack() {
@@ -145,6 +146,14 @@ function createServerAdapter<
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
+      if (plugin.tracer) {
+        if (tracer) {
+          throw new Error(
+            'Multiple tracers have been declared. Only one plugin with a tracer is allowed.',
+          );
+        }
+        tracer = plugin.tracer;
+      }
       if (plugin.onRequest) {
         onRequestHooks.push(plugin.onRequest);
       }
@@ -165,7 +174,7 @@ function createServerAdapter<
     }
   }
 
-  const handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
+  let handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
     onRequestHooks.length > 0 || onResponseHooks.length > 0
       ? function handleRequest(request, serverContext) {
           let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
@@ -237,6 +246,18 @@ function createServerAdapter<
           );
         }
       : givenHandleRequest;
+
+  if (tracer?.request) {
+    const originalRequestHandler = handleRequest;
+    handleRequest = (request, initialContext) => {
+      let response: Promise<Response> | Response;
+      const tracerPromise = tracer.request({ request }, () => {
+        response = originalRequestHandler(request, initialContext);
+        return isPromise(response) ? response.then(() => undefined) : undefined;
+      });
+      return isPromise(tracerPromise) ? tracerPromise.then(() => response) : response!;
+    };
+  }
 
   // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
