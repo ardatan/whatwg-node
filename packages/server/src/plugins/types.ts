@@ -50,7 +50,7 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
 }
 
 export type Tracer = {
-  request: (
+  request?: (
     payload: { request: Request },
     wrapped: () => Promise<void> | void,
   ) => Promise<void> | void;
