@@ -10,7 +10,7 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
    * A tracer insance. It can be used to wrap the entire request handling pipeline (including the
    * plugin hooks). It is mostly used for observability (monitoring, tracing, etc...).
    */
-  tracer: Tracer;
+  tracer?: Tracer;
   /**
    * This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request,
    * create a short circuit before the request handler takes it over.
