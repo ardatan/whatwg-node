@@ -1,3 +1,4 @@
+import { MaybePromise } from 'packages/disposablestack/src/utils.js';
 import {
   FetchAPI,
   ServerAdapterRequestHandler,
@@ -5,6 +6,11 @@ import {
 } from '../types.js';
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
+  /**
+   * A tracer insance. It can be used to wrap the entire request handling pipeline (including the
+   * plugin hooks). It is mostly used for observability (monitoring, tracing, etc...).
+   */
+  tracer: Tracer;
   /**
    * This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request,
    * create a short circuit before the request handler takes it over.
@@ -43,6 +49,14 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
    */
   onDispose?: () => PromiseLike<void> | void;
 }
+
+export type Tracer = {
+  request: (
+    payload: { request: Request },
+    wrapped: () => Promise<void> | void,
+  ) => Promise<void> | void;
+};
+
 export type OnRequestHook<TServerContext> = (
   payload: OnRequestEventPayload<TServerContext>,
 ) => Promise<void> | void;
