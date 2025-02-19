@@ -19,6 +19,8 @@ export class PonyfillHeaders implements Headers {
   private _get(key: string) {
     const normalized = key.toLowerCase();
     if (normalized === 'set-cookie') {
+      // this._setCookies is only set when this._map has been initialised
+      if (!this._map) this.getMap();
       return this._setCookies.join(', ');
     }
     // If the map is built, reuse it
