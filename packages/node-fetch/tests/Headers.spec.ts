@@ -61,4 +61,20 @@ describe('Headers', () => {
     headers.set('X-Header', null!);
     expect(inspect(headers)).toBe("Headers { 'x-header': null }");
   });
+  describe('Set-Cookie', () => {
+    it('handles values in the given map for get method', () => {
+      const headers = new PonyfillHeaders([
+        ['set-cookie', 'a=b'],
+        ['set-cookie', 'c=d'],
+      ]);
+      expect(headers.get('Set-Cookie')).toBe('a=b, c=d');
+    });
+    it('handles values in the given map for getSetCookie method', () => {
+      const headers = new PonyfillHeaders([
+        ['set-cookie', 'a=b'],
+        ['set-cookie', 'c=d'],
+      ]);
+      expect(headers.getSetCookie()).toEqual(['a=b', 'c=d']);
+    });
+  });
 });
