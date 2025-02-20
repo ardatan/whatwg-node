@@ -1,5 +1,36 @@
 # @whatwg-node/fetch
 
+## 0.10.4
+
+### Patch Changes
+
+- [#2082](https://github.com/ardatan/whatwg-node/pull/2082)
+  [`b217e30`](https://github.com/ardatan/whatwg-node/commit/b217e305b5a5d63e164cf83ef45e7d1e95fefa0e)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+
+  - Updated dependency
+    [`@whatwg-node/node-fetch@^0.7.9` ↗︎](https://www.npmjs.com/package/@whatwg-node/node-fetch/v/0.7.9)
+    (from `^0.7.8`, in `dependencies`)
+
+- [#2079](https://github.com/ardatan/whatwg-node/pull/2079)
+  [`090b4b0`](https://github.com/ardatan/whatwg-node/commit/090b4b0d2aefbf36707fa236395bc6ea99227b9c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug when `set-cookies` given is ignored
+  in `HeadersInit`;
+
+  ```js
+  import { Headers } from '@whatwg-node/fetch'
+
+  const headers = new Headers([
+    ['set-cookie', 'a=b'],
+    ['set-cookie', 'c=d']
+  ])
+  expect(headers.getSetCookie()).toEqual(['a=b', 'c=d']) // Previously it was empty
+  ```
+
+- Updated dependencies
+  [[`090b4b0`](https://github.com/ardatan/whatwg-node/commit/090b4b0d2aefbf36707fa236395bc6ea99227b9c)]:
+  - @whatwg-node/node-fetch@0.7.10
+
 ## 0.10.3
 
 ### Patch Changes

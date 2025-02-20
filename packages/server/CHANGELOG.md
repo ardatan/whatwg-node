@@ -1,5 +1,20 @@
 # @whatwg-node/server
 
+## 0.9.68
+
+### Patch Changes
+
+- [#2082](https://github.com/ardatan/whatwg-node/pull/2082)
+  [`b217e30`](https://github.com/ardatan/whatwg-node/commit/b217e305b5a5d63e164cf83ef45e7d1e95fefa0e)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Updated dependency
+    [`@whatwg-node/fetch@^0.10.3` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.3)
+    (from `^0.10.0`, in `dependencies`)
+- Updated dependencies
+  [[`b217e30`](https://github.com/ardatan/whatwg-node/commit/b217e305b5a5d63e164cf83ef45e7d1e95fefa0e),
+  [`090b4b0`](https://github.com/ardatan/whatwg-node/commit/090b4b0d2aefbf36707fa236395bc6ea99227b9c)]:
+  - @whatwg-node/fetch@0.10.4
+
 ## 0.9.67
 
 ### Patch Changes
