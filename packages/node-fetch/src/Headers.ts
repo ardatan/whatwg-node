@@ -108,6 +108,8 @@ export class PonyfillHeaders implements Headers {
   append(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      // this._setCookies is only set when this._map has been initialised
+      if (!this._map) this.getMap();
       this._setCookies.push(value);
       return;
     }
@@ -128,6 +130,8 @@ export class PonyfillHeaders implements Headers {
 
   has(name: string): boolean {
     if (name === 'set-cookie') {
+      // this._setCookies is only set when this._map has been initialised
+      if (!this._map) this.getMap();
       return this._setCookies.length > 0;
     }
     return !!this._get(name); // we might need to check if header exists and not just check if it's not nullable
@@ -136,6 +140,8 @@ export class PonyfillHeaders implements Headers {
   set(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      // this._setCookies is only set when this._map has been initialised
+      if (!this._map) this.getMap();
       this._setCookies = [value];
       return;
     }
@@ -145,6 +151,8 @@ export class PonyfillHeaders implements Headers {
   delete(name: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      // this._setCookies is only set when this._map has been initialised
+      if (!this._map) this.getMap();
       this._setCookies = [];
       return;
     }
@@ -152,51 +160,21 @@ export class PonyfillHeaders implements Headers {
   }
 
   forEach(callback: (value: string, key: string, parent: Headers) => void): void {
+    // this._setCookies is only set when this._map has been initialised
+    if (!this._map) this.getMap();
     this._setCookies.forEach(setCookie => {
       callback(setCookie, 'set-cookie', this);
     });
-    if (!this._map) {
-      if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          this.headersInit.forEach(([key, value]) => {
-            callback(value, key, this);
-          });
-          return;
-        }
-        if (isHeadersLike(this.headersInit)) {
-          this.headersInit.forEach(callback);
-          return;
-        }
-        Object.entries(this.headersInit).forEach(([key, value]) => {
-          if (value != null) {
-            callback(value, key, this);
-          }
-        });
-      }
-      return;
-    }
     this.getMap().forEach((value, key) => {
       callback(value, key, this);
     });
   }
 
   *_keys(): IterableIterator<string> {
+    // this._setCookies is only set when this._map has been initialised
+    if (!this._map) this.getMap();
     if (this._setCookies.length) {
       yield 'set-cookie';
-    }
-    if (!this._map) {
-      if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([key]) => key)[Symbol.iterator]();
-          return;
-        }
-        if (isHeadersLike(this.headersInit)) {
-          yield* this.headersInit.keys();
-          return;
-        }
-        yield* Object.keys(this.headersInit)[Symbol.iterator]();
-        return;
-      }
     }
     yield* this.getMap().keys();
   }
@@ -206,21 +184,9 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_values(): IterableIterator<string> {
+    // this._setCookies is only set when this._map has been initialised
+    if (!this._map) this.getMap();
     yield* this._setCookies;
-    if (!this._map) {
-      if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([, value]) => value)[Symbol.iterator]();
-          return;
-        }
-        if (isHeadersLike(this.headersInit)) {
-          yield* this.headersInit.values();
-          return;
-        }
-        yield* Object.values(this.headersInit)[Symbol.iterator]();
-        return;
-      }
-    }
     yield* this.getMap().values();
   }
 
@@ -229,21 +195,9 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_entries(): IterableIterator<[string, string]> {
+    // this._setCookies is only set when this._map has been initialised
+    if (!this._map) this.getMap();
     yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
-    if (!this._map) {
-      if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit;
-          return;
-        }
-        if (isHeadersLike(this.headersInit)) {
-          yield* this.headersInit.entries();
-          return;
-        }
-        yield* Object.entries(this.headersInit);
-        return;
-      }
-    }
     yield* this.getMap().entries();
   }
 
@@ -252,6 +206,8 @@ export class PonyfillHeaders implements Headers {
   }
 
   getSetCookie() {
+    // this._setCookies is only set when this._map has been initialised
+    if (!this._map) this.getMap();
     return this._setCookies;
   }
 
@@ -260,6 +216,8 @@ export class PonyfillHeaders implements Headers {
   }
 
   [Symbol.for('nodejs.util.inspect.custom')]() {
+    // this._setCookies is only set when this._map has been initialised
+    if (!this._map) this.getMap();
     const record: Record<string, string[] | string> = {};
     this.forEach((value, key) => {
       if (key === 'set-cookie') {
