@@ -11,14 +11,14 @@ export class PonyfillHeaders implements Headers {
   private _map: Map<string, string> | undefined;
   private objectNormalizedKeysOfHeadersInit: string[] = [];
   private objectOriginalKeysOfHeadersInit: string[] = [];
-  private _setCookies: string[] = [];
+  private _setCookies?: string[];
 
   constructor(private headersInit?: PonyfillHeadersInit) {}
 
   // perf: we don't need to build `this.map` for Requests, as we can access the headers directly
   private _get(key: string) {
     const normalized = key.toLowerCase();
-    if (normalized === 'set-cookie') {
+    if (normalized === 'set-cookie' && this._setCookies?.length) {
       return this._setCookies.join(', ');
     }
     // If the map is built, reuse it
@@ -67,6 +67,7 @@ export class PonyfillHeaders implements Headers {
           this.headersInit.forEach(([key, value]) => {
             const normalizedKey = key.toLowerCase();
             if (normalizedKey === 'set-cookie') {
+              this._setCookies ||= [];
               this._setCookies.push(value);
               return;
             }
@@ -76,6 +77,7 @@ export class PonyfillHeaders implements Headers {
           this._map = new Map();
           this.headersInit.forEach((value, key) => {
             if (key === 'set-cookie') {
+              this._setCookies ||= [];
               this._setCookies.push(value);
               return;
             }
@@ -88,6 +90,7 @@ export class PonyfillHeaders implements Headers {
             if (initValue != null) {
               const normalizedKey = initKey.toLowerCase();
               if (normalizedKey === 'set-cookie') {
+                this._setCookies ||= [];
                 this._setCookies.push(initValue);
                 continue;
               }
@@ -106,6 +109,7 @@ export class PonyfillHeaders implements Headers {
   append(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      this._setCookies ||= [];
       this._setCookies.push(value);
       return;
     }
@@ -121,12 +125,12 @@ export class PonyfillHeaders implements Headers {
       return null;
     }
 
-    return value;
+    return value.toString();
   }
 
   has(name: string): boolean {
     if (name === 'set-cookie') {
-      return this._setCookies.length > 0;
+      return !!this._setCookies?.length;
     }
     return !!this._get(name); // we might need to check if header exists and not just check if it's not nullable
   }
@@ -150,7 +154,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   forEach(callback: (value: string, key: string, parent: Headers) => void): void {
-    this._setCookies.forEach(setCookie => {
+    this._setCookies?.forEach(setCookie => {
       callback(setCookie, 'set-cookie', this);
     });
     if (!this._map) {
@@ -179,7 +183,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_keys(): IterableIterator<string> {
-    if (this._setCookies.length) {
+    if (this._setCookies?.length) {
       yield 'set-cookie';
     }
     if (!this._map) {
@@ -204,7 +208,9 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_values(): IterableIterator<string> {
-    yield* this._setCookies;
+    if (this._setCookies?.length) {
+      yield* this._setCookies;
+    }
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
@@ -227,7 +233,9 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_entries(): IterableIterator<[string, string]> {
-    yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
+    if (this._setCookies?.length) {
+      yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
+    }
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
@@ -250,7 +258,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   getSetCookie() {
-    return this._setCookies;
+    return this._setCookies || [];
   }
 
   [Symbol.iterator](): HeadersIterator<[string, string]> {
@@ -261,7 +269,7 @@ export class PonyfillHeaders implements Headers {
     const record: Record<string, string[] | string> = {};
     this.forEach((value, key) => {
       if (key === 'set-cookie') {
-        record['set-cookie'] = this._setCookies;
+        record['set-cookie'] = this._setCookies || [];
       } else {
         record[key] = value?.includes(',') ? value.split(',').map(el => el.trim()) : value;
       }
