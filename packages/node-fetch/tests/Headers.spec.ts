@@ -62,13 +62,19 @@ describe('Headers', () => {
     expect(inspect(headers)).toBe("Headers { 'x-header': null }");
   });
   describe('Set-Cookie', () => {
-    it('handles values in the given map', () => {
-      const init = {
-        // Record<string, string[]> is not a HeadersInit actually
-        'set-cookie': ['a=b', 'c=d'],
-      } as any;
-      const headers = new PonyfillHeaders(init);
-      expect(headers.get('Set-Cookie')).toBe('a=b,c=d');
+    it('handles values in the given map for get method', () => {
+      const headers = new PonyfillHeaders([
+        ['set-cookie', 'a=b'],
+        ['set-cookie', 'c=d'],
+      ]);
+      expect(headers.get('Set-Cookie')).toBe('a=b, c=d');
+    });
+    it('handles values in the given map for getSetCookie method', () => {
+      const headers = new PonyfillHeaders([
+        ['set-cookie', 'a=b'],
+        ['set-cookie', 'c=d'],
+      ]);
+      expect(headers.getSetCookie()).toEqual(['a=b', 'c=d']);
     });
   });
 });

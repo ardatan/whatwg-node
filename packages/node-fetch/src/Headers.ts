@@ -32,7 +32,16 @@ export class PonyfillHeaders implements Headers {
     }
 
     if (Array.isArray(this.headersInit)) {
-      return this.headersInit.find(header => header[0].toLowerCase() === normalized)?.[1] || null;
+      const found = this.headersInit.filter(
+        ([headerKey]) => headerKey.toLowerCase() === normalized,
+      );
+      if (found.length === 0) {
+        return null;
+      }
+      if (found.length === 1) {
+        return found[0][1];
+      }
+      return found.map(([, value]) => value).join(', ');
     } else if (isHeadersLike(this.headersInit)) {
       return this.headersInit.get(normalized);
     } else {
@@ -61,18 +70,18 @@ export class PonyfillHeaders implements Headers {
   // I could do a getter here, but I'm too lazy to type `getter`.
   private getMap() {
     if (!this._map) {
+      this._setCookies = [];
       if (this.headersInit != null) {
         if (Array.isArray(this.headersInit)) {
           this._map = new Map();
-          this.headersInit.forEach(([key, value]) => {
+          for (const [key, value] of this.headersInit) {
             const normalizedKey = key.toLowerCase();
             if (normalizedKey === 'set-cookie') {
-              this._setCookies ||= [];
               this._setCookies.push(value);
-              return;
+              continue;
             }
-            this._map!.set(normalizedKey, value);
-          });
+            this._map.set(normalizedKey, value);
+          }
         } else if (isHeadersLike(this.headersInit)) {
           this._map = new Map();
           this.headersInit.forEach((value, key) => {
@@ -258,7 +267,10 @@ export class PonyfillHeaders implements Headers {
   }
 
   getSetCookie() {
-    return this._setCookies || [];
+    if (!this._setCookies) {
+      this.getMap();
+    }
+    return this._setCookies!;
   }
 
   [Symbol.iterator](): HeadersIterator<[string, string]> {
