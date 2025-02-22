@@ -4,6 +4,4 @@
 '@whatwg-node/fetch': patch
 ---
 
-Fix HTTP/2 body stream handling
-
-This fixes the `TypeError: bodyInit.stream is not a function` error thrown when the incoming request is attempted to parse.
+Fixes the `TypeError: bodyInit.stream is not a function` error thrown when the incoming HTTP/2 request is attempted to parse.
