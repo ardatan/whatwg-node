@@ -1,5 +1,20 @@
 # @whatwg-node/server
 
+## 0.9.69
+
+### Patch Changes
+
+- [#2093](https://github.com/ardatan/whatwg-node/pull/2093)
+  [`31f021a`](https://github.com/ardatan/whatwg-node/commit/31f021ac5df1ddd7f16807d4ed6c5776d250ab29)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fixes the
+  `TypeError: bodyInit.stream is not a function` error thrown when `@whatwg-node/server` is used
+  with `node:http2` and attempts the incoming HTTP/2 request to parse with `Request.json`,
+  `Request.text`, `Request.formData`, or `Request.blob` methods.
+
+- Updated dependencies
+  [[`31f021a`](https://github.com/ardatan/whatwg-node/commit/31f021ac5df1ddd7f16807d4ed6c5776d250ab29)]:
+  - @whatwg-node/fetch@0.10.5
+
 ## 0.9.68
 
 ### Patch Changes
