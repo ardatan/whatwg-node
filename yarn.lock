@@ -10190,10 +10190,10 @@ workerd@1.20250214.0:
     "@cloudflare/workerd-linux-arm64" "1.20250214.0"
     "@cloudflare/workerd-windows-64" "1.20250214.0"
 
-wrangler@3.109.2:
-  version "3.109.2"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.109.2.tgz#e792c32b9656b71f9fec33b95f4de6fe0bb53fd8"
-  integrity sha512-CT8izugPBth5o1o4gLNcQrDkHKSX2Jthy6gkyhaWiy2pFrx+536NMn/atWilLA1t1uhIgddEI5BXDNudIkPPHA==
+wrangler@3.109.3:
+  version "3.109.3"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.109.3.tgz#4ed118bc9ef868c8576d946e0b2d7e25360e071a"
+  integrity sha512-T+SfFYEbkWDzf8WRR1JzaVKPH7wAzyciRIua8qszT+UqPqFNb6M5beCHHK/de7Zk5z6W5lvLly9SHToC11maDQ==
   dependencies:
     "@cloudflare/kv-asset-handler" "0.3.4"
     "@esbuild-plugins/node-globals-polyfill" "0.2.3"
