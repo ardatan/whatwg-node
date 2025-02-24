@@ -508,7 +508,7 @@ function isFormData(value: any): value is FormData {
 }
 
 function isBlob(value: any): value is Blob {
-  return value?.stream != null;
+  return value?.stream != null && typeof value.stream === 'function';
 }
 
 function isURLSearchParams(value: any): value is URLSearchParams {
