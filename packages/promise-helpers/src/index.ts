@@ -105,25 +105,34 @@ export function createDeferredPromise<T = void>(): DeferredPromise<T> {
   };
 }
 
-export function iterateAsyncVoid<TInput>(
+export { iterateAsync as iterateAsyncVoid };
+
+export function iterateAsync<TInput, TOutput>(
   iterable: Iterable<TInput>,
-  callback: (input: TInput, stopEarly: () => void) => MaybePromise<void>,
+  callback: (input: TInput, endEarly: VoidFunction) => MaybePromise<TOutput>,
+  results?: TOutput[],
 ): MaybePromise<void> {
-  const iterator = iterable[Symbol.iterator]();
-  let stopEarlyFlag = false;
-  function stopEarlyFn() {
-    stopEarlyFlag = true;
+  if ((iterable as Array<TInput>)?.length === 0) {
+    return;
   }
+  const iterator = iterable[Symbol.iterator]();
   function iterate(): MaybePromise<void> {
     const { done: endOfIterator, value } = iterator.next();
     if (endOfIterator) {
       return;
     }
+    let endedEarly = false;
+    function endEarly() {
+      endedEarly = true;
+    }
     return handleMaybePromise(
-      () => callback(value, stopEarlyFn),
-      () => {
-        if (stopEarlyFlag) {
+      () => callback(value, endEarly),
+      result => {
+        if (endedEarly) {
           return;
+        }
+        if (result) {
+          results?.push(result);
         }
         return iterate();
       },
