@@ -2,7 +2,12 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
-import { createDeferredPromise, isPromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  fakePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type { FetchAPI, FetchEvent } from './types.js';
 
 export { isPromise, createDeferredPromise };
@@ -164,9 +169,9 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
       get: (target, prop: keyof Request, receiver) => {
         switch (prop) {
           case 'json':
-            return async () => maybeParsedBody;
+            return () => fakePromise(maybeParsedBody);
           case 'text':
-            return async () => JSON.stringify(maybeParsedBody);
+            return () => fakePromise(JSON.stringify(maybeParsedBody));
           default:
             return Reflect.get(target, prop, receiver);
         }
