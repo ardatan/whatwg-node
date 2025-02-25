@@ -1,4 +1,5 @@
 import { describe, expect, it, jest } from '@jest/globals';
+import { MaybePromise } from '@whatwg-node/promise-helpers';
 import { AsyncDisposableStack, DisposableStack, DisposableSymbols, patchSymbols } from '../src';
 
 function createTestCases<
@@ -11,7 +12,7 @@ function createTestCases<
 ): Record<
   string,
   {
-    run(stack: TStack, disposeFn: jest.Mock): void | Promise<void>;
+    run(stack: TStack, disposeFn: jest.Mock): MaybePromise<void>;
     check(disposeFn: jest.Mock): void;
   }
 > {

@@ -402,7 +402,7 @@ function createServerAdapter<
       | ({ request: Request } & Partial<TServerContext>)
       | UWSResponse,
     ...maybeCtx: Partial<TServerContext>[]
-  ): Promise<Response> | Response | Promise<void> | void => {
+  ): MaybePromise<Response> | Promise<void> | void => {
     // If it is a Node request
     const [initOrCtxOrRes, ...restOfCtx] = maybeCtx;
 

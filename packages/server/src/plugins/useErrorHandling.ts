@@ -1,5 +1,5 @@
 import { Response as DefaultResponseCtor } from '@whatwg-node/fetch';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import type { ServerAdapterPlugin } from './types.js';
 
 export function createDefaultErrorHandler<TServerContext = {}>(
@@ -44,7 +44,7 @@ export type ErrorHandler<TServerContext> = (
   e: any,
   request: Request,
   ctx: TServerContext,
-) => Response | Promise<Response> | void;
+) => MaybePromise<Response> | void;
 
 export function useErrorHandling<TServerContext>(
   onError?: ErrorHandler<TServerContext>,
@@ -52,9 +52,7 @@ export function useErrorHandling<TServerContext>(
   return {
     onRequest({ requestHandler, setRequestHandler, fetchAPI }) {
       const errorHandler = onError || createDefaultErrorHandler<TServerContext>(fetchAPI.Response);
-      setRequestHandler(function handlerWithErrorHandling(request, serverContext):
-        | Promise<Response>
-        | Response {
+      setRequestHandler(function handlerWithErrorHandling(request, serverContext) {
         return handleMaybePromise(
           () => requestHandler(request, serverContext),
           response => response,

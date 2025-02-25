@@ -14,7 +14,7 @@ export function handleMaybePromiseLike<TInput, TOutput>(
   outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
 ): MaybePromiseLike<TOutput> {
-  function _handle() {
+  function _handleMaybePromiseLike() {
     const input$ = inputFactory();
     if (isPromiseLike(input$)) {
       return input$.then(outputSuccessFactory, outputErrorFactory);
@@ -22,10 +22,10 @@ export function handleMaybePromiseLike<TInput, TOutput>(
     return outputSuccessFactory(input$);
   }
   if (!outputErrorFactory) {
-    return _handle();
+    return _handleMaybePromiseLike();
   }
   try {
-    return _handle();
+    return _handleMaybePromiseLike();
   } catch (err) {
     return outputErrorFactory(err);
   }
@@ -106,14 +106,14 @@ export function createDeferredPromise<T = void>(): DeferredPromise<T> {
 
 export function iterateAsyncVoid<TInput>(
   iterable: Iterable<TInput>,
-  callback: (input: TInput, stopEarly: () => void) => Promise<void> | void,
-): Promise<void> | void {
+  callback: (input: TInput, stopEarly: () => void) => MaybePromise<void>,
+): MaybePromise<void> {
   const iterator = iterable[Symbol.iterator]();
   let stopEarlyFlag = false;
   function stopEarlyFn() {
     stopEarlyFlag = true;
   }
-  function iterate(): Promise<void> | void {
+  function iterate(): MaybePromise<void> {
     const { done: endOfIterator, value } = iterator.next();
     if (endOfIterator) {
       return;

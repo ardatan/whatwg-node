@@ -477,7 +477,7 @@ export function isolateObject<TIsolatedObject extends object>(
 }
 
 export function handleAbortSignalAndPromiseResponse(
-  response$: Promise<Response> | Response,
+  response$: MaybePromise<Response>,
   abortSignal: AbortSignal,
 ) {
   if (abortSignal?.aborted) {

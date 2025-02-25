@@ -1,3 +1,4 @@
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import type { ServerAdapterPlugin } from './types.js';
 
 export type CORSOptions =
@@ -21,7 +22,7 @@ export type CORSOptionsFactory<TServerContext> = (
   ...args: {} extends TServerContext
     ? [serverContext?: TServerContext | undefined]
     : [serverContext: TServerContext]
-) => CORSOptions | Promise<CORSOptions>;
+) => MaybePromise<CORSOptions>;
 
 export function getCORSHeadersByRequestAndOptions(
   request: Request,
@@ -102,14 +103,15 @@ export function getCORSHeadersByRequestAndOptions(
   return headers;
 }
 
-async function getCORSResponseHeaders<TServerContext>(
+function getCORSResponseHeaders<TServerContext>(
   request: Request,
   corsOptionsFactory: CORSOptionsFactory<TServerContext>,
   serverContext: TServerContext,
 ) {
-  const corsOptions = await corsOptionsFactory(request, serverContext);
-
-  return getCORSHeadersByRequestAndOptions(request, corsOptions);
+  return handleMaybePromise(
+    () => corsOptionsFactory(request, serverContext),
+    corsOptions => getCORSHeadersByRequestAndOptions(request, corsOptions),
+  );
 }
 
 export function useCORS<TServerContext>(
@@ -143,13 +145,17 @@ export function useCORS<TServerContext>(
         endResponse(response);
       }
     },
-    async onResponse({ request, serverContext, response }) {
-      const headers = await getCORSResponseHeaders<any>(request, corsOptionsFactory, serverContext);
-      if (headers != null) {
-        for (const headerName in headers) {
-          response.headers.set(headerName, headers[headerName]);
-        }
-      }
+    onResponse({ request, serverContext, response }) {
+      return handleMaybePromise(
+        () => getCORSResponseHeaders(request, corsOptionsFactory, serverContext),
+        headers => {
+          if (headers != null) {
+            for (const headerName in headers) {
+              response.headers.set(headerName, headers[headerName]);
+            }
+          }
+        },
+      );
     },
   };
 }
