@@ -140,3 +140,27 @@ export function iterateAsyncVoid<TInput>(
   }
   return iterate();
 }
+
+export function fakeRejectPromise(error: unknown): Promise<never> {
+  if (isPromise(error)) {
+    return error as Promise<never>;
+  }
+  return {
+    then() {
+      return this;
+    },
+    catch(reject: (error: unknown) => any) {
+      if (reject) {
+        return fakePromise(reject(error));
+      }
+      return this;
+    },
+    finally(cb) {
+      if (cb) {
+        cb();
+      }
+      return this;
+    },
+    [Symbol.toStringTag]: 'Promise',
+  };
+}
