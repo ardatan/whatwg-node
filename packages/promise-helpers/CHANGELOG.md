@@ -1,5 +1,12 @@
 # @whatwg-node/promise-helpers
 
+## 1.2.1
+
+### Patch Changes
+
+- [`a587b3d`](https://github.com/ardatan/whatwg-node/commit/a587b3dd1e8a5791ee01ce90d96d3527e0091f99)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the termination of the loop in `iterateAsync`
+
 ## 1.2.0
 
 ### Minor Changes
