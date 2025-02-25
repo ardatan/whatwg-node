@@ -2,7 +2,15 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
+import {
+  createDeferredPromise,
+  fakePromise,
+  isPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import type { FetchAPI, FetchEvent } from './types.js';
+
+export { isPromise, createDeferredPromise };
 
 export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   return (
@@ -161,9 +169,9 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
       get: (target, prop: keyof Request, receiver) => {
         switch (prop) {
           case 'json':
-            return async () => maybeParsedBody;
+            return () => fakePromise(maybeParsedBody);
           case 'text':
-            return async () => JSON.stringify(maybeParsedBody);
+            return () => fakePromise(JSON.stringify(maybeParsedBody));
           default:
             return Reflect.get(target, prop, receiver);
         }
@@ -444,40 +452,7 @@ export function completeAssign(...args: any[]) {
   return target;
 }
 
-export function isPromise<T>(val: T | Promise<T>): val is Promise<T> {
-  return (val as any)?.then != null;
-}
-
-export function iterateAsyncVoid<TInput>(
-  iterable: Iterable<TInput>,
-  callback: (input: TInput, stopEarly: () => void) => Promise<void> | void,
-): Promise<void> | void {
-  const iterator = iterable[Symbol.iterator]();
-  let stopEarlyFlag = false;
-  function stopEarlyFn() {
-    stopEarlyFlag = true;
-  }
-  function iterate(): Promise<void> | void {
-    const { done: endOfIterator, value } = iterator.next();
-    if (endOfIterator) {
-      return;
-    }
-    const result$ = callback(value, stopEarlyFn);
-    if (isPromise(result$)) {
-      return result$.then(() => {
-        if (stopEarlyFlag) {
-          return;
-        }
-        return iterate();
-      });
-    }
-    if (stopEarlyFlag) {
-      return;
-    }
-    return iterate();
-  }
-  return iterate();
-}
+export { iterateAsyncVoid } from '@whatwg-node/promise-helpers';
 
 export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof Response) {
   return new ResponseCtor(error.stack || error.message || error.toString(), {
@@ -506,32 +481,8 @@ export function isolateObject<TIsolatedObject extends object>(
   );
 }
 
-export interface DeferredPromise<T = void> {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (reason: any) => void;
-}
-
-export function createDeferredPromise<T = void>(): DeferredPromise<T> {
-  let resolveFn: (value: T) => void;
-  let rejectFn: (reason: any) => void;
-  const promise = new Promise<T>(function deferredPromiseExecutor(resolve, reject) {
-    resolveFn = resolve;
-    rejectFn = reject;
-  });
-  return {
-    promise,
-    get resolve() {
-      return resolveFn;
-    },
-    get reject() {
-      return rejectFn;
-    },
-  };
-}
-
 export function handleAbortSignalAndPromiseResponse(
-  response$: Promise<Response> | Response,
+  response$: MaybePromise<Response>,
   abortSignal: AbortSignal,
 ) {
   if (abortSignal?.aborted) {

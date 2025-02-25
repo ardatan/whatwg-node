@@ -1,11 +1,12 @@
+import { handleMaybePromiseLike, MaybePromiseLike } from '@whatwg-node/promise-helpers';
 import { PonyfillSuppressedError } from './SupressedError.js';
 import { DisposableSymbols } from './symbols.js';
-import { isAsyncDisposable, isSyncDisposable, MaybePromise } from './utils.js';
+import { isAsyncDisposable, isSyncDisposable } from './utils.js';
 
 const SuppressedError = globalThis.SuppressedError || PonyfillSuppressedError;
 
 export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
-  private callbacks: (() => MaybePromise<void>)[] = [];
+  private callbacks: (() => MaybePromiseLike<void>)[] = [];
   get disposed(): boolean {
     return this.callbacks.length === 0;
   }
@@ -19,14 +20,14 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
     return value;
   }
 
-  adopt<T>(value: T, onDisposeAsync: (value: T) => MaybePromise<void>): T {
+  adopt<T>(value: T, onDisposeAsync: (value: T) => MaybePromiseLike<void>): T {
     if (onDisposeAsync) {
       this.callbacks.push(() => onDisposeAsync(value));
     }
     return value;
   }
 
-  defer(onDisposeAsync: () => MaybePromise<void>): void {
+  defer(onDisposeAsync: () => MaybePromiseLike<void>): void {
     if (onDisposeAsync) {
       this.callbacks.push(onDisposeAsync);
     }
@@ -45,24 +46,17 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
 
   private _error?: Error | undefined;
 
-  private _iterateCallbacks(): MaybePromise<void> {
+  private _iterateCallbacks(): MaybePromiseLike<void> {
     const cb = this.callbacks.pop();
     if (cb) {
-      try {
-        const res$ = cb();
-        if (res$?.then) {
-          return res$.then(
-            () => this._iterateCallbacks(),
-            error => {
-              this._error = this._error ? new SuppressedError(error, this._error) : error;
-              return this._iterateCallbacks();
-            },
-          );
-        }
-      } catch (error: any) {
-        this._error = this._error ? new SuppressedError(error, this._error) : error;
-      }
-      return this._iterateCallbacks();
+      return handleMaybePromiseLike(
+        cb,
+        () => this._iterateCallbacks(),
+        error => {
+          this._error = this._error ? new SuppressedError(error, this._error) : error;
+          return this._iterateCallbacks();
+        },
+      );
     }
   }
 

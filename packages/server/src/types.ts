@@ -1,11 +1,12 @@
 import type { RequestListener } from 'node:http';
+import { MaybePromise, MaybePromiseLike } from '@whatwg-node/promise-helpers';
 import type { NodeRequest, NodeResponse } from './utils.js';
 import { UWSHandler, UWSRequest, UWSResponse } from './uwebsockets.js';
 
 export interface FetchEvent extends Event {
-  waitUntil(f: Promise<void> | void): void;
+  waitUntil(f: MaybePromise<void>): void;
   request: Request;
-  respondWith(r: Response | PromiseLike<Response>): void;
+  respondWith(r: MaybePromiseLike<Response>): void;
 }
 
 export interface ServerAdapterBaseObject<
@@ -27,28 +28,24 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   handleRequest: (
     request: Request,
     ctx: TServerContext & Partial<ServerAdapterInitialContext>,
-  ) => Promise<Response> | Response;
+  ) => MaybePromise<Response>;
   /**
    * WHATWG Fetch spec compliant `fetch` function that can be used for testing purposes.
    */
-  fetch(request: Request, ctx: TServerContext): Promise<Response> | Response;
-  fetch(request: Request, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
-  fetch(urlStr: string, ctx: TServerContext): Promise<Response> | Response;
-  fetch(urlStr: string, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
-  fetch(urlStr: string, init: RequestInit, ctx: TServerContext): Promise<Response> | Response;
+  fetch(request: Request, ctx: TServerContext): MaybePromise<Response>;
+  fetch(request: Request, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>;
+  fetch(urlStr: string, ctx: TServerContext): MaybePromise<Response>;
+  fetch(urlStr: string, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>;
+  fetch(urlStr: string, init: RequestInit, ctx: TServerContext): MaybePromise<Response>;
   fetch(
     urlStr: string,
     init: RequestInit,
     ...ctx: Partial<TServerContext>[]
-  ): Promise<Response> | Response;
-  fetch(url: URL, ctx: TServerContext): Promise<Response> | Response;
-  fetch(url: URL, ...ctx: Partial<TServerContext>[]): Promise<Response> | Response;
-  fetch(url: URL, init: RequestInit, ctx: TServerContext): Promise<Response> | Response;
-  fetch(
-    url: URL,
-    init: RequestInit,
-    ...ctx: Partial<TServerContext>[]
-  ): Promise<Response> | Response;
+  ): MaybePromise<Response>;
+  fetch(url: URL, ctx: TServerContext): MaybePromise<Response>;
+  fetch(url: URL, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>;
+  fetch(url: URL, init: RequestInit, ctx: TServerContext): MaybePromise<Response>;
+  fetch(url: URL, init: RequestInit, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>;
   /**
    * This function takes Node's request object and returns a WHATWG Fetch spec compliant `Response` object.
    *
@@ -57,7 +54,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   handleNodeRequest(
     nodeRequest: NodeRequest,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
-  ): Promise<Response> | Response;
+  ): MaybePromise<Response>;
   /**
    * This function takes Node's request and response objects and returns a WHATWG Fetch spec compliant `Response` object.
    */
@@ -65,7 +62,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
     nodeRequest: NodeRequest,
     nodeResponseOrContainer: { raw: NodeResponse } | NodeResponse,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
-  ): Promise<Response> | Response;
+  ): MaybePromise<Response>;
   /**
    * A request listener function that can be used with any Node server variation.
    */
@@ -81,11 +78,11 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   handle(
     requestLike: RequestLike,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
-  ): Promise<Response> | Response;
+  ): MaybePromise<Response>;
   handle(
     request: Request,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
-  ): Promise<Response> | Response;
+  ): MaybePromise<Response>;
   handle(
     fetchEvent: FetchEvent & Partial<TServerContext & ServerAdapterInitialContext>,
     ...ctx: Partial<TServerContext>[]
@@ -98,7 +95,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   handle(
     container: { request: Request } & Partial<TServerContext & ServerAdapterInitialContext>,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
-  ): Promise<Response> | Response;
+  ): MaybePromise<Response>;
 
   disposableStack: AsyncDisposableStack;
 
@@ -128,7 +125,7 @@ export type ServerAdapter<
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
   ctx: TServerContext & ServerAdapterInitialContext,
-) => Promise<Response> | Response;
+) => MaybePromise<Response>;
 
 export type ServerAdapterNodeContext = {
   req: NodeRequest;

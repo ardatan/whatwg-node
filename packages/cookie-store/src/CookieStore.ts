@@ -1,3 +1,4 @@
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import { CookieChangeEvent } from './CookieChangeEvent.js';
 import { parse } from './parse.js';
 import {
@@ -21,7 +22,7 @@ export class CookieStore extends EventTarget {
     this.cookieMap = parse(cookieString);
   }
 
-  async get(
+  get(
     init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions | undefined,
   ): Promise<Cookie | undefined> {
     if (init == null) {
@@ -29,7 +30,7 @@ export class CookieStore extends EventTarget {
     } else if (init instanceof Object && !Object.keys(init).length) {
       throw new TypeError('CookieStoreGetOptions must not be empty');
     }
-    return (await this.getAll(init))[0];
+    return this.getAll(init).then(cookies => cookies[0]);
   }
 
   async set(init: CookieListItem | string, possibleValue?: string): Promise<void> {
@@ -95,10 +96,10 @@ export class CookieStore extends EventTarget {
     }
   }
 
-  async getAll(init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions): Promise<Cookie[]> {
+  getAll(init?: CookieStoreGetOptions['name'] | CookieStoreGetOptions): Promise<Cookie[]> {
     const cookies = Array.from(this.cookieMap.values());
     if (init == null || Object.keys(init).length === 0) {
-      return cookies;
+      return fakePromise(cookies);
     }
     let name: string | undefined;
     if (typeof init === 'string') {
@@ -106,10 +107,10 @@ export class CookieStore extends EventTarget {
     } else {
       name = init.name;
     }
-    return cookies.filter(cookie => cookie.name === name);
+    return fakePromise(cookies.filter(cookie => cookie.name === name));
   }
 
-  async delete(init: CookieStoreDeleteOptions['name'] | CookieStoreDeleteOptions): Promise<void> {
+  delete(init: CookieStoreDeleteOptions['name'] | CookieStoreDeleteOptions): Promise<void> {
     const item: CookieListItem = {
       name: '',
       value: '',
@@ -128,6 +129,6 @@ export class CookieStore extends EventTarget {
 
     item.expires = 0;
 
-    await this.set(item);
+    return this.set(item);
   }
 }
