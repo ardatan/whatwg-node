@@ -159,7 +159,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           }
         }
         this.locked = false;
-        return fakePromise(undefined);
+        return fakePromise();
       },
       closed: new Promise((resolve, reject) => {
         this.readable.once('end', resolve);

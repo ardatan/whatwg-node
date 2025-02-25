@@ -79,7 +79,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
       },
       write(chunk: W) {
         if (chunk == null) {
-          return fakePromise(undefined);
+          return fakePromise();
         }
         return new Promise<void>((resolve, reject) => {
           writable.write(chunk, (err: Error | null | undefined) => {
@@ -93,7 +93,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
       },
       close() {
         if (!writable.errored && writable.closed) {
-          return fakePromise(undefined);
+          return fakePromise();
         }
         return new Promise<void>((resolve, reject) => {
           if (writable.errored) {
@@ -120,7 +120,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
 
   close(): Promise<void> {
     if (!this.writable.errored && this.writable.closed) {
-      return fakePromise(undefined);
+      return fakePromise();
     }
     return new Promise<void>((resolve, reject) => {
       if (this.writable.errored) {

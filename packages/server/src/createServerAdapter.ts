@@ -452,13 +452,13 @@ function createServerAdapter<
       if (_disposableStack && !_disposableStack.disposed) {
         return _disposableStack.disposeAsync();
       }
-      return fakePromise(undefined);
+      return fakePromise();
     },
     dispose() {
       if (_disposableStack && !_disposableStack.disposed) {
         return _disposableStack.disposeAsync();
       }
-      return fakePromise(undefined);
+      return fakePromise();
     },
   };
 

@@ -1,4 +1,4 @@
-import { handleMaybePromiseLike, MaybePromiseLike } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, type MaybePromiseLike } from '@whatwg-node/promise-helpers';
 import { PonyfillSuppressedError } from './SupressedError.js';
 import { DisposableSymbols } from './symbols.js';
 import { isAsyncDisposable, isSyncDisposable } from './utils.js';
@@ -49,7 +49,7 @@ export class PonyfillAsyncDisposableStack implements AsyncDisposableStack {
   private _iterateCallbacks(): MaybePromiseLike<void> {
     const cb = this.callbacks.pop();
     if (cb) {
-      return handleMaybePromiseLike(
+      return handleMaybePromise(
         cb,
         () => this._iterateCallbacks(),
         error => {

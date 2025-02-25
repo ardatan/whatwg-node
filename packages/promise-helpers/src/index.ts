@@ -1,56 +1,47 @@
-export type MaybePromise<T> = MaybePromiseLike<T, Promise<T>>;
-export type MaybePromiseLike<T, TPromise extends PromiseLike<T> = PromiseLike<T>> = TPromise | T;
+export type MaybePromise<T> = Promise<T> | T;
+export type MaybePromiseLike<T> = PromiseLike<T> | T;
 
-export function isPromise<T>(value: MaybePromise<T>): value is Promise<T> {
-  return isPromiseLike(value);
-}
-
-export function isPromiseLike<T, TPromiseLike extends PromiseLike<T>>(
-  value: MaybePromiseLike<T, TPromiseLike>,
-): value is TPromiseLike {
-  return (value as TPromiseLike)?.then != null;
-}
-
-export function handleMaybePromiseLike<
-  TInput,
-  TOutput,
-  TPromiseLikeInput extends PromiseLike<TInput> = PromiseLike<TInput>,
-  TPromiseLikeOutput extends PromiseLike<TOutput> = PromiseLike<TOutput>,
->(
-  inputFactory: () => MaybePromiseLike<TInput, TPromiseLikeInput>,
-  outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput, TPromiseLikeOutput>,
-  outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput, TPromiseLikeOutput>,
-): MaybePromiseLike<TOutput, TPromiseLikeOutput> {
-  function _handleMaybePromiseLike(): MaybePromiseLike<TOutput, TPromiseLikeOutput> {
-    const input$ = inputFactory();
-    if (isPromiseLike<TInput, TPromiseLikeInput>(input$)) {
-      return input$.then(outputSuccessFactory, outputErrorFactory) as TPromiseLikeOutput;
-    }
-    return outputSuccessFactory(input$);
-  }
-  if (!outputErrorFactory) {
-    return _handleMaybePromiseLike();
-  }
-  try {
-    return _handleMaybePromiseLike();
-  } catch (err) {
-    return outputErrorFactory(err);
-  }
+export function isPromise<T>(value: MaybePromise<T>): value is Promise<T>;
+export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T>;
+export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T> {
+  return (value as any)?.then != null;
 }
 
 export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromise<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromise<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromise<TOutput>,
-): MaybePromise<TOutput> {
-  return handleMaybePromiseLike<TInput, TOutput, Promise<TInput>, Promise<TOutput>>(
-    inputFactory,
-    outputSuccessFactory,
-    outputErrorFactory,
-  );
+): MaybePromise<TOutput>;
+export function handleMaybePromise<TInput, TOutput>(
+  inputFactory: () => MaybePromiseLike<TInput>,
+  outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
+  outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
+): MaybePromiseLike<TOutput>;
+export function handleMaybePromise<TInput, TOutput>(
+  inputFactory: () => MaybePromiseLike<TInput>,
+  outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
+  outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
+): MaybePromiseLike<TOutput> {
+  function _handleMaybePromise() {
+    const input$ = inputFactory() as MaybePromise<TInput>;
+    if (isPromise(input$)) {
+      return input$.then(outputSuccessFactory, outputErrorFactory);
+    }
+    return outputSuccessFactory(input$);
+  }
+  if (!outputErrorFactory) {
+    return _handleMaybePromise();
+  }
+  try {
+    return _handleMaybePromise();
+  } catch (err) {
+    return outputErrorFactory(err);
+  }
 }
 
-export function fakePromise<T>(value: T): Promise<T> {
+export function fakePromise<T>(value: T): Promise<T>;
+export function fakePromise(value: void): Promise<void>;
+export function fakePromise<T = void>(value: T): Promise<T> {
   if (isPromise(value)) {
     return value;
   }
@@ -163,4 +154,25 @@ export function fakeRejectPromise(error: unknown): Promise<never> {
     },
     [Symbol.toStringTag]: 'Promise',
   };
+}
+
+/**
+ * @deprecated Use `handleMaybePromise` instead.
+ */
+export function mapMaybePromise<TInput, TOutput>(
+  input: MaybePromise<TInput>,
+  onSuccess: (value: TInput) => MaybePromise<TOutput>,
+  onError?: (err: any) => MaybePromise<TOutput>,
+): MaybePromise<TOutput>;
+export function mapMaybePromise<TInput, TOutput>(
+  input: MaybePromiseLike<TInput>,
+  onSuccess: (value: TInput) => MaybePromiseLike<TOutput>,
+  onError?: (err: any) => MaybePromiseLike<TOutput>,
+): MaybePromiseLike<TOutput>;
+export function mapMaybePromise<TInput, TOutput>(
+  input: MaybePromiseLike<TInput>,
+  onSuccess: (value: TInput) => MaybePromiseLike<TOutput>,
+  onError?: (err: any) => MaybePromiseLike<TOutput>,
+): MaybePromiseLike<TOutput> {
+  return handleMaybePromise(() => input, onSuccess, onError);
 }

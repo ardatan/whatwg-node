@@ -1,5 +1,5 @@
 import type { RequestListener } from 'node:http';
-import { MaybePromise, MaybePromiseLike } from '@whatwg-node/promise-helpers';
+import type { MaybePromise, MaybePromiseLike } from '@whatwg-node/promise-helpers';
 import type { NodeRequest, NodeResponse } from './utils.js';
 import { UWSHandler, UWSRequest, UWSResponse } from './uwebsockets.js';
 
