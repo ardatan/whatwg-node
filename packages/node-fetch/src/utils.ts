@@ -35,30 +35,6 @@ export function isNodeReadable(obj: any): obj is Readable {
   return obj != null && obj.pipe != null;
 }
 
-export interface DeferredPromise<T = void> {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
-  reject: (reason: any) => void;
-}
-
-export function createDeferredPromise<T = void>(): DeferredPromise<T> {
-  let resolveFn: (value: T) => void;
-  let rejectFn: (reason: any) => void;
-  const promise = new Promise<T>(function deferredPromiseExecutor(resolve, reject) {
-    resolveFn = resolve;
-    rejectFn = reject;
-  });
-  return {
-    promise,
-    get resolve() {
-      return resolveFn;
-    },
-    get reject() {
-      return rejectFn;
-    },
-  };
-}
-
 export function isIterable(value: any): value is Iterable<unknown> {
   return value?.[Symbol.iterator] != null;
 }

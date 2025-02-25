@@ -2,14 +2,10 @@ import { Buffer } from 'node:buffer';
 import { PassThrough, Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { rootCertificates } from 'node:tls';
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import {
-  createDeferredPromise,
-  defaultHeadersSerializer,
-  isNodeReadable,
-  shouldRedirect,
-} from './utils.js';
+import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
