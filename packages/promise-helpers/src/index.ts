@@ -129,11 +129,11 @@ export function iterateAsync<TInput, TOutput>(
     return handleMaybePromise(
       () => callback(value, endEarly, index++),
       result => {
-        if (endedEarly) {
-          return;
-        }
         if (result) {
           results?.push(result);
+        }
+        if (endedEarly) {
+          return;
         }
         return iterate();
       },
