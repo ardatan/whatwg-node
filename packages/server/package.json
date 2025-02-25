@@ -36,6 +36,7 @@
   "dependencies": {
     "@whatwg-node/disposablestack": "^0.0.5",
     "@whatwg-node/fetch": "^0.10.5",
+    "@whatwg-node/promise-helpers": "^0.0.0",
     "tslib": "^2.6.3"
   },
   "devDependencies": {

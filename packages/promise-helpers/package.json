@@ -1,12 +1,12 @@
 {
-  "name": "@whatwg-node/cookie-store",
-  "version": "0.2.2",
+  "name": "@whatwg-node/promise-helpers",
+  "version": "0.0.0",
   "type": "module",
-  "description": "Cookie Store",
+  "description": "Promise helpers",
   "repository": {
     "type": "git",
     "url": "ardatan/whatwg-node",
-    "directory": "packages/cookie-store"
+    "directory": "packages/promise-helpers"
   },
   "author": "Arda TANRIKULU <ardatanrikulu@gmail.com>",
   "license": "MIT",
@@ -34,7 +34,6 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
-    "@whatwg-node/promise-helpers": "^0.0.0",
     "tslib": "^2.6.3"
   },
   "publishConfig": {

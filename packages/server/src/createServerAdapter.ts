@@ -1,5 +1,6 @@
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
   FetchAPI,
@@ -180,63 +181,60 @@ function createServerAdapter<
                 return Reflect.get(url, prop, url);
               },
             }) as URL);
-          const onRequestHooksIteration$ = iterateAsyncVoid(
-            onRequestHooks,
-            (onRequestHook, stopEarly) =>
-              onRequestHook({
-                request,
-                setRequest(newRequest) {
-                  request = newRequest;
-                },
-                serverContext,
-                fetchAPI,
-                url,
-                requestHandler,
-                setRequestHandler(newRequestHandler) {
-                  requestHandler = newRequestHandler;
-                },
-                endResponse(newResponse) {
-                  response = newResponse;
-                  if (newResponse) {
-                    stopEarly();
-                  }
-                },
-              }),
-          );
           function handleResponse(response: Response) {
             if (onResponseHooks.length === 0) {
               return response;
             }
-            const onResponseHooksIteration$ = iterateAsyncVoid(onResponseHooks, onResponseHook =>
-              onResponseHook({
-                request,
-                response,
-                serverContext,
-                setResponse(newResponse) {
-                  response = newResponse;
-                },
-                fetchAPI,
-              }),
+            return handleMaybePromise(
+              () =>
+                iterateAsyncVoid(onResponseHooks, onResponseHook =>
+                  onResponseHook({
+                    request,
+                    response,
+                    serverContext,
+                    setResponse(newResponse) {
+                      response = newResponse;
+                    },
+                    fetchAPI,
+                  }),
+                ),
+              () => response,
             );
-            if (isPromise(onResponseHooksIteration$)) {
-              return onResponseHooksIteration$.then(() => response);
-            }
-            return response;
           }
           function handleEarlyResponse() {
             if (!response) {
-              const response$ = requestHandler(request, serverContext);
-              if (isPromise(response$)) {
-                return response$.then(handleResponse);
-              }
-              return handleResponse(response$);
+              return handleMaybePromise(
+                () => requestHandler(request, serverContext),
+                handleResponse,
+              );
             }
             return handleResponse(response);
           }
-          if (isPromise(onRequestHooksIteration$)) {
-            return onRequestHooksIteration$.then(handleEarlyResponse);
-          }
-          return handleEarlyResponse();
+          return handleMaybePromise(
+            () =>
+              iterateAsyncVoid(onRequestHooks, (onRequestHook, stopEarly) =>
+                onRequestHook({
+                  request,
+                  setRequest(newRequest) {
+                    request = newRequest;
+                  },
+                  serverContext,
+                  fetchAPI,
+                  url,
+                  requestHandler,
+                  setRequestHandler(newRequestHandler) {
+                    requestHandler = newRequestHandler;
+                  },
+                  endResponse(newResponse) {
+                    response = newResponse;
+                    if (newResponse) {
+                      stopEarly();
+                    }
+                  },
+                }),
+              ),
+            handleEarlyResponse,
+          );
         }
       : givenHandleRequest;
 
@@ -272,30 +270,26 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    let response$: Response | Promise<Response> | undefined;
-    try {
-      response$ = handleNodeRequestAndResponse(
-        nodeRequest,
-        nodeResponse,
-        defaultServerContext as any,
-        ...ctx,
-      );
-    } catch (err: any) {
-      response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
-    }
-    if (isPromise(response$)) {
-      return response$
-        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest))
-        .catch(err => {
-          console.error(`Unexpected error while handling request: ${err.message || err}`);
-        });
-    }
-    try {
-      return sendNodeResponse(response$, nodeResponse, nodeRequest);
-    } catch (err: any) {
-      console.error(`Unexpected error while handling request: ${err.message || err}`);
-    }
+    return handleMaybePromise(
+      () =>
+        handleMaybePromise(
+          () =>
+            handleNodeRequestAndResponse(
+              nodeRequest,
+              nodeResponse,
+              defaultServerContext as any,
+              ...ctx,
+            ),
+          response => response,
+          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+        ),
+      response =>
+        handleMaybePromise(
+          () => sendNodeResponse(response, nodeResponse, nodeRequest),
+          r => r,
+          err => console.error(`Unexpected error while handling request: ${err.message || err}`),
+        ),
+    );
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
@@ -330,35 +324,25 @@ function createServerAdapter<
       fetchAPI,
       controller,
     });
-    let response$: Response | Promise<Response> | undefined;
-    try {
-      response$ = handleRequest(request, serverContext);
-    } catch (err: any) {
-      response$ = handleErrorFromRequestHandler(err, fetchAPI.Response);
-    }
-    if (isPromise(response$)) {
-      return response$
-        .catch((e: any) => handleErrorFromRequestHandler(e, fetchAPI.Response))
-        .then(response => {
-          if (!controller.signal.aborted && !resEnded) {
-            return sendResponseToUwsOpts(res, response, controller, fetchAPI);
-          }
-        })
-        .catch(err => {
-          console.error(
-            `Unexpected error while handling request: \n${err.stack || err.message || err}`,
+    return handleMaybePromise(
+      () =>
+        handleMaybePromise(
+          () => handleRequest(request, serverContext),
+          response => response,
+          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+        ),
+      response => {
+        if (!controller.signal.aborted && !resEnded) {
+          return handleMaybePromise(
+            () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
+            r => r,
+            err => {
+              console.error(`Unexpected error while handling request: ${err.message || err}`);
+            },
           );
-        });
-    }
-    try {
-      if (!controller.signal.aborted && !resEnded) {
-        return sendResponseToUwsOpts(res, response$, controller, fetchAPI);
-      }
-    } catch (err: any) {
-      console.error(
-        `Unexpected error while handling request: \n${err.stack || err.message || err}`,
-      );
-    }
+        }
+      },
+    );
   }
 
   function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]): void {
