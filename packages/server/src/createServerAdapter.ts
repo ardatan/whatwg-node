@@ -1,6 +1,6 @@
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
 import {
   FetchAPI,
@@ -402,7 +402,7 @@ function createServerAdapter<
       | ({ request: Request } & Partial<TServerContext>)
       | UWSResponse,
     ...maybeCtx: Partial<TServerContext>[]
-  ): MaybePromise<Response> | Promise<void> | void => {
+  ): MaybePromise<Response> | MaybePromise<void> => {
     // If it is a Node request
     const [initOrCtxOrRes, ...restOfCtx] = maybeCtx;
 

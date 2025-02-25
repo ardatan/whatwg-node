@@ -8,6 +8,7 @@
     "fetchache": "./packages/fetchache/src/index.ts",
     "@whatwg-node/node-fetch": "./packages/node-fetch/src/index.ts",
     "@whatwg-node/server": "./packages/server/src/index.ts",
-    "@whatwg-node/server-plugin-cookies": "./packages/server-plugin-cookies/src/index.ts"
+    "@whatwg-node/server-plugin-cookies": "./packages/server-plugin-cookies/src/index.ts",
+    "@whatwg-node/promise-helpers": "./packages/promise-helpers/src/index.ts"
   }
 }

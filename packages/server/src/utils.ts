@@ -2,7 +2,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
 import type { Readable } from 'node:stream';
-import { createDeferredPromise, isPromise } from '@whatwg-node/promise-helpers';
+import { createDeferredPromise, isPromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import type { FetchAPI, FetchEvent } from './types.js';
 
 export { isPromise, createDeferredPromise };
