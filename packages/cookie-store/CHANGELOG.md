@@ -1,5 +1,19 @@
 # @whatwg-node/cookie-store
 
+## 0.2.3
+
+### Patch Changes
+
+- [#2102](https://github.com/ardatan/whatwg-node/pull/2102)
+  [`5cf6b2d`](https://github.com/ardatan/whatwg-node/commit/5cf6b2dbc589f4330c5efdee96356f48e438ae9e)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Added dependency
+    [`@whatwg-node/promise-helpers@^0.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/0.0.0)
+    (to `dependencies`)
+- Updated dependencies
+  [[`5cf6b2d`](https://github.com/ardatan/whatwg-node/commit/5cf6b2dbc589f4330c5efdee96356f48e438ae9e)]:
+  - @whatwg-node/promise-helpers@1.0.0
+
 ## 0.2.2
 
 ### Patch Changes

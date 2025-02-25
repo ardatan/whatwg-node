@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/disposablestack",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "type": "module",
   "description": "Cross Platform Smart DisposableStack API Ponyfill",
   "repository": {
@@ -34,7 +34,7 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
-    "@whatwg-node/promise-helpers": "^0.0.0",
+    "@whatwg-node/promise-helpers": "^1.0.0",
     "tslib": "^2.6.3"
   },
   "publishConfig": {
