@@ -109,13 +109,14 @@ export { iterateAsync as iterateAsyncVoid };
 
 export function iterateAsync<TInput, TOutput>(
   iterable: Iterable<TInput>,
-  callback: (input: TInput, endEarly: VoidFunction) => MaybePromise<TOutput>,
+  callback: (input: TInput, endEarly: VoidFunction, index: number) => MaybePromise<TOutput>,
   results?: TOutput[],
 ): MaybePromise<void> {
   if ((iterable as Array<TInput>)?.length === 0) {
     return;
   }
   const iterator = iterable[Symbol.iterator]();
+  let index = 0;
   function iterate(): MaybePromise<void> {
     const { done: endOfIterator, value } = iterator.next();
     if (endOfIterator) {
@@ -126,7 +127,7 @@ export function iterateAsync<TInput, TOutput>(
       endedEarly = true;
     }
     return handleMaybePromise(
-      () => callback(value, endEarly),
+      () => callback(value, endEarly, index++),
       result => {
         if (endedEarly) {
           return;
