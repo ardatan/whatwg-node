@@ -1,5 +1,5 @@
 ---
-'@whatwg-node/promise-helpers': patch
+'@whatwg-node/promise-helpers': major
 ---
 
 New promise helpers
