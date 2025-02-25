@@ -1,5 +1,12 @@
 # @whatwg-node/promise-helpers
 
+## 1.2.0
+
+### Minor Changes
+
+- [`156f85f`](https://github.com/ardatan/whatwg-node/commit/156f85f0de1c43ee62f745132f315f3dc5b9a42b)
+  Thanks [@ardatan](https://github.com/ardatan)! - Pass `index` to `iterateAsync`
+
 ## 1.1.0
 
 ### Minor Changes
