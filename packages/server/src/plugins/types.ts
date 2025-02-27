@@ -2,7 +2,7 @@ import {
   FetchAPI,
   ServerAdapterRequestHandler,
   type ServerAdapterInitialContext,
-} from "../types.js";
+} from '../types.js';
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
   /**
@@ -52,12 +52,12 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
 export type Instruments = {
   request?: (
     payload: { request: Request },
-    wrapped: () => Promise<void> | void
+    wrapped: () => Promise<void> | void,
   ) => Promise<void> | void;
 };
 
 export type OnRequestHook<TServerContext> = (
-  payload: OnRequestEventPayload<TServerContext>
+  payload: OnRequestEventPayload<TServerContext>,
 ) => Promise<void> | void;
 
 export interface OnRequestEventPayload<TServerContext> {
@@ -66,15 +66,13 @@ export interface OnRequestEventPayload<TServerContext> {
   serverContext: TServerContext;
   fetchAPI: FetchAPI;
   requestHandler: ServerAdapterRequestHandler<TServerContext>;
-  setRequestHandler(
-    newRequestHandler: ServerAdapterRequestHandler<TServerContext>
-  ): void;
+  setRequestHandler(newRequestHandler: ServerAdapterRequestHandler<TServerContext>): void;
   endResponse(response: Response): void;
   url: URL;
 }
 
 export type OnResponseHook<TServerContext> = (
-  payload: OnResponseEventPayload<TServerContext>
+  payload: OnResponseEventPayload<TServerContext>,
 ) => Promise<void> | void;
 
 export interface OnResponseEventPayload<TServerContext> {
