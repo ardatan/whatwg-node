@@ -1235,10 +1235,10 @@
   dependencies:
     tslib "^2.4.0"
 
-"@envelop/instruments@^5.0.3":
-  version "5.0.3"
-  resolved "https://registry.yarnpkg.com/@envelop/instruments/-/instruments-5.0.3.tgz#94b28145916aea22db3d2f3714cc555db3f02916"
-  integrity sha512-89BC6LPo6UYR/8+RmeyxOSjr18bQ+2NxREvieexyA9zn8P5qXbTPUK+sW3kHznkPYfV4RDrkrmw81sjedQ0fyA==
+"@envelop/instruments@1.0.0-alpha-20250227114734-64d7083775b6c1ee4ce365437ae5f77c33aee3a5":
+  version "1.0.0-alpha-20250227114734-64d7083775b6c1ee4ce365437ae5f77c33aee3a5"
+  resolved "https://registry.yarnpkg.com/@envelop/instruments/-/instruments-1.0.0-alpha-20250227114734-64d7083775b6c1ee4ce365437ae5f77c33aee3a5.tgz#f39c4e0561d5b57501093e02b720897b13036263"
+  integrity sha512-/TR3ZLdmmxiAvyR/0Wjk1x530PT7sYfSyVrNjrX7bwU0/RKo9IDasa75Viehj+G/IlrMg2pdg6JedFnZ2ztvGA==
   dependencies:
     "@whatwg-node/promise-helpers" "^1.2.1"
     tslib "^2.5.0"
