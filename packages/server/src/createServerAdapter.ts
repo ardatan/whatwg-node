@@ -1,7 +1,16 @@
-import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
-import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { OnRequestHook, OnResponseHook, ServerAdapterPlugin, Tracer } from './plugins/types.js';
+import { chain, getInstrumented } from "@envelop/instruments";
+import {
+  AsyncDisposableStack,
+  DisposableSymbols,
+} from "@whatwg-node/disposablestack";
+import * as DefaultFetchAPI from "@whatwg-node/fetch";
+import { handleMaybePromise, MaybePromise } from "@whatwg-node/promise-helpers";
+import {
+  OnRequestHook,
+  OnResponseHook,
+  ServerAdapterPlugin,
+  Instruments,
+} from "./plugins/types.js";
 import {
   FetchAPI,
   FetchEvent,
@@ -10,7 +19,7 @@ import {
   ServerAdapterObject,
   ServerAdapterRequestHandler,
   type ServerAdapterInitialContext,
-} from './types.js';
+} from "./types.js";
 import {
   completeAssign,
   ensureDisposableStackRegisteredForTerminateEvents,
@@ -28,7 +37,7 @@ import {
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
-} from './utils.js';
+} from "./utils.js";
 import {
   fakePromise,
   getRequestFromUWSRequest,
@@ -36,12 +45,14 @@ import {
   sendResponseToUwsOpts,
   type UWSRequest,
   type UWSResponse,
-} from './uwebsockets.js';
+} from "./uwebsockets.js";
 
 type RequestContainer = { request: Request };
 
 // Required for envs like nextjs edge runtime
-function isRequestAccessible(serverContext: any): serverContext is RequestContainer {
+function isRequestAccessible(
+  serverContext: any
+): serverContext is RequestContainer {
   try {
     return !!serverContext?.request;
   } catch {
@@ -66,43 +77,48 @@ const EMPTY_OBJECT = {};
 
 function createServerAdapter<
   TServerContext = {},
-  THandleRequest extends
-    ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>
 >(
   serverAdapterRequestHandler: THandleRequest,
-  options?: ServerAdapterOptions<TServerContext>,
-): ServerAdapter<TServerContext, ServerAdapterBaseObject<TServerContext, THandleRequest>>;
+  options?: ServerAdapterOptions<TServerContext>
+): ServerAdapter<
+  TServerContext,
+  ServerAdapterBaseObject<TServerContext, THandleRequest>
+>;
 function createServerAdapter<
   TServerContext,
-  TBaseObject extends ServerAdapterBaseObject<TServerContext>,
+  TBaseObject extends ServerAdapterBaseObject<TServerContext>
 >(
   serverAdapterBaseObject: TBaseObject,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext>
 ): ServerAdapter<TServerContext, TBaseObject>;
 function createServerAdapter<
   TServerContext = {},
-  THandleRequest extends
-    ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
   TBaseObject extends ServerAdapterBaseObject<
     TServerContext,
     THandleRequest
-  > = ServerAdapterBaseObject<TServerContext, THandleRequest>,
+  > = ServerAdapterBaseObject<TServerContext, THandleRequest>
 >(
   serverAdapterBaseObject: TBaseObject | THandleRequest,
-  options?: ServerAdapterOptions<TServerContext>,
+  options?: ServerAdapterOptions<TServerContext>
 ): ServerAdapter<TServerContext, TBaseObject> {
   const fetchAPI = {
     ...DefaultFetchAPI,
     ...options?.fetchAPI,
   };
   const givenHandleRequest =
-    typeof serverAdapterBaseObject === 'function'
+    typeof serverAdapterBaseObject === "function"
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
 
-  const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
-  const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
-  let tracer: Tracer | undefined;
+  const onRequestHooks: OnRequestHook<
+    TServerContext & ServerAdapterInitialContext
+  >[] = [];
+  const onResponseHooks: OnResponseHook<
+    TServerContext & ServerAdapterInitialContext
+  >[] = [];
+  let instruments: Instruments | undefined;
   const waitUntilPromises = new Set<PromiseLike<unknown>>();
   let _disposableStack: AsyncDisposableStack | undefined;
   function ensureDisposableStack() {
@@ -119,7 +135,7 @@ function createServerAdapter<
             },
             () => {
               waitUntilPromises.clear();
-            },
+            }
           );
         }
       });
@@ -136,23 +152,22 @@ function createServerAdapter<
         () => {
           waitUntilPromises.delete(promiseLike);
         },
-        err => {
-          console.error(`Unexpected error while waiting: ${err.message || err}`);
+        (err) => {
+          console.error(
+            `Unexpected error while waiting: ${err.message || err}`
+          );
           waitUntilPromises.delete(promiseLike);
-        },
+        }
       );
     }
   }
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
-      if (plugin.tracer) {
-        if (tracer) {
-          throw new Error(
-            'Multiple tracers have been declared. Only one plugin with a tracer is allowed.',
-          );
-        }
-        tracer = plugin.tracer;
+      if (plugin.instruments) {
+        instruments = instruments
+          ? chain(instruments, plugin.instruments)
+          : plugin.instruments;
       }
       if (plugin.onRequest) {
         onRequestHooks.push(plugin.onRequest);
@@ -174,19 +189,22 @@ function createServerAdapter<
     }
   }
 
-  let handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
+  let handleRequest: ServerAdapterRequestHandler<
+    TServerContext & ServerAdapterInitialContext
+  > =
     onRequestHooks.length > 0 || onResponseHooks.length > 0
       ? function handleRequest(request, serverContext) {
-          let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
+          let requestHandler: ServerAdapterRequestHandler<any> =
+            givenHandleRequest;
           let response: Response | undefined;
           if (onRequestHooks.length === 0) {
             return handleEarlyResponse();
           }
           let url =
-            (request as any)['parsedUrl'] ||
+            (request as any)["parsedUrl"] ||
             (new Proxy(EMPTY_OBJECT as URL, {
               get(_target, prop, _receiver) {
-                url = new fetchAPI.URL(request.url, 'http://localhost');
+                url = new fetchAPI.URL(request.url, "http://localhost");
                 return Reflect.get(url, prop, url);
               },
             }) as URL);
@@ -196,7 +214,7 @@ function createServerAdapter<
             }
             return handleMaybePromise(
               () =>
-                iterateAsyncVoid(onResponseHooks, onResponseHook =>
+                iterateAsyncVoid(onResponseHooks, (onResponseHook) =>
                   onResponseHook({
                     request,
                     response,
@@ -205,16 +223,16 @@ function createServerAdapter<
                       response = newResponse;
                     },
                     fetchAPI,
-                  }),
+                  })
                 ),
-              () => response,
+              () => response
             );
           }
           function handleEarlyResponse() {
             if (!response) {
               return handleMaybePromise(
                 () => requestHandler(request, serverContext),
-                handleResponse,
+                handleResponse
               );
             }
             return handleResponse(response);
@@ -240,28 +258,30 @@ function createServerAdapter<
                       stopEarly();
                     }
                   },
-                }),
+                })
               ),
-            handleEarlyResponse,
+            handleEarlyResponse
           );
         }
       : givenHandleRequest;
 
-  if (tracer?.request) {
+  if (instruments?.request) {
     const originalRequestHandler = handleRequest;
     handleRequest = (request, initialContext) => {
-      let response: Promise<Response> | Response;
-      const tracerPromise = tracer!.request!({ request }, () => {
-        response = originalRequestHandler(request, initialContext);
-        return isPromise(response) ? response.then(() => undefined) : undefined;
-      });
-      return isPromise(tracerPromise) ? tracerPromise.then(() => response) : response!;
+      return getInstrumented({ request }).asyncFn(
+        instruments.request,
+        originalRequestHandler
+      )(request, initialContext);
     };
   }
 
   // TODO: Remove this on the next major version
-  function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
+  function handleNodeRequest(
+    nodeRequest: NodeRequest,
+    ...ctx: Partial<TServerContext>[]
+  ) {
+    const serverContext =
+      ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
     // Ensure `waitUntil` is available in the server context
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
@@ -299,27 +319,34 @@ function createServerAdapter<
               nodeRequest,
               nodeResponse,
               defaultServerContext as any,
-              ...ctx,
+              ...ctx
             ),
-          response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+          (response) => response,
+          (err) => handleErrorFromRequestHandler(err, fetchAPI.Response)
         ),
-      response =>
+      (response) =>
         handleMaybePromise(
           () => sendNodeResponse(response, nodeResponse, nodeRequest),
-          r => r,
-          err => console.error(`Unexpected error while handling request: ${err.message || err}`),
-        ),
+          (r) => r,
+          (err) =>
+            console.error(
+              `Unexpected error while handling request: ${err.message || err}`
+            )
+        )
     );
   }
 
-  function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
+  function handleUWS(
+    res: UWSResponse,
+    req: UWSRequest,
+    ...ctx: Partial<TServerContext>[]
+  ) {
     const defaultServerContext = {
       res,
       req,
       waitUntil,
     };
-    const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
+    const filteredCtxParts = ctx.filter((partCtx) => partCtx != null);
     const serverContext =
       filteredCtxParts.length > 0
         ? completeAssign(defaultServerContext, ...ctx)
@@ -337,7 +364,7 @@ function createServerAdapter<
       controller.abort();
     });
     res.onAborted = function (cb: () => void) {
-      controller.signal.addEventListener('abort', cb, { once: true });
+      controller.signal.addEventListener("abort", cb, { once: true });
     };
     const request = getRequestFromUWSRequest({
       req,
@@ -349,28 +376,33 @@ function createServerAdapter<
       () =>
         handleMaybePromise(
           () => handleRequest(request, serverContext),
-          response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+          (response) => response,
+          (err) => handleErrorFromRequestHandler(err, fetchAPI.Response)
         ),
-      response => {
+      (response) => {
         if (!controller.signal.aborted && !resEnded) {
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
-            r => r,
-            err => {
-              console.error(`Unexpected error while handling request: ${err.message || err}`);
-            },
+            (r) => r,
+            (err) => {
+              console.error(
+                `Unexpected error while handling request: ${err.message || err}`
+              );
+            }
           );
         }
-      },
+      }
     );
   }
 
-  function handleEvent(event: FetchEvent, ...ctx: Partial<TServerContext>[]): void {
+  function handleEvent(
+    event: FetchEvent,
+    ...ctx: Partial<TServerContext>[]
+  ): void {
     if (!event.respondWith || !event.request) {
       throw new TypeError(`Expected FetchEvent, got ${event}`);
     }
-    const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
+    const filteredCtxParts = ctx.filter((partCtx) => partCtx != null);
     const serverContext =
       filteredCtxParts.length > 0
         ? completeAssign({}, event, ...filteredCtxParts)
@@ -379,8 +411,11 @@ function createServerAdapter<
     event.respondWith(response$);
   }
 
-  function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
-    const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
+  function handleRequestWithWaitUntil(
+    request: Request,
+    ...ctx: Partial<TServerContext>[]
+  ) {
+    const filteredCtxParts: any[] = ctx.filter((partCtx) => partCtx != null);
     const serverContext =
       filteredCtxParts.length > 1
         ? completeAssign({}, ...filteredCtxParts)
@@ -388,16 +423,16 @@ function createServerAdapter<
             filteredCtxParts[0],
             filteredCtxParts[0] == null || filteredCtxParts[0].waitUntil == null
               ? waitUntil
-              : undefined,
+              : undefined
           );
     return handleRequest(request, serverContext);
   }
 
-  const fetchFn: ServerAdapterObject<TServerContext>['fetch'] = (
+  const fetchFn: ServerAdapterObject<TServerContext>["fetch"] = (
     input,
     ...maybeCtx: Partial<TServerContext>[]
   ) => {
-    if (typeof input === 'string' || 'href' in input) {
+    if (typeof input === "string" || "href" in input) {
       const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
         const request = new fetchAPI.Request(input, initOrCtx);
@@ -439,7 +474,7 @@ function createServerAdapter<
     }
 
     if (isServerResponse(initOrCtxOrRes)) {
-      throw new TypeError('Got Node response without Node request');
+      throw new TypeError("Got Node response without Node request");
     }
 
     // Is input a container object over Request?
@@ -465,7 +500,8 @@ function createServerAdapter<
     requestListener,
     handleEvent,
     handleUWS,
-    handle: genericRequestHandler as ServerAdapterObject<TServerContext>['handle'],
+    handle:
+      genericRequestHandler as ServerAdapterObject<TServerContext>["handle"],
     get disposableStack() {
       return ensureDisposableStack();
     },
@@ -508,11 +544,15 @@ function createServerAdapter<
         return handleProp;
       }
       if (serverAdapterBaseObject) {
-        const serverAdapterBaseObjectProp = (serverAdapterBaseObject as any)[prop];
+        const serverAdapterBaseObjectProp = (serverAdapterBaseObject as any)[
+          prop
+        ];
         if (serverAdapterBaseObjectProp) {
           if (serverAdapterBaseObjectProp.bind) {
             return function (...args: any[]) {
-              const returnedVal = (serverAdapterBaseObject as any)[prop](...args);
+              const returnedVal = (serverAdapterBaseObject as any)[prop](
+                ...args
+              );
               if (returnedVal === serverAdapterBaseObject) {
                 return serverAdapter;
               }
@@ -523,7 +563,11 @@ function createServerAdapter<
         }
       }
     },
-    apply(_, __, args: Parameters<ServerAdapterObject<TServerContext>['handle']>) {
+    apply(
+      _,
+      __,
+      args: Parameters<ServerAdapterObject<TServerContext>["handle"]>
+    ) {
       return genericRequestHandler(...args);
     },
   });

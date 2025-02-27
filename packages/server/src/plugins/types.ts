@@ -2,14 +2,14 @@ import {
   FetchAPI,
   ServerAdapterRequestHandler,
   type ServerAdapterInitialContext,
-} from '../types.js';
+} from "../types.js";
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
   /**
    * A tracer insance. It can be used to wrap the entire request handling pipeline (including the
    * plugin hooks). It is mostly used for observability (monitoring, tracing, etc...).
    */
-  tracer?: Tracer;
+  instruments?: Instruments;
   /**
    * This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request,
    * create a short circuit before the request handler takes it over.
@@ -49,15 +49,15 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
   onDispose?: () => PromiseLike<void> | void;
 }
 
-export type Tracer = {
+export type Instruments = {
   request?: (
     payload: { request: Request },
-    wrapped: () => Promise<void> | void,
+    wrapped: () => Promise<void> | void
   ) => Promise<void> | void;
 };
 
 export type OnRequestHook<TServerContext> = (
-  payload: OnRequestEventPayload<TServerContext>,
+  payload: OnRequestEventPayload<TServerContext>
 ) => Promise<void> | void;
 
 export interface OnRequestEventPayload<TServerContext> {
@@ -66,13 +66,15 @@ export interface OnRequestEventPayload<TServerContext> {
   serverContext: TServerContext;
   fetchAPI: FetchAPI;
   requestHandler: ServerAdapterRequestHandler<TServerContext>;
-  setRequestHandler(newRequestHandler: ServerAdapterRequestHandler<TServerContext>): void;
+  setRequestHandler(
+    newRequestHandler: ServerAdapterRequestHandler<TServerContext>
+  ): void;
   endResponse(response: Response): void;
   url: URL;
 }
 
 export type OnResponseHook<TServerContext> = (
-  payload: OnResponseEventPayload<TServerContext>,
+  payload: OnResponseEventPayload<TServerContext>
 ) => Promise<void> | void;
 
 export interface OnResponseEventPayload<TServerContext> {
