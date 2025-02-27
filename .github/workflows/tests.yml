@@ -134,6 +134,8 @@ jobs:
         uses: the-guild-org/shared-config/setup@main
         with:
           nodeVersion: 22
+      - name: Build
+        run: yarn build
       - name: Test
         uses: nick-fields/retry@v3
         with:
