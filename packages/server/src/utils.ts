@@ -166,7 +166,7 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
       request.headers.set('content-type', 'application/json; charset=utf-8');
     }
     return new Proxy(request, {
-      get: (target, prop: keyof Request,receiver) => {
+      get: (target, prop: keyof Request, receiver) => {
         switch (prop) {
           case 'json':
             return () => fakePromise(maybeParsedBody);
