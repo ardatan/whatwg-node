@@ -166,14 +166,14 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
       request.headers.set('content-type', 'application/json; charset=utf-8');
     }
     return new Proxy(request, {
-      get: (target, prop: keyof Request, receiver) => {
+      get: (_target, prop: keyof Request, _receiver) => {
         switch (prop) {
           case 'json':
             return () => fakePromise(maybeParsedBody);
           case 'text':
             return () => fakePromise(JSON.stringify(maybeParsedBody));
           default:
-            return Reflect.get(target, prop, receiver);
+            return Reflect.get(request, prop, request);
         }
       },
     });
