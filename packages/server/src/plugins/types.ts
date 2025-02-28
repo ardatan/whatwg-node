@@ -50,6 +50,13 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
 }
 
 export type Instruments = {
+  /**
+   * Run code befor, after or around the handling of each request.
+   * This instrument can't modify result or paramters of the request handling.
+   * To have access to the input or the output of the request handling, use the `onRequest` hook.
+   *
+   * Note: The `wrapped` function must be called, otherwise the request will not be handled properly
+   */
   request?: (
     payload: { request: Request },
     wrapped: () => Promise<void> | void,
