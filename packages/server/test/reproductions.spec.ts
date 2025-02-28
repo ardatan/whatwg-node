@@ -1,5 +1,5 @@
-import { Server } from 'http';
-import { AddressInfo } from 'net';
+import { Server } from 'node:http';
+import { AddressInfo } from 'node:net';
 import express from 'express';
 import { expect, it } from '@jest/globals';
 import { createServerAdapter, Response } from '@whatwg-node/server';
