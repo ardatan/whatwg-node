@@ -530,8 +530,8 @@ describe('Node Specific Cases', () => {
             baz: 'qux',
           });
         });
-
-        it('handles react streaming response', async () => {
+        const testIf = (condition: boolean) => (condition ? it : it.skip);
+        testIf(!!globalThis.ReadableStream)('handles react streaming response', async () => {
           await using serverAdapter = createServerAdapter(async () => {
             const MyComponent = () => {
               return React.createElement('h1', null, 'Rendered in React');

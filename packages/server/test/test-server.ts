@@ -159,7 +159,7 @@ if (globalThis.Bun) {
 } else {
   serverImplMap['node:http'] = createNodeHttpTestServer;
 
-  if (nodeMajor >= 16) {
+  if (nodeMajor >= 18) {
     serverImplMap['fastify'] = async function createFastifyTestServer() {
       let adapter: ServerAdapter<
         {
