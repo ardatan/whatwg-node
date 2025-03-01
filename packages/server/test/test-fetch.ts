@@ -79,7 +79,7 @@ export function runTestsForEachFetchImpl(
   ) {
     noNative = true;
   }
-  describeIf(!noNative || globalThis.Bun || globalThis.Deno)('Native', () => {
+  describeIf(!noNative || globalThis.Bun || (globalThis.Deno && globalThis.fetch))('Native', () => {
     const fetchAPI = createFetch({ skipPonyfill: true });
     callback('native', {
       fetchAPI,
