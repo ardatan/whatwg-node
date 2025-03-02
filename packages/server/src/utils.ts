@@ -262,6 +262,9 @@ function configureSocket(rawRequest: NodeRequest) {
 }
 
 function endResponse(serverResponse: NodeResponse) {
+  if (serverResponse.finished) {
+    return;
+  }
   // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
   serverResponse.end(null, null, null);
 }

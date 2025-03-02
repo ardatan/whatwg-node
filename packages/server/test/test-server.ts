@@ -2,12 +2,14 @@ import { createServer, globalAgent, Server, ServerResponse } from 'node:http';
 import { AddressInfo, Socket } from 'node:net';
 import { Readable } from 'node:stream';
 import express from 'express';
-import fastify, { FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import Koa, { Context } from 'koa';
 import Hapi from '@hapi/hapi';
 import { afterAll, beforeAll, describe } from '@jest/globals';
 import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
 import { ServerAdapter, ServerAdapterBaseObject } from '@whatwg-node/server';
+
+const nodeMajor = parseInt(process.versions.node.split('.')[0], 10);
 
 export interface TestServer extends AsyncDisposable {
   name: string;
@@ -157,89 +159,91 @@ if (globalThis.Bun) {
 } else {
   serverImplMap['node:http'] = createNodeHttpTestServer;
 
-  serverImplMap['fastify'] = async function createFastifyTestServer() {
-    let adapter: ServerAdapter<
-      {
-        req: FastifyRequest;
-        res: ServerResponse;
-        reply: FastifyReply;
-      },
-      ServerAdapterBaseObject<{}>
-    >;
-
-    const fastifyApp = fastify().route({
-      method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
-      url: '*',
-      async handler(req: FastifyRequest, reply: FastifyReply) {
-        const response: Response = await adapter.handleNodeRequestAndResponse(req, reply, {
-          req,
-          res: reply.raw,
-          reply,
-        });
-
-        if (!response) {
-          return reply.status(404).send('Not Found');
-        }
-
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body || '');
-
-        return reply;
-      },
-    });
-    const sockets = new Set<Socket>();
-    fastifyApp.server.on('connection', socket => {
-      sockets.add(socket);
-      socket.once('close', () => {
-        sockets.delete(socket);
-      });
-    });
-
-    fastifyApp.addContentTypeParser(/(.*)/, {}, (_req, _payload, done) => done(null));
-
-    let url = await fastifyApp.listen({ port: 0, host: '::1' });
-    url = url.replace('127.0.0.1', 'localhost');
-    return {
-      name: 'fastify',
-      url,
-      async [DisposableSymbols.asyncDispose]() {
-        await adapter?.[DisposableSymbols.asyncDispose]?.();
-        sockets.forEach(socket => {
-          socket.destroy();
-        });
-        if (!globalThis.Bun) {
-          fastifyApp.server.closeAllConnections();
-        }
-        await new Promise<void>((resolve, reject) => {
-          fastifyApp.server.close(err => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
+  if (nodeMajor >= 18) {
+    serverImplMap['fastify'] = async function createFastifyTestServer() {
+      let adapter: ServerAdapter<
+        {
+          req: FastifyRequest;
+          res: ServerResponse;
+          reply: FastifyReply;
+        },
+        ServerAdapterBaseObject<{}>
+      >;
+      const fastify = await import('fastify').then(m => m.default || m);
+      const fastifyApp = fastify().route({
+        method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
+        url: '*',
+        async handler(req: FastifyRequest, reply: FastifyReply) {
+          const response: Response = await adapter.handleNodeRequestAndResponse(req, reply, {
+            req,
+            res: reply.raw,
+            reply,
           });
+
+          if (!response) {
+            return reply.status(404).send('Not Found');
+          }
+
+          response.headers.forEach((value, key) => {
+            reply.header(key, value);
+          });
+
+          reply.status(response.status);
+
+          reply.send(response.body || '');
+
+          return reply;
+        },
+      });
+      const sockets = new Set<Socket>();
+      fastifyApp.server.on('connection', socket => {
+        sockets.add(socket);
+        socket.once('close', () => {
+          sockets.delete(socket);
         });
-        return fastifyApp.close();
-      },
-      async addOnceHandler(newHandler, ...ctxParts) {
-        await adapter?.[DisposableSymbols.asyncDispose]?.();
-        adapter = newHandler;
-        if (ctxParts.length) {
-          adapter = {
-            ...newHandler,
-            handleNodeRequestAndResponse(...args: any[]) {
-              return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
-            },
-          };
-        }
-      },
+      });
+
+      fastifyApp.addContentTypeParser(/(.*)/, {}, (_req, _payload, done) => done(null));
+
+      let url = await fastifyApp.listen({ port: 0, host: '::1' });
+      url = url.replace('127.0.0.1', 'localhost');
+      return {
+        name: 'fastify',
+        url,
+        async [DisposableSymbols.asyncDispose]() {
+          await adapter?.[DisposableSymbols.asyncDispose]?.();
+          sockets.forEach(socket => {
+            socket.destroy();
+          });
+          if (!globalThis.Bun) {
+            fastifyApp.server.closeAllConnections();
+          }
+          await new Promise<void>((resolve, reject) => {
+            fastifyApp.server.close(err => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          });
+          return fastifyApp.close();
+        },
+        async addOnceHandler(newHandler, ...ctxParts) {
+          await adapter?.[DisposableSymbols.asyncDispose]?.();
+          adapter = newHandler;
+          if (ctxParts.length) {
+            adapter = {
+              ...newHandler,
+              handleNodeRequestAndResponse(...args: any[]) {
+                return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
+              },
+            };
+          }
+        },
+      };
     };
-  };
+  }
 
   serverImplMap['express'] = async function createExpressTestServer() {
     let handler: any;
