@@ -1,5 +1,14 @@
 # @whatwg-node/promise-helpers
 
+## 1.2.2
+
+### Patch Changes
+
+- [#2123](https://github.com/ardatan/whatwg-node/pull/2123)
+  [`2ca563a`](https://github.com/ardatan/whatwg-node/commit/2ca563a205d12fa6f0bfe2fec39c838b757f7319)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use Node 16 at least to prevent breaking change
+  on dependent Tools packages
+
 ## 1.2.1
 
 ### Patch Changes

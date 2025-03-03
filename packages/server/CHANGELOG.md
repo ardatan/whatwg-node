@@ -1,5 +1,18 @@
 # @whatwg-node/server
 
+## 0.9.71
+
+### Patch Changes
+
+- [#2117](https://github.com/ardatan/whatwg-node/pull/2117)
+  [`6631a27`](https://github.com/ardatan/whatwg-node/commit/6631a27f1a3dafe4af99b3e3e4f3feb973f0a77f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the error
+  `The Request.url getter can only be used on instances of Request` when the adapter is used with
+  Express on Bun
+- Updated dependencies
+  [[`2ca563a`](https://github.com/ardatan/whatwg-node/commit/2ca563a205d12fa6f0bfe2fec39c838b757f7319)]:
+  - @whatwg-node/promise-helpers@1.2.2
+
 ## 0.9.70
 
 ### Patch Changes
