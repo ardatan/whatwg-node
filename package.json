@@ -65,7 +65,7 @@
     "lint-staged": "15.4.3",
     "node-libcurl": "4.1.0",
     "patch-package": "8.0.0",
-    "prettier": "3.5.2",
+    "prettier": "3.5.3",
     "rimraf": "6.0.1",
     "ts-jest": "29.2.6",
     "typescript": "5.8.2"
