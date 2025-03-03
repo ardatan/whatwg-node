@@ -1,7 +1,13 @@
+import { chain, getInstrumented } from '@envelop/instruments';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { OnRequestHook, OnResponseHook, ServerAdapterPlugin } from './plugins/types.js';
+import {
+  Instruments,
+  OnRequestHook,
+  OnResponseHook,
+  ServerAdapterPlugin,
+} from './plugins/types.js';
 import {
   FetchAPI,
   FetchEvent,
@@ -102,6 +108,7 @@ function createServerAdapter<
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
+  let instruments: Instruments | undefined;
   const waitUntilPromises = new Set<PromiseLike<unknown>>();
   let _disposableStack: AsyncDisposableStack | undefined;
   function ensureDisposableStack() {
@@ -145,6 +152,9 @@ function createServerAdapter<
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
+      if (plugin.instruments) {
+        instruments = instruments ? chain(instruments, plugin.instruments) : plugin.instruments;
+      }
       if (plugin.onRequest) {
         onRequestHooks.push(plugin.onRequest);
       }
@@ -165,7 +175,7 @@ function createServerAdapter<
     }
   }
 
-  const handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
+  let handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
     onRequestHooks.length > 0 || onResponseHooks.length > 0
       ? function handleRequest(request, serverContext) {
           let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
@@ -237,6 +247,16 @@ function createServerAdapter<
           );
         }
       : givenHandleRequest;
+
+  if (instruments?.request) {
+    const originalRequestHandler = handleRequest;
+    handleRequest = (request, initialContext) => {
+      return getInstrumented({ request }).asyncFn(instruments.request, originalRequestHandler)(
+        request,
+        initialContext,
+      );
+    };
+  }
 
   // TODO: Remove this on the next major version
   function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {

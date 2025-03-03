@@ -18,6 +18,7 @@
     "prebuild": "yarn clean-dist",
     "prerelease": "yarn build",
     "prerelease-canary": "yarn build",
+    "pretest:deno": "yarn build",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
