@@ -4,11 +4,11 @@
 
 Add new Instruments API
 
-Introducation of a new API allowing to instrument the graphql pipeline.
+Introduction of a new API allowing to instrument the graphql pipeline.
 
-This new API differs from already existing Hooks by not having access to intup/output of phases. The
-goal of `Instruments` is to run allow running code before, after or araound the **whole process of a
-phase**, incuding plugins hooks executions.
+This new API differs from already existing Hooks by not having access to input/output of phases. The
+goal of `Instruments` is to run allow running code before, after or around the **whole process of a
+phase**, including plugins hooks executions.
 
 The main use case of this new API is observability (monitoring, tracing, etc...).
 
@@ -16,7 +16,7 @@ The main use case of this new API is observability (monitoring, tracing, etc...)
 
 ```ts
 import Sentry from '@sentry/node'
-import { createServerAdapter } from '@wahtwg-node/server'
+import { createServerAdapter } from '@whatwg-node/server'
 
 const server = createServerAdapter(
   (req, res) => {
@@ -41,14 +41,14 @@ const server = createServerAdapter(
 )
 ```
 
-### Mutliple instruments plugins
+### Multiple instruments plugins
 
-It is possilbe to have multiple instruments plugins (Prometheus and Sentry for example), they will
-be automatically composed by envelop in the same order than the plugin array (first is outtermost,
+It is possible to have multiple instruments plugins (Prometheus and Sentry for example), they will
+be automatically composed by envelop in the same order than the plugin array (first is outermost,
 last is inner most).
 
 ```ts
-import { createServerAdapter } from '@wahtwg-node/server'
+import { createServerAdapter } from '@whatwg-node/server'
 
 const getEnveloped = createServerAdapter(
   (req, res) => {
@@ -68,11 +68,11 @@ sequenceDiagram
 
 ### Custom instruments ordering
 
-If the default composition ordering doesn't suite your need, you can mannually compose instruments.
+If the default composition ordering doesn't suite your need, you can manually compose instruments.
 This allows to have a different execution order of hooks and instruments.
 
 ```ts
-import { composeInstruments, createServerAdapter } from '@wahtwg-node/server'
+import { composeInstruments, createServerAdapter } from '@whatwg-node/server'
 
 const { instruments: sentryInstruments, ...sentryPlugin } = useSentry()
 const { instruments: otelInstruments, ...otelPlugin } = useOpentelemetry()
