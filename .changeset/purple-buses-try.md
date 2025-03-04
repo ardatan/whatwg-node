@@ -50,7 +50,7 @@ last is inner most).
 ```ts
 import { createServerAdapter } from '@whatwg-node/server'
 
-const getEnveloped = createServerAdapter(
+const server = createServerAdapter(
   (req, res) => {
     //...
   },
@@ -78,7 +78,7 @@ const { instruments: sentryInstruments, ...sentryPlugin } = useSentry()
 const { instruments: otelInstruments, ...otelPlugin } = useOpentelemetry()
 const instruments = composeInstruments([otelInstruments, sentryInstruments])
 
-const getEnveloped = createServerAdapter(
+const server = createServerAdapter(
   (req, res) => {
     //...
   },
