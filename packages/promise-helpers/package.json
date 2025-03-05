@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/promise-helpers",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "type": "module",
   "description": "Promise helpers",
   "repository": {
