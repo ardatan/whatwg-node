@@ -1,5 +1,15 @@
 # @whatwg-node/promise-helpers
 
+## 1.2.3
+
+### Patch Changes
+
+- [#2068](https://github.com/ardatan/whatwg-node/pull/2068)
+  [`516bf60`](https://github.com/ardatan/whatwg-node/commit/516bf60b55babd57e1721d404a01c526ec218acf)
+  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Fix return type of the callback of
+  `iterateAsync`. The callback can actually return `null` or `undefined`, the implementation is
+  already handling this case.
+
 ## 1.2.2
 
 ### Patch Changes
