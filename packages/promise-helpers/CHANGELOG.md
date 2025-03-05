@@ -1,5 +1,12 @@
 # @whatwg-node/promise-helpers
 
+## 1.2.4
+
+### Patch Changes
+
+- [`a448fd1`](https://github.com/ardatan/whatwg-node/commit/a448fd130ace70f5c65e8ad5a28846a7af8d9777)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not consider fake promises as real promises
+
 ## 1.2.3
 
 ### Patch Changes
