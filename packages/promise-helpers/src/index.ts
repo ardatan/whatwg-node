@@ -23,7 +23,13 @@ export function handleMaybePromise<TInput, TOutput>(
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
 ): MaybePromiseLike<TOutput> {
   function _handleMaybePromise() {
-    const input$ = inputFactory() as MaybePromise<TInput>;
+    const input$ = inputFactory();
+    if (isFakePromise<TInput>(input$)) {
+      return outputSuccessFactory(input$.__fakePromiseValue);
+    }
+    if (isFakeRejectPromise(input$)) {
+      throw input$.__fakeRejectError;
+    }
     if (isPromise(input$)) {
       return input$.then(outputSuccessFactory, outputErrorFactory);
     }
@@ -75,7 +81,8 @@ export function fakePromise<T = void>(value: T): Promise<T> {
       return this;
     },
     [Symbol.toStringTag]: 'Promise',
-  };
+    __fakePromiseValue: value,
+  } as Promise<T>;
 }
 
 export interface DeferredPromise<T = void> {
@@ -166,8 +173,9 @@ export function fakeRejectPromise(error: unknown): Promise<never> {
       }
       return this;
     },
+    __fakeRejectError: error,
     [Symbol.toStringTag]: 'Promise',
-  };
+  } as Promise<never>;
 }
 
 /**
@@ -281,4 +289,12 @@ export function mapAsyncIterator<T, U>(
 
 function iteratorResult<T>(value: T): IteratorResult<T> {
   return { value, done: false };
+}
+
+function isFakePromise<T>(value: any): value is Promise<T> & { __fakePromiseValue: T } {
+  return (value as any)?.__fakePromiseValue != null;
+}
+
+function isFakeRejectPromise(value: any): value is Promise<never> & { __fakeRejectError: any } {
+  return (value as any)?.__fakeRejectError != null;
 }
