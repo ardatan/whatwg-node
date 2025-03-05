@@ -34,6 +34,7 @@
   },
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
+    "@envelop/instruments": "1.0.0",
     "@whatwg-node/disposablestack": "^0.0.6",
     "@whatwg-node/fetch": "^0.10.5",
     "@whatwg-node/promise-helpers": "^1.2.2",

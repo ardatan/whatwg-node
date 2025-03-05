@@ -1,14 +1,6 @@
 {
   "imports": {
     "@jest/globals": "./deno-jest.ts",
-    "@whatwg-node/cookie-store": "./packages/cookie-store/src/index.ts",
-    "@whatwg-node/disposablestack": "./packages/disposablestack/src/index.ts",
-    "@whatwg-node/fetch": "./packages/fetch/dist/esm-ponyfill.js",
-    "@whatwg-node/events": "./packages/events/src/index.ts",
-    "fetchache": "./packages/fetchache/src/index.ts",
-    "@whatwg-node/node-fetch": "./packages/node-fetch/src/index.ts",
-    "@whatwg-node/server": "./packages/server/src/index.ts",
-    "@whatwg-node/server-plugin-cookies": "./packages/server-plugin-cookies/src/index.ts",
-    "@whatwg-node/promise-helpers": "./packages/promise-helpers/src/index.ts"
+    "@whatwg-node/fetch": "./packages/fetch/dist/esm-ponyfill.js"
   }
 }

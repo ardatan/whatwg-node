@@ -109,7 +109,11 @@ export { iterateAsync as iterateAsyncVoid };
 
 export function iterateAsync<TInput, TOutput>(
   iterable: Iterable<TInput>,
-  callback: (input: TInput, endEarly: VoidFunction, index: number) => MaybePromise<TOutput>,
+  callback: (
+    input: TInput,
+    endEarly: VoidFunction,
+    index: number,
+  ) => MaybePromise<TOutput | undefined | null | void>,
   results?: TOutput[],
 ): MaybePromise<void> {
   if ((iterable as Array<TInput>)?.length === 0) {
