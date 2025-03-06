@@ -6,10 +6,10 @@ import {
 
 export interface ServerAdapterPlugin<TServerContext = {}> {
   /**
-   * A tracer insance. It can be used to wrap the entire request handling pipeline (including the
+   * A tracer instance. It can be used to wrap the entire request handling pipeline (including the
    * plugin hooks). It is mostly used for observability (monitoring, tracing, etc...).
    */
-  instruments?: Instruments;
+  instrumentation?: Instrumentation;
   /**
    * This hook is invoked for ANY incoming HTTP request. Here you can manipulate the request,
    * create a short circuit before the request handler takes it over.
@@ -49,7 +49,7 @@ export interface ServerAdapterPlugin<TServerContext = {}> {
   onDispose?: () => PromiseLike<void> | void;
 }
 
-export type Instruments = {
+export type Instrumentation = {
   /**
    * Run code befor, after or around the handling of each request.
    * This instrument can't modify result or paramters of the request handling.

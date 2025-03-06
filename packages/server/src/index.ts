@@ -8,4 +8,4 @@ export * from './plugins/useContentEncoding.js';
 export * from './uwebsockets.js';
 export { Response } from '@whatwg-node/fetch';
 export { DisposableSymbols } from '@whatwg-node/disposablestack';
-export * from '@envelop/instruments';
+export * from '@envelop/instrumentation';

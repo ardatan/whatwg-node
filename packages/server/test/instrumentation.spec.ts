@@ -1,13 +1,13 @@
 import { describe, expect, it } from '@jest/globals';
 import { createServerAdapter, ServerAdapterPlugin } from '@whatwg-node/server';
 
-describe('instruments', () => {
-  it('should wrap request handler with instruments and automatically compose them', async () => {
+describe('instrumentation', () => {
+  it('should wrap request handler with instrumentation and automatically compose them', async () => {
     const results: string[] = [];
 
     function make(name: string): ServerAdapterPlugin {
       return {
-        instruments: {
+        instrumentation: {
           request: async (_, wrapped) => {
             results.push(`pre-${name}`);
             await wrapped();

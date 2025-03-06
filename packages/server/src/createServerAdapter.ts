@@ -1,9 +1,9 @@
-import { chain, getInstrumented } from '@envelop/instruments';
+import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
-  Instruments,
+  Instrumentation,
   OnRequestHook,
   OnResponseHook,
   ServerAdapterPlugin,
@@ -108,7 +108,7 @@ function createServerAdapter<
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
-  let instruments: Instruments | undefined;
+  let instrumentation: Instrumentation | undefined;
   const waitUntilPromises = new Set<PromiseLike<unknown>>();
   let _disposableStack: AsyncDisposableStack | undefined;
   function ensureDisposableStack() {
@@ -152,8 +152,10 @@ function createServerAdapter<
 
   if (options?.plugins != null) {
     for (const plugin of options.plugins) {
-      if (plugin.instruments) {
-        instruments = instruments ? chain(instruments, plugin.instruments) : plugin.instruments;
+      if (plugin.instrumentation) {
+        instrumentation = instrumentation
+          ? chain(instrumentation, plugin.instrumentation)
+          : plugin.instrumentation;
       }
       if (plugin.onRequest) {
         onRequestHooks.push(plugin.onRequest);
@@ -248,10 +250,10 @@ function createServerAdapter<
         }
       : givenHandleRequest;
 
-  if (instruments?.request) {
+  if (instrumentation?.request) {
     const originalRequestHandler = handleRequest;
     handleRequest = (request, initialContext) => {
-      return getInstrumented({ request }).asyncFn(instruments.request, originalRequestHandler)(
+      return getInstrumented({ request }).asyncFn(instrumentation.request, originalRequestHandler)(
         request,
         initialContext,
       );
