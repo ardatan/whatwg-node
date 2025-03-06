@@ -1,5 +1,19 @@
 # @whatwg-node/server
 
+## 0.10.1
+
+### Patch Changes
+
+- [#2145](https://github.com/ardatan/whatwg-node/pull/2145)
+  [`dac036c`](https://github.com/ardatan/whatwg-node/commit/dac036c95987813ea4a1f6d46904274b867b7e8e)
+  Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
+  - Added dependency
+    [`@envelop/instrumentation@^1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instrumentation/v/1.0.0)
+    (to `dependencies`)
+  - Removed dependency
+    [`@envelop/instruments@1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instruments/v/1.0.0)
+    (from `dependencies`)
+
 ## 0.10.0
 
 ### Minor Changes
@@ -11,8 +25,8 @@
   Introduction of a new API allowing to instrument the graphql pipeline.
 
   This new API differs from already existing Hooks by not having access to input/output of phases.
-  The goal of `Instrumentation` is to run allow running code before, after or around the **whole process
-  of a phase**, including plugins hooks executions.
+  The goal of `Instrumentation` is to run allow running code before, after or around the **whole
+  process of a phase**, including plugins hooks executions.
 
   The main use case of this new API is observability (monitoring, tracing, etc...).
 
@@ -47,9 +61,9 @@
 
   ### Multiple instrumentation plugins
 
-  It is possible to have multiple instrumentation plugins (Prometheus and Sentry for example), they will
-  be automatically composed by envelop in the same order than the plugin array (first is outermost,
-  last is inner most).
+  It is possible to have multiple instrumentation plugins (Prometheus and Sentry for example), they
+  will be automatically composed by envelop in the same order than the plugin array (first is
+  outermost, last is inner most).
 
   ```ts
   import { createServerAdapter } from '@whatwg-node/server'
@@ -72,8 +86,8 @@
 
   ### Custom instrumentation ordering
 
-  If the default composition ordering doesn't suite your need, you can manually compose instrumentation.
-  This allows to have a different execution order of hooks and instrumentation.
+  If the default composition ordering doesn't suite your need, you can manually compose
+  instrumentation. This allows to have a different execution order of hooks and instrumentation.
 
   ```ts
   import { composeInstrumentation, createServerAdapter } from '@whatwg-node/server'
