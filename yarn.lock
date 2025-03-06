@@ -11,9 +11,9 @@
     "@jridgewell/trace-mapping" "^0.3.24"
 
 "@azure/functions@^4.6.1":
-  version "4.6.1"
-  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.6.1.tgz#e1e1167ea4b2e29d411b0fef4e4ab300ba488cbf"
-  integrity sha512-Py2Az29yk+A21vHES/rL6iU3ptKB+vVz3sGTjm0jSPFjG4kPbhFLi5vFI7YkCPMGeoD4WMIjHqTAeXvnFrBUBA==
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/@azure/functions/-/functions-4.7.0.tgz#572039654da41857f83da78296f60f8de9d8f55a"
+  integrity sha512-y1caGX6LYrA7msAckQVb/quFOhWHSPiGzWfIML17t0ee2ydpinJTBF+Sti+URfLAH63dtmXJR4meraZkhhK9tw==
   dependencies:
     cookie "^0.7.0"
     long "^4.0.0"
@@ -1240,7 +1240,7 @@
   dependencies:
     tslib "^2.4.0"
 
-"@envelop/instrumentation@1.0.0":
+"@envelop/instrumentation@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@envelop/instrumentation/-/instrumentation-1.0.0.tgz#43268392e065d8ba975cacbdf4fc297dfe3e11e5"
   integrity sha512-cxgkB66RQB95H3X27jlnxCRNTmPuSTgmBAq6/4n2Dtv4hsk4yz8FadA1ggmd0uZzvKqWD6CR+WFgTjhDqg7eyw==
@@ -10184,10 +10184,10 @@ workerd@1.20250224.0:
     "@cloudflare/workerd-linux-arm64" "1.20250224.0"
     "@cloudflare/workerd-windows-64" "1.20250224.0"
 
-wrangler@3.113.0:
-  version "3.113.0"
-  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.113.0.tgz#86e2007cda73e11c6b9864bc3a415ec42a17ba9e"
-  integrity sha512-Fr7sxO9kNFoN12AZLdwkQEnHN7pf1FziOfmEZsQIvyyMJTQC0HMWWS9LEsMdxJf0X9okoRMXLPfE9wtz1C1SIg==
+wrangler@3.114.0:
+  version "3.114.0"
+  resolved "https://registry.yarnpkg.com/wrangler/-/wrangler-3.114.0.tgz#7080819f3929e22b8fb375481767039ec5b1b30e"
+  integrity sha512-cY0HxgU5yuc24tE1Y4KD2n9UzYYEx+9lSL7p/Sqj18SgDfwyiMPY/FryXQAPYLuD/S+dxArRQyeEkFSokIr75Q==
   dependencies:
     "@cloudflare/kv-asset-handler" "0.3.4"
     "@cloudflare/unenv-preset" "2.0.0"
