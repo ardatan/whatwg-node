@@ -6,12 +6,12 @@
 
 - [#2068](https://github.com/ardatan/whatwg-node/pull/2068)
   [`516bf60`](https://github.com/ardatan/whatwg-node/commit/516bf60b55babd57e1721d404a01c526ec218acf)
-  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Add new Instruments API
+  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Add new Instrumentation API
 
   Introduction of a new API allowing to instrument the graphql pipeline.
 
   This new API differs from already existing Hooks by not having access to input/output of phases.
-  The goal of `Instruments` is to run allow running code before, after or around the **whole process
+  The goal of `Instrumentation` is to run allow running code before, after or around the **whole process
   of a phase**, including plugins hooks executions.
 
   The main use case of this new API is observability (monitoring, tracing, etc...).
@@ -29,7 +29,7 @@
     {
       plugins: [
         {
-          instruments: {
+          instrumentation: {
             request: ({ request }, wrapped) =>
               Sentry.startSpan({ name: 'Graphql Operation' }, async () => {
                 try {
@@ -45,9 +45,9 @@
   )
   ```
 
-  ### Multiple instruments plugins
+  ### Multiple instrumentation plugins
 
-  It is possible to have multiple instruments plugins (Prometheus and Sentry for example), they will
+  It is possible to have multiple instrumentation plugins (Prometheus and Sentry for example), they will
   be automatically composed by envelop in the same order than the plugin array (first is outermost,
   last is inner most).
 
@@ -70,23 +70,23 @@
     Opentelemetry->>Sentry: ;
   ```
 
-  ### Custom instruments ordering
+  ### Custom instrumentation ordering
 
-  If the default composition ordering doesn't suite your need, you can manually compose instruments.
-  This allows to have a different execution order of hooks and instruments.
+  If the default composition ordering doesn't suite your need, you can manually compose instrumentation.
+  This allows to have a different execution order of hooks and instrumentation.
 
   ```ts
-  import { composeInstruments, createServerAdapter } from '@whatwg-node/server'
+  import { composeInstrumentation, createServerAdapter } from '@whatwg-node/server'
 
-  const { instruments: sentryInstruments, ...sentryPlugin } = useSentry()
-  const { instruments: otelInstruments, ...otelPlugin } = useOpentelemetry()
-  const instruments = composeInstruments([otelInstruments, sentryInstruments])
+  const { instrumentation: sentryInstrumentation, ...sentryPlugin } = useSentry()
+  const { instrumentation: otelInstrumentation, ...otelPlugin } = useOpentelemetry()
+  const instrumentation = composeInstrumentation([otelInstrumentation, sentryInstrumentation])
 
   const server = createServerAdapter(
     (req, res) => {
       //...
     },
-    { plugins: [{ instruments }, sentryPlugin, otelPlugin] }
+    { plugins: [{ instrumentation }, sentryPlugin, otelPlugin] }
   )
   ```
 
@@ -107,7 +107,7 @@
     [`@whatwg-node/promise-helpers@^1.2.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/promise-helpers/v/1.2.2)
     (from `^1.0.0`, in `dependencies`)
   - Added dependency
-    [`@envelop/instruments@1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instruments/v/1.0.0)
+    [`@envelop/instrumentation@1.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instrumentation/v/1.0.0)
     (to `dependencies`)
 - Updated dependencies
   [[`516bf60`](https://github.com/ardatan/whatwg-node/commit/516bf60b55babd57e1721d404a01c526ec218acf)]:
