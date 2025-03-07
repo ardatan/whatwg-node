@@ -11,16 +11,19 @@ export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromise<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromise<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromise<TOutput>,
+  finallyFactory?: () => MaybePromise<void>,
 ): MaybePromise<TOutput>;
 export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromiseLike<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
+  finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput>;
 export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromiseLike<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
+  finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
   function _handleMaybePromise() {
     const input$ = inputFactory();
@@ -35,13 +38,35 @@ export function handleMaybePromise<TInput, TOutput>(
     }
     return outputSuccessFactory(input$);
   }
-  if (!outputErrorFactory) {
-    return _handleMaybePromise();
-  }
   try {
-    return _handleMaybePromise();
+    if (finallyFactory) {
+      return handleMaybePromise(
+        _handleMaybePromise,
+        res => handleMaybePromise(finallyFactory, () => res),
+        outputErrorFactory
+          ? err =>
+              handleMaybePromise(
+                () => outputErrorFactory(err),
+                res => handleMaybePromise(finallyFactory, () => res),
+                err =>
+                  handleMaybePromise(finallyFactory, () => {
+                    throw err;
+                  }),
+              )
+          : err =>
+              handleMaybePromise(finallyFactory, () => {
+                throw err;
+              }),
+      );
+    } else {
+      return _handleMaybePromise();
+    }
   } catch (err) {
-    return outputErrorFactory(err);
+    if (outputErrorFactory) {
+      return outputErrorFactory(err);
+    } else {
+      throw err;
+    }
   }
 }
 
