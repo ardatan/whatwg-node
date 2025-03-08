@@ -3,18 +3,16 @@ import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { fakePromise, fakeRejectPromise, handleMaybePromise } from '../src';
 
 describe('promise-helpers', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   describe('handleMaybePromise', () => {
     describe('finally', () => {
       describe('with promises', () => {
         const onFinally = jest.fn(() => Promise.resolve());
         const onError = jest.fn(err => Promise.resolve(err));
         const onSuccess = jest.fn(res => Promise.resolve(res));
-
-        beforeEach(() => {
-          onFinally.mockClear();
-          onSuccess.mockClear();
-          onError.mockClear();
-        });
 
         it('should call finally and allow chaining with a successful Promise', async () => {
           expect(
@@ -67,12 +65,6 @@ describe('promise-helpers', () => {
         const onFinally = jest.fn(() => {});
         const onError = jest.fn(err => err);
         const onSuccess = jest.fn(res => res);
-
-        beforeEach(() => {
-          onFinally.mockClear();
-          onSuccess.mockClear();
-          onError.mockClear();
-        });
 
         it('should call finally and allow chaining with a successful function', () => {
           expect(handleMaybePromise(() => 'test', onSuccess, onError, onFinally)).toBe('test');
@@ -134,12 +126,6 @@ describe('promise-helpers', () => {
         const onFinally = jest.fn(() => {});
         const onError = jest.fn(err => fakePromise(err));
         const onSuccess = jest.fn(res => fakePromise(res));
-
-        beforeEach(() => {
-          onFinally.mockClear();
-          onSuccess.mockClear();
-          onError.mockClear();
-        });
 
         it('should call finally and allow chaining on successful fake promise', () => {
           expect(handleMaybePromise(() => fakePromise('test'), onSuccess, onError, onFinally)).toBe(
