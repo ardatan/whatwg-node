@@ -72,7 +72,9 @@
     "typescript": "5.8.2"
   },
   "resolutions": {
-    "@pulumi/pulumi": "3.153.1"
+    "@pulumi/pulumi": "3.153.1",
+    "cookie": "0.7.0",
+    "esbuild": "0.25.0"
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
