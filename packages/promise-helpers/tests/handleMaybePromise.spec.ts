@@ -1,18 +1,18 @@
 /* eslint-disable prefer-promise-reject-errors, no-throw-literal */
-import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest as jestDoNotUse } from '@jest/globals';
 import { fakePromise, fakeRejectPromise, handleMaybePromise } from '../src';
 
 describe('promise-helpers', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    clearAllMocks();
   });
 
   describe('handleMaybePromise', () => {
     describe('finally', () => {
       describe('with promises', () => {
-        const onFinally = jest.fn(() => Promise.resolve());
-        const onError = jest.fn(err => Promise.resolve(err));
-        const onSuccess = jest.fn(res => Promise.resolve(res));
+        const onFinally = spy(() => Promise.resolve());
+        const onError = spy(err => Promise.resolve(err));
+        const onSuccess = spy(res => Promise.resolve(res));
 
         it('should call finally and allow chaining with a successful Promise', async () => {
           expect(
@@ -62,9 +62,9 @@ describe('promise-helpers', () => {
       });
 
       describe('with sync function', () => {
-        const onFinally = jest.fn(() => {});
-        const onError = jest.fn(err => err);
-        const onSuccess = jest.fn(res => res);
+        const onFinally = spy(() => {});
+        const onError = spy(err => err);
+        const onSuccess = spy(res => res);
 
         it('should call finally and allow chaining with a successful function', () => {
           expect(handleMaybePromise(() => 'test', onSuccess, onError, onFinally)).toBe('test');
@@ -123,9 +123,9 @@ describe('promise-helpers', () => {
       });
 
       describe('with fake promises', () => {
-        const onFinally = jest.fn(() => {});
-        const onError = jest.fn(err => fakePromise(err));
-        const onSuccess = jest.fn(res => fakePromise(res));
+        const onFinally = spy(() => {});
+        const onError = spy(err => fakePromise(err));
+        const onSuccess = spy(res => fakePromise(res));
 
         it('should call finally and allow chaining on successful fake promise', () => {
           expect(handleMaybePromise(() => fakePromise('test'), onSuccess, onError, onFinally)).toBe(
@@ -179,3 +179,16 @@ describe('promise-helpers', () => {
     });
   });
 });
+
+// Deno is missing `jest.mockClearAll`, so we have to implement it ourself
+
+const mocks: { mockClear: () => void }[] = [];
+function spy<T extends (...args: any) => any>(implementation: T) {
+  const f = jestDoNotUse.fn(implementation);
+  mocks.push(f);
+  return f;
+}
+
+function clearAllMocks() {
+  mocks.forEach(mock => mock.mockClear());
+}
