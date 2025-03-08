@@ -61,8 +61,9 @@ export function handleMaybePromise<TInput, TOutput>(
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
 export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T>;
+export function fakePromise(value: void): Promise<void>;
 export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
-  if (isActualPromise(value)) {
+  if (value && isActualPromise(value)) {
     return value;
   }
 
@@ -78,7 +79,7 @@ export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
   // Write a fake promise to avoid the promise constructor
   // being called with `new Promise` in the browser.
   return {
-    then(resolve: (value: T) => any) {
+    then(resolve) {
       if (resolve) {
         const callbackResult = resolve(value);
         if (isPromise(callbackResult)) {
