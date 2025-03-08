@@ -30,19 +30,7 @@ export function handleMaybePromise<TInput, TOutput>(
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
   finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
-  let input$: MaybePromise<TInput> | undefined;
-  try {
-    input$ = fakePromise(inputFactory());
-  } catch (err) {
-    input$ = fakeRejectPromise(err);
-  }
-
-  let result$: Promise<TOutput>;
-  try {
-    result$ = input$.then(outputSuccessFactory, outputErrorFactory);
-  } catch (err) {
-    result$ = fakeRejectPromise(err);
-  }
+  let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
 
   if (finallyFactory) {
     result$ = result$.finally(finallyFactory);
