@@ -73,7 +73,7 @@
   },
   "resolutions": {
     "@pulumi/pulumi": "3.153.1",
-    "cookie": "0.7.0",
+    "cookie": "0.7.2",
     "esbuild": "0.25.0"
   },
   "lint-staged": {
