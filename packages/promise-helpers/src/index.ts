@@ -7,60 +7,73 @@ export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T
   return (value as any)?.then != null;
 }
 
+export function isActualPromise<T>(value: MaybePromiseLike<T>): value is Promise<T> {
+  const maybePromise = value as any;
+  return maybePromise && maybePromise.then && maybePromise.catch && maybePromise.finally;
+}
+
 export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromise<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromise<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromise<TOutput>,
+  finallyFactory?: () => MaybePromise<void>,
 ): MaybePromise<TOutput>;
 export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromiseLike<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
+  finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput>;
 export function handleMaybePromise<TInput, TOutput>(
   inputFactory: () => MaybePromiseLike<TInput>,
   outputSuccessFactory: (value: TInput) => MaybePromiseLike<TOutput>,
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
+  finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
-  function _handleMaybePromise() {
-    const input$ = inputFactory();
-    if (isFakePromise<TInput>(input$)) {
-      return outputSuccessFactory(input$.__fakePromiseValue);
-    }
-    if (isFakeRejectPromise(input$)) {
-      throw input$.__fakeRejectError;
-    }
-    if (isPromise(input$)) {
-      return input$.then(outputSuccessFactory, outputErrorFactory);
-    }
-    return outputSuccessFactory(input$);
+  let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
+
+  if (finallyFactory) {
+    result$ = result$.finally(finallyFactory);
   }
-  if (!outputErrorFactory) {
-    return _handleMaybePromise();
+
+  if (isFakePromise<TOutput>(result$)) {
+    return result$.__fakePromiseValue;
   }
-  try {
-    return _handleMaybePromise();
-  } catch (err) {
-    return outputErrorFactory(err);
+
+  if (isFakeRejectPromise(result$)) {
+    throw result$.__fakeRejectError;
   }
+
+  return result$;
 }
 
-export function fakePromise<T>(value: T): Promise<T>;
+export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
+export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T>;
 export function fakePromise(value: void): Promise<void>;
-export function fakePromise<T = void>(value: T): Promise<T> {
-  if (isPromise(value)) {
+export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
+  if (value && isActualPromise(value)) {
     return value;
   }
+
+  if (isPromise(value)) {
+    return {
+      then: (resolve, reject) => fakePromise(value.then(resolve, reject)),
+      catch: reject => fakePromise(value.then(res => res, reject)),
+      finally: cb => fakePromise(cb ? promiseLikeFinally(value, cb) : value),
+      [Symbol.toStringTag]: 'Promise',
+    };
+  }
+
   // Write a fake promise to avoid the promise constructor
   // being called with `new Promise` in the browser.
   return {
-    then(resolve: (value: T) => any) {
+    then(resolve) {
       if (resolve) {
-        const callbackResult = resolve(value);
-        if (isPromise(callbackResult)) {
-          return callbackResult;
+        try {
+          return fakePromise(resolve(value));
+        } catch (err) {
+          return fakeRejectPromise(err);
         }
-        return fakePromise(callbackResult);
       }
       return this;
     },
@@ -69,14 +82,14 @@ export function fakePromise<T = void>(value: T): Promise<T> {
     },
     finally(cb) {
       if (cb) {
-        const callbackResult = cb();
-        if (isPromise(callbackResult)) {
-          return callbackResult.then(
+        try {
+          return fakePromise(cb()).then(
             () => value,
             () => value,
           );
+        } catch (err) {
+          return fakeRejectPromise(err);
         }
-        return fakePromise(value);
       }
       return this;
     },
@@ -153,23 +166,35 @@ export function iterateAsync<TInput, TOutput>(
   return iterate();
 }
 
-export function fakeRejectPromise(error: unknown): Promise<never> {
-  if (isPromise(error)) {
-    return error as Promise<never>;
-  }
+export function fakeRejectPromise<T>(error: unknown): Promise<T> {
   return {
-    then() {
+    then(_resolve, reject) {
+      if (reject) {
+        try {
+          return fakePromise(reject(error));
+        } catch (err) {
+          return fakeRejectPromise(err);
+        }
+      }
       return this;
     },
     catch(reject: (error: unknown) => any) {
       if (reject) {
-        return fakePromise(reject(error));
+        try {
+          return fakePromise(reject(error));
+        } catch (err) {
+          return fakeRejectPromise(err);
+        }
       }
       return this;
     },
     finally(cb) {
       if (cb) {
-        cb();
+        try {
+          cb();
+        } catch (err) {
+          return fakeRejectPromise(err);
+        }
       }
       return this;
     },
@@ -297,4 +322,30 @@ function isFakePromise<T>(value: any): value is Promise<T> & { __fakePromiseValu
 
 function isFakeRejectPromise(value: any): value is Promise<never> & { __fakeRejectError: any } {
   return (value as any)?.__fakeRejectError != null;
+}
+
+export function promiseLikeFinally<T>(
+  value: PromiseLike<T> | Promise<T>,
+  onFinally: () => MaybePromiseLike<void>,
+): PromiseLike<T> {
+  if ('finally' in value) {
+    return value.finally(onFinally);
+  }
+
+  return value.then(
+    res => {
+      const finallyRes = onFinally();
+      return isPromise(finallyRes) ? finallyRes.then(() => res) : res;
+    },
+    err => {
+      const finallyRes = onFinally();
+      if (isPromise(finallyRes)) {
+        return finallyRes.then(() => {
+          throw err;
+        });
+      } else {
+        throw err;
+      }
+    },
+  );
 }
