@@ -81,11 +81,11 @@ export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
   return {
     then(resolve) {
       if (resolve) {
-        const callbackResult = resolve(value);
-        if (isPromise(callbackResult)) {
-          return callbackResult;
+        try {
+          return fakePromise(resolve(value));
+        } catch (err) {
+          return fakeRejectPromise(err);
         }
-        return fakePromise(callbackResult);
       }
       return this;
     },
@@ -94,14 +94,14 @@ export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
     },
     finally(cb) {
       if (cb) {
-        const callbackResult = cb();
-        if (isPromise(callbackResult)) {
-          return callbackResult.then(
+        try {
+          return fakePromise(cb()).then(
             () => value,
             () => value,
           );
+        } catch (err) {
+          return fakeRejectPromise(err);
         }
-        return fakePromise(value);
       }
       return this;
     },
@@ -182,19 +182,31 @@ export function fakeRejectPromise<T>(error: unknown): Promise<T> {
   return {
     then(_resolve, reject) {
       if (reject) {
-        return fakePromise(reject(error));
+        try {
+          return fakePromise(reject(error));
+        } catch (err) {
+          return fakeRejectPromise(err);
+        }
       }
       return this;
     },
     catch(reject: (error: unknown) => any) {
       if (reject) {
-        return fakePromise(reject(error));
+        try {
+          return fakePromise(reject(error));
+        } catch (err) {
+          return fakeRejectPromise(err);
+        }
       }
       return this;
     },
     finally(cb) {
       if (cb) {
-        cb();
+        try {
+          cb();
+        } catch (err) {
+          return fakeRejectPromise(err);
+        }
       }
       return this;
     },
