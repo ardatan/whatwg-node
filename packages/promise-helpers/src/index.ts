@@ -36,15 +36,7 @@ export function handleMaybePromise<TInput, TOutput>(
     result$ = result$.finally(finallyFactory);
   }
 
-  if (isFakePromise<TOutput>(result$)) {
-    return result$.__fakePromiseValue;
-  }
-
-  if (isFakeRejectPromise(result$)) {
-    throw result$.__fakeRejectError;
-  }
-
-  return result$;
+  return unfakePromise(result$);
 }
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
@@ -350,4 +342,16 @@ export function promiseLikeFinally<T>(
       }
     },
   );
+}
+
+export function unfakePromise<T>(promise: Promise<T>): MaybePromise<T> {
+  if (isFakePromise<T>(promise)) {
+    return promise.__fakePromiseValue;
+  }
+
+  if (isFakeRejectPromise(promise)) {
+    throw promise.__fakeRejectError;
+  }
+
+  return promise;
 }
