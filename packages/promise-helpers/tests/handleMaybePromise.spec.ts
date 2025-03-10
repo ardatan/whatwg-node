@@ -228,14 +228,14 @@ describe('promise-helpers', () => {
       });
 
       describe('with fake promises', () => {
-        const onFinally = jest.fn(() => {});
-        const onError = jest.fn(err => fakePromise(err));
-        const onSuccess = jest.fn(res => fakePromise(res));
+        let onFinally: jest.Mock<VoidFunction>;
+        let onError: jest.Mock;
+        let onSuccess: jest.Mock;
 
         beforeEach(() => {
-          onFinally.mockClear();
-          onSuccess.mockClear();
-          onError.mockClear();
+          onFinally = jest.fn(() => {});
+          onSuccess = jest.fn(res => fakePromise(res));
+          onError = jest.fn(err => fakePromise(err));
         });
 
         it('should call finally and allow chaining on successful fake promise', () => {
