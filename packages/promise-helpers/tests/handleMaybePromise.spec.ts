@@ -103,14 +103,14 @@ describe('promise-helpers', () => {
     });
     describe('finally', () => {
       describe('with promises', () => {
-        const onFinally = jest.fn(() => Promise.resolve());
-        const onError = jest.fn(err => Promise.resolve(err));
-        const onSuccess = jest.fn(res => Promise.resolve(res));
+        let onFinally: jest.MockedFunction<any>;
+        let onError: jest.MockedFunction<any>;
+        let onSuccess: jest.MockedFunction<any>;
 
         beforeEach(() => {
-          onFinally.mockClear();
-          onSuccess.mockClear();
-          onError.mockClear();
+          onFinally = jest.fn(() => Promise.resolve());
+          onError = jest.fn(err => Promise.resolve(err));
+          onSuccess = jest.fn(res => Promise.resolve(res));
         });
 
         it('should call finally and allow chaining with a successful Promise', async () => {
@@ -161,14 +161,14 @@ describe('promise-helpers', () => {
       });
 
       describe('with sync function', () => {
-        const onFinally = jest.fn(() => {});
-        const onError = jest.fn(err => err);
-        const onSuccess = jest.fn(res => res);
+        let onFinally: jest.Mock<VoidFunction>;
+        let onError: jest.Mock;
+        let onSuccess: jest.Mock;
 
         beforeEach(() => {
-          onFinally.mockClear();
-          onSuccess.mockClear();
-          onError.mockClear();
+          onFinally = jest.fn(() => {});
+          onError = jest.fn(err => err);
+          onSuccess = jest.fn(res => res);
         });
 
         it('should call finally and allow chaining with a successful function', () => {
