@@ -1,6 +1,8 @@
 export type MaybePromise<T> = Promise<T> | T;
 export type MaybePromiseLike<T> = PromiseLike<T> | T;
 
+const FAKE_PROMISE_SYMBOL_NAME = '@whatwg-node/promise-helpers/FakePromise';
+
 export function isPromise<T>(value: MaybePromise<T>): value is Promise<T>;
 export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T>;
 export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T> {
@@ -87,6 +89,7 @@ export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
     },
     [Symbol.toStringTag]: 'Promise',
     __fakePromiseValue: value,
+    [Symbol.for(FAKE_PROMISE_SYMBOL_NAME)]: 'resolved',
   } as Promise<T>;
 }
 
@@ -192,6 +195,7 @@ export function fakeRejectPromise<T>(error: unknown): Promise<T> {
     },
     __fakeRejectError: error,
     [Symbol.toStringTag]: 'Promise',
+    [Symbol.for(FAKE_PROMISE_SYMBOL_NAME)]: 'rejected',
   } as Promise<never>;
 }
 
@@ -309,11 +313,11 @@ function iteratorResult<T>(value: T): IteratorResult<T> {
 }
 
 function isFakePromise<T>(value: any): value is Promise<T> & { __fakePromiseValue: T } {
-  return (value as any)?.__fakePromiseValue != null;
+  return (value as any)?.[Symbol.for(FAKE_PROMISE_SYMBOL_NAME)] === 'resolved';
 }
 
 function isFakeRejectPromise(value: any): value is Promise<never> & { __fakeRejectError: any } {
-  return (value as any)?.__fakeRejectError != null;
+  return (value as any)?.[Symbol.for(FAKE_PROMISE_SYMBOL_NAME)] === 'rejected';
 }
 
 export function promiseLikeFinally<T>(
