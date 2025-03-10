@@ -4,6 +4,103 @@ import { fakePromise, fakeRejectPromise, handleMaybePromise } from '../src';
 
 describe('promise-helpers', () => {
   describe('handleMaybePromise', () => {
+    describe('should be sync', () => {
+      const cases = [
+        { input: 'sync', output: 'sync' },
+        { input: 'fake', output: 'sync' },
+        { input: 'sync', output: 'fake' },
+        { input: 'fake', output: 'fake' },
+      ];
+
+      it.each(cases)('when input is $input and success is $output', ({ input, output }) => {
+        expect(
+          handleMaybePromise(
+            () => (input === 'fake' ? fakePromise('test') : 'test'),
+            res => (output === 'fake' ? fakePromise(res) : res),
+          ),
+        ).toBe('test');
+      });
+
+      it.each(cases)('when input is $input and onError is $output', ({ input, output }) => {
+        expect(
+          handleMaybePromise(
+            () => {
+              if (input === 'fake') {
+                return fakeRejectPromise('error');
+              } else {
+                throw 'error';
+              }
+            },
+            res => res,
+            () => (output === 'fake' ? fakePromise('test') : 'test'),
+          ),
+        ).toBe('test');
+      });
+
+      it.each(
+        cases.flatMap(c => [
+          { ...c, success: 'fake' },
+          { ...c, success: 'sync' },
+        ]),
+      )(
+        'when input is $input, onSuccess is $success and onError is $output',
+        ({ input, output, success }) => {
+          try {
+            handleMaybePromise(
+              () => (input === 'fake' ? fakePromise('test') : 'test'),
+              () => {
+                if (success === 'fake') {
+                  return fakeRejectPromise('error');
+                } else {
+                  throw 'error';
+                }
+              },
+              () => (output === 'fake' ? fakePromise('test') : 'test'),
+            );
+            throw new Error('error has not been thrown');
+          } catch (err) {
+            expect(err).toBe('error');
+          }
+        },
+      );
+
+      it.each(cases)('when fake value is falsy', ({ input, output }) => {
+        expect(
+          handleMaybePromise(
+            () => (input === 'fake' ? fakePromise(undefined) : undefined),
+            res => (output === 'fake' ? fakePromise(undefined) : res),
+          ),
+        ).toBe(undefined);
+
+        expect(
+          handleMaybePromise(
+            () => (input === 'fake' ? fakePromise(null) : null),
+            res => (output === 'fake' ? fakePromise(null) : res),
+          ),
+        ).toBe(null);
+
+        expect(
+          handleMaybePromise(
+            () => (input === 'fake' ? fakePromise('') : ''),
+            res => (output === 'fake' ? fakePromise('') : res),
+          ),
+        ).toBe('');
+
+        expect(
+          handleMaybePromise(
+            () => (input === 'fake' ? fakePromise(false) : false),
+            res => (output === 'fake' ? fakePromise(false) : res),
+          ),
+        ).toBe(false);
+
+        expect(
+          handleMaybePromise(
+            () => (input === 'fake' ? fakePromise(0) : 0),
+            res => (output === 'fake' ? fakePromise(0) : res),
+          ),
+        ).toBe(0);
+      });
+    });
     describe('finally', () => {
       describe('with promises', () => {
         const onFinally = jest.fn(() => Promise.resolve());
