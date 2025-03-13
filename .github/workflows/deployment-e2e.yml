@@ -45,10 +45,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Use Node 22
+      - name: Setup Node
         uses: actions/setup-node@master
         with:
-          node-version: 22
+          node-version: 23
 
       - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
