@@ -3,7 +3,7 @@ name: benchmarks
 on:
   push:
     branches:
-      - 'main'
+      - 'master'
   pull_request:
     paths-ignore:
       - 'website/**'
@@ -72,7 +72,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 22
+          nodeVersion: 23
           packageManager: yarn
       - name: Setup K6
         run: |
