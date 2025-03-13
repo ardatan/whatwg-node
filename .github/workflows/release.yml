@@ -3,10 +3,7 @@ name: Release
 on:
   push:
     branches:
-      - 'master'
-  pull_request:
-    paths-ignore:
-      - 'website/**'
+      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,7 +17,7 @@ jobs:
     uses: the-guild-org/shared-config/.github/workflows/release-stable.yml@main
     with:
       releaseScript: release
-      nodeVersion: 20
+      nodeVersion: 22
     secrets:
       githubToken: ${{ secrets.GUILD_BOT_TOKEN }}
       npmToken: ${{ secrets.NODE_AUTH_TOKEN }}
