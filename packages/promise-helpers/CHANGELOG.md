@@ -1,5 +1,14 @@
 # @whatwg-node/promise-helpers
 
+## 1.3.0
+
+### Minor Changes
+
+- [#2152](https://github.com/ardatan/whatwg-node/pull/2152)
+  [`f8368ea`](https://github.com/ardatan/whatwg-node/commit/f8368ea3c93d566840de7087c6a46da7eac8760b)
+  Thanks [@EmrysMyrddin](https://github.com/EmrysMyrddin)! - Allow to pass a finally callback to
+  `handleMaybePromise`
+
 ## 1.2.4
 
 ### Patch Changes
