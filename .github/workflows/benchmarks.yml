@@ -3,7 +3,7 @@ name: benchmarks
 on:
   push:
     branches:
-      - 'main'
+      - 'master'
   pull_request:
     paths-ignore:
       - 'website/**'
@@ -69,10 +69,12 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+      - name: Install Required Libraries
+        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 22
+          nodeVersion: 23
           packageManager: yarn
       - name: Setup K6
         run: |
