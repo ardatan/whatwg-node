@@ -170,10 +170,10 @@ export class PonyfillBody<TJSON = any> implements Body {
     const _body = this.generateBody();
     if (!_body) {
       this._chunks = [];
-      return fakePromise([]);
+      return fakePromise(this._chunks);
     }
+    this._chunks = [];
     _body.readable.on('data', chunk => {
-      this._chunks ||= [];
       this._chunks!.push(chunk);
     });
     return new Promise<Uint8Array[]>((resolve, reject) => {
