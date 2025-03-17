@@ -194,12 +194,12 @@ describe('promise-helpers', () => {
           };
           try {
             handleMaybePromise(throwingFn, onSuccess, undefined, onFinally);
+            throw 'Error was not thrown';
           } catch (err) {
             expect(err).toBe('error');
           }
           expect(onFinally).toHaveBeenCalledTimes(1);
           expect(onSuccess).not.toHaveBeenCalled();
-          expect.assertions(3);
         });
 
         it('should call finally even if onSuccess throws', async () => {
@@ -259,12 +259,12 @@ describe('promise-helpers', () => {
         it('should call finally and allow throw if no error handler is given', async () => {
           try {
             handleMaybePromise(() => fakeRejectPromise('error'), onSuccess, undefined, onFinally);
+            throw 'Error has not been thrown';
           } catch (err) {
             expect(err).toBe('error');
           }
           expect(onFinally).toHaveBeenCalledTimes(1);
           expect(onSuccess).not.toHaveBeenCalled();
-          expect.assertions(3);
         });
 
         it('should call finally even if onSuccess throws', async () => {
