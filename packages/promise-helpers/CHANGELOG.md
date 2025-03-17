@@ -1,5 +1,15 @@
 # @whatwg-node/promise-helpers
 
+## 1.2.5
+
+### Patch Changes
+
+- [#2182](https://github.com/ardatan/whatwg-node/pull/2182)
+  [`a45e929`](https://github.com/ardatan/whatwg-node/commit/a45e9290cdc110392d9175d2780c96ad4fd31727)
+  Thanks [@ardatan](https://github.com/ardatan)! - - Name functions in `iterateAsync` for more
+  readable traces
+  - `fakePromise` accepts `MaybePromise` as an input
+
 ## 1.2.4
 
 ### Patch Changes
