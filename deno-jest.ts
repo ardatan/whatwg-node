@@ -8,7 +8,7 @@ it.each =
       Object.entries(c).forEach(([k, v]) => {
         name = name.replaceAll(k, v);
       });
-      return it(name, runner);
+      return it(name, () => runner(c));
     }
   };
 export { it };
