@@ -1,14 +1,19 @@
 import { fn } from 'jsr:@std/expect';
+import { it } from 'jsr:@std/testing/bdd';
 
-export {
-  describe,
-  it,
-  test,
-  beforeEach,
-  afterEach,
-  beforeAll,
-  afterAll,
-} from 'jsr:@std/testing/bdd';
+it.each =
+  (cases: object[]): typeof it =>
+  (name, runner) => {
+    for (const c of cases) {
+      Object.entries(c).forEach(([k, v]) => {
+        name = name.replaceAll(k, v);
+      });
+      return it(name, runner);
+    }
+  };
+export { it };
+
+export { describe, test, beforeEach, afterEach, beforeAll, afterAll } from 'jsr:@std/testing/bdd';
 export { expect } from 'jsr:@std/expect';
 
 export const jest = {
