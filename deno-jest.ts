@@ -5,10 +5,11 @@ it.each =
   (cases: object[]): typeof it =>
   (name, runner) => {
     for (const c of cases) {
+      let testName = name;
       Object.entries(c).forEach(([k, v]) => {
-        name = name.replaceAll(k, v);
+        testName = testName.replaceAll(k, v);
       });
-      return it(name, () => runner(c));
+      it(testName, () => runner(c));
     }
   };
 export { it };
