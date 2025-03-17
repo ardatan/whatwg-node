@@ -140,7 +140,7 @@ describe('promise-helpers', () => {
         });
 
         it('should call finally even if onSuccess is rejected', async () => {
-          onSuccess.mockRejectedValueOnce('error');
+          onSuccess = jest.fn(() => Promise.reject('error'));
           await expect(
             handleMaybePromise(() => Promise.resolve('test'), onSuccess, onError, onFinally),
           ).rejects.toBe('error');
@@ -150,7 +150,7 @@ describe('promise-helpers', () => {
         });
 
         it('should call finally even if onError is rejected', async () => {
-          onError.mockRejectedValueOnce('error');
+          onError = jest.fn(() => Promise.reject('error'));
           await expect(
             handleMaybePromise(() => Promise.reject('test'), onSuccess, onError, onFinally),
           ).rejects.toBe('error');
@@ -203,7 +203,7 @@ describe('promise-helpers', () => {
         });
 
         it('should call finally even if onSuccess throws', async () => {
-          onSuccess.mockImplementationOnce(() => {
+          onSuccess = jest.fn(() => {
             throw 'error';
           });
           await expect(
@@ -215,7 +215,7 @@ describe('promise-helpers', () => {
         });
 
         it('should call finally even if onError throws', async () => {
-          onError.mockImplementationOnce(() => {
+          onError = jest.fn(() => {
             throw 'error';
           });
           await expect(
@@ -268,7 +268,7 @@ describe('promise-helpers', () => {
         });
 
         it('should call finally even if onSuccess throws', async () => {
-          onSuccess.mockReturnValueOnce(fakeRejectPromise('error'));
+          onSuccess = jest.fn(() => fakeRejectPromise('error'));
           await expect(
             handleMaybePromise(() => Promise.resolve('test'), onSuccess, onError, onFinally),
           ).rejects.toBe('error');
@@ -278,7 +278,7 @@ describe('promise-helpers', () => {
         });
 
         it('should call finally even if onError throws', async () => {
-          onError.mockReturnValueOnce(fakeRejectPromise('error'));
+          onError = jest.fn(() => fakeRejectPromise('error'));
           await expect(
             handleMaybePromise(() => Promise.reject('test'), onSuccess, onError, onFinally),
           ).rejects.toBe('error');
