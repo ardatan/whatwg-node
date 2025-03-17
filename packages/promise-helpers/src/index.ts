@@ -45,7 +45,7 @@ export function handleMaybePromise<TInput, TOutput>(
   }
 }
 
-export function fakePromise<T>(value: T): Promise<T>;
+export function fakePromise<T>(value: T): Promise<Awaited<T>>;
 export function fakePromise(value: void): Promise<void>;
 export function fakePromise<T = void>(value: T): Promise<T> {
   if (isPromise(value)) {
@@ -138,8 +138,10 @@ export function iterateAsync<TInput, TOutput>(
       endedEarly = true;
     }
     return handleMaybePromise(
-      () => callback(value, endEarly, index++),
-      result => {
+      function handleCallback() {
+        return callback(value, endEarly, index++);
+      },
+      function handleCallbackResult(result) {
         if (result) {
           results?.push(result);
         }

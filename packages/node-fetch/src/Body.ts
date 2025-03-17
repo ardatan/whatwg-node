@@ -2,6 +2,7 @@
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import busboy from 'busboy';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
@@ -140,36 +141,44 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise(this._chunks);
     }
     if (this.bodyType === BodyInitType.AsyncIterable) {
+      if (Array.fromAsync) {
+        return handleMaybePromise(
+          () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array>),
+          chunks => {
+            this._chunks = chunks;
+            return this._chunks;
+          },
+        );
+      }
       const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
-      const collectValue = (): Promise<Uint8Array[]> => {
-        return iterator.next().then(({ value, done }) => {
-          this._chunks ||= [];
-          if (value) {
-            this._chunks.push(value);
-          }
-          if (!done) {
-            return collectValue();
-          }
-          return this._chunks;
-        });
-      };
+      const collectValue = (): MaybePromise<Uint8Array[]> =>
+        handleMaybePromise(
+          () => iterator.next(),
+          ({ value, done }) => {
+            this._chunks ||= [];
+            if (value) {
+              this._chunks.push(value);
+            }
+            if (!done) {
+              return collectValue();
+            }
+            return this._chunks;
+          },
+        );
       return collectValue();
     }
     const _body = this.generateBody();
     if (!_body) {
-      return fakePromise([]);
+      this._chunks = [];
+      return fakePromise(this._chunks);
     }
     this._chunks = [];
     _body.readable.on('data', chunk => {
       this._chunks!.push(chunk);
     });
     return new Promise<Uint8Array[]>((resolve, reject) => {
-      _body.readable.once('end', () => {
-        resolve(this._chunks!);
-      });
-      _body.readable.once('error', e => {
-        reject(e);
-      });
+      _body.readable.once('end', () => resolve(this._chunks!));
+      _body.readable.once('error', reject);
     });
   }
 
@@ -190,13 +199,18 @@ export class PonyfillBody<TJSON = any> implements Body {
       });
       return fakePromise(this._blob);
     }
-    return this._collectChunksFromReadable().then(chunks => {
-      this._blob = new PonyfillBlob(chunks, {
-        type: this.contentType || '',
-        size: this.contentLength,
-      });
-      return this._blob;
-    });
+    return fakePromise(
+      handleMaybePromise(
+        () => this._collectChunksFromReadable(),
+        chunks => {
+          this._blob = new PonyfillBlob(chunks, {
+            type: this.contentType || '',
+            size: this.contentLength,
+          });
+          return this._blob;
+        },
+      ),
+    );
   }
 
   _formData: PonyfillFormData | null = null;
@@ -299,14 +313,19 @@ export class PonyfillBody<TJSON = any> implements Body {
         });
       }
     }
-    return this._collectChunksFromReadable().then(chunks => {
-      if (chunks.length === 1) {
-        this._buffer = chunks[0] as Buffer;
-        return this._buffer;
-      }
-      this._buffer = Buffer.concat(chunks);
-      return this._buffer;
-    });
+    return fakePromise(
+      handleMaybePromise(
+        () => this._collectChunksFromReadable(),
+        chunks => {
+          if (chunks.length === 1) {
+            this._buffer = chunks[0] as Buffer;
+            return this._buffer;
+          }
+          this._buffer = Buffer.concat(chunks);
+          return this._buffer;
+        },
+      ),
+    );
   }
 
   bytes(): Promise<Uint8Array> {
