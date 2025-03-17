@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/node-fetch",
-  "version": "0.7.12",
+  "version": "0.7.13",
   "type": "module",
   "description": "Fetch API implementation for Node",
   "repository": {
@@ -35,7 +35,7 @@
   "typings": "dist/typings/index.d.ts",
   "dependencies": {
     "@whatwg-node/disposablestack": "^0.0.6",
-    "@whatwg-node/promise-helpers": "^1.0.0",
+    "@whatwg-node/promise-helpers": "^1.2.5",
     "busboy": "^1.6.0",
     "tslib": "^2.6.3"
   },

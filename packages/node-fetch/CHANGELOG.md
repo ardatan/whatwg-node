@@ -1,5 +1,18 @@
 # @whatwg-node/node-fetch
 
+## 0.7.13
+
+### Patch Changes
+
+- [#2182](https://github.com/ardatan/whatwg-node/pull/2182)
+  [`a45e929`](https://github.com/ardatan/whatwg-node/commit/a45e9290cdc110392d9175d2780c96ad4fd31727)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use `Array.fromAsync` when possible to collect
+  values
+
+- Updated dependencies
+  [[`a45e929`](https://github.com/ardatan/whatwg-node/commit/a45e9290cdc110392d9175d2780c96ad4fd31727)]:
+  - @whatwg-node/promise-helpers@1.2.5
+
 ## 0.7.12
 
 ### Patch Changes
