@@ -42,7 +42,7 @@
     "@eslint/eslintrc": "3.3.0",
     "@eslint/js": "9.22.0",
     "@jest/globals": "29.7.0",
-    "@theguild/prettier-config": "3.0.0",
+    "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.2.0",
     "@types/node": "22.13.10",
     "@types/react": "19.0.11",
