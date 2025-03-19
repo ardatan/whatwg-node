@@ -1,5 +1,13 @@
 # @whatwg-node/node-fetch
 
+## 0.7.14
+
+### Patch Changes
+
+- [`2225af7`](https://github.com/ardatan/whatwg-node/commit/2225af7fc46f59c126005bb91065568c7b305a67)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use `URL` as the constructor name as some
+  instrumentations like NewRelic needs it to be
+
 ## 0.7.13
 
 ### Patch Changes
