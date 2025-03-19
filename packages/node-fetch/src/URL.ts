@@ -2,7 +2,9 @@ import NodeBuffer from 'node:buffer';
 import { randomUUID } from 'node:crypto';
 import { PonyfillBlob } from './Blob.js';
 
-export class PonyfillURL extends URL {
+const NativeURL = globalThis.URL;
+
+class URL extends NativeURL {
   // This part is only needed to handle `PonyfillBlob` objects
   static blobRegistry = new Map<string, Blob | PonyfillBlob>();
   static createObjectURL(blob: Blob): string {
@@ -13,7 +15,7 @@ export class PonyfillURL extends URL {
 
   static revokeObjectURL(url: string): void {
     if (!this.blobRegistry.has(url)) {
-      URL.revokeObjectURL(url);
+      NativeURL.revokeObjectURL(url);
     } else {
       this.blobRegistry.delete(url);
     }
@@ -26,3 +28,5 @@ export class PonyfillURL extends URL {
       | undefined;
   }
 }
+
+export { URL as PonyfillURL };
