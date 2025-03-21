@@ -2,4 +2,15 @@
 '@whatwg-node/node-fetch': patch
 ---
 
-Do not hang when server adapter request is leaked to the outside
+When any `Request` method is called outside server adapter scope, it used to leak.
+This PR prevents it to hang and throw an error if the readable stream is destroyed earlier.
+
+```ts
+let request: Request;
+const adapter = createServerAdapter(req => {
+    request = req;
+  return new Response('Hello World');
+});
+
+await request.text(); // Was hanging but now throws an error
+```
