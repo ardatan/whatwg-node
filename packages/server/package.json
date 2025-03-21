@@ -44,7 +44,7 @@
     "@hapi/hapi": "^21.3.12",
     "@types/express": "5.0.1",
     "@types/koa": "^2.15.0",
-    "@types/node": "22.13.10",
+    "@types/node": "22.13.11",
     "express": "4.21.2",
     "fastify": "5.2.1",
     "koa": "^2.15.3",
