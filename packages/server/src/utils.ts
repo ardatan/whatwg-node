@@ -8,7 +8,7 @@ import {
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
-import type { FetchAPI, FetchEvent } from './types.js';
+import type { FetchAPI, FetchEvent, WaitUntilFn } from './types.js';
 
 export { isPromise, createDeferredPromise };
 
@@ -467,7 +467,7 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
 
 export function isolateObject<TIsolatedObject extends object>(
   originalCtx: TIsolatedObject,
-  waitUntilFn?: (promiseLike: PromiseLike<unknown>) => void,
+  waitUntilFn?: WaitUntilFn,
 ): TIsolatedObject {
   if (originalCtx == null) {
     if (waitUntilFn == null) {

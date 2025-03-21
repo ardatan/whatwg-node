@@ -100,6 +100,15 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
   disposableStack: AsyncDisposableStack;
 
   dispose(): Promise<void> | void;
+
+  /**
+   * Register a promise that should be waited in the background for before the server process is exited.
+   *
+   * This also avoids unhandled promise rejections, which would otherwise cause the process to exit on some environment like Node.
+   * @param promise The promise to wait for
+   * @returns
+   */
+  waitUntil: WaitUntilFn;
 }
 
 export interface RequestLike {

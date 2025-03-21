@@ -133,18 +133,18 @@ function createServerAdapter<
     return _disposableStack;
   }
 
-  function waitUntil(promiseLike: PromiseLike<unknown>) {
+  function waitUntil(maybePromise: MaybePromise<void>) {
     // Ensure that the disposable stack is created
-    if (isPromise(promiseLike)) {
+    if (isPromise(maybePromise)) {
       ensureDisposableStack();
-      waitUntilPromises.add(promiseLike);
-      promiseLike.then(
+      waitUntilPromises.add(maybePromise);
+      maybePromise.then(
         () => {
-          waitUntilPromises.delete(promiseLike);
+          waitUntilPromises.delete(maybePromise);
         },
         err => {
           console.error(`Unexpected error while waiting: ${err.message || err}`);
-          waitUntilPromises.delete(promiseLike);
+          waitUntilPromises.delete(maybePromise);
         },
       );
     }
@@ -482,6 +482,7 @@ function createServerAdapter<
       }
       return fakePromise();
     },
+    waitUntil,
   };
 
   const serverAdapter = new Proxy(genericRequestHandler, {
