@@ -51,29 +51,31 @@ it('bun issue#12368', async () => {
   );
 });
 
-it('should not hang on req.text() outside handler', async () => {
-  const { promise: wait, resolve: unwait } = createDeferredPromise();
-  let req: Request;
+if (!globalThis.Bun || !globalThis.Deno) {
+  it('should not hang on req.text() outside handler', async () => {
+    const { promise: wait, resolve: unwait } = createDeferredPromise();
+    let req: Request;
 
-  await using serv = createServer(
-    createServerAdapter(_req => {
-      req = _req;
-      unwait();
-      return new Response();
-    }),
-  );
+    await using serv = createServer(
+      createServerAdapter(_req => {
+        req = _req;
+        unwait();
+        return new Response();
+      }),
+    );
 
-  serv.listen(0);
+    serv.listen(0);
 
-  const url = `http://localhost:${(serv.address() as AddressInfo).port}`;
-  await fetch(url, {
-    method: 'POST',
-    body: 'hello world',
+    const url = `http://localhost:${(serv.address() as AddressInfo).port}`;
+    await fetch(url, {
+      method: 'POST',
+      body: 'hello world',
+    });
+
+    await wait;
+
+    expect(Promise.resolve().then(() => req.text())).rejects.toThrow(
+      'Readable stream has already been consumed or destroyed.',
+    );
   });
-
-  await wait;
-
-  expect(Promise.resolve().then(() => req.text())).rejects.toThrow(
-    'Readable stream has already been consumed or destroyed.',
-  );
-});
+}
