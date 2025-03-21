@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.10.2
+
+### Patch Changes
+
+- [`ace1774`](https://github.com/ardatan/whatwg-node/commit/ace1774b545dc7ebdaa6932368796decd76b5e2f)
+  Thanks [@ardatan](https://github.com/ardatan)! - Expose `waitUntil` method in the adapter
+
 ## 0.10.1
 
 ### Patch Changes
