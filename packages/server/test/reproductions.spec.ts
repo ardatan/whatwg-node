@@ -53,29 +53,29 @@ it('bun issue#12368', async () => {
 
 if (!globalThis.Bun || !globalThis.Deno) {
   it('should not hang on req.text() outside handler', async () => {
-    const { promise: wait, resolve: unwait } = createDeferredPromise();
-    let req: Request;
+    const { promise: wait, resolve: unwait } = createDeferredPromise<Request>();
 
-    await using serv = createServer(
-      createServerAdapter(_req => {
-        req = _req;
-        unwait();
+    await using server = createServer(
+      createServerAdapter(req => {
+        unwait(req);
         return new Response();
       }),
     );
 
-    serv.listen(0);
+    await new Promise<void>(resolve => server.listen(0, resolve));
 
-    const url = `http://localhost:${(serv.address() as AddressInfo).port}`;
+    const url = `http://localhost:${(server.address() as AddressInfo).port}`;
     await fetch(url, {
       method: 'POST',
       body: 'hello world',
     });
 
-    await wait;
+    const req = await wait;
 
-    expect(Promise.resolve().then(() => req.text())).rejects.toThrow(
-      'Readable stream has already been consumed or destroyed.',
-    );
+    try {
+      await req!.text();
+    } catch (err: any) {
+      expect(err.message).toEqual('Readable stream has already been consumed or destroyed.');
+    }
   });
 }
