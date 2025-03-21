@@ -2,7 +2,7 @@
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import busboy from 'busboy';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { fakeRejectPromise, handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
@@ -168,11 +168,15 @@ export class PonyfillBody<TJSON = any> implements Body {
       return collectValue();
     }
     const _body = this.generateBody();
+    this._chunks = [];
     if (!_body) {
-      this._chunks = [];
       return fakePromise(this._chunks);
     }
-    this._chunks = [];
+    if (_body.readable?.destroyed) {
+      return fakeRejectPromise<Buffer[]>(
+        new Error('Readable stream has already been consumed or destroyed.'),
+      );
+    }
     _body.readable.on('data', chunk => {
       this._chunks!.push(chunk);
     });

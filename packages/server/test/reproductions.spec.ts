@@ -1,8 +1,8 @@
-import { Server } from 'node:http';
+import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import express from 'express';
 import { afterAll, expect, it } from '@jest/globals';
-import { createServerAdapter, Response } from '@whatwg-node/server';
+import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
 
 let server: Server | undefined;
 afterAll(() => {
@@ -48,5 +48,32 @@ it('bun issue#12368', async () => {
       body: { hello: 'world' },
       url: `http://localhost:${port}/my-path`,
     }),
+  );
+});
+
+it('should not hang on req.text() outside handler', async () => {
+  const { promise: wait, resolve: unwait } = createDeferredPromise();
+  let req: Request;
+
+  await using serv = createServer(
+    createServerAdapter(_req => {
+      req = _req;
+      unwait();
+      return new Response();
+    }),
+  );
+
+  serv.listen(0);
+
+  const url = `http://localhost:${(serv.address() as AddressInfo).port}`;
+  await fetch(url, {
+    method: 'POST',
+    body: 'hello world',
+  });
+
+  await wait;
+
+  expect(Promise.resolve().then(() => req.text())).rejects.toThrow(
+    'Readable stream has already been consumed or destroyed.',
   );
 });
