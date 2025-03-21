@@ -2,7 +2,7 @@
 '@whatwg-node/node-fetch': patch
 ---
 
-When any `Request` method is called outside server adapter scope, it used to leak.
+When any `Request` method is called outside server adapter scope, it used to hang.
 This PR prevents it to hang and throw an error if the readable stream is destroyed earlier.
 
 ```ts
