@@ -52,12 +52,12 @@ it('bun issue#12368', async () => {
   );
 });
 
-if (!globalThis.Bun || !globalThis.Deno) {
+if (!globalThis.Bun && !globalThis.Deno) {
   it('should not hang on req.text() outside handler', async () => {
     const { promise: wait, resolve: unwait } = createDeferredPromise<Request>();
 
     server = createServer(
-      createServerAdapter(req => {
+      createServerAdapter(async req => {
         unwait(req);
         return new Response('hello world');
       }),
