@@ -26,13 +26,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         fetchRequest.parsedUrl?.protocol || fetchRequest.url,
       );
 
-      const nodeReadable = (
-        fetchRequest.body != null
-          ? isNodeReadable(fetchRequest.body)
-            ? fetchRequest.body
-            : Readable.from(fetchRequest.body)
-          : null
-      ) as Readable | null;
       const headersSerializer: typeof getHeadersObj =
         (fetchRequest.headersSerializer as any) || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
@@ -132,10 +125,24 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       });
       nodeRequest.once('error', reject);
 
-      if (nodeReadable) {
-        nodeReadable.pipe(nodeRequest);
+      if (fetchRequest['_buffer'] != null) {
+        nodeRequest.write(fetchRequest['_buffer']);
+        // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+        nodeRequest.end(null, null, null);
       } else {
-        nodeRequest.end();
+        const nodeReadable = (
+          fetchRequest.body != null
+            ? isNodeReadable(fetchRequest.body)
+              ? fetchRequest.body
+              : Readable.from(fetchRequest.body)
+            : null
+        ) as Readable | null;
+        if (nodeReadable) {
+          nodeReadable.pipe(nodeRequest);
+        } else {
+          // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+          nodeRequest.end(null, null, null);
+        }
       }
     } catch (e) {
       reject(e);

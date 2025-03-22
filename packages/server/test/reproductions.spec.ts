@@ -2,6 +2,7 @@ import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import express from 'express';
 import { afterAll, expect, it } from '@jest/globals';
+import { fetch } from '@whatwg-node/fetch';
 import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
 
 let server: Server | undefined;
@@ -55,14 +56,14 @@ if (!globalThis.Bun || !globalThis.Deno) {
   it('should not hang on req.text() outside handler', async () => {
     const { promise: wait, resolve: unwait } = createDeferredPromise<Request>();
 
-    await using server = createServer(
+    server = createServer(
       createServerAdapter(req => {
         unwait(req);
-        return new Response();
+        return new Response('hello world');
       }),
     );
 
-    await new Promise<void>(resolve => server.listen(0, resolve));
+    await new Promise<void>(resolve => server?.listen(0, resolve));
 
     const url = `http://localhost:${(server.address() as AddressInfo).port}`;
     await fetch(url, {
@@ -72,10 +73,6 @@ if (!globalThis.Bun || !globalThis.Deno) {
 
     const req = await wait;
 
-    try {
-      await req!.text();
-    } catch (err: any) {
-      expect(err.message).toEqual('Readable stream has already been consumed or destroyed.');
-    }
+    expect(await req!.text()).toEqual('hello world');
   });
 }
