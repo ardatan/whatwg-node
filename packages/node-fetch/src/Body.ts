@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
-import { Readable } from 'node:stream';
+import { IncomingMessage } from 'node:http';
+import { PassThrough, Readable } from 'node:stream';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -44,6 +45,7 @@ export interface FormDataLimits {
 
 export interface PonyfillBodyOptions {
   formDataLimits?: FormDataLimits;
+  signal?: AbortSignal;
 }
 
 export class PonyfillBody<TJSON = any> implements Body {
@@ -55,7 +57,10 @@ export class PonyfillBody<TJSON = any> implements Body {
     private bodyInit: BodyPonyfillInit | null,
     private options: PonyfillBodyOptions = {},
   ) {
-    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(bodyInit);
+    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(
+      bodyInit,
+      options?.signal,
+    );
     this._bodyFactory = bodyFactory;
     this.contentType = contentType;
     this.contentLength = contentLength;
@@ -169,7 +174,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
     const _body = this.generateBody();
     this._chunks = [];
-    if (!_body || _body.readable?.destroyed) {
+    if (!_body) {
       return fakePromise(this._chunks);
     }
     _body.readable.on('data', chunk => {
@@ -372,7 +377,10 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 }
 
-function processBodyInit(bodyInit: BodyPonyfillInit | null): {
+function processBodyInit(
+  bodyInit: BodyPonyfillInit | null,
+  signal?: AbortSignal,
+): {
   bodyType?: BodyInitType;
   contentType: string | null;
   contentLength: number | null;
@@ -401,13 +409,14 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (Buffer.isBuffer(bodyInit)) {
+    const buffer: Buffer = bodyInit;
     return {
       bodyType: BodyInitType.Buffer,
       contentType: null,
       contentLength: bodyInit.length,
       buffer: bodyInit,
       bodyFactory() {
-        const readable = Readable.from(bodyInit);
+        const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
       },
@@ -428,20 +437,22 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (bodyInit instanceof PonyfillReadableStream && bodyInit.readable != null) {
+    const readableStream: PonyfillReadableStream<Uint8Array> = bodyInit;
     return {
       bodyType: BodyInitType.ReadableStream,
-      bodyFactory: () => bodyInit,
+      bodyFactory: () => readableStream,
       contentType: null,
       contentLength: null,
     };
   }
   if (isBlob(bodyInit)) {
+    const blob = bodyInit as PonyfillBlob;
     return {
       bodyType: BodyInitType.Blob,
       contentType: bodyInit.type,
       contentLength: bodyInit.size,
       bodyFactory() {
-        return bodyInit.stream() as PonyfillReadableStream<Uint8Array>;
+        return blob.stream();
       },
     };
   }
@@ -457,6 +468,21 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
+      },
+    };
+  }
+  if (bodyInit instanceof IncomingMessage) {
+    const passthrough: PassThrough = (bodyInit = bodyInit.pipe(new PassThrough(), {
+      end: true,
+      // @ts-expect-error - `signal` is not in the type definition
+      signal,
+    }));
+    return {
+      bodyType: BodyInitType.Readable,
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        return new PonyfillReadableStream<Uint8Array>(passthrough);
       },
     };
   }
