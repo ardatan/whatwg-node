@@ -57,7 +57,7 @@ if (!globalThis.Bun && !globalThis.Deno) {
     const { promise: wait, resolve: unwait } = createDeferredPromise<Request>();
 
     server = createServer(
-      createServerAdapter(async req => {
+      createServerAdapter(req => {
         unwait(req);
         return new Response('hello world');
       }),

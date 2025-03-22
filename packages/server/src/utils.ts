@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
-import type { Readable } from 'node:stream';
+import { PassThrough, type Readable } from 'node:stream';
 import {
   createDeferredPromise,
   fakePromise,
@@ -223,7 +223,11 @@ It will affect your performance. Please check our Bun integration recipe, and av
     headers: normalizedHeaders,
     signal: controller.signal,
     // @ts-expect-error - AsyncIterable is supported as body
-    body: rawRequest,
+    body: rawRequest.pipe(new PassThrough(), {
+      end: true,
+      signal: controller.signal,
+    }),
+    // @ts-expect-error - AsyncIterable is supported as body
     duplex: 'half',
   });
 }
