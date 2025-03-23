@@ -1,12 +1,12 @@
 import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import express from 'express';
-import { afterAll, expect, it } from '@jest/globals';
+import { afterEach, expect, it } from '@jest/globals';
 import { fetch } from '@whatwg-node/fetch';
 import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
 
 let server: Server | undefined;
-afterAll(() => {
+afterEach(() => {
   if (server) {
     return new Promise<void>((resolve, reject) =>
       server?.close(err => (err ? reject(err) : resolve())),
