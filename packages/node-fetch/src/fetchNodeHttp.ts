@@ -115,7 +115,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream, {
+        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
