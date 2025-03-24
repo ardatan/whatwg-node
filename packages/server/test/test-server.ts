@@ -192,27 +192,12 @@ if (!globalThis.Deno) {
     const fastifyApp = fastify().route({
       method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
       url: '*',
-      async handler(req: FastifyRequest, reply: FastifyReply) {
-        const response: Response = await adapter.handleNodeRequestAndResponse(req, reply, {
+      handler: (req, reply) =>
+        adapter.handleNodeRequestAndResponse(req, reply, {
           req,
           res: reply.raw,
           reply,
-        });
-
-        if (!response) {
-          return reply.status(404).send('Not Found');
-        }
-
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body || '');
-
-        return reply;
-      },
+        }),
     });
     const sockets = new Set<Socket>();
     fastifyApp.server.on('connection', socket => {
