@@ -2,10 +2,12 @@ import { describe, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
+const skipIf = (condition: boolean) => (condition ? it.skip : it);
+
 describe('Request Abort', () => {
   runTestsForEachServerImpl(server => {
     runTestsForEachFetchImpl((_, { fetchAPI, createServerAdapter }) => {
-      it(
+      skipIf(globalThis.Bun && server?.name !== 'Bun')(
         'calls body.cancel on request abort',
         () =>
           new Promise<void>(resolve => {

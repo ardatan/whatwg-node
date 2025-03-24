@@ -124,6 +124,8 @@ if ((globalThis as any)['createUWS']) {
   serverImplMap.uWebSockets = createUWSTestServer;
 }
 
+serverImplMap['node:http'] = createNodeHttpTestServer;
+
 if (globalThis.Bun) {
   serverImplMap.Bun = createBunServer;
 } else if (globalThis.Deno) {
@@ -155,8 +157,6 @@ if (globalThis.Bun) {
     };
   };
 } else {
-  serverImplMap['node:http'] = createNodeHttpTestServer;
-
   serverImplMap['fastify'] = async function createFastifyTestServer() {
     let adapter: ServerAdapter<
       {
@@ -514,7 +514,7 @@ export function runTestsForEachServerImpl(
       callback(
         {
           get name() {
-            return globalServerMap[serverImplName].name;
+            return serverImplName;
           },
           get url() {
             return globalServerMap[serverImplName].url;
