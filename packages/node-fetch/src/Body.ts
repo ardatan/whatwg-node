@@ -483,22 +483,16 @@ function processBodyInit(
     };
   }
   if (bodyInit instanceof IncomingMessage) {
-    const originalStream = bodyInit;
-    const passthrough: PassThrough = (bodyInit = bodyInit.pipe(
-      new PassThrough({
-        signal,
-      }),
-      {
-        end: true,
-      },
-    ));
-    pipeline(originalStream, passthrough, {
+    const passthrough = new PassThrough({
+      signal,
+    });
+    pipeline(bodyInit, passthrough, {
       end: true,
       signal,
     })
       .then(() => {
-        if (!originalStream.destroyed) {
-          originalStream.resume();
+        if (!bodyInit.destroyed) {
+          bodyInit.resume();
         }
       })
       .catch(e => {
