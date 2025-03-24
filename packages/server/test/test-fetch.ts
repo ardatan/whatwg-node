@@ -35,22 +35,20 @@ export function runTestsForEachFetchImpl(
       });
       return;
     }
-    if (libcurl) {
-      describe('libcurl', () => {
-        const fetchAPI = createFetch({ skipPonyfill: false });
-        callback('libcurl', {
-          fetchAPI,
-          createServerAdapter: (baseObj: any, opts?: any) =>
-            createServerAdapter(baseObj, {
-              fetchAPI,
-              ...opts,
-            }),
-        });
-        afterAll(() => {
-          libcurl.Curl.globalCleanup();
-        });
+    describeIf(libcurl)('libcurl', () => {
+      const fetchAPI = createFetch({ skipPonyfill: false });
+      callback('libcurl', {
+        fetchAPI,
+        createServerAdapter: (baseObj: any, opts?: any) =>
+          createServerAdapter(baseObj, {
+            fetchAPI,
+            ...opts,
+          }),
       });
-    }
+      afterAll(() => {
+        libcurl.Curl.globalCleanup();
+      });
+    });
     describe('node-http', () => {
       beforeAll(() => {
         (globalThis.libcurl as any) = null;

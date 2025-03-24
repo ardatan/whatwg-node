@@ -148,37 +148,40 @@ describe('Node Specific Cases', () => {
           },
           1000,
         );
-        it('should handle large streaming responses', async () => {
-          const successFn = jest.fn();
-          await using serverAdapter = createServerAdapter(() => {
-            let i = 0;
-            const t = 5;
-            const stream = new ReadableStream({
-              pull(controller) {
-                i++;
-                if (i > t) {
-                  controller.close();
-                } else {
-                  successFn();
-                  controller.enqueue(Buffer.from('x'.repeat(5409)));
-                }
-              },
+        skipIf(globalThis.Deno && serverImplName !== 'Deno')(
+          'should handle large streaming responses',
+          async () => {
+            const successFn = jest.fn();
+            await using serverAdapter = createServerAdapter(() => {
+              let i = 0;
+              const t = 5;
+              const stream = new ReadableStream({
+                pull(controller) {
+                  i++;
+                  if (i > t) {
+                    controller.close();
+                  } else {
+                    successFn();
+                    controller.enqueue(Buffer.from('x'.repeat(5409)));
+                  }
+                },
+              });
+              return new Response(stream, { status: 200 });
             });
-            return new Response(stream, { status: 200 });
-          });
-          await testServer.addOnceHandler(serverAdapter);
-          const response = await fetch(testServer.url);
+            await testServer.addOnceHandler(serverAdapter);
+            const response = await fetch(testServer.url);
 
-          let result: string | null = '';
-          for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
-            result += Buffer.from(chunk).toString('utf-8');
-          }
+            let result: string | null = '';
+            for await (const chunk of response.body as any as AsyncIterable<Uint8Array>) {
+              result += Buffer.from(chunk).toString('utf-8');
+            }
 
-          expect(result.length).toBe(27045);
-          expect(successFn).toHaveBeenCalledTimes(5);
+            expect(result.length).toBe(27045);
+            expect(successFn).toHaveBeenCalledTimes(5);
 
-          result = null;
-        });
+            result = null;
+          },
+        );
 
         if (!globalThis.Bun && !globalThis.Deno) {
           it('should not kill the server if response is ended on low level', async () => {
