@@ -308,7 +308,9 @@ export function sendNodeResponse(
   });
 
   // Optimizations for node-fetch
-  const bufOfRes = (fetchResponse as any)._buffer;
+  const bufOfRes: Buffer =
+    // @ts-expect-error - _buffer is a private property
+    fetchResponse._buffer;
   if (bufOfRes) {
     // @ts-expect-error http and http2 writes are actually compatible
     serverResponse.write(bufOfRes);
@@ -323,7 +325,10 @@ export function sendNodeResponse(
     return;
   }
 
-  if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
+  if (
+    // @ts-expect-error - Uint8Array is a valid body type
+    fetchBody[Symbol.toStringTag] === 'Uint8Array'
+  ) {
     serverResponse
       // @ts-expect-error http and http2 writes are actually compatible
       .write(fetchBody);
@@ -337,7 +342,9 @@ export function sendNodeResponse(
     serverResponse.once('close', () => {
       fetchBody.destroy();
     });
-    fetchBody.pipe(serverResponse);
+    fetchBody.pipe(serverResponse, {
+      end: true,
+    });
     return;
   }
 
