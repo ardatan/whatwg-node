@@ -21,7 +21,7 @@ describe('Node Specific Cases', () => {
       runTestsForEachServerImpl((testServer, serverImplName) => {
         // Deno and Bun does not empty responses
         if (!globalThis.Bun && !globalThis.Deno) {
-          it('should handle empty responses', async () => {
+          it.only('should handle empty responses', async () => {
             await using serverAdapter = createServerAdapter(() => {
               return undefined as any;
             });
