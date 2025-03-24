@@ -189,17 +189,21 @@ if (!globalThis.Deno) {
       ServerAdapterBaseObject<{}>
     >;
 
-    const fastifyApp = fastify().route({
-      method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
-      url: '*',
-      handler: (req, reply) =>
-        adapter.handleNodeRequestAndResponse(req, reply, {
-          req,
-          res: reply.raw,
-          reply,
-        }),
-    });
     const sockets = new Set<Socket>();
+    const fastifyApp = fastify()
+      .route({
+        method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
+        url: '*',
+        handler: (req, reply) =>
+          adapter.handleNodeRequestAndResponse(req, reply, {
+            req,
+            res: reply.raw,
+            reply,
+          }),
+      })
+      .setNotFoundHandler(function (_, reply) {
+        reply.code(404).send({ error: 'Not Found', message: 'Four Oh Four 🤷‍♂️', statusCode: 404 });
+      });
     fastifyApp.server.on('connection', socket => {
       sockets.add(socket);
       socket.once('close', () => {
