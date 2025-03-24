@@ -86,9 +86,6 @@ export class PonyfillBody<TJSON = any> implements Body {
     const body = this._bodyFactory();
 
     this._generatedBody = body;
-    if (body?.readable && this.signal) {
-      addAbortSignal(this.signal, body.readable);
-    }
     return body;
   }
 
@@ -181,7 +178,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
-    return _body.readable.toArray().then(chunks => {
+    return _body.readable.toArray({ signal: this.signal! || undefined }).then(chunks => {
       this._chunks = chunks;
       return this._chunks;
     });
