@@ -231,10 +231,7 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-async function sendAsyncIterable(
-  serverResponse: NodeResponse,
-  asyncIterable: AsyncIterable<Uint8Array>,
-) {
+function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIterable<Uint8Array>) {
   let closed = false;
   const closeEventListener = () => {
     closed = true;
@@ -244,35 +241,44 @@ async function sendAsyncIterable(
 
   serverResponse.once('finish', () => {
     serverResponse.removeListener('close', closeEventListener);
+    serverResponse.removeListener('error', closeEventListener);
   });
-  for await (const chunk of asyncIterable) {
-    if (closed) {
-      break;
-    }
-    const shouldBreak = await new Promise(resolve => {
-      if (
-        !serverResponse
-          // @ts-expect-error http and http2 writes are actually compatible
-          .write(chunk, err => {
-            if (err) {
-              resolve(true);
-            }
-          })
-      ) {
-        if (closed) {
-          resolve(true);
-          return;
-        }
-        serverResponse.once('drain', () => {
-          resolve(false);
-        });
+  const iterator = asyncIterable[Symbol.asyncIterator]();
+  const pump = (): Promise<void> =>
+    iterator.next().then(({ done, value }) => {
+      if (closed || done) {
+        return;
       }
+      return new Promise(resolve => {
+        if (
+          !serverResponse
+            // @ts-expect-error http and http2 writes are actually compatible
+            .write(value, err => {
+              if (err) {
+                resolve(true);
+              }
+            })
+        ) {
+          if (closed) {
+            resolve(true);
+            return;
+          }
+          serverResponse.once('drain', () => {
+            resolve(false);
+          });
+        }
+      })
+        .then(shouldBreak => {
+          if (shouldBreak) {
+            return;
+          }
+          return pump();
+        })
+        .then(() => {
+          endResponse(serverResponse);
+        });
     });
-    if (shouldBreak) {
-      break;
-    }
-  }
-  endResponse(serverResponse);
+  return pump();
 }
 
 export function sendNodeResponse(
@@ -313,8 +319,7 @@ export function sendNodeResponse(
     fetchResponse._buffer;
   if (bufOfRes) {
     // @ts-expect-error http and http2 writes are actually compatible
-    serverResponse.write(bufOfRes);
-    endResponse(serverResponse);
+    serverResponse.write(bufOfRes, () => endResponse(serverResponse));
     return;
   }
 
