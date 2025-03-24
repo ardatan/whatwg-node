@@ -126,6 +126,59 @@ if ((globalThis as any)['createUWS']) {
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
 
+serverImplMap['express'] = async function createExpressTestServer() {
+  let handler: any;
+  const app = express().use((...args) => handler(...args));
+  const sockets = new Set<Socket>();
+  let server: Server | undefined;
+  await new Promise<void>((resolve, reject) => {
+    server = app
+      .listen(0, () => {
+        resolve();
+      })
+      .once('error', reject)
+      .on('connection', socket => {
+        sockets.add(socket);
+        socket.once('close', () => {
+          sockets.delete(socket);
+        });
+      });
+  });
+
+  return {
+    name: 'express',
+    url: `http://localhost:${(server?.address() as AddressInfo).port}`,
+    async [DisposableSymbols.asyncDispose]() {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
+      sockets.forEach(socket => {
+        socket.destroy();
+      });
+      return new Promise((resolve, reject) => {
+        if (server) {
+          server.close(err => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        } else {
+          resolve();
+        }
+      });
+    },
+    async addOnceHandler(newHandler, ...ctxParts) {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
+      handler = newHandler;
+      if (ctxParts.length) {
+        handler = function (...args: any[]) {
+          return newHandler(...args, ...ctxParts);
+        };
+      }
+    },
+  };
+};
+
 if (globalThis.Bun) {
   serverImplMap.Bun = createBunServer;
 } else if (globalThis.Deno) {
@@ -235,59 +288,6 @@ if (globalThis.Bun) {
             handleNodeRequestAndResponse(...args: any[]) {
               return newHandler.handleNodeRequestAndResponse(...args, ...ctxParts);
             },
-          };
-        }
-      },
-    };
-  };
-
-  serverImplMap['express'] = async function createExpressTestServer() {
-    let handler: any;
-    const app = express().use((...args) => handler(...args));
-    const sockets = new Set<Socket>();
-    let server: Server | undefined;
-    await new Promise<void>((resolve, reject) => {
-      server = app
-        .listen(0, () => {
-          resolve();
-        })
-        .once('error', reject)
-        .on('connection', socket => {
-          sockets.add(socket);
-          socket.once('close', () => {
-            sockets.delete(socket);
-          });
-        });
-    });
-
-    return {
-      name: 'express',
-      url: `http://localhost:${(server?.address() as AddressInfo).port}`,
-      async [DisposableSymbols.asyncDispose]() {
-        await handler?.[DisposableSymbols.asyncDispose]?.();
-        sockets.forEach(socket => {
-          socket.destroy();
-        });
-        return new Promise((resolve, reject) => {
-          if (server) {
-            server.close(err => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          } else {
-            resolve();
-          }
-        });
-      },
-      async addOnceHandler(newHandler, ...ctxParts) {
-        await handler?.[DisposableSymbols.asyncDispose]?.();
-        handler = newHandler;
-        if (ctxParts.length) {
-          handler = function (...args: any[]) {
-            return newHandler(...args, ...ctxParts);
           };
         }
       },
