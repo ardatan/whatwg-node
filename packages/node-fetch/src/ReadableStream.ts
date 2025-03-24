@@ -243,6 +243,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   static from<T>(iterable: AsyncIterable<T> | Iterable<T>): PonyfillReadableStream<T> {
     return new PonyfillReadableStream(Readable.from(iterable));
   }
+
+  [Symbol.toStringTag] = 'ReadableStream';
 }
 
 function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> {

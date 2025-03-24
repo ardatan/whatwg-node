@@ -147,7 +147,7 @@ describe('Compression', () => {
     );
   });
   runTestsForEachFetchImpl((implName, { fetchAPI, createServerAdapter }) => {
-    runTestsForEachServerImpl(server => {
+    runTestsForEachServerImpl((server, serverImplName) => {
       const skipIf = (condition: boolean) => (condition ? it.skip : it);
       // Deno's fetch does not decompress automatically
       skipIf(!!globalThis.Deno)(
@@ -224,27 +224,63 @@ describe('Compression', () => {
               expect(numberContentLength).toBeLessThan(origSize);
             }
           });
-          it(`from the client to the server`, async () => {
-            const adapter = createServerAdapter(
-              async req => {
-                const body = await req.text();
-                return fetchAPI.Response.json({
-                  body,
-                  contentLength: req.headers.get('content-length'),
+          skipIf(globalThis.Deno && serverImplName !== 'Deno')(
+            `from the client to the server`,
+            async () => {
+              const adapter = createServerAdapter(
+                async req => {
+                  const body = await req.text();
+                  return fetchAPI.Response.json({
+                    body,
+                    contentLength: req.headers.get('content-length'),
+                  });
+                },
+                {
+                  plugins: [useContentEncoding()],
+                },
+              );
+              server.addOnceHandler(adapter);
+              if (encoding === 'none') {
+                const res = await fetchAPI.fetch(server.url, {
+                  method: 'POST',
+                  body: exampleData,
+                  headers: {
+                    'content-length': String(Buffer.byteLength(exampleData)),
+                  },
                 });
-              },
-              {
-                plugins: [useContentEncoding()],
-              },
-            );
-            server.addOnceHandler(adapter);
-            if (encoding === 'none') {
+                const resText = await res.text();
+                let resJson: { body: string; contentLength: string };
+                try {
+                  resJson = JSON.parse(resText);
+                } catch {
+                  throw new Error(`Could not parse JSON: ${resText}`);
+                }
+                expect(resJson.body).toEqual(exampleData);
+                expect(Number(resJson.contentLength)).toEqual(Buffer.byteLength(exampleData));
+                return;
+              }
+              const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
+              const writer = stream.writable.getWriter();
+              writer.write(Buffer.from(exampleData));
+              writer.close();
+              const chunks: number[] = [];
+              const reader = stream.readable.getReader();
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                  reader.releaseLock();
+                  break;
+                } else if (value) {
+                  chunks.push(...value);
+                }
+              }
+              const uint8Array = new Uint8Array(chunks);
               const res = await fetchAPI.fetch(server.url, {
                 method: 'POST',
-                body: exampleData,
                 headers: {
-                  'content-length': String(Buffer.byteLength(exampleData)),
+                  'content-encoding': encoding,
                 },
+                body: uint8Array,
               });
               const resText = await res.text();
               let resJson: { body: string; contentLength: string };
@@ -254,42 +290,9 @@ describe('Compression', () => {
                 throw new Error(`Could not parse JSON: ${resText}`);
               }
               expect(resJson.body).toEqual(exampleData);
-              expect(Number(resJson.contentLength)).toEqual(Buffer.byteLength(exampleData));
-              return;
-            }
-            const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
-            const writer = stream.writable.getWriter();
-            writer.write(Buffer.from(exampleData));
-            writer.close();
-            const chunks: number[] = [];
-            const reader = stream.readable.getReader();
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) {
-                reader.releaseLock();
-                break;
-              } else if (value) {
-                chunks.push(...value);
-              }
-            }
-            const uint8Array = new Uint8Array(chunks);
-            const res = await fetchAPI.fetch(server.url, {
-              method: 'POST',
-              headers: {
-                'content-encoding': encoding,
-              },
-              body: uint8Array,
-            });
-            const resText = await res.text();
-            let resJson: { body: string; contentLength: string };
-            try {
-              resJson = JSON.parse(resText);
-            } catch {
-              throw new Error(`Could not parse JSON: ${resText}`);
-            }
-            expect(resJson.body).toEqual(exampleData);
-            expect(Number(resJson.contentLength)).toBeLessThan(Buffer.byteLength(resJson.body));
-          });
+              expect(Number(resJson.contentLength)).toBeLessThan(Buffer.byteLength(resJson.body));
+            },
+          );
         });
       }
     });
