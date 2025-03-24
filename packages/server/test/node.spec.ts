@@ -402,17 +402,20 @@ describe('Node Specific Cases', () => {
           expect(disposedThen).toHaveBeenCalled();
         });
 
-        it('handles ipv6 addresses correctly', async () => {
-          await using serverAdapter = createServerAdapter(() => {
-            return new Response('Hello world!', { status: 200 });
-          });
-          await testServer.addOnceHandler(serverAdapter);
-          const port = new URL(testServer.url).port;
-          const ipv6Url = new URL(`http://[::1]:${port}/`);
-          const response = await fetch(ipv6Url);
-          expect(response.status).toBe(200);
-          await expect(response.text()).resolves.toBe('Hello world!');
-        });
+        skipIf(globalThis.Deno && serverImplName !== 'Deno')(
+          'handles ipv6 addresses correctly',
+          async () => {
+            await using serverAdapter = createServerAdapter(() => {
+              return new Response('Hello world!', { status: 200 });
+            });
+            await testServer.addOnceHandler(serverAdapter);
+            const port = new URL(testServer.url).port;
+            const ipv6Url = new URL(`http://[::1]:${port}/`);
+            const response = await fetch(ipv6Url);
+            expect(response.status).toBe(200);
+            await expect(response.text()).resolves.toBe('Hello world!');
+          },
+        );
 
         describe('handles status codes correctly', () => {
           for (const statusCodeStr in STATUS_CODES) {
