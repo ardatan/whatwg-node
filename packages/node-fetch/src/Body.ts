@@ -490,10 +490,6 @@ function processBodyInit(
       },
     );
 
-    if (signal) {
-      addAbortSignal(signal, passThrough);
-    }
-
     return {
       bodyType: BodyInitType.Readable,
       contentType: null,
