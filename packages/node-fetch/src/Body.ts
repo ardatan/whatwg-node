@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { addAbortSignal, PassThrough, Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -178,7 +178,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
-    return _body.readable.toArray({ signal: this.signal! || undefined }).then(chunks => {
+    return _body.readable.toArray().then(chunks => {
       this._chunks = chunks;
       return this._chunks;
     });
