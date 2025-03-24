@@ -181,7 +181,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
-    return _body.readable.toArray({ signal: (this as any).signal }).then(chunks => {
+    return _body.readable.toArray().then(chunks => {
       this._chunks = chunks;
       return this._chunks;
     });
