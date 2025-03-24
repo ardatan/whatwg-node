@@ -1,5 +1,6 @@
 ---
 '@whatwg-node/node-fetch': patch
+'@whatwg-node/server': patch
 ---
 
 When any `Request` method is called outside server adapter scope, it used to hang.
