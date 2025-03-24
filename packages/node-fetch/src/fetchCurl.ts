@@ -120,7 +120,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.once(
     'stream',
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      const outputStream = new PassThrough();
+      const outputStream = new PassThrough({
+        signal: fetchRequest.signal,
+      });
 
       pipeline(stream, outputStream, {
         end: true,

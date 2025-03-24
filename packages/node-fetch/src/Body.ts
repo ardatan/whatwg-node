@@ -2,6 +2,7 @@
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
 import { PassThrough, Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -482,6 +483,7 @@ function processBodyInit(
     };
   }
   if (bodyInit instanceof IncomingMessage) {
+    const originalStream = bodyInit;
     const passthrough: PassThrough = (bodyInit = bodyInit.pipe(
       new PassThrough({
         signal,
@@ -490,6 +492,18 @@ function processBodyInit(
         end: true,
       },
     ));
+    pipeline(originalStream, passthrough, {
+      end: true,
+      signal,
+    })
+      .then(() => {
+        if (!originalStream.destroyed) {
+          originalStream.resume();
+        }
+      })
+      .catch(e => {
+        passthrough.destroy(e);
+      });
     return {
       bodyType: BodyInitType.Readable,
       contentType: null,
