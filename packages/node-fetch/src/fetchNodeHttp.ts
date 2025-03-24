@@ -120,6 +120,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
+          signal: fetchRequest.signal,
         });
         resolve(ponyfillResponse);
       });
