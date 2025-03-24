@@ -90,8 +90,6 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-let bunNodeCompatModeWarned = false;
-
 export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
 
 export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
@@ -182,39 +180,6 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
         }
       },
     });
-  }
-
-  // Temporary workaround for a bug in Bun Node compat mode
-  if (globalThis.process?.versions?.bun && isReadable(rawRequest)) {
-    if (!bunNodeCompatModeWarned) {
-      bunNodeCompatModeWarned = true;
-      console.warn(
-        `You use Bun Node compatibility mode, which is not recommended!
-It will affect your performance. Please check our Bun integration recipe, and avoid using 'http' for your server implementation.`,
-      );
-    }
-    return new fetchAPI.Request(fullUrl, {
-      method: nodeRequest.method,
-      headers: normalizedHeaders,
-      duplex: 'half',
-      body: new ReadableStream({
-        start(controller) {
-          rawRequest.on('data', chunk => {
-            controller.enqueue(chunk);
-          });
-          rawRequest.on('error', e => {
-            controller.error(e);
-          });
-          rawRequest.on('end', () => {
-            controller.close();
-          });
-        },
-        cancel(e) {
-          rawRequest.destroy(e);
-        },
-      }),
-      signal: controller.signal,
-    } as RequestInit);
   }
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better

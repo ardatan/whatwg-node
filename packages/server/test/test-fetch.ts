@@ -22,7 +22,7 @@ export function runTestsForEachFetchImpl(
   ) => void,
   opts: { noLibCurl?: boolean; noNativeFetch?: boolean } = {},
 ) {
-  describeIf(!globalThis.Bun && !globalThis.Deno)('Ponyfill', () => {
+  describeIf(!globalThis.Deno)('Ponyfill', () => {
     if (opts.noLibCurl) {
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('ponyfill', {

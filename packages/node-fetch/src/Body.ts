@@ -139,12 +139,9 @@ export class PonyfillBody<TJSON = any> implements Body {
     return null;
   }
 
-  _chunks: Uint8Array[] | null = null;
+  _chunks: MaybePromise<Uint8Array[]> | null = null;
 
-  _collectChunksFromReadable() {
-    if (this._chunks) {
-      return fakePromise(this._chunks);
-    }
+  _doCollectChunksFromReadableJob() {
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
         return handleMaybePromise(
@@ -156,34 +153,47 @@ export class PonyfillBody<TJSON = any> implements Body {
         );
       }
       const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
+      const chunks: Uint8Array[] = [];
       const collectValue = (): MaybePromise<Uint8Array[]> =>
         handleMaybePromise(
           () => iterator.next(),
           ({ value, done }) => {
-            this._chunks ||= [];
             if (value) {
-              this._chunks.push(value);
+              chunks.push(value);
             }
             if (!done) {
               return collectValue();
             }
+            this._chunks = chunks;
             return this._chunks;
           },
         );
       return collectValue();
     }
     const _body = this.generateBody();
-    this._chunks = [];
     if (!_body) {
+      this._chunks = [];
       return fakePromise(this._chunks);
     }
+    const chunks: Uint8Array[] = [];
     _body.readable.on('data', chunk => {
-      this._chunks!.push(chunk);
+      chunks.push(chunk);
     });
     return new Promise<Uint8Array[]>((resolve, reject) => {
-      _body.readable.once('end', () => resolve(this._chunks!));
+      _body.readable.once('end', () => {
+        this._chunks = chunks;
+        resolve(this._chunks!);
+      });
       _body.readable.once('error', reject);
     });
+  }
+
+  _collectChunksFromReadable() {
+    if (this._chunks) {
+      return fakePromise(this._chunks);
+    }
+    this._chunks ||= this._doCollectChunksFromReadableJob();
+    return this._chunks;
   }
 
   _blob: PonyfillBlob | null = null;
@@ -472,11 +482,14 @@ function processBodyInit(
     };
   }
   if (bodyInit instanceof IncomingMessage) {
-    const passthrough: PassThrough = (bodyInit = bodyInit.pipe(new PassThrough(), {
-      end: true,
-      // @ts-expect-error - `signal` is not in the type definition
-      signal,
-    }));
+    const passthrough: PassThrough = (bodyInit = bodyInit.pipe(
+      new PassThrough({
+        signal,
+      }),
+      {
+        end: true,
+      },
+    ));
     return {
       bodyType: BodyInitType.Readable,
       contentType: null,
