@@ -8,6 +8,7 @@ import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-no
 let server: Server | undefined;
 afterEach(() => {
   if (server) {
+    server.closeAllConnections();
     return new Promise<void>((resolve, reject) =>
       server?.close(err => (err ? reject(err) : resolve())),
     );
