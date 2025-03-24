@@ -54,7 +54,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
       requestInit = options;
     }
 
-    super(bodyInit, options);
+    super(bodyInit, requestInit);
 
     this._url = _url;
     this._parsedUrl = _parsedUrl;

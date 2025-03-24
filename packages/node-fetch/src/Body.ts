@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable } from 'node:stream';
+import { addAbortSignal, PassThrough, Readable } from 'node:stream';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -52,11 +52,13 @@ export class PonyfillBody<TJSON = any> implements Body {
   bodyUsed = false;
   contentType: string | null = null;
   contentLength: number | null = null;
+  signal?: AbortSignal | null = null;
 
   constructor(
     private bodyInit: BodyPonyfillInit | null,
     private options: PonyfillBodyOptions = {},
   ) {
+    this.signal = options.signal || null;
     const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(
       bodyInit,
       options?.signal,
@@ -82,7 +84,11 @@ export class PonyfillBody<TJSON = any> implements Body {
       return this._generatedBody;
     }
     const body = this._bodyFactory();
+
     this._generatedBody = body;
+    if (body?.readable && this.signal) {
+      addAbortSignal(this.signal, body.readable);
+    }
     return body;
   }
 
