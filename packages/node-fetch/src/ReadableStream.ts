@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
@@ -73,20 +74,40 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     } else {
       let started = false;
       let ongoing = false;
-      const readImpl = async (desiredSize: number) => {
+      const handleStart = (desiredSize: number) => {
         if (!started) {
           const controller = createController(desiredSize, this.readable);
           started = true;
-          await underlyingSource?.start?.(controller);
-          controller._flush();
-          if (controller._closed) {
-            return;
-          }
+          return handleMaybePromise(
+            () => underlyingSource?.start?.(controller),
+            () => {
+              controller._flush();
+              if (controller._closed) {
+                return false;
+              }
+              return true;
+            },
+          );
         }
-        const controller = createController(desiredSize, this.readable);
-        await underlyingSource?.pull?.(controller);
-        controller._flush();
-        ongoing = false;
+        return true;
+      };
+      const readImpl = (desiredSize: number) => {
+        return handleMaybePromise(
+          () => handleStart(desiredSize),
+          shouldContinue => {
+            if (!shouldContinue) {
+              return;
+            }
+            const controller = createController(desiredSize, this.readable);
+            return handleMaybePromise(
+              () => underlyingSource?.pull?.(controller),
+              () => {
+                controller._flush();
+                ongoing = false;
+              },
+            );
+          },
+        );
       };
       this.readable = new Readable({
         read(desiredSize) {
@@ -243,6 +264,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   static from<T>(iterable: AsyncIterable<T> | Iterable<T>): PonyfillReadableStream<T> {
     return new PonyfillReadableStream(Readable.from(iterable));
   }
+
+  [Symbol.toStringTag] = 'ReadableStream';
 }
 
 function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> {

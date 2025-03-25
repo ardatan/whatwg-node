@@ -90,8 +90,6 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-let bunNodeCompatModeWarned = false;
-
 export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
 
 export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
@@ -184,39 +182,6 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
     });
   }
 
-  // Temporary workaround for a bug in Bun Node compat mode
-  if (globalThis.process?.versions?.bun && isReadable(rawRequest)) {
-    if (!bunNodeCompatModeWarned) {
-      bunNodeCompatModeWarned = true;
-      console.warn(
-        `You use Bun Node compatibility mode, which is not recommended!
-It will affect your performance. Please check our Bun integration recipe, and avoid using 'http' for your server implementation.`,
-      );
-    }
-    return new fetchAPI.Request(fullUrl, {
-      method: nodeRequest.method,
-      headers: normalizedHeaders,
-      duplex: 'half',
-      body: new ReadableStream({
-        start(controller) {
-          rawRequest.on('data', chunk => {
-            controller.enqueue(chunk);
-          });
-          rawRequest.on('error', e => {
-            controller.error(e);
-          });
-          rawRequest.on('end', () => {
-            controller.close();
-          });
-        },
-        cancel(e) {
-          rawRequest.destroy(e);
-        },
-      }),
-      signal: controller.signal,
-    } as RequestInit);
-  }
-
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
@@ -266,10 +231,7 @@ function endResponse(serverResponse: NodeResponse) {
   serverResponse.end(null, null, null);
 }
 
-async function sendAsyncIterable(
-  serverResponse: NodeResponse,
-  asyncIterable: AsyncIterable<Uint8Array>,
-) {
+function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIterable<Uint8Array>) {
   let closed = false;
   const closeEventListener = () => {
     closed = true;
@@ -279,35 +241,44 @@ async function sendAsyncIterable(
 
   serverResponse.once('finish', () => {
     serverResponse.removeListener('close', closeEventListener);
+    serverResponse.removeListener('error', closeEventListener);
   });
-  for await (const chunk of asyncIterable) {
-    if (closed) {
-      break;
-    }
-    const shouldBreak = await new Promise(resolve => {
-      if (
-        !serverResponse
-          // @ts-expect-error http and http2 writes are actually compatible
-          .write(chunk, err => {
-            if (err) {
-              resolve(true);
-            }
-          })
-      ) {
-        if (closed) {
-          resolve(true);
-          return;
-        }
-        serverResponse.once('drain', () => {
-          resolve(false);
-        });
+  const iterator = asyncIterable[Symbol.asyncIterator]();
+  const pump = (): Promise<void> =>
+    iterator.next().then(({ done, value }) => {
+      if (closed || done) {
+        return;
       }
+      return new Promise(resolve => {
+        if (
+          !serverResponse
+            // @ts-expect-error http and http2 writes are actually compatible
+            .write(value, err => {
+              if (err) {
+                resolve(true);
+              }
+            })
+        ) {
+          if (closed) {
+            resolve(true);
+            return;
+          }
+          serverResponse.once('drain', () => {
+            resolve(false);
+          });
+        }
+      })
+        .then(shouldBreak => {
+          if (shouldBreak) {
+            return;
+          }
+          return pump();
+        })
+        .then(() => {
+          endResponse(serverResponse);
+        });
     });
-    if (shouldBreak) {
-      break;
-    }
-  }
-  endResponse(serverResponse);
+  return pump();
 }
 
 export function sendNodeResponse(
@@ -343,11 +314,12 @@ export function sendNodeResponse(
   });
 
   // Optimizations for node-fetch
-  const bufOfRes = (fetchResponse as any)._buffer;
+  const bufOfRes: Buffer =
+    // @ts-expect-error - _buffer is a private property
+    fetchResponse._buffer;
   if (bufOfRes) {
     // @ts-expect-error http and http2 writes are actually compatible
-    serverResponse.write(bufOfRes);
-    endResponse(serverResponse);
+    serverResponse.write(bufOfRes, () => endResponse(serverResponse));
     return;
   }
 
@@ -358,7 +330,10 @@ export function sendNodeResponse(
     return;
   }
 
-  if ((fetchBody as any)[Symbol.toStringTag] === 'Uint8Array') {
+  if (
+    // @ts-expect-error - Uint8Array is a valid body type
+    fetchBody[Symbol.toStringTag] === 'Uint8Array'
+  ) {
     serverResponse
       // @ts-expect-error http and http2 writes are actually compatible
       .write(fetchBody);
@@ -372,7 +347,9 @@ export function sendNodeResponse(
     serverResponse.once('close', () => {
       fetchBody.destroy();
     });
-    fetchBody.pipe(serverResponse);
+    fetchBody.pipe(serverResponse, {
+      end: true,
+    });
     return;
   }
 

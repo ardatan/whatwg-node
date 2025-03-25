@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
-import { Readable } from 'node:stream';
+import { IncomingMessage } from 'node:http';
+import { PassThrough, Readable } from 'node:stream';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -44,18 +45,24 @@ export interface FormDataLimits {
 
 export interface PonyfillBodyOptions {
   formDataLimits?: FormDataLimits;
+  signal?: AbortSignal;
 }
 
 export class PonyfillBody<TJSON = any> implements Body {
   bodyUsed = false;
   contentType: string | null = null;
   contentLength: number | null = null;
+  signal?: AbortSignal | null = null;
 
   constructor(
     private bodyInit: BodyPonyfillInit | null,
     private options: PonyfillBodyOptions = {},
   ) {
-    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(bodyInit);
+    this.signal = options.signal || null;
+    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(
+      bodyInit,
+      options?.signal,
+    );
     this._bodyFactory = bodyFactory;
     this.contentType = contentType;
     this.contentLength = contentLength;
@@ -77,6 +84,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       return this._generatedBody;
     }
     const body = this._bodyFactory();
+
     this._generatedBody = body;
     return body;
   }
@@ -134,12 +142,9 @@ export class PonyfillBody<TJSON = any> implements Body {
     return null;
   }
 
-  _chunks: Uint8Array[] | null = null;
+  _chunks: MaybePromise<Uint8Array[]> | null = null;
 
-  _collectChunksFromReadable() {
-    if (this._chunks) {
-      return fakePromise(this._chunks);
-    }
+  _doCollectChunksFromReadableJob() {
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
         return handleMaybePromise(
@@ -151,17 +156,18 @@ export class PonyfillBody<TJSON = any> implements Body {
         );
       }
       const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
+      const chunks: Uint8Array[] = [];
       const collectValue = (): MaybePromise<Uint8Array[]> =>
         handleMaybePromise(
           () => iterator.next(),
           ({ value, done }) => {
-            this._chunks ||= [];
             if (value) {
-              this._chunks.push(value);
+              chunks.push(value);
             }
             if (!done) {
               return collectValue();
             }
+            this._chunks = chunks;
             return this._chunks;
           },
         );
@@ -172,14 +178,18 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
-    this._chunks = [];
-    _body.readable.on('data', chunk => {
-      this._chunks!.push(chunk);
+    return _body.readable.toArray().then(chunks => {
+      this._chunks = chunks;
+      return this._chunks;
     });
-    return new Promise<Uint8Array[]>((resolve, reject) => {
-      _body.readable.once('end', () => resolve(this._chunks!));
-      _body.readable.once('error', reject);
-    });
+  }
+
+  _collectChunksFromReadable() {
+    if (this._chunks) {
+      return fakePromise(this._chunks);
+    }
+    this._chunks ||= this._doCollectChunksFromReadableJob();
+    return this._chunks;
   }
 
   _blob: PonyfillBlob | null = null;
@@ -373,7 +383,10 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 }
 
-function processBodyInit(bodyInit: BodyPonyfillInit | null): {
+function processBodyInit(
+  bodyInit: BodyPonyfillInit | null,
+  signal?: AbortSignal,
+): {
   bodyType?: BodyInitType;
   contentType: string | null;
   contentLength: number | null;
@@ -402,13 +415,14 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (Buffer.isBuffer(bodyInit)) {
+    const buffer: Buffer = bodyInit;
     return {
       bodyType: BodyInitType.Buffer,
       contentType: null,
       contentLength: bodyInit.length,
       buffer: bodyInit,
       bodyFactory() {
-        const readable = Readable.from(bodyInit);
+        const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
       },
@@ -429,20 +443,22 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (bodyInit instanceof PonyfillReadableStream && bodyInit.readable != null) {
+    const readableStream: PonyfillReadableStream<Uint8Array> = bodyInit;
     return {
       bodyType: BodyInitType.ReadableStream,
-      bodyFactory: () => bodyInit,
+      bodyFactory: () => readableStream,
       contentType: null,
       contentLength: null,
     };
   }
   if (isBlob(bodyInit)) {
+    const blob = bodyInit as PonyfillBlob;
     return {
       bodyType: BodyInitType.Blob,
       contentType: bodyInit.type,
       contentLength: bodyInit.size,
       bodyFactory() {
-        return bodyInit.stream() as PonyfillReadableStream<Uint8Array>;
+        return blob.stream();
       },
     };
   }
@@ -458,6 +474,25 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
+      },
+    };
+  }
+  if (bodyInit instanceof IncomingMessage) {
+    const passThrough = bodyInit.pipe(
+      new PassThrough({
+        signal,
+      }),
+      {
+        end: true,
+      },
+    );
+
+    return {
+      bodyType: BodyInitType.Readable,
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        return new PonyfillReadableStream<Uint8Array>(passThrough);
       },
     };
   }

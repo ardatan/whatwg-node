@@ -124,39 +124,61 @@ if ((globalThis as any)['createUWS']) {
   serverImplMap.uWebSockets = createUWSTestServer;
 }
 
-if (globalThis.Bun) {
-  serverImplMap.Bun = createBunServer;
-} else if (globalThis.Deno) {
-  serverImplMap.Deno = async function createDenoTestServer() {
-    let handler: any;
+serverImplMap['node:http'] = createNodeHttpTestServer;
 
-    const server = Deno.serve(
-      {
-        hostname: '::',
-      },
-      (...args) => handler(...args),
-    );
-    return {
-      name: 'Deno',
-      url: `http://localhost:${server.addr.port}`,
-      async [DisposableSymbols.asyncDispose]() {
-        await handler?.[DisposableSymbols.asyncDispose]?.();
-        return server.shutdown();
-      },
-      async addOnceHandler(newHandler, ...ctxParts) {
-        await handler?.[DisposableSymbols.asyncDispose]?.();
-        handler = newHandler;
-        if (ctxParts.length) {
-          handler = function (...args: any[]) {
-            return newHandler(...args, ...ctxParts);
-          };
+serverImplMap['express'] = async function createExpressTestServer() {
+  let handler: any;
+  const app = express().use((...args) => handler(...args));
+  const sockets = new Set<Socket>();
+  let server: Server | undefined;
+  await new Promise<void>((resolve, reject) => {
+    server = app
+      .listen(0, () => {
+        resolve();
+      })
+      .once('error', reject)
+      .on('connection', socket => {
+        sockets.add(socket);
+        socket.once('close', () => {
+          sockets.delete(socket);
+        });
+      });
+  });
+
+  return {
+    name: 'express',
+    url: `http://localhost:${(server?.address() as AddressInfo).port}`,
+    async [DisposableSymbols.asyncDispose]() {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
+      sockets.forEach(socket => {
+        socket.destroy();
+      });
+      return new Promise((resolve, reject) => {
+        if (server) {
+          server.close(err => {
+            if (err) {
+              reject(err);
+            } else {
+              resolve();
+            }
+          });
+        } else {
+          resolve();
         }
-      },
-    };
+      });
+    },
+    async addOnceHandler(newHandler, ...ctxParts) {
+      await handler?.[DisposableSymbols.asyncDispose]?.();
+      handler = newHandler;
+      if (ctxParts.length) {
+        handler = function (...args: any[]) {
+          return newHandler(...args, ...ctxParts);
+        };
+      }
+    },
   };
-} else {
-  serverImplMap['node:http'] = createNodeHttpTestServer;
-
+};
+if (!globalThis.Deno) {
   serverImplMap['fastify'] = async function createFastifyTestServer() {
     let adapter: ServerAdapter<
       {
@@ -167,32 +189,17 @@ if (globalThis.Bun) {
       ServerAdapterBaseObject<{}>
     >;
 
+    const sockets = new Set<Socket>();
     const fastifyApp = fastify().route({
       method: ['DELETE', 'GET', 'HEAD', 'PATCH', 'POST', 'PUT', 'OPTIONS', 'TRACE'],
       url: '*',
-      async handler(req: FastifyRequest, reply: FastifyReply) {
-        const response: Response = await adapter.handleNodeRequestAndResponse(req, reply, {
+      handler: (req, reply) =>
+        adapter.handleNodeRequestAndResponse(req, reply, {
           req,
           res: reply.raw,
           reply,
-        });
-
-        if (!response) {
-          return reply.status(404).send('Not Found');
-        }
-
-        response.headers.forEach((value, key) => {
-          reply.header(key, value);
-        });
-
-        reply.status(response.status);
-
-        reply.send(response.body || '');
-
-        return reply;
-      },
+        }) || reply.status(404).send('Not Found'),
     });
-    const sockets = new Set<Socket>();
     fastifyApp.server.on('connection', socket => {
       sockets.add(socket);
       socket.once('close', () => {
@@ -240,47 +247,26 @@ if (globalThis.Bun) {
       },
     };
   };
+}
 
-  serverImplMap['express'] = async function createExpressTestServer() {
+if (globalThis.Bun) {
+  serverImplMap.Bun = createBunServer;
+} else if (globalThis.Deno) {
+  serverImplMap.Deno = async function createDenoTestServer() {
     let handler: any;
-    const app = express().use((...args) => handler(...args));
-    const sockets = new Set<Socket>();
-    let server: Server | undefined;
-    await new Promise<void>((resolve, reject) => {
-      server = app
-        .listen(0, () => {
-          resolve();
-        })
-        .once('error', reject)
-        .on('connection', socket => {
-          sockets.add(socket);
-          socket.once('close', () => {
-            sockets.delete(socket);
-          });
-        });
-    });
 
+    const server = Deno.serve(
+      {
+        hostname: '::',
+      },
+      (...args) => handler(...args),
+    );
     return {
-      name: 'express',
-      url: `http://localhost:${(server?.address() as AddressInfo).port}`,
+      name: 'Deno',
+      url: `http://localhost:${server.addr.port}`,
       async [DisposableSymbols.asyncDispose]() {
         await handler?.[DisposableSymbols.asyncDispose]?.();
-        sockets.forEach(socket => {
-          socket.destroy();
-        });
-        return new Promise((resolve, reject) => {
-          if (server) {
-            server.close(err => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          } else {
-            resolve();
-          }
-        });
+        return server.shutdown();
       },
       async addOnceHandler(newHandler, ...ctxParts) {
         await handler?.[DisposableSymbols.asyncDispose]?.();
@@ -293,7 +279,7 @@ if (globalThis.Bun) {
       },
     };
   };
-
+} else {
   serverImplMap['koa'] = async function createKoaTestServer() {
     let adapter: ServerAdapter<Context, ServerAdapterBaseObject<{}>>;
     const app = new Koa();
@@ -514,7 +500,7 @@ export function runTestsForEachServerImpl(
       callback(
         {
           get name() {
-            return globalServerMap[serverImplName].name;
+            return serverImplName;
           },
           get url() {
             return globalServerMap[serverImplName].url;

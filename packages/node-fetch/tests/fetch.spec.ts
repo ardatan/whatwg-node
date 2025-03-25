@@ -153,17 +153,17 @@ describe('Node Fetch Ponyfill', () => {
         ).rejects.toThrow();
       });
       it('should respect AbortSignal on a streamed response', async () => {
-        expect.assertions(1);
+        expect.assertions(2);
         const controller = new AbortController();
         const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/${10 * 1024 * 1024 * 1024}`, {
           signal: controller.signal,
         });
+        let cnt = 0;
         try {
           const response = await fetchPromise;
           if (!response || !response.body) {
             throw new Error('Response or response body is null');
           }
-          let cnt = 0;
           // @ts-expect-error ReadableStream is an AsyncIterable but types are not updated yet
           for await (const _ of response.body) {
             if (controller.signal.aborted) {
@@ -177,6 +177,7 @@ describe('Node Fetch Ponyfill', () => {
         } catch (err: any) {
           expect(err.message).toMatch(/aborted/);
         }
+        expect(cnt).toBe(4);
       });
       const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
       // Deno does not uncompress responses automatically

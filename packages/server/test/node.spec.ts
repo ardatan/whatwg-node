@@ -94,52 +94,60 @@ describe('Node Specific Cases', () => {
           expect(calledCtx).toMatchObject(additionalCtx);
         });
 
-        it('should handle cancellation of incremental responses', async () => {
-          const deferred = createDeferredPromise<void>();
-          let cancellation = 0;
-          await using serverAdapter = createServerAdapter(() => {
-            return new Response(
-              new ReadableStream({
-                async pull(controller) {
-                  await setTimeout(100);
-                  controller.enqueue(Buffer.from(Date.now().toString()));
-                },
-                cancel() {
-                  cancellation++;
-                  deferred.resolve();
-                },
-              }),
-            );
-          });
-          await testServer.addOnceHandler(serverAdapter);
-          const ctrl = new AbortController();
-          const response = await fetch(testServer.url, {
-            signal: ctrl.signal,
-          });
+        const skipIf = (condition: boolean) => (condition ? it.skip : it);
+        skipIf(
+          (globalThis.Bun && serverImplName !== 'Bun') ||
+            (globalThis.Deno && serverImplName !== 'Deno'),
+        )(
+          'should handle cancellation of incremental responses',
+          async () => {
+            const deferred = createDeferredPromise<void>();
+            let cancellation = 0;
+            await using serverAdapter = createServerAdapter(() => {
+              return new Response(
+                new ReadableStream({
+                  async pull(controller) {
+                    await setTimeout(100);
+                    controller.enqueue(Buffer.from(Date.now().toString()));
+                  },
+                  cancel() {
+                    cancellation++;
+                    deferred.resolve();
+                  },
+                }),
+              );
+            });
+            await testServer.addOnceHandler(serverAdapter);
+            const ctrl = new AbortController();
+            const response = await fetch(testServer.url, {
+              signal: ctrl.signal,
+            });
 
-          const collectedValues: string[] = [];
+            const collectedValues: string[] = [];
 
-          let i = 0;
-          const reader = response.body!.getReader();
-          reader.closed.catch(() => {});
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-              break;
+            let i = 0;
+            const reader = response.body!.getReader();
+            reader.closed.catch(() => {});
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) {
+                break;
+              }
+              if (i > 2) {
+                ctrl.abort();
+                break;
+              }
+              if (value) {
+                collectedValues.push(Buffer.from(value).toString('utf-8'));
+                i++;
+              }
             }
-            if (i > 2) {
-              ctrl.abort();
-              break;
-            }
-            if (value) {
-              collectedValues.push(Buffer.from(value).toString('utf-8'));
-              i++;
-            }
-          }
-          expect(collectedValues).toHaveLength(3);
-          await deferred.promise;
-          expect(cancellation).toBe(1);
-        }, 1000);
+            expect(collectedValues).toHaveLength(3);
+            await deferred.promise;
+            expect(cancellation).toBe(1);
+          },
+          1000,
+        );
         it('should handle large streaming responses', async () => {
           const successFn = jest.fn();
           await using serverAdapter = createServerAdapter(() => {
@@ -225,8 +233,10 @@ describe('Node Specific Cases', () => {
           expect(await response.text()).toContain('Hello World');
         });
 
-        // TODO: Flakey on native fetch
-        it('handles Request.signal inside adapter correctly', async () => {
+        skipIf(
+          (globalThis.Bun && serverImplName !== 'Bun') ||
+            (globalThis.Deno && serverImplName !== 'Deno'),
+        )('handles Request.signal inside adapter correctly', async () => {
           const abortListener = jest.fn();
           const abortDeferred = createDeferredPromise<void>();
           const adapterResponseDeferred = createDeferredPromise<Response>();
@@ -257,7 +267,10 @@ describe('Node Specific Cases', () => {
           resolveAdapter();
         });
 
-        it('handles Request.signal inside adapter with streaming bodies', async () => {
+        skipIf(
+          (globalThis.Bun && serverImplName !== 'Bun') ||
+            (globalThis.Deno && serverImplName !== 'Deno'),
+        )('handles Request.signal inside adapter with streaming bodies', async () => {
           const abortDeferred = createDeferredPromise<void>();
           const adapterResponseDeferred = createDeferredPromise<Response>();
           function resolveAdapter() {
@@ -389,17 +402,20 @@ describe('Node Specific Cases', () => {
           expect(disposedThen).toHaveBeenCalled();
         });
 
-        it('handles ipv6 addresses correctly', async () => {
-          await using serverAdapter = createServerAdapter(() => {
-            return new Response('Hello world!', { status: 200 });
-          });
-          await testServer.addOnceHandler(serverAdapter);
-          const port = new URL(testServer.url).port;
-          const ipv6Url = new URL(`http://[::1]:${port}/`);
-          const response = await fetch(ipv6Url);
-          expect(response.status).toBe(200);
-          await expect(response.text()).resolves.toBe('Hello world!');
-        });
+        skipIf(globalThis.Deno && serverImplName !== 'Deno')(
+          'handles ipv6 addresses correctly',
+          async () => {
+            await using serverAdapter = createServerAdapter(() => {
+              return new Response('Hello world!', { status: 200 });
+            });
+            await testServer.addOnceHandler(serverAdapter);
+            const port = new URL(testServer.url).port;
+            const ipv6Url = new URL(`http://[::1]:${port}/`);
+            const response = await fetch(ipv6Url);
+            expect(response.status).toBe(200);
+            await expect(response.text()).resolves.toBe('Hello world!');
+          },
+        );
 
         describe('handles status codes correctly', () => {
           for (const statusCodeStr in STATUS_CODES) {

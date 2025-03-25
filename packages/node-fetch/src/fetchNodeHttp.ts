@@ -26,13 +26,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         fetchRequest.parsedUrl?.protocol || fetchRequest.url,
       );
 
-      const nodeReadable = (
-        fetchRequest.body != null
-          ? isNodeReadable(fetchRequest.body)
-            ? fetchRequest.body
-            : Readable.from(fetchRequest.body)
-          : null
-      ) as Readable | null;
       const headersSerializer: typeof getHeadersObj =
         (fetchRequest.headersSerializer as any) || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
@@ -60,7 +53,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       }
 
       nodeRequest.once('response', nodeResponse => {
-        let outputStream: PassThrough;
+        let outputStream: PassThrough | undefined;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
@@ -78,8 +71,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           case 'br':
             outputStream = createBrotliDecompress();
             break;
-          default:
-            outputStream = new PassThrough();
         }
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
           if (fetchRequest.redirect === 'error') {
@@ -106,36 +97,53 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
         }
-        pipeline(nodeResponse, outputStream, {
-          signal: fetchRequest.signal,
-          end: true,
-        })
-          .then(() => {
-            if (!nodeResponse.destroyed) {
-              nodeResponse.resume();
-            }
+        if (outputStream != null) {
+          pipeline(nodeResponse, outputStream, {
+            signal: fetchRequest.signal,
+            end: true,
           })
-          .catch(reject);
+            .then(() => {
+              if (!nodeResponse.destroyed) {
+                nodeResponse.resume();
+              }
+            })
+            .catch(reject);
+        }
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream, {
+        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
+          signal: fetchRequest.signal,
         });
         resolve(ponyfillResponse);
       });
       nodeRequest.once('error', reject);
 
-      if (nodeReadable) {
-        nodeReadable.pipe(nodeRequest);
+      if (fetchRequest['_buffer'] != null) {
+        nodeRequest.write(fetchRequest['_buffer']);
+        // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+        nodeRequest.end(null, null, null);
       } else {
-        nodeRequest.end();
+        const nodeReadable = (
+          fetchRequest.body != null
+            ? isNodeReadable(fetchRequest.body)
+              ? fetchRequest.body
+              : Readable.from(fetchRequest.body)
+            : null
+        ) as Readable | null;
+        if (nodeReadable) {
+          nodeReadable.pipe(nodeRequest);
+        } else {
+          // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+          nodeRequest.end(null, null, null);
+        }
       }
     } catch (e) {
       reject(e);

@@ -26,6 +26,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     this.url = init?.url || '';
     this.redirected = init?.redirected || false;
     this.type = init?.type || 'default';
+    this.signal = init?.signal || null;
 
     this.handleContentLengthHeader();
   }
@@ -74,4 +75,6 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     }
     return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
+
+  [Symbol.toStringTag] = 'Response';
 }

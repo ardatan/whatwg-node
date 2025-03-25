@@ -166,27 +166,11 @@ const app = fastify({ logger: true })
 app.route({
   url: '/mypath',
   method: ['GET', 'POST', 'OPTIONS'],
-  handler: async (req, reply) => {
-    const response: Response = await myServerAdapter.handleNodeRequestAndResponse(req, reply, {
+  handler: (req, reply) =>
+    myServerAdapter.handleNodeRequestAndResponse(req, reply, {
       req,
       reply
     })
-
-    if (!response) {
-      return reply.status(404).send('Not Found')
-    }
-
-    response.headers.forEach((value, key) => {
-      reply.header(key, value)
-    })
-
-    reply.status(response.status)
-
-    // Fastify doesn't accept `null` as a response body
-    reply.send(response.body || undefined)
-
-    return reply
-  }
 })
 
 app.listen(4000)

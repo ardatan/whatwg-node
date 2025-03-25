@@ -1,12 +1,16 @@
-import { Server } from 'node:http';
+import { createServer, Server } from 'node:http';
 import { AddressInfo } from 'node:net';
 import express from 'express';
-import { afterAll, expect, it } from '@jest/globals';
-import { createServerAdapter, Response } from '@whatwg-node/server';
+import { afterEach, expect, it } from '@jest/globals';
+import { fetch } from '@whatwg-node/fetch';
+import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
 
 let server: Server | undefined;
-afterAll(() => {
+afterEach(() => {
   if (server) {
+    if (!globalThis.Bun) {
+      server.closeAllConnections();
+    }
     return new Promise<void>((resolve, reject) =>
       server?.close(err => (err ? reject(err) : resolve())),
     );
@@ -50,3 +54,28 @@ it('bun issue#12368', async () => {
     }),
   );
 });
+
+if (!globalThis.Bun && !globalThis.Deno) {
+  it('should not hang on req.text() outside handler', async () => {
+    const { promise: wait, resolve: unwait } = createDeferredPromise<Request>();
+
+    server = createServer(
+      createServerAdapter(req => {
+        unwait(req);
+        return new Response('hello world');
+      }),
+    );
+
+    await new Promise<void>(resolve => server?.listen(0, resolve));
+
+    const url = `http://localhost:${(server.address() as AddressInfo).port}`;
+    await fetch(url, {
+      method: 'POST',
+      body: 'hello world',
+    });
+
+    const req = await wait;
+
+    expect(await req!.text()).toEqual('hello world');
+  });
+}
