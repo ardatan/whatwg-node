@@ -480,9 +480,7 @@ function processBodyInit(
     };
   }
   if (bodyInit instanceof IncomingMessage) {
-    const passThrough = new PassThrough({
-      signal,
-    });
+    const passThrough = new PassThrough();
 
     pipeline(bodyInit, passThrough, {
       signal,
