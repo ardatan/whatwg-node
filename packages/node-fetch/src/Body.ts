@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
-import { fakePromise, isArrayBufferView } from './utils.js';
+import { fakePromise, isArrayBufferView, wrapIncomingMessageWithPassthrough } from './utils.js';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -480,17 +479,10 @@ function processBodyInit(
     };
   }
   if (bodyInit instanceof IncomingMessage) {
-    const passThrough = new PassThrough({
+    const passThrough = wrapIncomingMessageWithPassthrough({
+      incomingMessage: bodyInit,
       signal,
     });
-
-    pipeline(bodyInit, passThrough, {
-      signal,
-      end: true,
-    }).catch(e => {
-      passThrough.destroy(e);
-    });
-
     return {
       bodyType: BodyInitType.Readable,
       contentType: null,

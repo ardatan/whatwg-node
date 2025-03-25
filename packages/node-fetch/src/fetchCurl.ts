@@ -1,11 +1,16 @@
 import { Buffer } from 'node:buffer';
-import { PassThrough, Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { IncomingMessage } from 'node:http';
+import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
+import {
+  defaultHeadersSerializer,
+  isNodeReadable,
+  shouldRedirect,
+  wrapIncomingMessageWithPassthrough,
+} from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
@@ -120,18 +125,11 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.once(
     'stream',
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      const outputStream = new PassThrough();
-
-      pipeline(stream, outputStream, {
-        end: true,
+      const outputStream = wrapIncomingMessageWithPassthrough({
+        incomingMessage: stream as IncomingMessage,
         signal: fetchRequest.signal,
-      })
-        .then(() => {
-          if (!stream.destroyed) {
-            stream.resume();
-          }
-        })
-        .catch(deferredPromise.reject);
+        onError: deferredPromise.reject,
+      });
       const headersFlat = headersBuf
         .toString('utf8')
         .split(/\r?\n|\r/g)
