@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.7.17
+
+### Patch Changes
+
+- [`770d4fe`](https://github.com/ardatan/whatwg-node/commit/770d4feeafc96ff6c55a02fbc8866b34a10b8d93)
+  Thanks [@ardatan](https://github.com/ardatan)! - Pipe even if there is no signal
+
 ## 0.7.16
 
 ### Patch Changes
