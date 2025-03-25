@@ -18,7 +18,7 @@ export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   );
 }
 
-export interface NodeRequest extends AsyncIterable<Uint8Array> {
+export interface NodeRequest {
   protocol?: string | undefined;
   hostname?: string | undefined;
   body?: any | undefined;
@@ -183,7 +183,7 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
   }
 
   // Workaround for Bun
-  if (globalThis.Bun && fetchAPI.Request === globalThis.Request) {
+  if (globalThis.Bun && fetchAPI.Request === globalThis.Request && isAsyncIterable(rawRequest)) {
     let iterator: AsyncIterator<Uint8Array>;
     return new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
