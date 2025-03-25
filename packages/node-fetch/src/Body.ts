@@ -485,9 +485,15 @@ function processBodyInit(
     pipeline(bodyInit, passThrough, {
       signal,
       end: true,
-    }).catch(e => {
-      passThrough.destroy(e);
-    });
+    })
+      .then(() => {
+        if (!bodyInit.destroyed) {
+          bodyInit.resume();
+        }
+      })
+      .catch(e => {
+        passThrough.destroy(e);
+      });
 
     return {
       bodyType: BodyInitType.Readable,
