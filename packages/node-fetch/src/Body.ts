@@ -483,14 +483,13 @@ function processBodyInit(
       signal,
     });
 
-    if (signal) {
-      pipeline(bodyInit, passThrough, {
-        signal,
-        end: true,
-      }).catch(e => {
-        passThrough.destroy(e);
-      });
-    }
+    pipeline(bodyInit, passThrough, {
+      signal,
+      end: true,
+    }).catch(e => {
+      passThrough.destroy(e);
+    });
+
     return {
       bodyType: BodyInitType.Readable,
       contentType: null,
