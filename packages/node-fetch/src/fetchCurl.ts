@@ -1,7 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
