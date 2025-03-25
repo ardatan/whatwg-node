@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.7.16
+
+### Patch Changes
+
+- [`1daa740`](https://github.com/ardatan/whatwg-node/commit/1daa740760b7413686d8a7722611fe1203351dda)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use promise pipeline
+
 ## 0.7.15
 
 ### Patch Changes
