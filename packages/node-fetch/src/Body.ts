@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable } from 'node:stream';
+import { addAbortSignal, PassThrough, Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import busboy from 'busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
@@ -87,6 +87,11 @@ export class PonyfillBody<TJSON = any> implements Body {
     const body = this._bodyFactory();
 
     this._generatedBody = body;
+
+    if (this.signal && body?.readable) {
+      addAbortSignal(this.signal, body.readable);
+    }
+
     return body;
   }
 

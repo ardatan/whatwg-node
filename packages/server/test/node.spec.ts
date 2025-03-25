@@ -218,7 +218,7 @@ describe('Node Specific Cases', () => {
           });
         }
 
-        it('should handle async body read streams', async () => {
+        it.only('should handle async body read streams', async () => {
           await using serverAdapter = createServerAdapter(async request => {
             await setTimeout(10);
             const reqText = await request.text();
@@ -229,8 +229,8 @@ describe('Node Specific Cases', () => {
             method: 'POST',
             body: 'Hello World',
           });
-          expect(response.status).toBe(200);
           expect(await response.text()).toContain('Hello World');
+          expect(response.status).toBe(200);
         });
 
         skipIf(

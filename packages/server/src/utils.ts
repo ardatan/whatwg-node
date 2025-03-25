@@ -18,7 +18,7 @@ export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   );
 }
 
-export interface NodeRequest {
+export interface NodeRequest extends AsyncIterable<Uint8Array> {
   protocol?: string | undefined;
   hostname?: string | undefined;
   body?: any | undefined;
@@ -179,6 +179,42 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
             return Reflect.get(target, prop, receiver);
         }
       },
+    });
+  }
+
+  // Workaround for Bun
+  if (globalThis.Bun && fetchAPI.Request === globalThis.Request) {
+    let iterator: AsyncIterator<Uint8Array>;
+    return new fetchAPI.Request(fullUrl, {
+      method: nodeRequest.method,
+      headers: normalizedHeaders,
+      signal: controller.signal,
+      body: new ReadableStream({
+        start() {
+          iterator ||= rawRequest[Symbol.asyncIterator]();
+        },
+        pull(controller) {
+          iterator ||= rawRequest[Symbol.asyncIterator]();
+          return iterator
+            .next()
+            .then(({ done, value }) => {
+              if (done) {
+                controller.close();
+                return;
+              }
+              controller.enqueue(value);
+            })
+            .catch(err => {
+              controller.error(err);
+            });
+        },
+        cancel(reason) {
+          iterator ||= rawRequest[Symbol.asyncIterator]();
+          return iterator.return?.(reason) as Promise<any>;
+        },
+      }),
+      // @ts-expect-error - AsyncIterable is supported as body
+      duplex: 'half',
     });
   }
 

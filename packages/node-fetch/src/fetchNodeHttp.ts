@@ -53,7 +53,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       }
 
       nodeRequest.once('response', nodeResponse => {
-        let outputStream: PassThrough | undefined;
+        let outputStream: PassThrough;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
@@ -70,6 +70,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             break;
           case 'br':
             outputStream = createBrotliDecompress();
+            break;
+          default:
+            outputStream = new PassThrough({ signal: fetchRequest.signal });
             break;
         }
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
@@ -97,25 +100,24 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
         }
-        if (outputStream != null) {
-          pipeline(nodeResponse, outputStream, {
-            signal: fetchRequest.signal,
-            end: true,
+
+        pipeline(nodeResponse, outputStream, {
+          signal: fetchRequest.signal,
+          end: true,
+        })
+          .then(() => {
+            if (!nodeResponse.destroyed) {
+              nodeResponse.resume();
+            }
           })
-            .then(() => {
-              if (!nodeResponse.destroyed) {
-                nodeResponse.resume();
-              }
-            })
-            .catch(reject);
-        }
+          .catch(reject);
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
+        const ponyfillResponse = new PonyfillResponse(outputStream, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
