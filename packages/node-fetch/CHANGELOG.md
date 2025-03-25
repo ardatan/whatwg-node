@@ -1,5 +1,25 @@
 # @whatwg-node/node-fetch
 
+## 0.7.15
+
+### Patch Changes
+
+- [#2208](https://github.com/ardatan/whatwg-node/pull/2208)
+  [`ff052a3`](https://github.com/ardatan/whatwg-node/commit/ff052a38b63995935309c54d0c150e21d4190126)
+  Thanks [@ardatan](https://github.com/ardatan)! - When any `Request` method is called outside
+  server adapter scope, it used to hang. This PR prevents it to hang and throw an error if the
+  readable stream is destroyed earlier.
+
+  ```ts
+  let request: Request
+  const adapter = createServerAdapter(req => {
+    request = req
+    return new Response('Hello World')
+  })
+
+  await request.text() // Was hanging but now throws an error
+  ```
+
 ## 0.7.14
 
 ### Patch Changes
