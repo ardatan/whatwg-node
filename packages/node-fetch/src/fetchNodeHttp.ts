@@ -1,12 +1,16 @@
 import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
 import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'node:zlib';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { getHeadersObj, isNodeReadable, shouldRedirect } from './utils.js';
+import {
+  getHeadersObj,
+  isNodeReadable,
+  shouldRedirect,
+  wrapIncomingMessageWithPassthrough,
+} from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
   if (url.startsWith('http:')) {
@@ -99,16 +103,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         }
 
         if (outputStream != null) {
-          pipeline(nodeResponse, outputStream, {
+          outputStream = wrapIncomingMessageWithPassthrough({
+            incomingMessage: nodeResponse,
+            passThrough: outputStream,
             signal: fetchRequest.signal,
-            end: true,
-          })
-            .then(() => {
-              if (!nodeResponse.destroyed) {
-                nodeResponse.resume();
-              }
-            })
-            .catch(reject);
+            onError: reject,
+          });
         }
 
         const statusCode = nodeResponse.statusCode || 200;
