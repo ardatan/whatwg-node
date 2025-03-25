@@ -72,7 +72,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             outputStream = createBrotliDecompress();
             break;
           default:
-            outputStream = new PassThrough({ signal: fetchRequest.signal });
+            outputStream = new PassThrough();
             break;
         }
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
