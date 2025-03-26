@@ -1,24 +1,33 @@
 import { decompressedResponseMap, getSupportedEncodings } from '../utils.js';
 import type { ServerAdapterPlugin } from './types.js';
 
+const emptyEncodings = ['none', 'identity'];
+
 export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServerContext> {
   return {
     onRequest({ request, setRequest, fetchAPI, endResponse }) {
       const contentEncodingHeader = request.headers.get('content-encoding');
-      if (contentEncodingHeader && contentEncodingHeader !== 'none' && request.body) {
-        const contentEncodings = contentEncodingHeader.split(',') as CompressionFormat[];
-        if (
-          !contentEncodings.every(encoding => getSupportedEncodings(fetchAPI).includes(encoding))
-        ) {
-          endResponse(
-            new fetchAPI.Response(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
-              status: 415,
-              statusText: 'Unsupported Media Type',
-            }),
-          );
-          return;
-        }
+      if (
+        contentEncodingHeader &&
+        contentEncodingHeader !== 'none' &&
+        contentEncodingHeader !== 'identity' &&
+        request.body
+      ) {
+        const contentEncodings = contentEncodingHeader
+          .split(',')
+          .filter(encoding => !emptyEncodings.includes(encoding)) as CompressionFormat[];
         if (contentEncodings.length) {
+          if (
+            !contentEncodings.every(encoding => getSupportedEncodings(fetchAPI).includes(encoding))
+          ) {
+            endResponse(
+              new fetchAPI.Response(`Unsupported 'Content-Encoding': ${contentEncodingHeader}`, {
+                status: 415,
+                statusText: 'Unsupported Media Type',
+              }),
+            );
+            return;
+          }
           let newBody = request.body;
           for (const contentEncoding of contentEncodings) {
             newBody = request.body.pipeThrough(new fetchAPI.DecompressionStream(contentEncoding));
