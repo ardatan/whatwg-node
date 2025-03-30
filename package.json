@@ -74,7 +74,7 @@
   "resolutions": {
     "@pulumi/pulumi": "3.159.0",
     "cookie": "1.0.2",
-    "esbuild": "0.25.1"
+    "esbuild": "0.25.2"
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
