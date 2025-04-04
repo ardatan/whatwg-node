@@ -45,7 +45,7 @@
     "@types/express": "5.0.1",
     "@types/koa": "^2.15.0",
     "@types/node": "22.13.14",
-    "express": "4.21.2",
+    "express": "5.1.0",
     "fastify": "5.2.2",
     "koa": "^2.15.3",
     "react": "19.1.0",
