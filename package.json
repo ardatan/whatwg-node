@@ -51,7 +51,7 @@
     "@typescript-eslint/parser": "8.29.0",
     "babel-jest": "29.7.0",
     "bob-the-bundler": "7.0.1",
-    "bun": "1.2.7",
+    "bun": "1.2.8",
     "deno": "2.2.6",
     "eslint": "9.23.0",
     "eslint-config-prettier": "10.1.1",
