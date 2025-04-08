@@ -65,11 +65,6 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
         },
       });
 
-      new aws.iam.RolePolicyAttachment('role-policy-attachment', {
-        role: lambdaRolePolicy.name,
-        policyArn: 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole',
-      });
-
       const func = new aws.lambda.Function(
         'func',
         {
