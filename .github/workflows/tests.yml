@@ -192,7 +192,7 @@ jobs:
       VERCEL_AUTH_TOKEN: ${{ secrets.VERCEL_AUTH_TOKEN }}
       VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
     runs-on: ubuntu-latest
-    if: !github.event.pull_request.head.repo.fork
+    if: github.event.pull_request.head.repo.fork != true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
