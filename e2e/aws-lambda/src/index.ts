@@ -1,56 +1,51 @@
 import { Buffer } from 'node:buffer';
-import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
+import { pipeline } from 'node:stream/promises';
+import type { Context, LambdaFunctionURLEvent } from 'aws-lambda';
 import { createTestServerAdapter } from '@e2e/shared-server';
-import { URL } from '@whatwg-node/fetch';
 
 const app = createTestServerAdapter<ServerContext>();
 
 interface ServerContext {
-  event: APIGatewayEvent;
+  event: LambdaFunctionURLEvent;
   lambdaContext: Context;
+  res: awslambda.ResponseStream;
 }
 
-export async function handler(
-  event: APIGatewayEvent,
-  lambdaContext: Context,
-): Promise<APIGatewayProxyResult> {
-  const url = new URL(event.path, 'http://localhost');
-  if (event.queryStringParameters != null) {
-    for (const name in event.queryStringParameters) {
-      const value = event.queryStringParameters[name];
-      if (value != null) {
-        url.searchParams.set(name, value);
-      }
-    }
-  }
-
-  const serverContext: ServerContext = {
-    event,
-    lambdaContext,
-  };
-
+export const handler = awslambda.streamifyResponse(async function handler(
+  event: LambdaFunctionURLEvent,
+  res,
+  lambdaContext,
+) {
   const response = await app.fetch(
-    url,
+    // Construct the URL
+    `https://${event.requestContext.domainName}${event.requestContext.http.path}?${event.rawQueryString}`,
     {
-      method: event.httpMethod,
+      method: event.requestContext.http.method,
       headers: event.headers as HeadersInit,
-      body: event.body
-        ? Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8')
-        : undefined,
+      // Parse the body if needed
+      body:
+        event.body && event.isBase64Encoded
+          ? Buffer.from(event.body, 'base64')
+          : event.body || null,
     },
-    serverContext,
+    {
+      event,
+      res,
+      lambdaContext,
+    },
   );
 
-  const responseHeaders: Record<string, string> = {};
-
-  response.headers.forEach((value, name) => {
-    responseHeaders[name] = value;
+  // Attach the metadata to the response stream
+  res = awslambda.HttpResponseStream.from(res, {
+    statusCode: response.status,
+    headers: Object.fromEntries(response.headers.entries()),
   });
 
-  return {
-    statusCode: response.status,
-    headers: responseHeaders,
-    body: await response.text(),
-    isBase64Encoded: false,
-  };
-}
+  if (response.body) {
+    // @ts-expect-error - Pipe the response body to the response stream
+    await pipeline(response.body, res);
+  }
+
+  // End the response stream
+  res.end();
+});

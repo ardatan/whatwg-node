@@ -6,8 +6,8 @@ import {
   execPromise,
 } from '@e2e/shared-scripts';
 import * as aws from '@pulumi/aws';
+import * as awsNative from '@pulumi/aws-native';
 import { version } from '@pulumi/aws/package.json';
-import * as awsx from '@pulumi/awsx';
 import * as pulumi from '@pulumi/pulumi';
 import { Stack } from '@pulumi/pulumi/automation';
 
@@ -69,7 +69,7 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
         'func',
         {
           role: lambdaRole.arn,
-          runtime: 'nodejs16.x',
+          runtime: 'nodejs20.x',
           handler: 'index.handler',
           code: new pulumi.asset.AssetArchive({
             'index.js': new pulumi.asset.FileAsset(join(__dirname, '../dist/index.js')),
@@ -78,23 +78,21 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
         { dependsOn: lambdaRolePolicy },
       );
 
-      const lambdaGw = new awsx.apigateway.API('api', {
-        routes: [
-          {
-            path: '/',
-            method: 'GET',
-            eventHandler: func,
-          },
-          {
-            path: '/',
-            method: 'POST',
-            eventHandler: func,
-          },
-        ],
+      new aws.lambda.Permission('streaming-permission', {
+        action: 'lambda:InvokeFunctionUrl',
+        function: func.arn,
+        principal: '*',
+        functionUrlAuthType: 'NONE',
+      });
+
+      const lambdaGw = new awsNative.lambda.Url('streaming-url', {
+        authType: 'NONE',
+        targetFunctionArn: func.arn,
+        invokeMode: 'RESPONSE_STREAM',
       });
 
       return {
-        functionUrl: lambdaGw.url,
+        functionUrl: lambdaGw.functionUrl,
       };
     },
     test: async ({ functionUrl }) => {
