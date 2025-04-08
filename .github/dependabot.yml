@@ -20,4 +20,4 @@ updates:
     groups:
       actions-deps:
         patterns:
-          - "*"
+          - '*'
