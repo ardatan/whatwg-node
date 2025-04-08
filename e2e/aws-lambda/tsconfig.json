@@ -10,5 +10,5 @@
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "include": ["./**/*.ts"]
+  "files": ["src/index.ts", "src/awslambda.d.ts", "scripts/e2e.ts"]
 }
