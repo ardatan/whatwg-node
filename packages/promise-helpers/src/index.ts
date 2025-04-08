@@ -126,7 +126,7 @@ export function iterateAsync<TInput, TOutput>(
   iterable: Iterable<TInput>,
   callback: (
     input: TInput,
-    endEarly: VoidFunction,
+    endEarly: () => void,
     index: number,
   ) => MaybePromise<TOutput | undefined | null | void>,
   results?: TOutput[],
