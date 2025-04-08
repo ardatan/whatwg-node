@@ -161,7 +161,7 @@ describe('promise-helpers', () => {
       });
 
       describe('with sync function', () => {
-        let onFinally: jest.Mock<() => void)>;
+        let onFinally: jest.Mock<() => void>;
         let onError: jest.Mock;
         let onSuccess: jest.Mock;
 
@@ -228,7 +228,7 @@ describe('promise-helpers', () => {
       });
 
       describe('with fake promises', () => {
-        let onFinally: jest.Mock<() => void)>;
+        let onFinally: jest.Mock<() => void>;
         let onError: jest.Mock;
         let onSuccess: jest.Mock;
 
