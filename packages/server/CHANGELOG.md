@@ -1,5 +1,17 @@
 # @whatwg-node/server
 
+## 0.10.4
+
+### Patch Changes
+
+- [#2229](https://github.com/ardatan/whatwg-node/pull/2229)
+  [`9655941`](https://github.com/ardatan/whatwg-node/commit/9655941914b17380dba7c170bd6698493e2cc8a8)
+  Thanks [@ardatan](https://github.com/ardatan)! - Simplify `useContentEncoding` plugin
+
+- Updated dependencies
+  [[`6bf6aa0`](https://github.com/ardatan/whatwg-node/commit/6bf6aa0b6d4e0c7524aec55fb666147d0862c9b9)]:
+  - @whatwg-node/promise-helpers@1.3.1
+
 ## 0.10.3
 
 ### Patch Changes
