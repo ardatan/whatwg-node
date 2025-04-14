@@ -265,7 +265,10 @@ export class PonyfillBody<TJSON = any> implements Body {
         defCharset: 'utf-8',
       });
 
+      let completed = false;
       const complete = (err: unknown) => {
+        if (completed) return;
+        completed = true;
         stream!.unpipe(bb);
         bb.destroy();
         if (currFile) {
