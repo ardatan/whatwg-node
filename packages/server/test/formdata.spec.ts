@@ -61,7 +61,7 @@ describe('FormData', () => {
           expect(receivedFileContent).toBe('baz');
         });
 
-        it.only('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
+        it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
           const adapter = createServerAdapter(async request => {
             try {
               await request.formData();
