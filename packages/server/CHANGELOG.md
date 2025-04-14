@@ -1,5 +1,15 @@
 # @whatwg-node/server
 
+## 0.10.5
+
+### Patch Changes
+
+- [`b9f3629`](https://github.com/ardatan/whatwg-node/commit/b9f362947d4b5d73b8d8808664d45b0751c4a198)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  - Updated dependency
+    [`@whatwg-node/fetch@^0.10.6` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.10.6)
+    (from `^0.10.5`, in `dependencies`)
+
 ## 0.10.4
 
 ### Patch Changes
