@@ -2,6 +2,7 @@ import http from 'node:http';
 import { setTimeout } from 'node:timers/promises';
 import NodeFormData from 'form-data';
 import { describe, expect, it } from '@jest/globals';
+import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
@@ -147,6 +148,57 @@ describe('FormData', () => {
       });
 
       expect(res.statusCode).toBe(408);
+    });
+
+    it('should fail parsing form data if the request gets cancelled', async () => {
+      const { promise: waitForRequestHandling, reject: failRequestHandling } =
+        createDeferredPromise();
+      const adapter = createServerAdapter(async request => {
+        try {
+          await request.formData();
+        } catch (e) {
+          failRequestHandling(e);
+        }
+        return new Response(null, { status: 500 });
+      });
+      await testServer.addOnceHandler(adapter);
+
+      const formData = new NodeFormData();
+      formData.append('foo', Buffer.alloc(10), {
+        filename: 'foo.txt',
+        filepath: '/tmp/foo.txt',
+        contentType: 'text/plain',
+      });
+
+      const url = new URL(testServer.url);
+
+      const req = http.request({
+        signal: AbortSignal.timeout(100),
+        method: 'post',
+        hostname: url.hostname,
+        port: url.port,
+        headers: {
+          ...formData.getHeaders(),
+          'content-length': 1000,
+        },
+      });
+
+      formData.pipe(req);
+
+      await expect(
+        new Promise((resolve, reject) => {
+          req.on('error', err => {
+            reject(err);
+          });
+          req.on('response', res => {
+            resolve(res);
+          });
+        }),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(`"The operation was aborted"`);
+
+      await expect(waitForRequestHandling).rejects.toMatchInlineSnapshot(
+        `[AbortError: The operation was aborted]`,
+      );
     });
   });
 });
