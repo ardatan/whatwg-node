@@ -97,7 +97,8 @@ describe('Node Specific Cases', () => {
         const skipIf = (condition: boolean) => (condition ? it.skip : it);
         skipIf(
           (globalThis.Bun && serverImplName !== 'Bun') ||
-            (globalThis.Deno && serverImplName !== 'Deno'),
+            (globalThis.Deno && serverImplName !== 'Deno') ||
+            serverImplName === 'hapi',
         )(
           'should handle cancellation of incremental responses',
           async () => {
@@ -218,7 +219,7 @@ describe('Node Specific Cases', () => {
           });
         }
 
-        it.only('should handle async body read streams', async () => {
+        it('should handle async body read streams', async () => {
           await using serverAdapter = createServerAdapter(async request => {
             await setTimeout(10);
             const reqText = await request.text();

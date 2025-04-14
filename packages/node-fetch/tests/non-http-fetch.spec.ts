@@ -20,6 +20,8 @@ describe('File protocol', () => {
     expect(response.status).toBe(404);
   });
   it('returns 403 if file is not accessible', async () => {
+    // this can yield a false negative if the test is run with sufficient privileges
+    // TODO: consistent behavior across platforms
     const response = await fetchPonyfill(pathToFileURL('/root/private_data.txt'));
     expect(response.status).toBe(403);
   });

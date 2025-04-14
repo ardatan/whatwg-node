@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { Readable } from 'node:stream';
-import busboy from 'busboy';
+import { addAbortSignal, Readable } from 'node:stream';
+import { Busboy, BusboyFileStream } from '@fastify/busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
@@ -244,59 +244,104 @@ export class PonyfillBody<TJSON = any> implements Body {
       ...opts?.formDataLimits,
     };
     return new Promise((resolve, reject) => {
-      const bb = busboy({
+      const stream = this.body?.readable;
+      if (!stream) {
+        return reject(new Error('No stream available'));
+      }
+
+      // form data file that is currently being processed, it's
+      // important to keep track of it in case the stream ends early
+      let currFile: BusboyFileStream | null = null;
+
+      const bb = new Busboy({
         headers: {
+          'content-length':
+            typeof this.contentLength === 'number'
+              ? this.contentLength.toString()
+              : this.contentLength || '',
           'content-type': this.contentType || '',
         },
         limits: formDataLimits,
-        defParamCharset: 'utf-8',
+        defCharset: 'utf-8',
       });
-      bb.on('field', (name, value, { nameTruncated, valueTruncated }) => {
-        if (nameTruncated) {
-          reject(new Error(`Field name size exceeded: ${formDataLimits?.fieldNameSize} bytes`));
+
+      if (this.signal) {
+        addAbortSignal(this.signal, bb);
+      }
+
+      let completed = false;
+      const complete = (err: unknown) => {
+        if (completed) return;
+        completed = true;
+        stream!.unpipe(bb);
+        bb.destroy();
+        if (currFile) {
+          currFile.destroy();
+          currFile = null;
+        }
+        if (err) {
+          reject(err);
+        } else {
+          // no error occured, this is a successful end/complete/finish
+          resolve(this._formData!);
+        }
+      };
+
+      // we dont need to listen to the stream close event because bb will close or error when necessary
+      // stream.on('close', complete);
+
+      // stream can be aborted, for example
+      stream.on('error', complete);
+
+      bb.on('field', (name, value, fieldnameTruncated, valueTruncated) => {
+        if (fieldnameTruncated) {
+          return complete(
+            new Error(`Field name size exceeded: ${formDataLimits?.fieldNameSize} bytes`),
+          );
         }
         if (valueTruncated) {
-          reject(new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`));
+          return complete(
+            new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`),
+          );
         }
         this._formData!.set(name, value);
       });
-      bb.on('fieldsLimit', () => {
-        reject(new Error(`Fields limit exceeded: ${formDataLimits?.fields}`));
+
+      bb.on('file', (name, fileStream, filename, _transferEncoding, mimeType) => {
+        currFile = fileStream;
+        const chunks: BlobPart[] = [];
+        fileStream.on('data', chunk => {
+          chunks.push(chunk);
+        });
+        fileStream.on('error', complete);
+        fileStream.on('limit', () => {
+          complete(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
+        });
+        fileStream.on('close', () => {
+          if (fileStream.truncated) {
+            complete(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
+          }
+          currFile = null;
+          const file = new PonyfillFile(chunks, filename, { type: mimeType });
+          this._formData!.set(name, file);
+        });
       });
-      bb.on(
-        'file',
-        (name, fileStream: Readable & { truncated: boolean }, { filename, mimeType }) => {
-          const chunks: BlobPart[] = [];
-          fileStream.on('limit', () => {
-            reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
-          });
-          fileStream.on('data', chunk => {
-            chunks.push(chunk);
-          });
-          fileStream.on('close', () => {
-            if (fileStream.truncated) {
-              reject(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
-            }
-            const file = new PonyfillFile(chunks, filename, { type: mimeType });
-            this._formData!.set(name, file);
-          });
-        },
-      );
+
+      bb.on('fieldsLimit', () => {
+        complete(new Error(`Fields limit exceeded: ${formDataLimits?.fields}`));
+      });
       bb.on('filesLimit', () => {
-        reject(new Error(`Files limit exceeded: ${formDataLimits?.files}`));
+        complete(new Error(`Files limit exceeded: ${formDataLimits?.files}`));
       });
       bb.on('partsLimit', () => {
-        reject(new Error(`Parts limit exceeded: ${formDataLimits?.parts}`));
+        complete(new Error(`Parts limit exceeded: ${formDataLimits?.parts}`));
       });
-      bb.on('close', () => {
-        resolve(this._formData!);
-      });
-      bb.on('error', (err: any = 'An error occurred while parsing the form data') => {
-        const errMessage = err.message || err.toString();
-        // @ts-ignore - `cause` is in `TypeError`in node
-        reject(new TypeError(errMessage, err.cause));
-      });
-      _body?.readable.pipe(bb);
+      bb.on('end', complete);
+      bb.on('finish', complete);
+      bb.on('close', complete);
+      bb.on('error', complete);
+
+      stream.pipe(bb);
     });
   }
 

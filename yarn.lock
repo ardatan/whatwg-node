@@ -1475,6 +1475,11 @@
   resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-2.1.1.tgz#b9da6a878a371829a0502c9b6c1c143ef6663f4d"
   integrity sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==
 
+"@fastify/busboy@^3.1.1":
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/@fastify/busboy/-/busboy-3.1.1.tgz#af3aea7f1e52ec916d8b5c9dcc0f09d4c060a3fc"
+  integrity sha512-5DGmA8FTdB2XbDeEwc/5ZXBl6UbBAyBOOLlPuBnZ/N1SwdH9Ii+cOX3tBROlDgcTXxjOYnLMVoKk9+FXAw0CJw==
+
 "@fastify/error@^4.0.0":
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/@fastify/error/-/error-4.1.0.tgz#a6a3a8d2309bd8d3441512dff9a7c739d0c35fe2"
@@ -3114,13 +3119,6 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/busboy@1.5.4":
-  version "1.5.4"
-  resolved "https://registry.yarnpkg.com/@types/busboy/-/busboy-1.5.4.tgz#0038c31102ca90f2a7f0d8bc27ee5ebf1088e230"
-  integrity sha512-kG7WrUuAKK0NoyxfQHsVE6j1m01s6kMma64E+OZenQABMQyTJop1DumUWcLwAQ2JzpefU7PDYoRDKl8uZosFjw==
-  dependencies:
-    "@types/node" "*"
-
 "@types/cacheable-request@^6.0.1":
   version "6.0.3"
   resolved "https://registry.yarnpkg.com/@types/cacheable-request/-/cacheable-request-6.0.3.tgz#a430b3260466ca7b5ca5bfd735693b36e7a9d183"
@@ -4167,7 +4165,7 @@ bun@1.2.9:
     "@oven/bun-windows-x64" "1.2.9"
     "@oven/bun-windows-x64-baseline" "1.2.9"
 
-busboy@1.6.0, busboy@^1.6.0:
+busboy@1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/busboy/-/busboy-1.6.0.tgz#966ea36a9502e43cdb9146962523b92f531f6893"
   integrity sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==
@@ -5669,7 +5667,7 @@ foreground-child@^3.1.0:
     cross-spawn "^7.0.6"
     signal-exit "^4.0.1"
 
-form-data@^4.0.0:
+form-data@^4.0.0, form-data@^4.0.2:
   version "4.0.2"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.2.tgz#35cabbdd30c3ce73deb2c42d3c8d3ed9ca51794c"
   integrity sha512-hGfm/slu0ZabnNt4oaRZ6uREyfCj6P4fT/n6A1rGV+Z0VdGXjfOhVUpkn6qVQONHGIFwmveGXyDs75+nr6FM8w==
@@ -7759,7 +7757,6 @@ mvdan-sh@^0.10.1:
 
 "nan@github:JCMais/nan#fix/electron-failures":
   version "2.22.0"
-  uid "0ec2eca8b2fd7518affb3945d087e393ad839b7e"
   resolved "https://codeload.github.com/JCMais/nan/tar.gz/0ec2eca8b2fd7518affb3945d087e393ad839b7e"
 
 nanoid@^3.3.6:
@@ -9957,7 +9954,6 @@ typescript@5.8.3:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.51.0:
   version "20.51.0"
-  uid "6609a88ffa9a16ac5158046761356ce03250a0df"
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/6609a88ffa9a16ac5158046761356ce03250a0df"
 
 ufo@^1.5.4:

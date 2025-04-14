@@ -66,7 +66,7 @@ describe('Body', () => {
     expect(result).toBe('hello world');
   });
 
-  it('throws a TypeError if the body is unable to parse as FormData', async () => {
+  it('throws an error if the body is unable to parse as FormData', async () => {
     const formStr =
       '--Boundary_with_capital_letters\r\n' +
       'Content-Type: application/json\r\n' +
@@ -80,11 +80,13 @@ describe('Body', () => {
         type: 'multipart/form-data; boundary=Boundary_with_capital_letters',
       }),
     );
+
+    let err;
     try {
       await body.formData();
-      expect(true).toBe(false);
     } catch (e) {
-      expect(e).toBeInstanceOf(TypeError);
+      err = e;
     }
+    expect(String(err)).toContain('Unexpected end of multipart data');
   });
 });
