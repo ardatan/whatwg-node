@@ -16,7 +16,7 @@
   "browser": "dist/global-ponyfill.js",
   "types": "dist/index.d.ts",
   "dependencies": {
-    "@whatwg-node/node-fetch": "^0.7.11",
+    "@whatwg-node/node-fetch": "^0.7.18",
     "urlpattern-polyfill": "^10.0.0"
   },
   "publishConfig": {
