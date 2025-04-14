@@ -86,20 +86,24 @@ export function getRequestFromUWSRequest({
     getReadableStream = () => {
       if (!readableStream) {
         readableStream = new fetchAPI.ReadableStream({
-          start(controller) {
+          start(streamCtrl) {
             for (const chunk of chunks) {
-              controller.enqueue(chunk);
+              streamCtrl.enqueue(chunk);
             }
             if (stopped) {
-              controller.close();
+              streamCtrl.close();
               return;
             }
             pushFns.push((chunk: Buffer) => {
-              controller.enqueue(chunk);
+              streamCtrl.enqueue(chunk);
             });
             stopFns.push(() => {
-              if (controller.desiredSize) {
-                controller.close();
+              if (controller.signal.reason) {
+                streamCtrl.error(controller.signal.reason);
+                return;
+              }
+              if (streamCtrl.desiredSize) {
+                streamCtrl.close();
               }
             });
           },

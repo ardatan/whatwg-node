@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
-import { Readable } from 'node:stream';
+import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -264,6 +264,10 @@ export class PonyfillBody<TJSON = any> implements Body {
         limits: formDataLimits,
         defCharset: 'utf-8',
       });
+
+      if (this.signal) {
+        addAbortSignal(this.signal, bb);
+      }
 
       let completed = false;
       const complete = (err: unknown) => {

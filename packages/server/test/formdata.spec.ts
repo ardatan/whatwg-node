@@ -1,3 +1,4 @@
+import { Buffer } from 'node:buffer';
 import http from 'node:http';
 import { setTimeout } from 'node:timers/promises';
 import NodeFormData from 'form-data';
@@ -5,6 +6,8 @@ import { describe, expect, it } from '@jest/globals';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
+
+const skipIf = (condition: boolean) => (condition ? it.skip : it);
 
 describe('FormData', () => {
   runTestsForEachServerImpl(testServer => {
@@ -58,10 +61,9 @@ describe('FormData', () => {
           expect(receivedFileContent).toBe('baz');
         });
 
-        if (globalThis.Deno) {
-          // TODO: test in deno
-        } else {
-          it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
+        skipIf(!!globalThis.Deno)(
+          'should fail parsing form data where content-lenght is smaller than the actual data',
+          async () => {
             const adapter = createServerAdapter(async request => {
               try {
                 await request.formData();
@@ -105,9 +107,12 @@ describe('FormData', () => {
             });
 
             expect(res.statusCode).toBe(400);
-          });
+          },
+        );
 
-          it('should hang when parsing form data where content-lenght is larger than the actual data', async () => {
+        skipIf(!!globalThis.Deno)(
+          'should hang when parsing form data where content-lenght is larger than the actual data',
+          async () => {
             const adapter = createServerAdapter(async request => {
               // the request's body stream will never end, because the content-length is larger than the actual data
               // this is expected and should be handled by the server itself in user-land
@@ -154,9 +159,12 @@ describe('FormData', () => {
             });
 
             expect(res.statusCode).toBe(408);
-          });
+          },
+        );
 
-          it('should fail parsing form data if the request gets cancelled', async () => {
+        skipIf(!!globalThis.Deno)(
+          'should fail parsing form data if the request gets cancelled',
+          async () => {
             const {
               promise: waitForRequestHandling,
               resolve: requestHandled,
@@ -189,11 +197,17 @@ describe('FormData', () => {
               duplex: 'half',
             });
 
-            await expect(fetch(req)).rejects.toThrowError(/operation timed out|aborted/);
+            const error = await fetch(req)
+              .then(r => r.text())
+              .catch(e => e);
+            expect(error).toBeInstanceOf(Error);
+            expect(error.message).toMatch(/operation timed out|aborted/);
 
-            await expect(waitForRequestHandling).rejects.toThrowError(/aborted|closed/);
-          });
-        }
+            const err = await waitForRequestHandling.catch(e => e);
+            expect(err).toBeInstanceOf(Error);
+            expect(err.message).toMatch(/aborted|closed/);
+          },
+        );
       },
     );
   });
