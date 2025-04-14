@@ -161,6 +161,7 @@ describe('FormData', () => {
           },
         );
 
+        // TODO: this test is flakey in bun, fix it
         skipIf(!!globalThis.Deno)(
           'should fail parsing form data if the request gets cancelled',
           async () => {
