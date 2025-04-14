@@ -80,8 +80,6 @@ describe('Body', () => {
         type: 'multipart/form-data; boundary=Boundary_with_capital_letters',
       }),
     );
-    await expect(body.formData()).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"Unexpected end of multipart data"`,
-    );
+    await expect(body.formData()).rejects.toThrowError('Unexpected end of multipart data');
   });
 });
