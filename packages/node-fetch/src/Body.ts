@@ -275,7 +275,9 @@ export class PonyfillBody<TJSON = any> implements Body {
           currFile = null;
         }
         if (err || lastError) {
-          reject(err || lastError);
+          reject(
+            new Error('An error occurred while parsing the form data', { cause: err || lastError }),
+          );
         } else {
           // no error occured, this is a successful end/complete/finish
           resolve(this._formData!);

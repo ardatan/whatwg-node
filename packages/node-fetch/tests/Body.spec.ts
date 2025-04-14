@@ -80,8 +80,14 @@ describe('Body', () => {
         type: 'multipart/form-data; boundary=Boundary_with_capital_letters',
       }),
     );
-    await expect(body.formData()).rejects.toThrowErrorMatchingInlineSnapshot(
-      `"Unexpected end of multipart data"`,
-    );
+
+    let err;
+    try {
+      await body.formData();
+    } catch (_err) {
+      err = _err;
+    }
+    expect(err).toMatchInlineSnapshot(`[Error: An error occurred while parsing the form data]`);
+    expect(Object(err).cause).toMatchInlineSnapshot(`[Error: Unexpected end of multipart data]`);
   });
 });
