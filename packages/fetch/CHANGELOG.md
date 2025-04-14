@@ -1,5 +1,16 @@
 # @whatwg-node/fetch
 
+## 0.10.6
+
+### Patch Changes
+
+- [#2310](https://github.com/ardatan/whatwg-node/pull/2310)
+  [`f699a1b`](https://github.com/ardatan/whatwg-node/commit/f699a1ba1558f98406f5844a31c07f77d874eb9b)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  - Updated dependency
+    [`@whatwg-node/node-fetch@^0.7.18` ↗︎](https://www.npmjs.com/package/@whatwg-node/node-fetch/v/0.7.18)
+    (from `^0.7.11`, in `dependencies`)
+
 ## 0.10.5
 
 ### Patch Changes
