@@ -249,8 +249,6 @@ export class PonyfillBody<TJSON = any> implements Body {
         return reject(new Error('No stream available'));
       }
 
-      let lastError;
-
       // form data file that is currently being processed, it's
       // important to keep track of it in case the stream ends early
       let currFile: BusboyFileStream | null = null;
@@ -274,8 +272,8 @@ export class PonyfillBody<TJSON = any> implements Body {
           currFile.destroy();
           currFile = null;
         }
-        if (err || lastError) {
-          reject(err || lastError);
+        if (err) {
+          reject(err);
         } else {
           // no error occured, this is a successful end/complete/finish
           resolve(this._formData!);
