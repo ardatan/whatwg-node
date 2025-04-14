@@ -61,7 +61,7 @@ describe('FormData', () => {
           expect(receivedFileContent).toBe('baz');
         });
 
-        it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
+        it('should fail parsing form data where content-length is smaller than the actual data', async () => {
           const adapter = createServerAdapter(async request => {
             try {
               await request.formData();
@@ -110,7 +110,7 @@ describe('FormData', () => {
         });
 
         skipIf(!!globalThis.Deno)(
-          'should hang when parsing form data where content-lenght is larger than the actual data',
+          'should hang when parsing form data where content-length is larger than the actual data',
           async () => {
             const adapter = createServerAdapter(async request => {
               // the request's body stream will never end, because the content-length is larger than the actual data
