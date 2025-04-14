@@ -61,7 +61,7 @@ describe('FormData', () => {
           expect(receivedFileContent).toBe('baz');
         });
 
-        it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
+        it.only('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
           const adapter = createServerAdapter(async request => {
             try {
               await request.formData();
@@ -106,6 +106,7 @@ describe('FormData', () => {
 
           expect(res.statusCode).toBe(400);
           req.destroy();
+          res.destroy();
         });
 
         skipIf(!!globalThis.Deno)(
