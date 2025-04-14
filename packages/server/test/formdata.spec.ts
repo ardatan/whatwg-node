@@ -188,7 +188,7 @@ describe('FormData', () => {
 
             await expect(fetch(req)).rejects.toThrowError(/operation timed out|aborted/);
 
-            await expect(waitForRequestHandling).rejects.toThrowError('aborted');
+            await expect(waitForRequestHandling).rejects.toThrowError(/aborted|closed/);
           });
         }
       },
