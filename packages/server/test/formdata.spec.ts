@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { setTimeout } from 'node:timers/promises';
 import NodeFormData from 'form-data';
 import { describe, expect, it } from '@jest/globals';
 import { createServerAdapter } from '../src/createServerAdapter';
@@ -53,12 +54,16 @@ describe('FormData', () => {
       },
     );
 
-    it('should parse form data where content-lenght is smaller than the actual data', async () => {
+    it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
       const adapter = createServerAdapter(async request => {
-        // this will throw and the server will automatically respond with a 400
-        // TODO: why? the user should have control over the response
-        await request.formData();
-        return new Response();
+        try {
+          await request.formData();
+        } catch {
+          // noop
+        }
+        // regardless of what you instruct node to reply with, node will always reply with a 400
+        // if the content-length is smaller than the actual data
+        return new Response(null, { status: 400 });
       });
       await testServer.addOnceHandler(adapter);
 
@@ -93,6 +98,55 @@ describe('FormData', () => {
       });
 
       expect(res.statusCode).toBe(400);
+    });
+
+    it('should hang when parsing form data where content-lenght is larger than the actual data', async () => {
+      const adapter = createServerAdapter(async request => {
+        // the request's body stream will never end, because the content-length is larger than the actual data
+        // this is expected and should be handled by the server itself in user-land
+        // see https://github.com/nodejs/node/issues/17978
+        //
+        // TODO: form data promise should complete after response's been sent out
+        request.formData();
+
+        // wait some time, but the form data parsing should not resolve (at all)
+        await setTimeout(100);
+
+        return new Response(null, { status: 408 });
+      });
+      await testServer.addOnceHandler(adapter);
+
+      const formData = new NodeFormData();
+      formData.append('foo', Buffer.alloc(10), {
+        filename: 'foo.txt',
+        filepath: '/tmp/foo.txt',
+        contentType: 'text/plain',
+      });
+
+      const url = new URL(testServer.url);
+
+      const req = http.request({
+        method: 'post',
+        hostname: url.hostname,
+        port: url.port,
+        headers: {
+          ...formData.getHeaders(),
+          'content-length': 1000,
+        },
+      });
+
+      formData.pipe(req);
+
+      const res: http.IncomingMessage = await new Promise((resolve, reject) => {
+        req.on('error', err => {
+          reject(err);
+        });
+        req.on('response', res => {
+          resolve(res);
+        });
+      });
+
+      expect(res.statusCode).toBe(408);
     });
   });
 });
