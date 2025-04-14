@@ -3,7 +3,6 @@ import { setTimeout } from 'node:timers/promises';
 import NodeFormData from 'form-data';
 import { describe, expect, it } from '@jest/globals';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
-import { createServerAdapter } from '../src/createServerAdapter';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
