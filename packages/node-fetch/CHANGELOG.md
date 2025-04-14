@@ -1,5 +1,33 @@
 # @whatwg-node/node-fetch
 
+## 0.7.18
+
+### Patch Changes
+
+- [#2305](https://github.com/ardatan/whatwg-node/pull/2305)
+  [`380984a`](https://github.com/ardatan/whatwg-node/commit/380984ae072ece9f1d0106164a78143d81a1d02e)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+
+  - Added dependency
+    [`@fastify/busboy@^3.1.1` ↗︎](https://www.npmjs.com/package/@fastify/busboy/v/3.1.1) (to
+    `dependencies`)
+  - Removed dependency [`busboy@^1.6.0` ↗︎](https://www.npmjs.com/package/busboy/v/1.6.0) (from
+    `dependencies`)
+
+- [#2305](https://github.com/ardatan/whatwg-node/pull/2305)
+  [`380984a`](https://github.com/ardatan/whatwg-node/commit/380984ae072ece9f1d0106164a78143d81a1d02e)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - Abort parsing form data if the request is
+  aborted
+
+- [#2305](https://github.com/ardatan/whatwg-node/pull/2305)
+  [`380984a`](https://github.com/ardatan/whatwg-node/commit/380984ae072ece9f1d0106164a78143d81a1d02e)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - Handle parsing form data when supplied
+  Content-Length header value is smaller than the actual data
+
+- Updated dependencies
+  [[`6bf6aa0`](https://github.com/ardatan/whatwg-node/commit/6bf6aa0b6d4e0c7524aec55fb666147d0862c9b9)]:
+  - @whatwg-node/promise-helpers@1.3.1
+
 ## 0.7.17
 
 ### Patch Changes
