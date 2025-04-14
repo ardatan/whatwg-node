@@ -309,6 +309,9 @@ export class PonyfillBody<TJSON = any> implements Body {
           chunks.push(chunk);
         });
         fileStream.on('error', complete);
+        fileStream.on('limit', () => {
+          complete(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
+        });
         fileStream.on('close', () => {
           if (fileStream.truncated) {
             complete(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
