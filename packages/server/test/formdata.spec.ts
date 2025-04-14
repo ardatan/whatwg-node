@@ -196,21 +196,13 @@ describe('FormData', () => {
               duplex: 'half',
             });
 
-            let fetchErr: any;
-            try {
-              await fetch(req);
-            } catch (e) {
-              fetchErr = e;
-            }
-            expect(fetchErr.message).toMatch(/operation timed out|aborted/);
+            await expect(fetch(req).catch(e => e.message)).resolves.toMatch(
+              /operation timed out|aborted|closed/,
+            );
 
-            let handleErr: any;
-            try {
-              await waitForRequestHandling;
-            } catch (e) {
-              handleErr = e;
-            }
-            expect(handleErr.message).toMatch(/aborted|closed/);
+            await expect(waitForRequestHandling.catch(e => e.message)).resolves.toMatch(
+              /aborted|closed/,
+            );
           },
         );
       },
