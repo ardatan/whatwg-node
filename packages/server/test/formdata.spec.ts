@@ -174,11 +174,11 @@ describe('FormData', () => {
               signal: AbortSignal.timeout(100),
               method: 'POST',
               headers: {
-                'content-type': 'multipart/form-data; boundary=--',
+                'content-type': 'multipart/form-data; boundary="---"',
               },
               body: new ReadableStream({
                 start(ctrl) {
-                  ctrl.enqueue('--');
+                  ctrl.enqueue('---\n');
                   // never closes
                 },
               }),
