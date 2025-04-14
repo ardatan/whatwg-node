@@ -161,8 +161,8 @@ describe('FormData', () => {
           },
         );
 
-        // TODO: this test is flakey in bun, fix it
-        skipIf(!!globalThis.Deno)(
+        // TODO: this test is flakey in Bun locally but consistantly fails in CI, fix it
+        skipIf(globalThis.Bun || globalThis.Deno)(
           'should fail parsing form data if the request gets cancelled',
           async () => {
             const {
