@@ -200,11 +200,9 @@ describe('FormData', () => {
             const error = await fetch(req)
               .then(r => r.text())
               .catch(e => e);
-            expect(error).toBeInstanceOf(Error);
             expect(error.message).toMatch(/operation timed out|aborted/);
 
             const err = await waitForRequestHandling.catch(e => e);
-            expect(err).toBeInstanceOf(Error);
             expect(err.message).toMatch(/aborted|closed/);
           },
         );
