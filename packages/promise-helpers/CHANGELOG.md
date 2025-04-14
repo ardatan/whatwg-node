@@ -1,5 +1,14 @@
 # @whatwg-node/promise-helpers
 
+## 1.3.1
+
+### Patch Changes
+
+- [#2276](https://github.com/ardatan/whatwg-node/pull/2276)
+  [`6bf6aa0`](https://github.com/ardatan/whatwg-node/commit/6bf6aa0b6d4e0c7524aec55fb666147d0862c9b9)
+  Thanks [@andreialecu](https://github.com/andreialecu)! - Fix types by replacing `VoidFunction`
+  type to `() => void`
+
 ## 1.3.0
 
 ### Minor Changes
