@@ -66,7 +66,7 @@ describe('Body', () => {
     expect(result).toBe('hello world');
   });
 
-  it('throws a TypeError if the body is unable to parse as FormData', async () => {
+  it('throws an error if the body is unable to parse as FormData', async () => {
     const formStr =
       '--Boundary_with_capital_letters\r\n' +
       'Content-Type: application/json\r\n' +
