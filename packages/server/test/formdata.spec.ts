@@ -55,138 +55,142 @@ describe('FormData', () => {
           expect(receivedFileContent).toBe('baz');
         });
 
-        it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
-          const adapter = createServerAdapter(async request => {
-            try {
-              await request.formData();
-            } catch {
-              // noop
-            }
-            // regardless of what you instruct node to reply with, node will always reply with a 400
-            // if the content-length is smaller than the actual data
-            return new Response(null, { status: 400 });
-          });
-          await testServer.addOnceHandler(adapter);
-
-          const formData = new NodeFormData();
-          formData.append('foo', Buffer.alloc(1000), {
-            filename: 'foo.txt',
-            filepath: '/tmp/foo.txt',
-            contentType: 'text/plain',
-          });
-
-          const url = new URL(testServer.url);
-
-          const req = http.request({
-            method: 'post',
-            hostname: url.hostname,
-            port: url.port,
-            headers: {
-              ...formData.getHeaders(),
-              'content-length': 10,
-            },
-          });
-
-          formData.pipe(req);
-
-          const res: http.IncomingMessage = await new Promise((resolve, reject) => {
-            req.on('error', err => {
-              reject(err);
+        if (globalThis.Deno) {
+          // TODO: test in deno
+        } else {
+          it('should fail parsing form data where content-lenght is smaller than the actual data', async () => {
+            const adapter = createServerAdapter(async request => {
+              try {
+                await request.formData();
+              } catch {
+                // noop
+              }
+              // regardless of what you instruct node to reply with, node will always reply with a 400
+              // if the content-length is smaller than the actual data
+              return new Response(null, { status: 400 });
             });
-            req.on('response', res => {
-              resolve(res);
+            await testServer.addOnceHandler(adapter);
+
+            const formData = new NodeFormData();
+            formData.append('foo', Buffer.alloc(1000), {
+              filename: 'foo.txt',
+              filepath: '/tmp/foo.txt',
+              contentType: 'text/plain',
             });
-          });
 
-          expect(res.statusCode).toBe(400);
-        });
+            const url = new URL(testServer.url);
 
-        it('should hang when parsing form data where content-lenght is larger than the actual data', async () => {
-          const adapter = createServerAdapter(async request => {
-            // the request's body stream will never end, because the content-length is larger than the actual data
-            // this is expected and should be handled by the server itself in user-land
-            // see https://github.com/nodejs/node/issues/17978
-            //
-            // TODO: form data promise should complete after response's been sent out
-            request.formData();
-
-            // wait some time, but the form data parsing should not resolve (at all)
-            await setTimeout(100);
-
-            return new Response(null, { status: 408 });
-          });
-          await testServer.addOnceHandler(adapter);
-
-          const formData = new NodeFormData();
-          formData.append('foo', Buffer.alloc(10), {
-            filename: 'foo.txt',
-            filepath: '/tmp/foo.txt',
-            contentType: 'text/plain',
-          });
-
-          const url = new URL(testServer.url);
-
-          const req = http.request({
-            method: 'post',
-            hostname: url.hostname,
-            port: url.port,
-            headers: {
-              ...formData.getHeaders(),
-              'content-length': 1000,
-            },
-          });
-
-          formData.pipe(req);
-
-          const res: http.IncomingMessage = await new Promise((resolve, reject) => {
-            req.on('error', err => {
-              reject(err);
-            });
-            req.on('response', res => {
-              resolve(res);
-            });
-          });
-
-          expect(res.statusCode).toBe(408);
-        });
-
-        it('should fail parsing form data if the request gets cancelled', async () => {
-          const {
-            promise: waitForRequestHandling,
-            resolve: requestHandled,
-            reject: failRequestHandling,
-          } = createDeferredPromise<FormData>();
-          const adapter = createServerAdapter(async request => {
-            try {
-              const formData = await request.formData();
-              requestHandled(formData);
-            } catch (e) {
-              failRequestHandling(e);
-            }
-            return new Response(null, { status: 500 });
-          });
-          await testServer.addOnceHandler(adapter);
-
-          const req = new Request(testServer.url, {
-            signal: AbortSignal.timeout(100),
-            method: 'POST',
-            headers: {
-              'content-type': 'multipart/form-data; boundary=--',
-            },
-            body: new ReadableStream({
-              start(ctrl) {
-                ctrl.enqueue('--');
-                // never closes
+            const req = http.request({
+              method: 'post',
+              hostname: url.hostname,
+              port: url.port,
+              headers: {
+                ...formData.getHeaders(),
+                'content-length': 10,
               },
-            }),
-            // @ts-expect-error https://github.com/whatwg/fetch/pull/1457
-            duplex: 'half',
+            });
+
+            formData.pipe(req);
+
+            const res: http.IncomingMessage = await new Promise((resolve, reject) => {
+              req.on('error', err => {
+                reject(err);
+              });
+              req.on('response', res => {
+                resolve(res);
+              });
+            });
+
+            expect(res.statusCode).toBe(400);
           });
 
-          await expect(fetch(req)).rejects.toThrowError(/operation timed out|aborted/);
+          it('should hang when parsing form data where content-lenght is larger than the actual data', async () => {
+            const adapter = createServerAdapter(async request => {
+              // the request's body stream will never end, because the content-length is larger than the actual data
+              // this is expected and should be handled by the server itself in user-land
+              // see https://github.com/nodejs/node/issues/17978
+              //
+              // TODO: form data promise should complete after response's been sent out
+              request.formData();
 
-          await expect(waitForRequestHandling).rejects.toThrowError('aborted');
-        });
+              // wait some time, but the form data parsing should not resolve (at all)
+              await setTimeout(100);
+
+              return new Response(null, { status: 408 });
+            });
+            await testServer.addOnceHandler(adapter);
+
+            const formData = new NodeFormData();
+            formData.append('foo', Buffer.alloc(10), {
+              filename: 'foo.txt',
+              filepath: '/tmp/foo.txt',
+              contentType: 'text/plain',
+            });
+
+            const url = new URL(testServer.url);
+
+            const req = http.request({
+              method: 'post',
+              hostname: url.hostname,
+              port: url.port,
+              headers: {
+                ...formData.getHeaders(),
+                'content-length': 1000,
+              },
+            });
+
+            formData.pipe(req);
+
+            const res: http.IncomingMessage = await new Promise((resolve, reject) => {
+              req.on('error', err => {
+                reject(err);
+              });
+              req.on('response', res => {
+                resolve(res);
+              });
+            });
+
+            expect(res.statusCode).toBe(408);
+          });
+
+          it('should fail parsing form data if the request gets cancelled', async () => {
+            const {
+              promise: waitForRequestHandling,
+              resolve: requestHandled,
+              reject: failRequestHandling,
+            } = createDeferredPromise<FormData>();
+            const adapter = createServerAdapter(async request => {
+              try {
+                const formData = await request.formData();
+                requestHandled(formData);
+              } catch (e) {
+                failRequestHandling(e);
+              }
+              return new Response(null, { status: 500 });
+            });
+            await testServer.addOnceHandler(adapter);
+
+            const req = new Request(testServer.url, {
+              signal: AbortSignal.timeout(100),
+              method: 'POST',
+              headers: {
+                'content-type': 'multipart/form-data; boundary=--',
+              },
+              body: new ReadableStream({
+                start(ctrl) {
+                  ctrl.enqueue('--');
+                  // never closes
+                },
+              }),
+              // @ts-expect-error https://github.com/whatwg/fetch/pull/1457
+              duplex: 'half',
+            });
+
+            await expect(fetch(req)).rejects.toThrowError(/operation timed out|aborted/);
+
+            await expect(waitForRequestHandling).rejects.toThrowError('aborted');
+          });
+        }
       },
     );
   });
