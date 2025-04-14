@@ -11,7 +11,10 @@ describe('FormData', () => {
     runTestsForEachFetchImpl(
       (
         _,
-        { createServerAdapter, fetchAPI: { Response, FormData, File, fetch, ReadableStream } },
+        {
+          createServerAdapter,
+          fetchAPI: { Response, FormData, File, fetch, ReadableStream, Request },
+        },
       ) => {
         if (!File) {
           it.skip('File does not exist in this version of Node', () => {});
