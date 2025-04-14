@@ -211,6 +211,7 @@ if (!globalThis.Deno) {
 
     let url = await fastifyApp.listen({ port: 0, host: '::1' });
     url = url.replace('127.0.0.1', 'localhost');
+    url = url.replace('[::1]', 'localhost');
     return {
       name: 'fastify',
       url,
