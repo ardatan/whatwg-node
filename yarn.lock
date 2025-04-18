@@ -5521,10 +5521,10 @@ fast-uri@^3.0.0, fast-uri@^3.0.1:
   resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-3.0.6.tgz#88f130b77cfaea2378d56bf970dea21257a68748"
   integrity sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==
 
-fastify@5.3.1:
-  version "5.3.1"
-  resolved "https://registry.yarnpkg.com/fastify/-/fastify-5.3.1.tgz#89881214b23d2c0715cb86eefc055a0ff2b53744"
-  integrity sha512-PhpFhuUZVnq1IvTHCrIMCqqukNuJGWnV/nxTrSDtirbsAZnVYO8I9LaxSk5OPXSiioA6DoEG1r5U1g41/cix0g==
+fastify@5.3.2:
+  version "5.3.2"
+  resolved "https://registry.yarnpkg.com/fastify/-/fastify-5.3.2.tgz#88c895a30c0f67166979077ac8649fe8b205a1b3"
+  integrity sha512-AIPqBgtqBAwkOkrnwesEE+dOyU30dQ4kh7udxeGVR05CRGwubZx+p2H8P0C4cRnQT0+EPK4VGea2DTL2RtWttg==
   dependencies:
     "@fastify/ajv-compiler" "^4.0.0"
     "@fastify/error" "^4.0.0"
