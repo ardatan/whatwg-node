@@ -52,7 +52,7 @@
     "babel-jest": "29.7.0",
     "bob-the-bundler": "7.0.1",
     "bun": "1.2.11",
-    "deno": "2.2.12",
+    "deno": "2.3.0",
     "eslint": "9.25.1",
     "eslint-config-prettier": "10.1.2",
     "eslint-config-standard": "17.1.0",
