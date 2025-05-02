@@ -3143,10 +3143,10 @@
     "@types/keygrip" "*"
     "@types/node" "*"
 
-"@types/deno@2.2.0":
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/@types/deno/-/deno-2.2.0.tgz#d27ff1e1ebac8bc662a92243ad12fe56261a2b9f"
-  integrity sha512-4x6M/ZSyoQy6fJeMArP0dvvNT4IOolfySyukuqqKhsLmSXDV4wGanqXIZ+xFihw3TlReS6JTa4hRG9nAZInpmw==
+"@types/deno@2.3.0":
+  version "2.3.0"
+  resolved "https://registry.yarnpkg.com/@types/deno/-/deno-2.3.0.tgz#ee3febb74e9fddf05fa71ac769538ecf17e32c03"
+  integrity sha512-/4SyefQpKjwNKGkq9qG3Ln7MazfbWKvydyVFBnXzP5OQA4u1paoFtaOe1iHKycIWHHkhYag0lPxyheThV1ijzw==
 
 "@types/estree@^1.0.6":
   version "1.0.7"
