@@ -81,7 +81,7 @@ if (!globalThis.Bun && !globalThis.Deno) {
   });
 }
 
-it.only('express + compression library', async () => {
+it('express + compression library', async () => {
   const app = express();
 
   app.use(compression());
