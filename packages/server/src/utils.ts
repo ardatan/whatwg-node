@@ -5,6 +5,7 @@ import type { Readable } from 'node:stream';
 import {
   createDeferredPromise,
   fakePromise,
+  handleMaybePromise,
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
@@ -317,6 +318,14 @@ function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIte
   return pump();
 }
 
+function safeWrite(chunk: any, serverResponse: NodeResponse) {
+  // @ts-expect-error http and http2 writes are actually compatible
+  const result = serverResponse.write(chunk);
+  if (!result) {
+    return new Promise(resolve => serverResponse.once('drain', resolve));
+  }
+}
+
 export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
@@ -354,10 +363,10 @@ export function sendNodeResponse(
     // @ts-expect-error - _buffer is a private property
     fetchResponse._buffer;
   if (bufOfRes) {
-    // @ts-expect-error http and http2 writes are actually compatible
-    serverResponse.write(bufOfRes);
-    endResponse(serverResponse);
-    return;
+    return handleMaybePromise(
+      () => safeWrite(bufOfRes, serverResponse),
+      () => endResponse(serverResponse),
+    );
   }
 
   // Other fetch implementations
@@ -371,11 +380,10 @@ export function sendNodeResponse(
     // @ts-expect-error - Uint8Array is a valid body type
     fetchBody[Symbol.toStringTag] === 'Uint8Array'
   ) {
-    serverResponse
-      // @ts-expect-error http and http2 writes are actually compatible
-      .write(fetchBody);
-    endResponse(serverResponse);
-    return;
+    return handleMaybePromise(
+      () => safeWrite(fetchBody, serverResponse),
+      () => endResponse(serverResponse),
+    );
   }
 
   configureSocket(nodeRequest);
