@@ -355,7 +355,8 @@ export function sendNodeResponse(
     fetchResponse._buffer;
   if (bufOfRes) {
     // @ts-expect-error http and http2 writes are actually compatible
-    serverResponse.write(bufOfRes, () => endResponse(serverResponse));
+    serverResponse.write(bufOfRes);
+    endResponse(serverResponse);
     return;
   }
 

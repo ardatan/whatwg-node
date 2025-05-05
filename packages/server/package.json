@@ -41,14 +41,16 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@hapi/hapi": "^21.3.12",
+    "@hapi/hapi": "21.4.0",
+    "@types/compression": "1.7.5",
     "@types/express": "5.0.1",
-    "@types/koa": "^2.15.0",
-    "@types/node": "22.15.17",
+    "@types/koa": "2.15.0",
+"@types/node": "22.15.17",
+    "compression": "1.8.0",
     "express": "5.1.0",
     "fastify": "5.3.2",
-    "form-data": "^4.0.2",
-    "koa": "^3.0.0",
+    "form-data": "4.0.2",
+    "koa": "3.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
   },
