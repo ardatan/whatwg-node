@@ -209,9 +209,8 @@ if (!globalThis.Deno) {
 
     fastifyApp.addContentTypeParser(/(.*)/, {}, (_req, _payload, done) => done(null));
 
-    let url = await fastifyApp.listen({ port: 0, host: '::1' });
-    url = url.replace('127.0.0.1', 'localhost');
-    url = url.replace('[::1]', 'localhost');
+    await fastifyApp.listen({ port: 0, host: '::' });
+    const url = `http://localhost:${(fastifyApp.server.address() as AddressInfo).port}`;
     return {
       name: 'fastify',
       url,

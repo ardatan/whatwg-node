@@ -286,34 +286,10 @@ function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIte
       if (closed || done) {
         return;
       }
-      return new Promise(resolve => {
-        if (
-          !serverResponse
-            // @ts-expect-error http and http2 writes are actually compatible
-            .write(value, err => {
-              if (err) {
-                resolve(true);
-              }
-            })
-        ) {
-          if (closed) {
-            resolve(true);
-            return;
-          }
-          serverResponse.once('drain', () => {
-            resolve(false);
-          });
-        }
-      })
-        .then(shouldBreak => {
-          if (shouldBreak) {
-            return;
-          }
-          return pump();
-        })
-        .then(() => {
-          endResponse(serverResponse);
-        });
+      return handleMaybePromise(
+        () => safeWrite(value, serverResponse),
+        () => (closed ? endResponse(serverResponse) : pump()),
+      );
     });
   return pump();
 }
@@ -407,7 +383,7 @@ export function sendNodeResponse(
   }
 }
 
-async function sendReadableStream(
+function sendReadableStream(
   nodeRequest: NodeRequest,
   serverResponse: NodeResponse,
   readableStream: ReadableStream<Uint8Array>,
@@ -416,20 +392,16 @@ async function sendReadableStream(
   nodeRequest?.once?.('error', err => {
     reader.cancel(err);
   });
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    if (
-      !serverResponse
-        // @ts-expect-error http and http2 writes are actually compatible
-        .write(value)
-    ) {
-      await new Promise(resolve => serverResponse.once('drain', resolve));
-    }
+  function pump(): Promise<void> {
+    return reader
+      .read()
+      .then(({ done, value }) =>
+        done
+          ? endResponse(serverResponse)
+          : handleMaybePromise(() => safeWrite(value, serverResponse), pump),
+      );
   }
-  endResponse(serverResponse);
+  return pump();
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {

@@ -81,41 +81,47 @@ if (!globalThis.Bun && !globalThis.Deno) {
   });
 }
 
-it('express + compression library', async () => {
-  const app = express();
+const bodies = [
+  'hello world', // 11 bytes
+  'hello world'.repeat(1024 * 1024), // 1MB
+  'hello world'.repeat(1024 * 1024 * 5), // 5MB
+];
 
-  app.use(compression());
+for (const largeBody of bodies) {
+  it(`express + compression (${largeBody.length} bytes)`, async () => {
+    const app = express();
 
-  const echoAdapter = createServerAdapter(req =>
-    req.json().then(body =>
-      Response.json({
-        body,
-        url: req.url,
-      }),
-    ),
-  );
+    app.use(compression());
 
-  app.use('/my-path', echoAdapter);
+    const echoAdapter = createServerAdapter(req =>
+      req.json().then(body =>
+        Response.json({
+          body,
+          url: req.url,
+        }),
+      ),
+    );
 
-  server = await new Promise<Server>((resolve, reject) => {
-    const server = app.listen(0, err => (err ? reject(err) : resolve(server)));
+    app.use('/my-path', echoAdapter);
+
+    server = await new Promise<Server>((resolve, reject) => {
+      const server = app.listen(0, err => (err ? reject(err) : resolve(server)));
+    });
+
+    const port = (server.address() as AddressInfo).port;
+
+    const response = await fetch(`http://localhost:${port}/my-path`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ largeBody }),
+    });
+
+    const bodyJson = await response.json();
+    expect(bodyJson).toEqual({
+      body: { largeBody },
+      url: `http://localhost:${port}/my-path`,
+    });
   });
-
-  const port = (server.address() as AddressInfo).port;
-
-  const largeBody = 'a'.repeat(1024 * 1024); // 1MB
-
-  const response = await fetch(`http://localhost:${port}/my-path`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ largeBody }),
-  });
-
-  const bodyJson = await response.json();
-  expect(bodyJson).toEqual({
-    body: { largeBody },
-    url: `http://localhost:${port}/my-path`,
-  });
-});
+}
