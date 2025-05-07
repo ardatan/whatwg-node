@@ -94,55 +94,67 @@ export function getStreamFromFormData(
   formData: FormData,
   boundary = '---',
 ): PonyfillReadableStream<Uint8Array> {
-  const entries: [string, string | PonyfillFile][] = [];
+  let entriesIterator: FormDataIterator<[string, FormDataEntryValue]>;
   let sentInitialHeader = false;
-  return new PonyfillReadableStream<Buffer>({
-    start: controller => {
-      formData.forEach((value, key) => {
-        if (!sentInitialHeader) {
-          controller.enqueue(Buffer.from(`--${boundary}\r\n`));
-          sentInitialHeader = true;
-        }
-        entries.push([key, value as any]);
-      });
-      if (!sentInitialHeader) {
-        controller.enqueue(Buffer.from(`--${boundary}--\r\n`));
-        controller.close();
-      }
-    },
-    pull: async controller => {
-      const entry = entries.shift();
-      if (entry) {
-        const [key, value] = entry;
-        if (typeof value === 'string') {
-          controller.enqueue(Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`));
-          controller.enqueue(Buffer.from(value));
-        } else {
-          let filenamePart = '';
-          if (value.name) {
-            filenamePart = `; filename="${value.name}"`;
-          }
-          controller.enqueue(
-            Buffer.from(`Content-Disposition: form-data; name="${key}"${filenamePart}\r\n`),
-          );
-          controller.enqueue(
-            Buffer.from(`Content-Type: ${value.type || 'application/octet-stream'}\r\n\r\n`),
-          );
-          const entryStream = value.stream();
-          for await (const chunk of entryStream) {
-            controller.enqueue(chunk);
-          }
-        }
-        if (entries.length === 0) {
-          controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
-          controller.close();
-        } else {
-          controller.enqueue(Buffer.from(`\r\n--${boundary}\r\n`));
-        }
+  let currentAsyncIterator: AsyncIterator<[string, FormDataEntryValue]> | undefined;
+  let hasBefore = false;
+  function handleNextEntry(controller: ReadableStreamController<Buffer>) {
+    const { done, value } = entriesIterator.next();
+    if (done) {
+      controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
+      return controller.close();
+    }
+    if (hasBefore) {
+      controller.enqueue(Buffer.from(`\r\n--${boundary}\r\n`));
+    }
+    if (value) {
+      const [key, blobOrString] = value;
+      if (typeof blobOrString === 'string') {
+        controller.enqueue(Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`));
+        controller.enqueue(Buffer.from(blobOrString));
       } else {
-        controller.enqueue(Buffer.from(`\r\n--${boundary}--\r\n`));
-        controller.close();
+        let filenamePart = '';
+        if (blobOrString.name) {
+          filenamePart = `; filename="${blobOrString.name}"`;
+        }
+        controller.enqueue(
+          Buffer.from(`Content-Disposition: form-data; name="${key}"${filenamePart}\r\n`),
+        );
+        controller.enqueue(
+          Buffer.from(`Content-Type: ${blobOrString.type || 'application/octet-stream'}\r\n\r\n`),
+        );
+        const entryStream: any = blobOrString.stream();
+        currentAsyncIterator = entryStream[Symbol.asyncIterator]();
       }
+      hasBefore = true;
+    }
+  }
+  return new PonyfillReadableStream<Buffer>({
+    start: () => {
+      entriesIterator = formData.entries();
+    },
+    pull: controller => {
+      if (!sentInitialHeader) {
+        sentInitialHeader = true;
+        return controller.enqueue(Buffer.from(`--${boundary}\r\n`));
+      }
+      if (currentAsyncIterator) {
+        return currentAsyncIterator.next().then(({ done, value }) => {
+          if (done) {
+            currentAsyncIterator = undefined;
+          }
+          if (value) {
+            return controller.enqueue(value);
+          } else {
+            return handleNextEntry(controller);
+          }
+        });
+      }
+      return handleNextEntry(controller);
+    },
+    cancel: err => {
+      entriesIterator?.return?.(err);
+      currentAsyncIterator?.return?.(err);
     },
   });
 }
