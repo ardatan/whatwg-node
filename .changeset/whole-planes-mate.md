@@ -11,4 +11,7 @@ It is actually a bug in `compression` package;
 [expressjs/compression#46](https://github.com/expressjs/compression/issues/46)
 But since it is a common mistake, we prefer to workaround this on our end.
 
-So now the server adapter calls `response.end` immediately after `response.write` for static responses.
+Now after calling `response.write`, it no longer uses callback but first it checks the result;
+
+if it is `true`, it means stream is drained and we can call `response.end` immediately.
+else if it is `false`, it means the stream is not drained yet, so we can wait for the `drain` event to call `response.end`.
