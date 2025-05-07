@@ -1,5 +1,6 @@
 import { Writable } from 'node:stream';
-import { fakePromise } from './utils.js';
+import { fakeRejectPromise } from '@whatwg-node/promise-helpers';
+import { endStream, fakePromise, safeWrite } from './utils.js';
 
 export class PonyfillWritableStream<W = any> implements WritableStream<W> {
   writable: Writable;
@@ -78,36 +79,20 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
         // no-op
       },
       write(chunk: W) {
+        const promise = fakePromise();
         if (chunk == null) {
-          return fakePromise();
+          return promise;
         }
-        return new Promise<void>((resolve, reject) => {
-          writable.write(chunk, (err: Error | null | undefined) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve();
-            }
-          });
-        });
+        return promise.then(() => safeWrite(chunk, writable));
       },
       close() {
         if (!writable.errored && writable.closed) {
           return fakePromise();
         }
-        return new Promise<void>((resolve, reject) => {
-          if (writable.errored) {
-            reject(writable.errored);
-          } else {
-            writable.end((err: Error | null) => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          }
-        });
+        if (writable.errored) {
+          return fakeRejectPromise(writable.errored);
+        }
+        return fakePromise().then(() => endStream(writable));
       },
       abort(reason) {
         return new Promise<void>(resolve => {
@@ -122,19 +107,10 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
     if (!this.writable.errored && this.writable.closed) {
       return fakePromise();
     }
-    return new Promise<void>((resolve, reject) => {
-      if (this.writable.errored) {
-        reject(this.writable.errored);
-      } else {
-        this.writable.end((err: Error | null) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve();
-          }
-        });
-      }
-    });
+    if (this.writable.errored) {
+      return fakeRejectPromise(this.writable.errored);
+    }
+    return fakePromise().then(() => endStream(this.writable));
   }
 
   abort(reason: any): Promise<void> {

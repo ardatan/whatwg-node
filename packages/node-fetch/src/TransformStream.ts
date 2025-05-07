@@ -1,5 +1,6 @@
 import { Transform } from 'node:stream';
 import { PonyfillReadableStream } from './ReadableStream.js';
+import { endStream } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
 export class PonyfillTransformStream<I = any, O = any> implements TransformStream<I, O> {
@@ -19,7 +20,7 @@ export class PonyfillTransformStream<I = any, O = any> implements TransformStrea
           transform.destroy(reason);
         },
         terminate() {
-          transform.end();
+          endStream(transform);
         },
         get desiredSize() {
           return transform.writableLength;

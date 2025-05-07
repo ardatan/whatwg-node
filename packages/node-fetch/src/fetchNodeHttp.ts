@@ -2,12 +2,15 @@ import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'node:zlib';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import {
+  endStream,
   getHeadersObj,
   isNodeReadable,
+  safeWrite,
   shouldRedirect,
   wrapIncomingMessageWithPassthrough,
 } from './utils.js';
@@ -56,6 +59,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         });
       }
 
+      nodeRequest.once('error', reject);
       nodeRequest.once('response', nodeResponse => {
         let outputStream: PassThrough | undefined;
         const contentEncoding = nodeResponse.headers['content-encoding'];
@@ -125,12 +129,13 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         });
         resolve(ponyfillResponse);
       });
-      nodeRequest.once('error', reject);
 
       if (fetchRequest['_buffer'] != null) {
-        nodeRequest.write(fetchRequest['_buffer']);
-        // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
-        nodeRequest.end(null, null, null);
+        handleMaybePromise(
+          () => safeWrite(fetchRequest['_buffer'], nodeRequest),
+          () => endStream(nodeRequest),
+          reject,
+        );
       } else {
         const nodeReadable = (
           fetchRequest.body != null
@@ -142,8 +147,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         if (nodeReadable) {
           nodeReadable.pipe(nodeRequest);
         } else {
-          // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
-          nodeRequest.end(null, null, null);
+          endStream(nodeRequest);
         }
       }
     } catch (e) {

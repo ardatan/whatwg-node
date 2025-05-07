@@ -70,3 +70,18 @@ export function wrapIncomingMessageWithPassthrough({
     .catch(onError);
   return passThrough;
 }
+
+export function endStream(stream: { end: () => void }) {
+  // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+  return stream.end(null, null, null);
+}
+
+export function safeWrite(
+  chunk: any,
+  stream: { write: (chunk: any) => boolean; once: (event: string, listener: () => void) => void },
+) {
+  const result = stream.write(chunk);
+  if (!result) {
+    return new Promise<void>(resolve => stream.once('drain', resolve));
+  }
+}
