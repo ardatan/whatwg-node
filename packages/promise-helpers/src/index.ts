@@ -33,10 +33,12 @@ export function handleMaybePromise<TInput, TOutput>(
   finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
   let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
+
   if (finallyFactory) {
     result$ = result$.finally(finallyFactory);
   }
-  return result$;
+
+  return unfakePromise(result$);
 }
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
