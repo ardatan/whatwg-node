@@ -64,42 +64,45 @@ describe('promise-helpers', () => {
         },
       );
 
-      it.each(cases)('when fake value is falsy', ({ input, output }) => {
-        expect(
-          handleMaybePromise(
-            () => (input === 'fake' ? fakePromise(undefined) : undefined),
-            res => (output === 'fake' ? fakePromise(undefined) : res),
-          ),
-        ).toBe(undefined);
+      it.each(cases)(
+        'when fake value is falsy; input: $input output: $output',
+        ({ input, output }) => {
+          expect(
+            handleMaybePromise(
+              () => (input === 'fake' ? fakePromise(undefined) : undefined),
+              res => (output === 'fake' ? fakePromise(undefined) : res),
+            ),
+          ).toBe(undefined);
 
-        expect(
-          handleMaybePromise(
-            () => (input === 'fake' ? fakePromise(null) : null),
-            res => (output === 'fake' ? fakePromise(null) : res),
-          ),
-        ).toBe(null);
+          expect(
+            handleMaybePromise(
+              () => (input === 'fake' ? fakePromise(null) : null),
+              res => (output === 'fake' ? fakePromise(null) : res),
+            ),
+          ).toBe(null);
 
-        expect(
-          handleMaybePromise(
-            () => (input === 'fake' ? fakePromise('') : ''),
-            res => (output === 'fake' ? fakePromise('') : res),
-          ),
-        ).toBe('');
+          expect(
+            handleMaybePromise(
+              () => (input === 'fake' ? fakePromise('') : ''),
+              res => (output === 'fake' ? fakePromise('') : res),
+            ),
+          ).toBe('');
 
-        expect(
-          handleMaybePromise(
-            () => (input === 'fake' ? fakePromise(false) : false),
-            res => (output === 'fake' ? fakePromise(false) : res),
-          ),
-        ).toBe(false);
+          expect(
+            handleMaybePromise(
+              () => (input === 'fake' ? fakePromise(false) : false),
+              res => (output === 'fake' ? fakePromise(false) : res),
+            ),
+          ).toBe(false);
 
-        expect(
-          handleMaybePromise(
-            () => (input === 'fake' ? fakePromise(0) : 0),
-            res => (output === 'fake' ? fakePromise(0) : res),
-          ),
-        ).toBe(0);
-      });
+          expect(
+            handleMaybePromise(
+              () => (input === 'fake' ? fakePromise(0) : 0),
+              res => (output === 'fake' ? fakePromise(0) : res),
+            ),
+          ).toBe(0);
+        },
+      );
     });
     describe('finally', () => {
       describe('with promises', () => {
