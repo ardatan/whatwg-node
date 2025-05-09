@@ -96,7 +96,7 @@ export function getStreamFromFormData(
 ): PonyfillReadableStream<Uint8Array> {
   let entriesIterator: FormDataIterator<[string, FormDataEntryValue]>;
   let sentInitialHeader = false;
-  let currentAsyncIterator: AsyncIterator<[string, FormDataEntryValue]> | undefined;
+  let currentAsyncIterator: AsyncIterator<Uint8Array> | undefined;
   let hasBefore = false;
   function handleNextEntry(controller: ReadableStreamController<Buffer>) {
     const { done, value } = entriesIterator.next();
@@ -123,7 +123,8 @@ export function getStreamFromFormData(
         controller.enqueue(
           Buffer.from(`Content-Type: ${blobOrString.type || 'application/octet-stream'}\r\n\r\n`),
         );
-        const entryStream: any = blobOrString.stream();
+        const entryStream = blobOrString.stream();
+        // @ts-expect-error - ReadableStream is async iterable
         currentAsyncIterator = entryStream[Symbol.asyncIterator]();
       }
       hasBefore = true;

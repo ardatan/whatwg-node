@@ -91,9 +91,11 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
-
-export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
+export function normalizeNodeRequest(
+  nodeRequest: NodeRequest,
+  fetchAPI: FetchAPI,
+  nodeResponse?: NodeResponse,
+): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
@@ -104,8 +106,6 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
     fullUrl = url.toString();
   }
 
-  const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
-  nodeRequestResponseMap.delete(nodeRequest);
   let normalizedHeaders: Record<string, string> = nodeRequest.headers;
   if (nodeRequest.headers?.[':method']) {
     normalizedHeaders = {};

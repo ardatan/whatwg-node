@@ -32,13 +32,36 @@ export function handleMaybePromise<TInput, TOutput>(
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
   finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
-  let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
-
   if (finallyFactory) {
-    result$ = result$.finally(finallyFactory);
+    return unfakePromise(
+      fakePromise()
+        .then(inputFactory)
+        .then(outputSuccessFactory, outputErrorFactory)
+        .finally(finallyFactory),
+    );
   }
-
-  return unfakePromise(result$);
+  // Faster impl without finallyFactory
+  function _handleMaybePromise() {
+    const input$ = inputFactory();
+    if (isFakePromise<TInput>(input$)) {
+      return outputSuccessFactory(input$.__fakePromiseValue);
+    }
+    if (isFakeRejectPromise(input$)) {
+      throw input$.__fakeRejectError;
+    }
+    if (isPromise(input$)) {
+      return input$.then(outputSuccessFactory, outputErrorFactory);
+    }
+    return outputSuccessFactory(input$);
+  }
+  if (!outputErrorFactory) {
+    return _handleMaybePromise();
+  }
+  try {
+    return _handleMaybePromise();
+  } catch (err) {
+    return outputErrorFactory(err);
+  }
 }
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
