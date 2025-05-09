@@ -5,6 +5,7 @@ import type { Readable } from 'node:stream';
 import {
   createDeferredPromise,
   fakePromise,
+  handleMaybePromise,
   isPromise,
   MaybePromise,
 } from '@whatwg-node/promise-helpers';
@@ -90,9 +91,11 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
-export const nodeRequestResponseMap = new WeakMap<NodeRequest, NodeResponse>();
-
-export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAPI): Request {
+export function normalizeNodeRequest(
+  nodeRequest: NodeRequest,
+  fetchAPI: FetchAPI,
+  nodeResponse?: NodeResponse,
+): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
   if (nodeRequest.query) {
@@ -103,8 +106,6 @@ export function normalizeNodeRequest(nodeRequest: NodeRequest, fetchAPI: FetchAP
     fullUrl = url.toString();
   }
 
-  const nodeResponse = nodeRequestResponseMap.get(nodeRequest);
-  nodeRequestResponseMap.delete(nodeRequest);
   let normalizedHeaders: Record<string, string> = nodeRequest.headers;
   if (nodeRequest.headers?.[':method']) {
     normalizedHeaders = {};
@@ -285,36 +286,20 @@ function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIte
       if (closed || done) {
         return;
       }
-      return new Promise(resolve => {
-        if (
-          !serverResponse
-            // @ts-expect-error http and http2 writes are actually compatible
-            .write(value, err => {
-              if (err) {
-                resolve(true);
-              }
-            })
-        ) {
-          if (closed) {
-            resolve(true);
-            return;
-          }
-          serverResponse.once('drain', () => {
-            resolve(false);
-          });
-        }
-      })
-        .then(shouldBreak => {
-          if (shouldBreak) {
-            return;
-          }
-          return pump();
-        })
-        .then(() => {
-          endResponse(serverResponse);
-        });
+      return handleMaybePromise(
+        () => safeWrite(value, serverResponse),
+        () => (closed ? endResponse(serverResponse) : pump()),
+      );
     });
   return pump();
+}
+
+function safeWrite(chunk: any, serverResponse: NodeResponse) {
+  // @ts-expect-error http and http2 writes are actually compatible
+  const result = serverResponse.write(chunk);
+  if (!result) {
+    return new Promise(resolve => serverResponse.once('drain', resolve));
+  }
 }
 
 export function sendNodeResponse(
@@ -354,9 +339,10 @@ export function sendNodeResponse(
     // @ts-expect-error - _buffer is a private property
     fetchResponse._buffer;
   if (bufOfRes) {
-    // @ts-expect-error http and http2 writes are actually compatible
-    serverResponse.write(bufOfRes, () => endResponse(serverResponse));
-    return;
+    return handleMaybePromise(
+      () => safeWrite(bufOfRes, serverResponse),
+      () => endResponse(serverResponse),
+    );
   }
 
   // Other fetch implementations
@@ -370,11 +356,10 @@ export function sendNodeResponse(
     // @ts-expect-error - Uint8Array is a valid body type
     fetchBody[Symbol.toStringTag] === 'Uint8Array'
   ) {
-    serverResponse
-      // @ts-expect-error http and http2 writes are actually compatible
-      .write(fetchBody);
-    endResponse(serverResponse);
-    return;
+    return handleMaybePromise(
+      () => safeWrite(fetchBody, serverResponse),
+      () => endResponse(serverResponse),
+    );
   }
 
   configureSocket(nodeRequest);
@@ -398,7 +383,7 @@ export function sendNodeResponse(
   }
 }
 
-async function sendReadableStream(
+function sendReadableStream(
   nodeRequest: NodeRequest,
   serverResponse: NodeResponse,
   readableStream: ReadableStream<Uint8Array>,
@@ -407,20 +392,16 @@ async function sendReadableStream(
   nodeRequest?.once?.('error', err => {
     reader.cancel(err);
   });
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
-    if (
-      !serverResponse
-        // @ts-expect-error http and http2 writes are actually compatible
-        .write(value)
-    ) {
-      await new Promise(resolve => serverResponse.once('drain', resolve));
-    }
+  function pump(): Promise<void> {
+    return reader
+      .read()
+      .then(({ done, value }) =>
+        done
+          ? endResponse(serverResponse)
+          : handleMaybePromise(() => safeWrite(value, serverResponse), pump),
+      );
   }
-  endResponse(serverResponse);
+  return pump();
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {

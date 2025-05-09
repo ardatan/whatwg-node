@@ -30,7 +30,6 @@ import {
   isServerResponse,
   iterateAsyncVoid,
   NodeRequest,
-  nodeRequestResponseMap,
   NodeResponse,
   normalizeNodeRequest,
   sendNodeResponse,
@@ -278,8 +277,13 @@ function createServerAdapter<
   ) {
     const nodeResponse: NodeResponse =
       (nodeResponseOrContainer as any).raw || nodeResponseOrContainer;
-    nodeRequestResponseMap.set(nodeRequest, nodeResponse);
-    return handleNodeRequest(nodeRequest, ...ctx);
+    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
+    // Ensure `waitUntil` is available in the server context
+    if (!serverContext.waitUntil) {
+      serverContext.waitUntil = waitUntil;
+    }
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse);
+    return handleRequest(request, serverContext);
   }
 
   function requestListener(
