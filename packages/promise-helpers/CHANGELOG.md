@@ -1,5 +1,13 @@
 # @whatwg-node/promise-helpers
 
+## 1.3.2
+
+### Patch Changes
+
+- [#2408](https://github.com/ardatan/whatwg-node/pull/2408)
+  [`d86b4f3`](https://github.com/ardatan/whatwg-node/commit/d86b4f3df884709145023bf32bb1022c4a8bb9cb)
+  Thanks [@slagiewka](https://github.com/slagiewka)! - Reuse fake promise Symbol
+
 ## 1.3.1
 
 ### Patch Changes
