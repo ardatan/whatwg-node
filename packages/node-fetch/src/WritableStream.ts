@@ -1,4 +1,5 @@
-import { once, Writable } from 'node:stream';
+import { once } from 'node:events';
+import { Writable } from 'node:stream';
 import { fakeRejectPromise } from '@whatwg-node/promise-helpers';
 import { endStream, fakePromise, safeWrite } from './utils.js';
 

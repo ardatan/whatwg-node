@@ -1,5 +1,6 @@
+import { once } from 'node:events';
 import { IncomingMessage } from 'node:http';
-import { once, PassThrough, Readable, Writable } from 'node:stream';
+import { PassThrough, Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 function isHeadersInstance(obj: any): obj is Headers {

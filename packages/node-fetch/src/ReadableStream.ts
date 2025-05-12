@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
-import { once, Readable } from 'node:stream';
+import { once } from 'node:events';
+import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
