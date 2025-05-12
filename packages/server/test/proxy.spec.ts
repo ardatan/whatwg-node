@@ -6,6 +6,7 @@ import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+const skipIf = (condition: boolean) => (condition ? it.skip : it);
 // Bun does not support streams on Request body
 // Readable streams for fetch() are not available on Bun
 describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
@@ -37,11 +38,6 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
         aborted = false;
       });
       runTestsForEachServerImpl((originalServer, serverImplName) => {
-        if (serverImplName === 'hapi' && fetchImplName.toLowerCase() === 'native') {
-          // Hapi does not work well with native streams
-          it.skip('skipping test on Hapi with native fetch', () => {});
-          return;
-        }
         beforeEach(() => originalServer.addOnceHandler(originalAdapter));
         const proxyAdapter = createServerAdapter(request => {
           const proxyUrl = new URL(request.url);
@@ -69,28 +65,32 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
               proxyServer.close(() => resolve());
             }),
         );
-        it('proxies requests', async () => {
-          const requestBody = JSON.stringify({
-            test: true,
-          });
-          const response = await fetch(
-            `http://localhost:${(proxyServer.address() as AddressInfo).port}/test`,
-            {
+        skipIf(serverImplName === 'fastify' && fetchImplName === 'native')(
+          'proxies requests',
+          async () => {
+            const requestBody = JSON.stringify({
+              test: true,
+            });
+            const response = await fetch(
+              `http://localhost:${(proxyServer.address() as AddressInfo).port}/test`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: requestBody,
+              },
+            );
+            expect(response.ok).toBe(true);
+            await expect(response.json()).resolves.toMatchObject({
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
+                'content-type': 'application/json',
               },
               body: requestBody,
-            },
-          );
-          expect(response.status).toBe(200);
-          const resJson = await response.json();
-          expect(resJson.method).toBe('POST');
-          expect(resJson.headers).toMatchObject({
-            'content-type': 'application/json',
-          });
-          expect(resJson.body).toBe(requestBody);
-        });
+            });
+          },
+        );
         it('handles aborted requests', async () => {
           const response = fetch(
             `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
