@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
+import { setTimeout } from 'node:timers/promises';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from './test-fetch';
 import { runTestsForEachServerImpl } from './test-server';
@@ -14,7 +15,7 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
       const originalAdapter = createServerAdapter(async request => {
         if (request.url.endsWith('/delay')) {
           await new Promise<void>(resolve => {
-            const timeout = setTimeout(() => {
+            const timeout = globalThis.setTimeout(() => {
               resolve();
             }, 1000);
             request.signal.addEventListener('abort', () => {
@@ -98,7 +99,7 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
             },
           );
           await expect(response).rejects.toThrow();
-          await new Promise<void>(resolve => setTimeout(resolve, 500));
+          await setTimeout(500);
           expect(aborted).toBe(true);
         });
         it('handles requested terminated before abort', async () => {
@@ -110,7 +111,7 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
           );
           expect(res.ok).toBe(true);
           await res.text();
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await setTimeout(1000);
           expect(aborted).toBe(false);
         });
       });

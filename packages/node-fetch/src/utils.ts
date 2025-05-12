@@ -81,6 +81,6 @@ export function safeWrite(chunk: any, stream: Writable, signal?: AbortSignal | u
   if (!result) {
     return once(stream, 'drain', {
       signal,
-    });
+    }) as unknown as Promise<any>;
   }
 }
