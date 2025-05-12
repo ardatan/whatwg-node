@@ -119,7 +119,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 23
+          nodeVersion: 24
       - name: Test
         run: yarn test:bun --ci
 
@@ -158,7 +158,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 23
+          nodeVersion: 24
       - name: Build Packages
         run: yarn build
       - name: Test ESM
