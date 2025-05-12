@@ -29,6 +29,7 @@
     "ts:check": "tsc --noEmit --skipLibCheck"
   },
   "optionalDependencies": {
+    "node-libcurl": "4.1.0",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.52.0"
   },
   "devDependencies": {
@@ -64,7 +65,6 @@
     "husky": "9.1.7",
     "jest": "29.7.0",
     "lint-staged": "16.0.0",
-    "node-libcurl": "4.1.0",
     "patch-package": "8.0.0",
     "prettier": "3.5.3",
     "rimraf": "6.0.1",
