@@ -1,3 +1,4 @@
+import { once } from 'node:events';
 import { Writable } from 'node:stream';
 import { fakeRejectPromise } from '@whatwg-node/promise-helpers';
 import { endStream, fakePromise, safeWrite } from './utils.js';
@@ -62,19 +63,15 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
   getWriter(): WritableStreamDefaultWriter<W> {
     const writable = this.writable;
     return {
-      closed: new Promise<undefined>(resolve => {
-        writable.once('close', () => {
-          resolve(undefined);
-        });
-      }),
+      get closed() {
+        return once(writable, 'close') as Promise<any>;
+      },
       get desiredSize() {
         return writable.writableLength;
       },
-      ready: new Promise<undefined>(resolve => {
-        writable.once('drain', () => {
-          resolve(undefined);
-        });
-      }),
+      get ready() {
+        return once(writable, 'drain') as Promise<any>;
+      },
       releaseLock() {
         // no-op
       },
@@ -95,10 +92,8 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
         return fakePromise().then(() => endStream(writable));
       },
       abort(reason) {
-        return new Promise<void>(resolve => {
-          writable.destroy(reason);
-          writable.once('close', resolve);
-        });
+        writable.destroy(reason);
+        return once(writable, 'close') as Promise<any>;
       },
     };
   }
@@ -114,10 +109,8 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
   }
 
   abort(reason: any): Promise<void> {
-    return new Promise<void>(resolve => {
-      this.writable.destroy(reason);
-      this.writable.once('close', resolve);
-    });
+    this.writable.destroy(reason);
+    return once(this.writable, 'close') as Promise<any>;
   }
 
   locked = false;

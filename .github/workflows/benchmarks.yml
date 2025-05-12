@@ -30,7 +30,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 23
+          nodeVersion: 24
           packageManager: yarn
       - name: Build Packages
         run: yarn build
@@ -74,7 +74,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
-          nodeVersion: 23
+          nodeVersion: 24
           packageManager: yarn
       - name: Setup K6
         run: |

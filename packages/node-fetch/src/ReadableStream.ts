@@ -1,5 +1,7 @@
 import { Buffer } from 'node:buffer';
+import { once } from 'node:events';
 import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
@@ -144,7 +146,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   cancel(reason?: any): Promise<void> {
     this.readable.destroy(reason);
-    return new Promise(resolve => this.readable.once('end', resolve));
+    // @ts-expect-error - we know it is void
+    return once(this.readable, 'close');
   }
 
   locked = false;
@@ -154,6 +157,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   getReader(_options?: ReadableStreamGetReaderOptions): ReadableStreamReader<T> {
     const iterator = this.readable[Symbol.asyncIterator]();
     this.locked = true;
+    const thisReadable = this.readable;
     return {
       read() {
         return iterator.next() as Promise<ReadableStreamReadResult<T>>;
@@ -182,10 +186,12 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         this.locked = false;
         return fakePromise();
       },
-      closed: new Promise((resolve, reject) => {
-        this.readable.once('end', resolve);
-        this.readable.once('error', reject);
-      }),
+      get closed() {
+        return Promise.race([
+          once(thisReadable, 'end'),
+          once(thisReadable, 'error').then(err => Promise.reject(err)),
+        ]) as Promise<any>;
+      },
     };
   }
 
@@ -228,10 +234,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   pipeTo(destination: WritableStream<T>): Promise<void> {
     if (isPonyfillWritableStream(destination)) {
-      return new Promise((resolve, reject) => {
-        this.readable.pipe(destination.writable);
-        destination.writable.once('finish', resolve);
-        destination.writable.once('error', reject);
+      return pipeline(this.readable, destination.writable, {
+        end: true,
       });
     } else {
       const writer = destination.getWriter();

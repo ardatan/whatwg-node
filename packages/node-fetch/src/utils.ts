@@ -1,5 +1,6 @@
+import { once } from 'node:events';
 import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable } from 'node:stream';
+import { PassThrough, Readable, Writable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 function isHeadersInstance(obj: any): obj is Headers {
@@ -76,12 +77,11 @@ export function endStream(stream: { end: () => void }) {
   return stream.end(null, null, null);
 }
 
-export function safeWrite(
-  chunk: any,
-  stream: { write: (chunk: any) => boolean; once: (event: string, listener: () => void) => void },
-) {
+export function safeWrite(chunk: any, stream: Writable, signal?: AbortSignal | undefined) {
   const result = stream.write(chunk);
   if (!result) {
-    return new Promise<void>(resolve => stream.once('drain', resolve));
+    return once(stream, 'drain', {
+      signal,
+    }) as unknown as Promise<any>;
   }
 }

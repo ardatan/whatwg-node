@@ -8,9 +8,8 @@ export class PonyfillTextDecoderStream
   private textDecoder: TextDecoder;
   constructor(encoding?: BufferEncoding, options?: TextDecoderOptions) {
     super({
-      transform: (chunk, controller) => {
-        controller.enqueue(this.textDecoder.decode(chunk, { stream: true }));
-      },
+      transform: (chunk, controller) =>
+        controller.enqueue(this.textDecoder.decode(chunk, { stream: true })),
     });
     this.textDecoder = new PonyfillTextDecoder(encoding, options);
   }
@@ -35,9 +34,7 @@ export class PonyfillTextEncoderStream
   private textEncoder: TextEncoder;
   constructor(encoding?: BufferEncoding) {
     super({
-      transform: (chunk, controller) => {
-        controller.enqueue(this.textEncoder.encode(chunk));
-      },
+      transform: (chunk, controller) => controller.enqueue(this.textEncoder.encode(chunk)),
     });
     this.textEncoder = new PonyfillTextEncoder(encoding);
   }

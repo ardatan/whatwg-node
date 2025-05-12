@@ -7788,7 +7788,6 @@ mvdan-sh@^0.10.1:
 
 "nan@github:JCMais/nan#fix/electron-failures":
   version "2.22.0"
-  uid "0ec2eca8b2fd7518affb3945d087e393ad839b7e"
   resolved "https://codeload.github.com/JCMais/nan/tar.gz/0ec2eca8b2fd7518affb3945d087e393ad839b7e"
 
 nano-spawn@^1.0.0:
@@ -9986,7 +9985,6 @@ typescript@5.8.3:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.52.0:
   version "20.52.0"
-  uid cfc9a40d8132a34881813cec3d5f8e3a185b3ce3
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3"
 
 ufo@^1.5.4:

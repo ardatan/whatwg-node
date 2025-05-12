@@ -375,7 +375,7 @@ if (globalThis.Bun) {
       h: Hapi.ResponseToolkit;
     }
     let adapter: ServerAdapter<HapiContext, ServerAdapterBaseObject<{}>>;
-    const server = Hapi.server({ port: 0 });
+    const server = Hapi.server({ port: 0, compression: false });
 
     server.route({
       method: '*',
