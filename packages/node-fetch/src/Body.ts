@@ -45,20 +45,20 @@ export interface FormDataLimits {
 
 export interface PonyfillBodyOptions {
   formDataLimits?: FormDataLimits;
-  signal?: AbortSignal;
+  signal?: AbortSignal | undefined;
 }
 
 export class PonyfillBody<TJSON = any> implements Body {
   bodyUsed = false;
   contentType: string | null = null;
   contentLength: number | null = null;
-  signal?: AbortSignal | null = null;
+  _signal?: AbortSignal | null = null;
 
   constructor(
     private bodyInit: BodyPonyfillInit | null,
     private options: PonyfillBodyOptions = {},
   ) {
-    this.signal = options.signal || null;
+    this._signal = options.signal || null;
     const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(
       bodyInit,
       options?.signal,
@@ -265,8 +265,8 @@ export class PonyfillBody<TJSON = any> implements Body {
         defCharset: 'utf-8',
       });
 
-      if (this.signal) {
-        addAbortSignal(this.signal, bb);
+      if (this._signal) {
+        addAbortSignal(this._signal, bb);
       }
 
       let completed = false;
