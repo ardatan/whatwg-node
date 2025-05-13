@@ -40,6 +40,16 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         nodeHeaders['accept-encoding'] = 'gzip, deflate, br';
       }
 
+      let signal: AbortSignal | undefined;
+
+      if (fetchRequest._signal === null) {
+        signal = undefined;
+      } else if (fetchRequest._signal) {
+        signal = fetchRequest._signal;
+      } else {
+        signal = fetchRequest.signal;
+      }
+
       let nodeRequest: ReturnType<typeof requestFn>;
 
       // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
@@ -47,14 +57,14 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         nodeRequest = requestFn(fetchRequest.parsedUrl, {
           method: fetchRequest.method,
           headers: nodeHeaders,
-          signal: fetchRequest.signal,
+          signal,
           agent: fetchRequest.agent,
         });
       } else {
         nodeRequest = requestFn(fetchRequest.url, {
           method: fetchRequest.method,
           headers: nodeHeaders,
-          signal: fetchRequest.signal,
+          signal,
           agent: fetchRequest.agent,
         });
       }
@@ -110,7 +120,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           outputStream = wrapIncomingMessageWithPassthrough({
             incomingMessage: nodeResponse,
             passThrough: outputStream,
-            signal: fetchRequest.signal,
+            signal,
             onError: reject,
           });
         }
@@ -125,14 +135,14 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
-          signal: fetchRequest.signal,
+          signal,
         });
         resolve(ponyfillResponse);
       });
 
       if (fetchRequest['_buffer'] != null) {
         handleMaybePromise(
-          () => safeWrite(fetchRequest['_buffer'], nodeRequest, fetchRequest.signal),
+          () => safeWrite(fetchRequest['_buffer'], nodeRequest, signal),
           () => endStream(nodeRequest),
           reject,
         );
