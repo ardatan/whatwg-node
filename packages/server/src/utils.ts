@@ -607,5 +607,5 @@ export function ensureDisposableStackRegisteredForTerminateEvents(
 }
 
 export function isArray<T>(value: any): value is T[] {
-  return value?.length && value?.map && value?.slice && value?.splice;
+  return value?.length != null && value?.map && value?.slice && value?.splice;
 }

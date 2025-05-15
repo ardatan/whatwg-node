@@ -11,6 +11,11 @@ export function getHeadersObj(headers: Headers): Record<string, string> {
   if (headers == null || !isHeadersInstance(headers)) {
     return headers as any;
   }
+  // @ts-expect-error - `headersInit` is not a public property
+  if (headers.headersInit && !headers._map && !isHeadersInstance(headers.headersInit)) {
+    // @ts-expect-error - `headersInit` is not a public property
+    return headers.headersInit;
+  }
   return Object.fromEntries(headers.entries());
 }
 
@@ -87,5 +92,5 @@ export function safeWrite(chunk: any, stream: Writable, signal?: AbortSignal | u
 }
 
 export function isArray<T>(value: any): value is T[] {
-  return value?.length && value?.map && value?.slice && value?.splice;
+  return value?.length != null && value?.map && value?.slice && value?.splice;
 }
