@@ -150,6 +150,18 @@ export class PonyfillHeaders implements Headers {
       this._setCookies = [value];
       return;
     }
+    if (this._map) {
+      this._map.set(key, value);
+      return;
+    }
+    if (
+      this.headersInit != null &&
+      !isHeadersLike(this.headersInit) &&
+      !Array.isArray(this.headersInit)
+    ) {
+      this.headersInit[key] = value;
+      return;
+    }
     this.getMap().set(key, value);
   }
 
