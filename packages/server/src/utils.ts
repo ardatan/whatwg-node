@@ -279,24 +279,30 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
-  serverResponse.statusCode = fetchResponse.status;
-  serverResponse.statusMessage = fetchResponse.statusText;
+  // @ts-expect-error - headersInit is a private property
+  if (fetchResponse.headers?.headersInit && !fetchResponse.headers?._map) {
+    // @ts-expect-error - headersInit is a private property
+    serverResponse.writeHead(fetchResponse.status, fetchResponse.headers.headersInit);
+  } else {
+    serverResponse.statusCode = fetchResponse.status;
+    serverResponse.statusMessage = fetchResponse.statusText;
 
-  let setCookiesSet = false;
-  fetchResponse.headers.forEach((value, key) => {
-    if (key === 'set-cookie') {
-      if (setCookiesSet) {
-        return;
+    let setCookiesSet = false;
+    fetchResponse.headers.forEach((value, key) => {
+      if (key === 'set-cookie') {
+        if (setCookiesSet) {
+          return;
+        }
+        setCookiesSet = true;
+        const setCookies = fetchResponse.headers.getSetCookie?.();
+        if (setCookies) {
+          serverResponse.setHeader('set-cookie', setCookies);
+          return;
+        }
       }
-      setCookiesSet = true;
-      const setCookies = fetchResponse.headers.getSetCookie?.();
-      if (setCookies) {
-        serverResponse.setHeader('set-cookie', setCookies);
-        return;
-      }
-    }
-    serverResponse.setHeader(key, value);
-  });
+      serverResponse.setHeader(key, value);
+    });
+  }
 
   // @ts-expect-error - Handle the case where the response is a string
   if (fetchResponse['bodyType'] === 'String') {
