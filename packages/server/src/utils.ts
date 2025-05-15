@@ -281,35 +281,35 @@ export function sendNodeResponse(
   }
   // @ts-expect-error - headersInit is a private property
   if (fetchResponse.headers?.headersInit && !fetchResponse.headers?._map) {
-    // @ts-expect-error - headersInit is a private property
     serverResponse.writeHead(
       fetchResponse.status,
       fetchResponse.statusText,
+      // @ts-expect-error - headersInit is a private property
       fetchResponse.headers.headersInit,
     );
-    // @ts-expect-error - setHeaders exist
-  } else if (serverResponse.setHeaders) {
-    // @ts-expect-error - setHeaders exist
-    serverResponse.setHeaders(fetchResponse.headers);
   } else {
-    serverResponse.statusCode = fetchResponse.status;
-    serverResponse.statusMessage = fetchResponse.statusText;
-
-    let setCookiesSet = false;
-    fetchResponse.headers.forEach((value, key) => {
-      if (key === 'set-cookie') {
-        if (setCookiesSet) {
-          return;
+    // @ts-expect-error - setHeaders exist
+    if (serverResponse.setHeaders) {
+      // @ts-expect-error - setHeaders exist
+      serverResponse.setHeaders(fetchResponse.headers);
+    } else {
+      let setCookiesSet = false;
+      fetchResponse.headers.forEach((value, key) => {
+        if (key === 'set-cookie') {
+          if (setCookiesSet) {
+            return;
+          }
+          setCookiesSet = true;
+          const setCookies = fetchResponse.headers.getSetCookie?.();
+          if (setCookies) {
+            serverResponse.setHeader('set-cookie', setCookies);
+            return;
+          }
         }
-        setCookiesSet = true;
-        const setCookies = fetchResponse.headers.getSetCookie?.();
-        if (setCookies) {
-          serverResponse.setHeader('set-cookie', setCookies);
-          return;
-        }
-      }
-      serverResponse.setHeader(key, value);
-    });
+        serverResponse.setHeader(key, value);
+      });
+    }
+    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
   }
 
   // @ts-expect-error - Handle the case where the response is a string
