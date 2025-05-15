@@ -279,8 +279,16 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
-  // @ts-expect-error - headersInit is a private property
-  if (fetchResponse.headers?.headersInit && !fetchResponse.headers?._map) {
+  if (
+    // @ts-expect-error - headersInit is a private property
+    fetchResponse.headers?.headersInit &&
+    // @ts-expect-error - headersInit is a private property
+    !Array.isArray(fetchResponse.headers.headersInit) &&
+    // @ts-expect-error - headersInit is a private property
+    !fetchResponse.headers.headersInit.get &&
+    // @ts-expect-error - map is a private property
+    !fetchResponse.headers._map
+  ) {
     serverResponse.writeHead(
       fetchResponse.status,
       fetchResponse.statusText,
