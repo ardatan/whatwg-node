@@ -92,5 +92,5 @@ export function safeWrite(chunk: any, stream: Writable, signal?: AbortSignal | u
 }
 
 export function isArray<T>(value: any): value is T[] {
-  return value?.length != null && value?.map && value?.slice && value?.splice;
+  return value?.splice;
 }
