@@ -154,13 +154,20 @@ export class PonyfillHeaders implements Headers {
       this._map.set(key, value);
       return;
     }
-    if (
-      this.headersInit != null &&
-      !isHeadersLike(this.headersInit) &&
-      !Array.isArray(this.headersInit)
-    ) {
-      this.headersInit[key] = value;
-      return;
+    if (this.headersInit != null) {
+      if (Array.isArray(this.headersInit)) {
+        const found = this.headersInit.find(([headerKey]) => headerKey.toLowerCase() === key);
+        if (found) {
+          found[1] = value;
+          return;
+        }
+      } else if (isHeadersLike(this.headersInit)) {
+        this.headersInit.set(key, value);
+        return;
+      } else {
+        this.headersInit[key] = value;
+        return;
+      }
     }
     this.getMap().set(key, value);
   }
