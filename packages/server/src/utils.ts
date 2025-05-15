@@ -282,7 +282,15 @@ export function sendNodeResponse(
   // @ts-expect-error - headersInit is a private property
   if (fetchResponse.headers?.headersInit && !fetchResponse.headers?._map) {
     // @ts-expect-error - headersInit is a private property
-    serverResponse.writeHead(fetchResponse.status, fetchResponse.headers.headersInit);
+    serverResponse.writeHead(
+      fetchResponse.status,
+      fetchResponse.statusText,
+      fetchResponse.headers.headersInit,
+    );
+    // @ts-expect-error - setHeaders exist
+  } else if (serverResponse.setHeaders) {
+    // @ts-expect-error - setHeaders exist
+    serverResponse.setHeaders(fetchResponse.headers);
   } else {
     serverResponse.statusCode = fetchResponse.status;
     serverResponse.statusMessage = fetchResponse.statusText;
