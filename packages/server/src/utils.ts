@@ -287,7 +287,9 @@ export function sendNodeResponse(
     // @ts-expect-error - headersInit is a private property
     !fetchResponse.headers.headersInit.get &&
     // @ts-expect-error - map is a private property
-    !fetchResponse.headers._map
+    !fetchResponse.headers._map &&
+    // @ts-expect-error - _setCookies is a private property
+    !fetchResponse.headers._setCookies?.length
   ) {
     serverResponse.writeHead(
       fetchResponse.status,
