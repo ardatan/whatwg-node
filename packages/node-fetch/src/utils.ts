@@ -85,3 +85,7 @@ export function safeWrite(chunk: any, stream: Writable, signal?: AbortSignal | u
     }) as unknown as Promise<any>;
   }
 }
+
+export function isArray<T>(value: any): value is T[] {
+  return value?.length && value?.map && value?.slice && value?.splice;
+}
