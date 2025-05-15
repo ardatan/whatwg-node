@@ -151,11 +151,7 @@ export class PonyfillHeaders implements Headers {
       this._setCookies = [value];
       return;
     }
-    if (this._map) {
-      this._map.set(key, value);
-      return;
-    }
-    if (this.headersInit != null) {
+    if (!this._map && this.headersInit != null) {
       if (isArray(this.headersInit)) {
         const found = this.headersInit.find(([headerKey]) => headerKey.toLowerCase() === key);
         if (found) {
