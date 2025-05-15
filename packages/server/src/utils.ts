@@ -298,6 +298,15 @@ export function sendNodeResponse(
     serverResponse.setHeader(key, value);
   });
 
+  // @ts-expect-error - Handle the case where the response is a string
+  if (fetchResponse['bodyType'] === 'String') {
+    return handleMaybePromise(
+      // @ts-expect-error - bodyInit is a private property
+      () => safeWrite(fetchResponse.bodyInit, serverResponse),
+      () => endResponse(serverResponse),
+    );
+  }
+
   // Optimizations for node-fetch
   const bufOfRes: Buffer =
     // @ts-expect-error - _buffer is a private property

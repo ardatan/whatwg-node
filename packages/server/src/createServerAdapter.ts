@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -296,24 +296,20 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    return handleMaybePromise(
-      () =>
-        handleMaybePromise(
-          () =>
-            handleNodeRequestAndResponse(
-              nodeRequest,
-              nodeResponse,
-              defaultServerContext as any,
-              ...ctx,
-            ),
-          response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
-        ),
-      response =>
-        handleMaybePromise(
-          () => sendNodeResponse(response, nodeResponse, nodeRequest),
-          r => r,
-          err => console.error(`Unexpected error while handling request: ${err.message || err}`),
+    return unfakePromise(
+      fakePromise()
+        .then(() =>
+          handleNodeRequestAndResponse(
+            nodeRequest,
+            nodeResponse,
+            defaultServerContext as any,
+            ...ctx,
+          ),
+        )
+        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
+        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest))
+        .catch(err =>
+          console.error(`Unexpected error while handling request: ${err.message || err}`),
         ),
     );
   }
