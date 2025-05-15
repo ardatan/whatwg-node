@@ -1,6 +1,7 @@
 import { STATUS_CODES } from 'node:http';
 import { BodyPonyfillInit, PonyfillBody, PonyfillBodyOptions } from './Body.js';
 import { isHeadersLike, PonyfillHeaders, PonyfillHeadersInit } from './Headers.js';
+import { isArray } from './utils.js';
 
 export type ResponsePonyfilInit = PonyfillBodyOptions &
   Omit<ResponseInit, 'headers'> & {
@@ -79,7 +80,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
       if (!init.headers.has('content-type')) {
         init.headers.set('content-type', JSON_CONTENT_TYPE);
       }
-    } else if (Array.isArray(init.headers)) {
+    } else if (isArray(init.headers)) {
       if (!init.headers.some(([key]) => key.toLowerCase() === 'content-type')) {
         init.headers.push(['content-type', JSON_CONTENT_TYPE]);
       }
