@@ -159,8 +159,10 @@ export class PonyfillHeaders implements Headers {
         const found = this.headersInit.find(([headerKey]) => headerKey.toLowerCase() === key);
         if (found) {
           found[1] = value;
-          return;
+        } else {
+          this.headersInit.push([key, value]);
         }
+        return;
       } else if (isHeadersLike(this.headersInit)) {
         this.headersInit.set(key, value);
         return;
