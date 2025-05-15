@@ -64,13 +64,29 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
     });
   }
 
-  static json<T = any>(data: T, init: ResponsePonyfilInit = {}) {
-    init.headers =
-      init?.headers && isHeadersLike(init.headers)
-        ? init.headers
-        : new PonyfillHeaders(init?.headers);
-    if (!init.headers.has('content-type')) {
-      init.headers.set('content-type', JSON_CONTENT_TYPE);
+  static json<T = any>(data: T, init?: ResponsePonyfilInit) {
+    if (!init) {
+      init = {
+        headers: {
+          'content-type': JSON_CONTENT_TYPE,
+        },
+      };
+    } else if (!init.headers) {
+      init.headers = {
+        'content-type': JSON_CONTENT_TYPE,
+      };
+    } else if (isHeadersLike(init.headers)) {
+      if (!init.headers.has('content-type')) {
+        init.headers.set('content-type', JSON_CONTENT_TYPE);
+      }
+    } else if (Array.isArray(init.headers)) {
+      if (!init.headers.some(([key]) => key.toLowerCase() === 'content-type')) {
+        init.headers.push(['content-type', JSON_CONTENT_TYPE]);
+      }
+    } else if (typeof init.headers === 'object') {
+      if (init.headers?.['content-type'] == null) {
+        init.headers['content-type'] = JSON_CONTENT_TYPE;
+      }
     }
     return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
