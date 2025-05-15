@@ -71,7 +71,7 @@ export class PonyfillHeaders implements Headers {
   // I could do a getter here, but I'm too lazy to type `getter`.
   private getMap() {
     if (!this._map) {
-      this._setCookies = [];
+      this._setCookies ||= [];
       if (this.headersInit != null) {
         if (isArray(this.headersInit)) {
           this._map = new Map();
@@ -139,7 +139,8 @@ export class PonyfillHeaders implements Headers {
   }
 
   has(name: string): boolean {
-    if (name === 'set-cookie') {
+    const key = name.toLowerCase();
+    if (key === 'set-cookie') {
       return !!this._setCookies?.length;
     }
     return !!this._get(name); // we might need to check if header exists and not just check if it's not nullable
