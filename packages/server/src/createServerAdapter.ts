@@ -103,12 +103,14 @@ function createServerAdapter<
 ): ServerAdapter<TServerContext, TBaseObject> {
   const useSingleWriteHead =
     options?.__useSingleWriteHead == null ? true : options.__useSingleWriteHead;
-  const useCustomAbortCtrl =
-    options?.__useCustomAbortCtrl == null ? true : options.__useCustomAbortCtrl;
   const fetchAPI = {
     ...DefaultFetchAPI,
     ...options?.fetchAPI,
   };
+  const useCustomAbortCtrl =
+    options?.__useCustomAbortCtrl == null
+      ? fetchAPI.Request !== globalThis.Request
+      : options.__useCustomAbortCtrl;
   const givenHandleRequest =
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
