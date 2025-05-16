@@ -116,14 +116,9 @@ export function normalizeNodeRequest(
       }
     }
   }
-  let controller: AbortController;
-  if (__useCustomAbortCtrl) {
-    controller = new CustomAbortControllerSignal();
-  } else if (fetchAPI.Request === globalThis.Request) {
-    controller = new AbortController();
-  } else {
-    controller = new CustomAbortControllerSignal();
-  }
+  const controller = __useCustomAbortCtrl
+    ? new CustomAbortControllerSignal()
+    : new AbortController();
   if (nodeResponse?.once) {
     const closeEventListener: EventListener = () => {
       if (!controller.signal.aborted) {
