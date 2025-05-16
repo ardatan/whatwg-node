@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/server",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "type": "module",
   "description": "Fetch API compliant HTTP Server adapter",
   "repository": {

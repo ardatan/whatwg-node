@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.10.7
+
+### Patch Changes
+
+- [#2431](https://github.com/ardatan/whatwg-node/pull/2431)
+  [`085186b`](https://github.com/ardatan/whatwg-node/commit/085186b220ba118a276ace42c4ceaabd25a08737)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Fix explicit resource management for Deno
+
 ## 0.10.6
 
 ### Patch Changes

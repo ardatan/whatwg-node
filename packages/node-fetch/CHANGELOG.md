@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.7.20
+
+### Patch Changes
+
+- [#2414](https://github.com/ardatan/whatwg-node/pull/2414)
+  [`1f0b643`](https://github.com/ardatan/whatwg-node/commit/1f0b64388d64d70c3514771eafaf3fe74e1a2abb)
+  Thanks [@ardatan](https://github.com/ardatan)! - Improvements for Node 24 and use `once` from
+  `node:events` for Promise-based event handling whenever possible
+
 ## 0.7.19
 
 ### Patch Changes
