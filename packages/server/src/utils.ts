@@ -115,7 +115,10 @@ export function normalizeNodeRequest(
       }
     }
   }
-  const controller = new AbortController();
+  const controller =
+    fetchAPI.Request === globalThis.Request
+      ? new AbortController()
+      : new CustomAbortControllerSignal();
   if (nodeResponse?.once) {
     const closeEventListener: EventListener = () => {
       if (!controller.signal.aborted) {
@@ -610,4 +613,43 @@ export function ensureDisposableStackRegisteredForTerminateEvents(
 
 export function isArray<T>(value: any): value is T[] {
   return value?.length != null && value?.map && value?.slice && value?.splice;
+}
+
+export class CustomAbortControllerSignal
+  extends EventTarget
+  implements AbortSignal, AbortController
+{
+  aborted = false;
+  private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
+  reason: any;
+
+  throwIfAborted(): void {
+    if (this.aborted) {
+      throw this.reason;
+    }
+  }
+
+  abort(reason: any = new DOMException('This operation was aborted', 'AbortError')) {
+    this.reason = reason;
+    this.aborted = true;
+    this.dispatchEvent(new Event('abort'));
+  }
+
+  get signal(): AbortSignal {
+    return this;
+  }
+
+  get onabort() {
+    return this._onabort;
+  }
+
+  set onabort(value) {
+    if (this._onabort) {
+      this.removeEventListener('abort', this._onabort);
+    }
+    this._onabort = value;
+    if (value) {
+      this.addEventListener('abort', value);
+    }
+  }
 }
