@@ -500,8 +500,8 @@ function createServerAdapter<
       );
     },
     get: (_, prop) => {
-      // Workaround for Deno
-      if (globalThis.Deno) {
+      // Somehow Deno and Node 24 don't like bound dispose functions
+      if (globalThis.Deno || prop === Symbol.asyncDispose || prop === Symbol.dispose) {
         const adapterProp = Reflect.get(adapterObj, prop, adapterObj);
         if (adapterProp) {
           return adapterProp;
