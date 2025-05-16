@@ -4,10 +4,8 @@
 '@whatwg-node/node-fetch': patch
 ---
 
-Performance optimizations for Node 24
+Performance optimizations
 
-- Use `once` from `node:events` for Promise-based event handling whenever
-possible
 - Avoid creating `AbortController` and `AbortSignal` if not needed with `new Request` because it is expensive
 - Avoid creating a map for `Headers` and try to re-use the init object for `Headers` for performance with a single-line `writeHead`.
 - Avoid creating `Buffer` for `string` bodies for performance
