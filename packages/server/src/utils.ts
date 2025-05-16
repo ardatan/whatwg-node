@@ -288,7 +288,7 @@ export function sendNodeResponse(
     // @ts-expect-error - headersInit is a private property
     fetchResponse.headers?.headersInit &&
     // @ts-expect-error - headersInit is a private property
-    !isArray(fetchResponse.headers.headersInit) &&
+    !Array.isArray(fetchResponse.headers.headersInit) &&
     // @ts-expect-error - headersInit is a private property
     !fetchResponse.headers.headersInit.get &&
     // @ts-expect-error - map is a private property
@@ -611,10 +611,6 @@ export function ensureDisposableStackRegisteredForTerminateEvents(
       });
     }
   }
-}
-
-export function isArray<T>(value: any): value is T[] {
-  return value?.length != null && value?.map && value?.slice && value?.splice;
 }
 
 export class CustomAbortControllerSignal

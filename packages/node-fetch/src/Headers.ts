@@ -1,6 +1,5 @@
 import { inspect } from 'node:util';
 import { PonyfillIteratorObject } from './IteratorObject.js';
-import { isArray } from './utils.js';
 
 export type PonyfillHeadersInit = [string, string][] | Record<string, string> | Headers;
 
@@ -32,7 +31,7 @@ export class PonyfillHeaders implements Headers {
       return null;
     }
 
-    if (isArray(this.headersInit)) {
+    if (Array.isArray(this.headersInit)) {
       const found = this.headersInit.filter(
         ([headerKey]) => headerKey.toLowerCase() === normalized,
       );
@@ -73,7 +72,7 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       this._setCookies ||= [];
       if (this.headersInit != null) {
-        if (isArray(this.headersInit)) {
+        if (Array.isArray(this.headersInit)) {
           this._map = new Map();
           for (const [key, value] of this.headersInit) {
             const normalizedKey = key.toLowerCase();
@@ -153,7 +152,7 @@ export class PonyfillHeaders implements Headers {
       return;
     }
     if (!this._map && this.headersInit != null) {
-      if (isArray(this.headersInit)) {
+      if (Array.isArray(this.headersInit)) {
         const found = this.headersInit.find(([headerKey]) => headerKey.toLowerCase() === key);
         if (found) {
           found[1] = value;
@@ -187,7 +186,7 @@ export class PonyfillHeaders implements Headers {
     });
     if (!this._map) {
       if (this.headersInit) {
-        if (isArray(this.headersInit)) {
+        if (Array.isArray(this.headersInit)) {
           this.headersInit.forEach(([key, value]) => {
             callback(value, key, this);
           });
@@ -216,7 +215,7 @@ export class PonyfillHeaders implements Headers {
     }
     if (!this._map) {
       if (this.headersInit) {
-        if (isArray(this.headersInit)) {
+        if (Array.isArray(this.headersInit)) {
           yield* this.headersInit.map(([key]) => key)[Symbol.iterator]();
           return;
         }
@@ -241,7 +240,7 @@ export class PonyfillHeaders implements Headers {
     }
     if (!this._map) {
       if (this.headersInit) {
-        if (isArray(this.headersInit)) {
+        if (Array.isArray(this.headersInit)) {
           yield* this.headersInit.map(([, value]) => value)[Symbol.iterator]();
           return;
         }
@@ -266,7 +265,7 @@ export class PonyfillHeaders implements Headers {
     }
     if (!this._map) {
       if (this.headersInit) {
-        if (isArray(this.headersInit)) {
+        if (Array.isArray(this.headersInit)) {
           yield* this.headersInit;
           return;
         }
