@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.10.8
+
+### Patch Changes
+
+- [`8eb332c`](https://github.com/ardatan/whatwg-node/commit/8eb332c83447f02cb78e65c2568cd79fd03621d0)
+  Thanks [@ardatan](https://github.com/ardatan)! - Workaround for the bug in Node 24 and Deno don't
+  like bound disposal functions
+
 ## 0.10.7
 
 ### Patch Changes
