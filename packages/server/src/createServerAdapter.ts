@@ -491,6 +491,7 @@ function createServerAdapter<
 
   const serverAdapter = new Proxy(genericRequestHandler, {
     // It should have all the attributes of the handler function and the server instance
+
     has: (_, prop) => {
       return (
         prop in adapterObj ||
@@ -499,6 +500,13 @@ function createServerAdapter<
       );
     },
     get: (_, prop) => {
+      // Workaround for Deno
+      if (globalThis.Deno) {
+        const adapterProp = Reflect.get(adapterObj, prop, adapterObj);
+        if (adapterProp) {
+          return adapterProp;
+        }
+      }
       const adapterProp = (adapterObj as any)[prop];
       if (adapterProp) {
         if (adapterProp.bind) {
