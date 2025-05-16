@@ -108,8 +108,6 @@ jobs:
     steps:
       - name: Checkout Master
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
@@ -128,8 +126,6 @@ jobs:
     steps:
       - name: Checkout Master
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
       - name: Setup env
         uses: the-guild-org/shared-config/setup@main
         with:
@@ -193,9 +189,6 @@ jobs:
         uses: actions/setup-node@master
         with:
           node-version: 24
-
-      - name: Install Required Libraries
-        run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
 
       - name: Cache Node Modules
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4

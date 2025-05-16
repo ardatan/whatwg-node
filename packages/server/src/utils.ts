@@ -183,42 +183,6 @@ export function normalizeNodeRequest(
     });
   }
 
-  // Workaround for Bun
-  if (globalThis.Bun && fetchAPI.Request === globalThis.Request && isAsyncIterable(rawRequest)) {
-    let iterator: AsyncIterator<Uint8Array>;
-    return new fetchAPI.Request(fullUrl, {
-      method: nodeRequest.method,
-      headers: normalizedHeaders,
-      signal: controller.signal,
-      body: new ReadableStream({
-        start() {
-          iterator ||= rawRequest[Symbol.asyncIterator]();
-        },
-        pull(controller) {
-          iterator ||= rawRequest[Symbol.asyncIterator]();
-          return iterator
-            .next()
-            .then(({ done, value }) => {
-              if (done) {
-                controller.close();
-                return;
-              }
-              controller.enqueue(value);
-            })
-            .catch(err => {
-              controller.error(err);
-            });
-        },
-        cancel(reason) {
-          iterator ||= rawRequest[Symbol.asyncIterator]();
-          return iterator.return?.(reason) as Promise<any>;
-        },
-      }),
-      // @ts-expect-error - AsyncIterable is supported as body
-      duplex: 'half',
-    });
-  }
-
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
