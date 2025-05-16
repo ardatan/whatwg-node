@@ -1,5 +1,4 @@
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
-import { isArray } from '../utils.js';
 import type { ServerAdapterPlugin } from './types.js';
 
 export type CORSOptions =
@@ -47,7 +46,7 @@ export function getCORSHeadersByRequestAndOptions(
   } else if (typeof corsOptions.origin === 'string') {
     // If there is one specific origin is specified, use it directly
     headers['Access-Control-Allow-Origin'] = corsOptions.origin;
-  } else if (isArray(corsOptions.origin)) {
+  } else if (Array.isArray(corsOptions.origin)) {
     // If there is only one origin defined in the array, consider it as a single one
     if (corsOptions.origin.length === 1) {
       headers['Access-Control-Allow-Origin'] = corsOptions.origin[0];
