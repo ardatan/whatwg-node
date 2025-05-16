@@ -282,48 +282,29 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
-  if (
-    // @ts-expect-error - headersInit is a private property
-    fetchResponse.headers?.headersInit &&
-    // @ts-expect-error - headersInit is a private property
-    !isArray(fetchResponse.headers.headersInit) &&
-    // @ts-expect-error - headersInit is a private property
-    !fetchResponse.headers.headersInit.get &&
-    // @ts-expect-error - map is a private property
-    !fetchResponse.headers._map &&
-    // @ts-expect-error - _setCookies is a private property
-    !fetchResponse.headers._setCookies?.length
-  ) {
-    serverResponse.writeHead(
-      fetchResponse.status,
-      fetchResponse.statusText,
-      // @ts-expect-error - headersInit is a private property
-      fetchResponse.headers.headersInit,
-    );
-  } else {
+
+  // @ts-expect-error - setHeaders exist
+  if (serverResponse.setHeaders) {
     // @ts-expect-error - setHeaders exist
-    if (serverResponse.setHeaders) {
-      // @ts-expect-error - setHeaders exist
-      serverResponse.setHeaders(fetchResponse.headers);
-    } else {
-      let setCookiesSet = false;
-      fetchResponse.headers.forEach((value, key) => {
-        if (key === 'set-cookie') {
-          if (setCookiesSet) {
-            return;
-          }
-          setCookiesSet = true;
-          const setCookies = fetchResponse.headers.getSetCookie?.();
-          if (setCookies) {
-            serverResponse.setHeader('set-cookie', setCookies);
-            return;
-          }
+    serverResponse.setHeaders(fetchResponse.headers);
+  } else {
+    let setCookiesSet = false;
+    fetchResponse.headers.forEach((value, key) => {
+      if (key === 'set-cookie') {
+        if (setCookiesSet) {
+          return;
         }
-        serverResponse.setHeader(key, value);
-      });
-    }
-    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
+        setCookiesSet = true;
+        const setCookies = fetchResponse.headers.getSetCookie?.();
+        if (setCookies) {
+          serverResponse.setHeader('set-cookie', setCookies);
+          return;
+        }
+      }
+      serverResponse.setHeader(key, value);
+    });
   }
+  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
 
   // @ts-expect-error - Handle the case where the response is a string
   if (fetchResponse['bodyType'] === 'String') {

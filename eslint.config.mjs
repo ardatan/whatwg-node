@@ -90,8 +90,8 @@ export default [
           devDependencies: [
             '**/*.test.ts',
             '**/*.spec.ts',
-            'vitest.config.ts',
-            'vitest.projects.ts',
+            '**/vitest.config.ts',
+            '**/vitest.projects.ts',
           ],
         },
       ],
