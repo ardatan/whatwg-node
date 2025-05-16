@@ -35,15 +35,30 @@ describe('Simple JSON Response', () => {
     benchConfig,
   );
 
-  const whatwgNodeServer = (
+  const whatwgNodeServerWithPonyfills = (
     createServer(createServerAdapter(() => Response.json({ hello: 'world' })))
       .listen(0)
       .address() as AddressInfo
   ).port;
 
   bench(
-    '@whatwg-node/server',
-    () => fetch(`http://localhost:${whatwgNodeServer}`).then(res => res.json()),
+    '@whatwg-node/server w/ ponyfills',
+    () => fetch(`http://localhost:${whatwgNodeServerWithPonyfills}`).then(res => res.json()),
+    benchConfig,
+  );
+
+  const whatwgNodeWithNative = (
+    createServer(
+      createServerAdapter(() => globalThis.Response.json({ hello: 'world ' }), {
+        fetchAPI: globalThis,
+      }),
+    )
+      .listen(0)
+      .address() as AddressInfo
+  ).port;
+  bench(
+    '@whatwg-node/server w/ native',
+    () => fetch(`http://localhost:${whatwgNodeWithNative}`).then(res => res.json()),
     benchConfig,
   );
 });
