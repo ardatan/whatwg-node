@@ -115,10 +115,7 @@ export function normalizeNodeRequest(
       }
     }
   }
-  const controller =
-    fetchAPI.Request === globalThis.Request
-      ? new AbortController()
-      : new CustomAbortControllerSignal();
+  const controller = new AbortController();
   if (nodeResponse?.once) {
     const closeEventListener: EventListener = () => {
       if (!controller.signal.aborted) {
