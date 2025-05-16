@@ -66,6 +66,10 @@ export interface ServerAdapterOptions<TServerContext> {
    * or [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
    */
   disposeOnProcessTerminate?: boolean;
+
+  // Internal flags for testing
+  __useCustomAbortCtrl?: boolean;
+  __useSingleWriteHead?: boolean;
 }
 
 const EMPTY_OBJECT = {};
@@ -97,6 +101,10 @@ function createServerAdapter<
   serverAdapterBaseObject: TBaseObject | THandleRequest,
   options?: ServerAdapterOptions<TServerContext>,
 ): ServerAdapter<TServerContext, TBaseObject> {
+  const useSingleWriteHead =
+    options?.__useSingleWriteHead == null ? true : options.__useSingleWriteHead;
+  const useCustomAbortCtrl =
+    options?.__useCustomAbortCtrl == null ? true : options.__useCustomAbortCtrl;
   const fetchAPI = {
     ...DefaultFetchAPI,
     ...options?.fetchAPI,
@@ -267,7 +275,7 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, undefined, useCustomAbortCtrl);
     return handleRequest(request, serverContext);
   }
 
@@ -283,7 +291,7 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
     return handleRequest(request, serverContext);
   }
 
@@ -308,7 +316,7 @@ function createServerAdapter<
           ),
         )
         .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest))
+        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
         .catch(err =>
           console.error(`Unexpected error while handling request: ${err.message || err}`),
         ),

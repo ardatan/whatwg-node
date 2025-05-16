@@ -95,6 +95,7 @@ export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   fetchAPI: FetchAPI,
   nodeResponse?: NodeResponse,
+  __useCustomAbortCtrl?: boolean,
 ): Request {
   const rawRequest = nodeRequest.raw || nodeRequest.req || nodeRequest;
   let fullUrl = buildFullUrl(rawRequest);
@@ -115,7 +116,14 @@ export function normalizeNodeRequest(
       }
     }
   }
-  const controller = new AbortController();
+  let controller: AbortController;
+  if (__useCustomAbortCtrl) {
+    controller = new CustomAbortControllerSignal();
+  } else if (fetchAPI.Request === globalThis.Request) {
+    controller = new AbortController();
+  } else {
+    controller = new CustomAbortControllerSignal();
+  }
   if (nodeResponse?.once) {
     const closeEventListener: EventListener = () => {
       if (!controller.signal.aborted) {
@@ -270,6 +278,7 @@ export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
   nodeRequest: NodeRequest,
+  __useSingleWriteHead: boolean,
 ) {
   if (serverResponse.closed || serverResponse.destroyed || serverResponse.writableEnded) {
     return;
@@ -279,29 +288,49 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
-
-  // @ts-expect-error - setHeaders exist
-  if (serverResponse.setHeaders) {
-    // @ts-expect-error - setHeaders exist
-    serverResponse.setHeaders(fetchResponse.headers);
+  if (
+    __useSingleWriteHead &&
+    // @ts-expect-error - headersInit is a private property
+    fetchResponse.headers?.headersInit &&
+    // @ts-expect-error - headersInit is a private property
+    !isArray(fetchResponse.headers.headersInit) &&
+    // @ts-expect-error - headersInit is a private property
+    !fetchResponse.headers.headersInit.get &&
+    // @ts-expect-error - map is a private property
+    !fetchResponse.headers._map &&
+    // @ts-expect-error - _setCookies is a private property
+    !fetchResponse.headers._setCookies?.length
+  ) {
+    serverResponse.writeHead(
+      fetchResponse.status,
+      fetchResponse.statusText,
+      // @ts-expect-error - headersInit is a private property
+      fetchResponse.headers.headersInit,
+    );
   } else {
-    let setCookiesSet = false;
-    fetchResponse.headers.forEach((value, key) => {
-      if (key === 'set-cookie') {
-        if (setCookiesSet) {
-          return;
+    // @ts-expect-error - setHeaders exist
+    if (serverResponse.setHeaders) {
+      // @ts-expect-error - setHeaders exist
+      serverResponse.setHeaders(fetchResponse.headers);
+    } else {
+      let setCookiesSet = false;
+      fetchResponse.headers.forEach((value, key) => {
+        if (key === 'set-cookie') {
+          if (setCookiesSet) {
+            return;
+          }
+          setCookiesSet = true;
+          const setCookies = fetchResponse.headers.getSetCookie?.();
+          if (setCookies) {
+            serverResponse.setHeader('set-cookie', setCookies);
+            return;
+          }
         }
-        setCookiesSet = true;
-        const setCookies = fetchResponse.headers.getSetCookie?.();
-        if (setCookies) {
-          serverResponse.setHeader('set-cookie', setCookies);
-          return;
-        }
-      }
-      serverResponse.setHeader(key, value);
-    });
+        serverResponse.setHeader(key, value);
+      });
+    }
+    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
   }
-  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
 
   // @ts-expect-error - Handle the case where the response is a string
   if (fetchResponse['bodyType'] === 'String') {
