@@ -14,7 +14,7 @@
     "e2e",
     "examples",
     "**/dist",
-    "./vitest.config.ts",
-    "./vitest.projects.ts"
+    "vitest.config.ts",
+    "vitest.projects.ts"
   ]
 }
