@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.10.9
+
+### Patch Changes
+
+- [`1642a76`](https://github.com/ardatan/whatwg-node/commit/1642a768e16444c1fe026e7d43f55ad045d66459)
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove unnecessary workaround for Bun
+
 ## 0.10.8
 
 ### Patch Changes
