@@ -13,6 +13,8 @@
     "packages/testing",
     "e2e",
     "examples",
-    "**/dist"
+    "**/dist",
+    "vitest.config.ts",
+    "vitest.projects.ts"
   ]
 }

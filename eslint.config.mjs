@@ -87,7 +87,12 @@ export default [
       'import/no-extraneous-dependencies': [
         'error',
         {
-          devDependencies: ['**/*.test.ts', '**/*.spec.ts'],
+          devDependencies: [
+            '**/*.test.ts',
+            '**/*.spec.ts',
+            '**/vitest.config.ts',
+            '**/vitest.projects.ts',
+          ],
         },
       ],
     },
