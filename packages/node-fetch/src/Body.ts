@@ -199,13 +199,6 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this._blob) {
       return fakePromise(this._blob);
     }
-    if (this.bodyType === BodyInitType.String) {
-      this._text = this.bodyInit as string;
-      this._blob = new PonyfillBlob([this._text], {
-        type: this.contentType || 'text/plain;charset=UTF-8',
-        size: this.contentLength,
-      });
-    }
     if (this.bodyType === BodyInitType.Blob) {
       this._blob = this.bodyInit as PonyfillBlob;
       return fakePromise(this._blob);
@@ -355,17 +348,6 @@ export class PonyfillBody<TJSON = any> implements Body {
   buffer(): Promise<Buffer> {
     if (this._buffer) {
       return fakePromise(this._buffer);
-    }
-    if (this._text) {
-      this._buffer = Buffer.from(this._text, 'utf-8');
-      return fakePromise(this._buffer);
-    }
-    if (this.bodyType === BodyInitType.String) {
-      return this.text().then(text => {
-        this._text = text;
-        this._buffer = Buffer.from(text, 'utf-8');
-        return this._buffer;
-      });
     }
     if (this.bodyType === BodyInitType.Blob) {
       if (hasBufferMethod(this.bodyInit)) {
