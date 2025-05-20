@@ -465,15 +465,14 @@ function processBodyInit(
     };
   }
   if (typeof bodyInit === 'string') {
-    const contentLength = Buffer.byteLength(bodyInit);
+    const buffer = Buffer.from(bodyInit, 'utf-8');
     return {
       bodyType: BodyInitType.String,
       contentType: 'text/plain;charset=UTF-8',
-      contentLength,
+      contentLength: buffer.byteLength,
+      buffer,
       bodyFactory() {
-        const readable = Readable.from(
-          Buffer.from(bodyInit, 'utf-8'), // Convert string to Buffer
-        );
+        const readable = Readable.from(buffer);
         return new PonyfillReadableStream<Uint8Array>(readable);
       },
     };

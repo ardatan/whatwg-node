@@ -65,54 +65,23 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   }
 
   static json<T = any>(data: T, init?: ResponsePonyfilInit) {
-    const bodyInit = JSON.stringify(data);
-    if (!init) {
+    if (init == null) {
+      const headers = new PonyfillHeaders();
+      headers.set('content-type', JSON_CONTENT_TYPE);
       init = {
-        headers: {
-          'content-type': JSON_CONTENT_TYPE,
-          'content-length': Buffer.byteLength(bodyInit).toString(),
-        },
+        headers: new PonyfillHeaders(),
       };
-    } else if (!init.headers) {
-      init.headers = {
-        'content-type': JSON_CONTENT_TYPE,
-        'content-length': Buffer.byteLength(bodyInit).toString(),
-      };
-    } else if (isHeadersLike(init.headers)) {
+    } else if (init.headers == null) {
+      const headers = new PonyfillHeaders();
+      headers.set('content-type', JSON_CONTENT_TYPE);
+      init.headers = headers;
+    } else {
+      init.headers = new PonyfillHeaders(init.headers);
       if (!init.headers.has('content-type')) {
         init.headers.set('content-type', JSON_CONTENT_TYPE);
       }
-      if (!init.headers.has('content-length')) {
-        init.headers.set('content-length', Buffer.byteLength(bodyInit).toString());
-      }
-    } else if (Array.isArray(init.headers)) {
-      let contentTypeExists = false;
-      let contentLengthExists = false;
-      for (const [key] of init.headers) {
-        if (contentLengthExists && contentTypeExists) {
-          break;
-        }
-        if (!contentTypeExists && key.toLowerCase() === 'content-type') {
-          contentTypeExists = true;
-        } else if (!contentLengthExists && key.toLowerCase() === 'content-length') {
-          contentLengthExists = true;
-        }
-      }
-      if (!contentTypeExists) {
-        init.headers.push(['content-type', JSON_CONTENT_TYPE]);
-      }
-      if (!contentLengthExists) {
-        init.headers.push(['content-length', Buffer.byteLength(bodyInit).toString()]);
-      }
-    } else if (typeof init.headers === 'object') {
-      if (init.headers?.['content-type'] == null) {
-        init.headers['content-type'] = JSON_CONTENT_TYPE;
-      }
-      if (init.headers?.['content-length'] == null) {
-        init.headers['content-length'] = Buffer.byteLength(bodyInit).toString();
-      }
     }
-    return new PonyfillResponse<T>(bodyInit, init);
+    return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
 
   [Symbol.toStringTag] = 'Response';

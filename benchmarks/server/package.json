@@ -1,6 +1,6 @@
 {
   "name": "@benchmarks/server",
-  "version": "0.0.56",
+  "version": "0.0.55",
   "type": "module",
   "private": true,
   "scripts": {
@@ -10,10 +10,11 @@
     "loadtest": "k6 -e GITHUB_PR=$GITHUB_PR -e GITHUB_SHA=$GITHUB_SHA -e GITHUB_TOKEN=$GITHUB_TOKEN run k6.js",
     "pretest": "npm run build",
     "start": "node dist/server.js",
-    "test": "start-server-and-test start http://127.0.0.1:4000/ping loadtest"
+    "test": "DEBUG=start-server-and-test start-server-and-test start http://127.0.0.1:4000/ping loadtest",
+    "test:ci": "npm run build && npm run start & sleep 5 && npm run loadtest"
   },
   "dependencies": {
-    "@whatwg-node/server": "0.10.9"
+    "@whatwg-node/server": "0.10.8"
   },
   "devDependencies": {
     "start-server-and-test": "2.0.12"
