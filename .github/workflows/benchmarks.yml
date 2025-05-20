@@ -41,7 +41,7 @@ jobs:
       - name: Start Benchmark
         working-directory: ./benchmarks/server
         run: |
-          yarn ci:test
+          yarn test:ci
         env:
           SCENARIO: ${{ matrix.scenario }}
           NODE_NO_WARNINGS: true
