@@ -81,10 +81,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
         init.headers.set('content-type', JSON_CONTENT_TYPE);
       }
     }
-    const stringify: typeof JSON.stringify =
-      // @ts-expect-error - we know it might have a stringify method
-      typeof data?.stringify === 'function' ? data.stringify : JSON.stringify;
-    return new PonyfillResponse<T>(stringify(data), init);
+    return new PonyfillResponse<T>(JSON.stringify(data), init);
   }
 
   [Symbol.toStringTag] = 'Response';
