@@ -69,7 +69,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
       const headers = new PonyfillHeaders();
       headers.set('content-type', JSON_CONTENT_TYPE);
       init = {
-        headers: new PonyfillHeaders(),
+        headers,
       };
     } else if (init.headers == null) {
       const headers = new PonyfillHeaders();
