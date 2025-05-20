@@ -337,10 +337,9 @@ function createServerAdapter<
         ? completeAssign(defaultServerContext, ...ctx)
         : defaultServerContext;
 
-    const controller =
-      fetchAPI.Request === globalThis.Request
-        ? new AbortController()
-        : new CustomAbortControllerSignal();
+    const controller = useCustomAbortCtrl
+      ? new CustomAbortControllerSignal()
+      : new AbortController();
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
     res.end = function (data: any) {
