@@ -35,8 +35,17 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   curlHandle.enable(CurlFeature.StreamResponse);
 
+  let signal: AbortSignal | undefined;
+  if (fetchRequest._signal === null) {
+    signal = undefined;
+  } else if (fetchRequest._signal) {
+    signal = fetchRequest._signal;
+  } else {
+    signal = fetchRequest.signal;
+  }
+
   curlHandle.setStreamProgressCallback(function () {
-    return fetchRequest.signal.aborted ? (process.env.DEBUG ? CurlProgressFunc.Continue : 1) : 0;
+    return signal?.aborted ? (process.env.DEBUG ? CurlProgressFunc.Continue : 1) : 0;
   });
 
   if (fetchRequest['bodyType'] === 'String') {
@@ -94,18 +103,15 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       }
     }
   }
-  if (fetchRequest.signal) {
-    fetchRequest.signal.addEventListener('abort', onAbort, { once: true });
-  }
+
+  signal?.addEventListener('abort', onAbort, { once: true });
   curlHandle.once('end', function endListener() {
     try {
       curlHandle.close();
     } catch (e) {
       deferredPromise.reject(e);
     }
-    if (fetchRequest.signal) {
-      fetchRequest.signal.removeEventListener('abort', onAbort);
-    }
+    signal?.removeEventListener('abort', onAbort);
   });
   curlHandle.once('error', function errorListener(error: any) {
     if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
@@ -127,7 +133,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
       const outputStream = wrapIncomingMessageWithPassthrough({
         incomingMessage: stream as IncomingMessage,
-        signal: fetchRequest.signal,
+        signal,
         onError: deferredPromise.reject,
       });
       const headersFlat = headersBuf

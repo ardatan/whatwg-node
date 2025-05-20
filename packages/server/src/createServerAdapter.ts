@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -19,6 +19,7 @@ import {
 } from './types.js';
 import {
   completeAssign,
+  CustomAbortControllerSignal,
   ensureDisposableStackRegisteredForTerminateEvents,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
@@ -65,6 +66,10 @@ export interface ServerAdapterOptions<TServerContext> {
    * or [Explicit Resource Management](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-2.html)
    */
   disposeOnProcessTerminate?: boolean;
+
+  // Internal flags for testing
+  __useCustomAbortCtrl?: boolean;
+  __useSingleWriteHead?: boolean;
 }
 
 const EMPTY_OBJECT = {};
@@ -96,10 +101,16 @@ function createServerAdapter<
   serverAdapterBaseObject: TBaseObject | THandleRequest,
   options?: ServerAdapterOptions<TServerContext>,
 ): ServerAdapter<TServerContext, TBaseObject> {
+  const useSingleWriteHead =
+    options?.__useSingleWriteHead == null ? true : options.__useSingleWriteHead;
   const fetchAPI = {
     ...DefaultFetchAPI,
     ...options?.fetchAPI,
   };
+  const useCustomAbortCtrl =
+    options?.__useCustomAbortCtrl == null
+      ? fetchAPI.Request !== globalThis.Request
+      : options.__useCustomAbortCtrl;
   const givenHandleRequest =
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
@@ -266,7 +277,7 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, undefined, useCustomAbortCtrl);
     return handleRequest(request, serverContext);
   }
 
@@ -282,7 +293,7 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse);
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
     return handleRequest(request, serverContext);
   }
 
@@ -296,24 +307,20 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    return handleMaybePromise(
-      () =>
-        handleMaybePromise(
-          () =>
-            handleNodeRequestAndResponse(
-              nodeRequest,
-              nodeResponse,
-              defaultServerContext as any,
-              ...ctx,
-            ),
-          response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
-        ),
-      response =>
-        handleMaybePromise(
-          () => sendNodeResponse(response, nodeResponse, nodeRequest),
-          r => r,
-          err => console.error(`Unexpected error while handling request: ${err.message || err}`),
+    return unfakePromise(
+      fakePromise()
+        .then(() =>
+          handleNodeRequestAndResponse(
+            nodeRequest,
+            nodeResponse,
+            defaultServerContext as any,
+            ...ctx,
+          ),
+        )
+        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
+        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
+        .catch(err =>
+          console.error(`Unexpected error while handling request: ${err.message || err}`),
         ),
     );
   }
@@ -330,7 +337,9 @@ function createServerAdapter<
         ? completeAssign(defaultServerContext, ...ctx)
         : defaultServerContext;
 
-    const controller = new AbortController();
+    const controller = useCustomAbortCtrl
+      ? new CustomAbortControllerSignal()
+      : new AbortController();
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
     res.end = function (data: any) {

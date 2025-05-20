@@ -11,6 +11,11 @@ export function getHeadersObj(headers: Headers): Record<string, string> {
   if (headers == null || !isHeadersInstance(headers)) {
     return headers as any;
   }
+  // @ts-expect-error - `headersInit` is not a public property
+  if (headers.headersInit && !headers._map && !isHeadersInstance(headers.headersInit)) {
+    // @ts-expect-error - `headersInit` is not a public property
+    return headers.headersInit;
+  }
   return Object.fromEntries(headers.entries());
 }
 

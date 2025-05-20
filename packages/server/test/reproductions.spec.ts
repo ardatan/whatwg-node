@@ -94,12 +94,23 @@ for (const largeBody of bodies) {
     app.use(compression());
 
     const echoAdapter = createServerAdapter(req =>
-      req.json().then(body =>
-        Response.json({
-          body,
-          url: req.url,
-        }),
-      ),
+      req
+        .json()
+        .then(body =>
+          Response.json({
+            body,
+            url: req.url,
+          }),
+        )
+        .catch(error =>
+          Response.json({
+            error: {
+              name: error.name,
+              message: error.message,
+              stack: error.stack,
+            },
+          }),
+        ),
     );
 
     app.use('/my-path', echoAdapter);
