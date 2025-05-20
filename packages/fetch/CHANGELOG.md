@@ -1,5 +1,24 @@
 # @whatwg-node/fetch
 
+## 0.10.8
+
+### Patch Changes
+
+- [#2424](https://github.com/ardatan/whatwg-node/pull/2424)
+  [`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)
+  Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
+
+  - Avoid creating `AbortController` and `AbortSignal` if not needed with `new Request` because it
+    is expensive
+  - Avoid creating a map for `Headers` and try to re-use the init object for `Headers` for
+    performance with a single-line `writeHead`.
+  - Avoid creating `Buffer` for `string` bodies for performance
+  - Use `setHeaders` which accepts `Headers` since Node 18 if needed to forward `Headers` to Node
+
+- Updated dependencies
+  [[`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)]:
+  - @whatwg-node/node-fetch@0.7.21
+
 ## 0.10.7
 
 ### Patch Changes
