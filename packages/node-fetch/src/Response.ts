@@ -66,25 +66,24 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
 
   static json<T = any>(data: T, init?: ResponsePonyfilInit) {
     const bodyInit = JSON.stringify(data);
-    const contentLength = Buffer.byteLength(bodyInit);
     if (!init) {
       init = {
         headers: {
           'content-type': JSON_CONTENT_TYPE,
-          'content-length': contentLength.toString(),
+          'content-length': Buffer.byteLength(bodyInit).toString(),
         },
       };
     } else if (!init.headers) {
       init.headers = {
         'content-type': JSON_CONTENT_TYPE,
-        'content-length': contentLength.toString(),
+        'content-length': Buffer.byteLength(bodyInit).toString(),
       };
     } else if (isHeadersLike(init.headers)) {
       if (!init.headers.has('content-type')) {
         init.headers.set('content-type', JSON_CONTENT_TYPE);
       }
       if (!init.headers.has('content-length')) {
-        init.headers.set('content-length', contentLength.toString());
+        init.headers.set('content-length', Buffer.byteLength(bodyInit).toString());
       }
     } else if (Array.isArray(init.headers)) {
       let contentTypeExists = false;
@@ -103,14 +102,14 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
         init.headers.push(['content-type', JSON_CONTENT_TYPE]);
       }
       if (!contentLengthExists) {
-        init.headers.push(['content-length', contentLength.toString()]);
+        init.headers.push(['content-length', Buffer.byteLength(bodyInit).toString()]);
       }
     } else if (typeof init.headers === 'object') {
       if (init.headers?.['content-type'] == null) {
         init.headers['content-type'] = JSON_CONTENT_TYPE;
       }
       if (init.headers?.['content-length'] == null) {
-        init.headers['content-length'] = contentLength.toString();
+        init.headers['content-length'] = Buffer.byteLength(bodyInit).toString();
       }
     }
     return new PonyfillResponse<T>(bodyInit, init);
