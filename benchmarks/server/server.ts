@@ -1,5 +1,6 @@
 import { Blob as BufferBlob } from 'node:buffer';
 import { createServer } from 'node:http';
+import { FastResponse, serve } from 'srvx';
 import * as undici from 'undici';
 import { App } from 'uWebSockets.js';
 import {
@@ -64,6 +65,14 @@ if (process.env.SCENARIO === 'uwebsockets') {
     .listen(4000, () => {
       console.log('listening on 0.0.0.0:4000');
     });
+} else if (process.env.SCENARIO === 'srvx') {
+  serve({
+    port: 4000,
+    silent: true,
+    fetch() {
+      return new FastResponse('Hello, World!');
+    },
+  });
 } else {
   createServer(serverAdapter).listen(4000, () => {
     console.log('listening on 0.0.0.0:4000');
