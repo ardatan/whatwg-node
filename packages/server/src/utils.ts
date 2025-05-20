@@ -311,10 +311,8 @@ export function sendNodeResponse(
     // @ts-expect-error - _buffer is a private property
     fetchResponse._buffer;
   if (bufOfRes) {
-    return handleMaybePromise(
-      () => safeWrite(bufOfRes, serverResponse),
-      () => endResponse(serverResponse),
-    );
+    serverResponse.end(bufOfRes);
+    return;
   }
 
   // Other fetch implementations
@@ -328,10 +326,9 @@ export function sendNodeResponse(
     // @ts-expect-error - Uint8Array is a valid body type
     fetchBody[Symbol.toStringTag] === 'Uint8Array'
   ) {
-    return handleMaybePromise(
-      () => safeWrite(fetchBody, serverResponse),
-      () => endResponse(serverResponse),
-    );
+    // @ts-expect-error - fetchBody is Uint8Array
+    serverResponse.end(fetchBody);
+    return;
   }
 
   configureSocket(nodeRequest);
