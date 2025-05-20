@@ -1,9 +1,15 @@
 import { Blob as BufferBlob } from 'node:buffer';
-import { createServer, type RequestListener } from 'node:http';
+import { createServer } from 'node:http';
 import * as undici from 'undici';
-import { createServerAdapter, Response } from '@whatwg-node/server';
+import { App } from 'uWebSockets.js';
+import {
+  createServerAdapter,
+  Response,
+  ServerAdapter,
+  ServerAdapterBaseObject,
+} from '@whatwg-node/server';
 
-let serverAdapter: RequestListener;
+let serverAdapter: ServerAdapter<{}, ServerAdapterBaseObject<any, any>>;
 if (process.env.SCENARIO === 'native') {
   serverAdapter = createServerAdapter(
     () => globalThis.Response.json({ message: `Hello, World!` }),
@@ -58,6 +64,14 @@ if (process.env.SCENARIO === 'native') {
   serverAdapter = createServerAdapter(() => Response.json({ message: `Hello, World!` }));
 }
 
-createServer(serverAdapter).listen(4000, () => {
-  console.log('listening on 0.0.0.0:4000');
-});
+if (process.env.SCENARIO === 'uwebsockets') {
+  App()
+    .any('/*', serverAdapter)
+    .listen(4000, () => {
+      console.log('listening on 0.0.0.0:4000');
+    });
+} else {
+  createServer(serverAdapter).listen(4000, () => {
+    console.log('listening on 0.0.0.0:4000');
+  });
+}
