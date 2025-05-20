@@ -73,6 +73,22 @@ if (process.env.SCENARIO === 'uwebsockets') {
       return new FastResponse('Hello, World!');
     },
   });
+} else if (process.env.SCENARIO === 'vanilla-node:http') {
+  createServer((_req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Hello, World!');
+  }).listen(4000, () => {
+    console.log('listening on 0.0.0.0:4000');
+  });
+} else if (process.env.SCENARIO === 'vanilla-uwebsockets') {
+  App()
+    .any('/*', res => {
+      res.writeHeader('Content-Type', 'text/plain');
+      res.end('Hello, World!');
+    })
+    .listen(4000, () => {
+      console.log('listening on 0.0.0.0:4000');
+    });
 } else {
   createServer(serverAdapter).listen(4000, () => {
     console.log('listening on 0.0.0.0:4000');
