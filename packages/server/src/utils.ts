@@ -613,13 +613,10 @@ export function ensureDisposableStackRegisteredForTerminateEvents(
   }
 }
 
-export class CustomAbortControllerSignal
-  extends EventTarget
-  implements AbortSignal, AbortController
-{
+class CustomAbortControllerSignal extends EventTarget implements AbortSignal, AbortController {
   aborted = false;
   private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
-  reason: any;
+  _reason: any;
 
   constructor() {
     super();
@@ -633,26 +630,62 @@ export class CustomAbortControllerSignal
   }
 
   throwIfAborted(): void {
+    if (this._nativeCtrl?.signal?.throwIfAborted) {
+      return this._nativeCtrl.signal.throwIfAborted();
+    }
     if (this.aborted) {
-      throw this.reason;
+      throw this._reason;
     }
   }
 
-  abort(reason: any = new DOMException('This operation was aborted', 'AbortError')) {
-    this.reason = reason;
+  private _nativeCtrl?: AbortController;
+
+  ensureNativeCtrl() {
+    if (!this._nativeCtrl) {
+      const isAborted = this.aborted;
+      this._nativeCtrl = new AbortController();
+      if (isAborted) {
+        this._nativeCtrl.abort(this._reason);
+      }
+    }
+    return this._nativeCtrl;
+  }
+
+  abort(reason?: any) {
+    if (this._nativeCtrl?.abort) {
+      return this._nativeCtrl?.abort(reason);
+    }
+    this._reason = reason || new DOMException('This operation was aborted', 'AbortError');
     this.aborted = true;
     this.dispatchEvent(new Event('abort'));
   }
 
   get signal(): AbortSignal {
+    if (this._nativeCtrl?.signal) {
+      return this._nativeCtrl.signal;
+    }
     return this;
   }
 
+  get reason(): any {
+    if (this._nativeCtrl?.signal) {
+      return this._nativeCtrl.signal.reason;
+    }
+    return this._reason;
+  }
+
   get onabort() {
+    if (this._onabort) {
+      return this._onabort;
+    }
     return this._onabort;
   }
 
   set onabort(value) {
+    if (this._nativeCtrl?.signal) {
+      this._nativeCtrl.signal.onabort = value;
+      return;
+    }
     if (this._onabort) {
       this.removeEventListener('abort', this._onabort);
     }
@@ -661,4 +694,26 @@ export class CustomAbortControllerSignal
       this.addEventListener('abort', value);
     }
   }
+}
+
+export function createCustomAbortControllerSignal() {
+  return new Proxy(new CustomAbortControllerSignal(), {
+    get(target, prop: keyof CustomAbortControllerSignal, receiver) {
+      if (prop.toString().includes('kDependantSignals')) {
+        const nativeCtrl = target.ensureNativeCtrl();
+        return Reflect.get(nativeCtrl.signal, prop, nativeCtrl.signal);
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+    set(target, prop: keyof CustomAbortControllerSignal, value, receiver) {
+      if (prop.toString().includes('kDependantSignals')) {
+        const nativeCtrl = target.ensureNativeCtrl();
+        return Reflect.set(nativeCtrl.signal, prop, value, nativeCtrl.signal);
+      }
+      return Reflect.set(target, prop, value, receiver);
+    },
+    getPrototypeOf() {
+      return AbortSignal.prototype;
+    },
+  });
 }
