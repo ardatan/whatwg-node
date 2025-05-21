@@ -42,7 +42,7 @@
   },
   "devDependencies": {
     "@hapi/hapi": "21.4.0",
-    "@types/compression": "1.7.5",
+    "@types/compression": "1.8.0",
     "@types/express": "5.0.2",
     "@types/koa": "2.15.0",
     "@types/node": "22.15.21",
