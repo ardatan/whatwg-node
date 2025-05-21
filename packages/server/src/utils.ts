@@ -621,6 +621,17 @@ export class CustomAbortControllerSignal
   private _onabort: ((this: AbortSignal, ev: Event) => any) | null = null;
   reason: any;
 
+  constructor() {
+    super();
+    const nodeEvents: typeof import('node:events') =
+      globalThis.process?.getBuiltinModule?.('node:events');
+    // @ts-expect-error - We know kMaxEventTargetListeners is available in node:events
+    if (nodeEvents?.kMaxEventTargetListeners) {
+      // @ts-expect-error - See https://github.com/nodejs/node/pull/55816/files#diff-03bd4f07a1006cb0daaddced702858751b20f5ab7681cb0719c1b1d80d6ca05cR31
+      this[nodeEvents.kMaxEventTargetListeners] = 0;
+    }
+  }
+
   throwIfAborted(): void {
     if (this.aborted) {
       throw this.reason;
