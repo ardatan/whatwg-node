@@ -7,7 +7,10 @@ describe('CustomAbortControllerSignal', () => {
     const ctrl2 = new AbortController();
     const signal2 = ctrl2.signal;
     const anySignal = AbortSignal.any([signal, signal2]);
-    signal.abort();
+    const reason = new Error('my reason');
+    signal.abort(reason);
     expect(anySignal.aborted).toBe(true);
+    expect(anySignal.reason).toBe(reason);
+    expect(signal2.aborted).toBe(false);
   });
 });
