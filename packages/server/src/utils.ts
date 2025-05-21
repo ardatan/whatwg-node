@@ -117,7 +117,7 @@ export function normalizeNodeRequest(
     }
   }
   const controller = __useCustomAbortCtrl
-    ? new CustomAbortControllerSignal()
+    ? createCustomAbortControllerSignal()
     : new AbortController();
   if (nodeResponse?.once) {
     const closeEventListener: EventListener = () => {

@@ -19,7 +19,7 @@ import {
 } from './types.js';
 import {
   completeAssign,
-  CustomAbortControllerSignal,
+  createCustomAbortControllerSignal,
   ensureDisposableStackRegisteredForTerminateEvents,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
@@ -338,7 +338,7 @@ function createServerAdapter<
         : defaultServerContext;
 
     const controller = useCustomAbortCtrl
-      ? new CustomAbortControllerSignal()
+      ? createCustomAbortControllerSignal()
       : new AbortController();
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
