@@ -697,6 +697,9 @@ class CustomAbortControllerSignal extends EventTarget implements AbortSignal, Ab
 }
 
 export function createCustomAbortControllerSignal() {
+  if (globalThis.Bun || globalThis.Deno) {
+    return new AbortController();
+  }
   return new Proxy(new CustomAbortControllerSignal(), {
     get(target, prop: keyof CustomAbortControllerSignal, receiver) {
       if (prop.toString().includes('kDependantSignals')) {
