@@ -142,7 +142,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       if (fetchRequest['_buffer'] != null) {
         handleMaybePromise(
-          () => safeWrite(fetchRequest['_buffer'], nodeRequest, signal),
+          () => safeWrite(fetchRequest['_buffer'], nodeRequest),
           () => endStream(nodeRequest),
           reject,
         );
