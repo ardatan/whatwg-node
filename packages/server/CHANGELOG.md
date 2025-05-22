@@ -1,5 +1,18 @@
 # @whatwg-node/server
 
+## 0.10.10
+
+### Patch Changes
+
+- [#2452](https://github.com/ardatan/whatwg-node/pull/2452)
+  [`19c0be5`](https://github.com/ardatan/whatwg-node/commit/19c0be579bbffc241d4feb811ca3553683fa2746)
+  Thanks [@ardatan](https://github.com/ardatan)! - Support AbortSignal.any on Node.js
+
+- [#2452](https://github.com/ardatan/whatwg-node/pull/2452)
+  [`19c0be5`](https://github.com/ardatan/whatwg-node/commit/19c0be579bbffc241d4feb811ca3553683fa2746)
+  Thanks [@ardatan](https://github.com/ardatan)! - Prevent custom AbortSignal to log
+  "MaxListenersExceededWarning"
+
 ## 0.10.9
 
 ### Patch Changes
