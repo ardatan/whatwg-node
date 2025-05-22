@@ -3702,6 +3702,17 @@
     loupe "^3.1.3"
     tinyrainbow "^2.0.0"
 
+"@whatwg-node/server@0.10.8":
+  version "0.10.8"
+  resolved "https://registry.yarnpkg.com/@whatwg-node/server/-/server-0.10.8.tgz#ae4deb08ceefe853b6551ebae39054e30008eecd"
+  integrity sha512-MflQk1++e/w944Uu+g3CJIPQXZXj5Ns3E9QbVmSc/7P5D1O6c/YoMaemP3Cg/Ud9ezy48j5DURJ4iba9oSkdbw==
+  dependencies:
+    "@envelop/instrumentation" "^1.0.0"
+    "@whatwg-node/disposablestack" "^0.0.6"
+    "@whatwg-node/fetch" "^0.10.7"
+    "@whatwg-node/promise-helpers" "^1.3.2"
+    tslib "^2.6.3"
+
 "@yarnpkg/lockfile@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
@@ -4678,6 +4689,11 @@ convert-source-map@^2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/convert-source-map/-/convert-source-map-2.0.0.tgz#4b560f649fc4e918dd0ab75cf4961e8bc882d82a"
   integrity sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==
+
+cookie-es@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/cookie-es/-/cookie-es-2.0.0.tgz#ca6163d7ef8686ea6bbdd551f1de575569c1ed69"
+  integrity sha512-RAj4E421UYRgqokKUmotqAwuplYw15qtdXfY+hGzgCJ/MBjCVZcSoHK/kH9kocfjRjcDME7IiDWR/1WX1TM2Pg==
 
 cookie-signature@^1.2.1:
   version "1.2.2"
@@ -7976,7 +7992,6 @@ mvdan-sh@^0.10.1:
 
 "nan@github:JCMais/nan#fix/electron-failures":
   version "2.22.0"
-  uid "0ec2eca8b2fd7518affb3945d087e393ad839b7e"
   resolved "https://codeload.github.com/JCMais/nan/tar.gz/0ec2eca8b2fd7518affb3945d087e393ad839b7e"
 
 nano-spawn@^1.0.0:
@@ -9682,6 +9697,13 @@ sprintf-js@~1.0.2:
   resolved "https://registry.yarnpkg.com/sprintf-js/-/sprintf-js-1.0.3.tgz#04e6926f662895354f3dd015203633b857297e2c"
   integrity sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==
 
+srvx@0.7.1:
+  version "0.7.1"
+  resolved "https://registry.yarnpkg.com/srvx/-/srvx-0.7.1.tgz#d485b32cc96f876b2a7dd40742eeda42a4890389"
+  integrity sha512-+Q5lVEj1UXrp4R0aq7io3dyeosU4Kn4627PA+ngf3Js1w/ZuOqXz7VfrflbdpCybYIZzNLFr7i12sAhEhN9WcA==
+  dependencies:
+    cookie-es "^2.0.0"
+
 ssri@^10.0.0, ssri@^10.0.6:
   version "10.0.6"
   resolved "https://registry.yarnpkg.com/ssri/-/ssri-10.0.6.tgz#a8aade2de60ba2bce8688e3fa349bad05c7dc1e5"
@@ -10257,7 +10279,6 @@ typescript@5.8.3:
 
 uWebSockets.js@uNetworking/uWebSockets.js#v20.52.0:
   version "20.52.0"
-  uid cfc9a40d8132a34881813cec3d5f8e3a185b3ce3
   resolved "https://codeload.github.com/uNetworking/uWebSockets.js/tar.gz/cfc9a40d8132a34881813cec3d5f8e3a185b3ce3"
 
 ufo@^1.6.1:

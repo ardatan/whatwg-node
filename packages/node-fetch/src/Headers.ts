@@ -70,7 +70,7 @@ export class PonyfillHeaders implements Headers {
   // I could do a getter here, but I'm too lazy to type `getter`.
   private getMap() {
     if (!this._map) {
-      this._setCookies ||= [];
+      this._setCookies = [];
       if (this.headersInit != null) {
         if (Array.isArray(this.headersInit)) {
           this._map = new Map();
@@ -150,23 +150,6 @@ export class PonyfillHeaders implements Headers {
     if (key === 'set-cookie') {
       this._setCookies = [value];
       return;
-    }
-    if (!this._map && this.headersInit != null) {
-      if (Array.isArray(this.headersInit)) {
-        const found = this.headersInit.find(([headerKey]) => headerKey.toLowerCase() === key);
-        if (found) {
-          found[1] = value;
-        } else {
-          this.headersInit.push([key, value]);
-        }
-        return;
-      } else if (isHeadersLike(this.headersInit)) {
-        this.headersInit.set(key, value);
-        return;
-      } else {
-        this.headersInit[key] = value;
-        return;
-      }
     }
     this.getMap().set(key, value);
   }

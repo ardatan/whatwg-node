@@ -22,6 +22,10 @@ jobs:
           - native
           - ponyfill
           - undici
+          - uwebsockets
+          - srvx
+          - vanilla-node:http
+          - vanilla-uwebsockets
     steps:
       - name: Checkout Repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
@@ -40,7 +44,7 @@ jobs:
       - name: Start Benchmark
         working-directory: ./benchmarks/server
         run: |
-          yarn test
+          yarn test:ci
         env:
           SCENARIO: ${{ matrix.scenario }}
           NODE_NO_WARNINGS: true

@@ -283,68 +283,36 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
-  if (
-    __useSingleWriteHead &&
-    // @ts-expect-error - headersInit is a private property
-    fetchResponse.headers?.headersInit &&
-    // @ts-expect-error - headersInit is a private property
-    !Array.isArray(fetchResponse.headers.headersInit) &&
-    // @ts-expect-error - headersInit is a private property
-    !fetchResponse.headers.headersInit.get &&
-    // @ts-expect-error - map is a private property
-    !fetchResponse.headers._map &&
-    // @ts-expect-error - _setCookies is a private property
-    !fetchResponse.headers._setCookies?.length
-  ) {
-    serverResponse.writeHead(
-      fetchResponse.status,
-      fetchResponse.statusText,
-      // @ts-expect-error - headersInit is a private property
-      fetchResponse.headers.headersInit,
-    );
-  } else {
+  // @ts-expect-error - setHeaders exist
+  if (serverResponse.setHeaders) {
     // @ts-expect-error - setHeaders exist
-    if (serverResponse.setHeaders) {
-      // @ts-expect-error - setHeaders exist
-      serverResponse.setHeaders(fetchResponse.headers);
-    } else {
-      let setCookiesSet = false;
-      fetchResponse.headers.forEach((value, key) => {
-        if (key === 'set-cookie') {
-          if (setCookiesSet) {
-            return;
-          }
-          setCookiesSet = true;
-          const setCookies = fetchResponse.headers.getSetCookie?.();
-          if (setCookies) {
-            serverResponse.setHeader('set-cookie', setCookies);
-            return;
-          }
+    serverResponse.setHeaders(fetchResponse.headers);
+  } else {
+    let setCookiesSet = false;
+    fetchResponse.headers.forEach((value, key) => {
+      if (key === 'set-cookie') {
+        if (setCookiesSet) {
+          return;
         }
-        serverResponse.setHeader(key, value);
-      });
-    }
-    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
+        setCookiesSet = true;
+        const setCookies = fetchResponse.headers.getSetCookie?.();
+        if (setCookies) {
+          serverResponse.setHeader('set-cookie', setCookies);
+          return;
+        }
+      }
+      serverResponse.setHeader(key, value);
+    });
   }
-
-  // @ts-expect-error - Handle the case where the response is a string
-  if (fetchResponse['bodyType'] === 'String') {
-    return handleMaybePromise(
-      // @ts-expect-error - bodyInit is a private property
-      () => safeWrite(fetchResponse.bodyInit, serverResponse),
-      () => endResponse(serverResponse),
-    );
-  }
+  serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
 
   // Optimizations for node-fetch
   const bufOfRes: Buffer =
     // @ts-expect-error - _buffer is a private property
     fetchResponse._buffer;
   if (bufOfRes) {
-    return handleMaybePromise(
-      () => safeWrite(bufOfRes, serverResponse),
-      () => endResponse(serverResponse),
-    );
+    serverResponse.end(bufOfRes);
+    return;
   }
 
   // Other fetch implementations
@@ -358,10 +326,9 @@ export function sendNodeResponse(
     // @ts-expect-error - Uint8Array is a valid body type
     fetchBody[Symbol.toStringTag] === 'Uint8Array'
   ) {
-    return handleMaybePromise(
-      () => safeWrite(fetchBody, serverResponse),
-      () => endResponse(serverResponse),
-    );
+    // @ts-expect-error - fetchBody is Uint8Array
+    serverResponse.end(fetchBody);
+    return;
   }
 
   configureSocket(nodeRequest);

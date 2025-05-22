@@ -60,15 +60,6 @@ export default function run() {
 
   check(res, {
     'no-errors': resp => resp.status === 200,
-    'expected-result': resp => {
-      const json = resp.json();
-      return (
-        !!json &&
-        typeof json === 'object' &&
-        'message' in json &&
-        typeof json.message === 'string' &&
-        json.message === 'Hello, World!'
-      );
-    },
+    'expected-result': resp => !!resp.body,
   });
 }

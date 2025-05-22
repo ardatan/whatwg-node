@@ -3,7 +3,11 @@ import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
 import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import {
+  createDeferredPromise,
+  handleMaybePromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
@@ -175,14 +179,26 @@ export class PonyfillBody<TJSON = any> implements Body {
       return collectValue();
     }
     const _body = this.generateBody();
-    if (!_body) {
-      this._chunks = [];
+    const chunks: Uint8Array[] = [];
+    if (!_body || _body.readable.destroyed || _body.readable.closed) {
+      this._chunks = chunks;
       return fakePromise(this._chunks);
     }
-    return _body.readable.toArray().then(chunks => {
-      this._chunks = chunks;
-      return this._chunks;
+    const deferred = createDeferredPromise<Uint8Array[]>();
+    _body.readable.on('error', err => {
+      deferred.reject(err);
     });
+    _body.readable.on('end', () => {
+      this._chunks = chunks;
+      deferred.resolve(chunks);
+    });
+    _body.readable.on('close', () => {
+      deferred.resolve(chunks);
+    });
+    _body.readable.on('data', chunk => {
+      chunks.push(chunk);
+    });
+    return deferred.promise;
   }
 
   _collectChunksFromReadable() {
@@ -198,13 +214,6 @@ export class PonyfillBody<TJSON = any> implements Body {
   blob(): Promise<PonyfillBlob> {
     if (this._blob) {
       return fakePromise(this._blob);
-    }
-    if (this.bodyType === BodyInitType.String) {
-      this._text = this.bodyInit as string;
-      this._blob = new PonyfillBlob([this._text], {
-        type: this.contentType || 'text/plain;charset=UTF-8',
-        size: this.contentLength,
-      });
     }
     if (this.bodyType === BodyInitType.Blob) {
       this._blob = this.bodyInit as PonyfillBlob;
@@ -356,17 +365,6 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this._buffer) {
       return fakePromise(this._buffer);
     }
-    if (this._text) {
-      this._buffer = Buffer.from(this._text, 'utf-8');
-      return fakePromise(this._buffer);
-    }
-    if (this.bodyType === BodyInitType.String) {
-      return this.text().then(text => {
-        this._text = text;
-        this._buffer = Buffer.from(text, 'utf-8');
-        return this._buffer;
-      });
-    }
     if (this.bodyType === BodyInitType.Blob) {
       if (hasBufferMethod(this.bodyInit)) {
         return this.bodyInit.buffer().then(buf => {
@@ -465,15 +463,14 @@ function processBodyInit(
     };
   }
   if (typeof bodyInit === 'string') {
-    const contentLength = Buffer.byteLength(bodyInit);
+    const buffer = Buffer.from(bodyInit, 'utf-8');
     return {
       bodyType: BodyInitType.String,
       contentType: 'text/plain;charset=UTF-8',
-      contentLength,
+      contentLength: buffer.byteLength,
+      buffer,
       bodyFactory() {
-        const readable = Readable.from(
-          Buffer.from(bodyInit, 'utf-8'), // Convert string to Buffer
-        );
+        const readable = Readable.from(buffer);
         return new PonyfillReadableStream<Uint8Array>(readable);
       },
     };
