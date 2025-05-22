@@ -80,7 +80,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
         if (chunk == null) {
           return promise;
         }
-        return promise.then(() => safeWrite(chunk, writable));
+        return promise.then(() => safeWrite(chunk, writable)) as Promise<any>;
       },
       close() {
         if (!writable.errored && writable.closed) {

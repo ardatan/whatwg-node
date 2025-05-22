@@ -82,11 +82,9 @@ export function endStream(stream: { end: () => void }) {
   return stream.end(null, null, null);
 }
 
-export function safeWrite(chunk: any, stream: Writable, signal?: AbortSignal | undefined) {
+export function safeWrite(chunk: any, stream: Writable) {
   const result = stream.write(chunk);
   if (!result) {
-    return once(stream, 'drain', {
-      signal,
-    }) as unknown as Promise<any>;
+    return once(stream, 'drain');
   }
 }
