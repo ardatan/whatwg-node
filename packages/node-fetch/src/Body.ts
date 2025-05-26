@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
-import { IncomingMessage } from 'node:http';
 import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
 import { createDeferredPromise, MaybePromise } from '@whatwg-node/promise-helpers';
@@ -8,7 +7,7 @@ import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } f
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
-import { fakePromise, isArrayBufferView, wrapIncomingMessageWithPassthrough } from './utils.js';
+import { fakePromise, isArrayBufferView } from './utils.js';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -59,10 +58,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     private options: PonyfillBodyOptions = {},
   ) {
     this._signal = options.signal || null;
-    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(
-      bodyInit,
-      options?.signal,
-    );
+    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(bodyInit);
     this._bodyFactory = bodyFactory;
     this.contentType = contentType;
     this.contentLength = contentLength;
@@ -170,6 +166,11 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
     const _body = this.generateBody();
     if (!_body) {
+      this._chunks = [];
+      return this._chunks;
+    }
+    if (_body.readable.destroyed) {
+      // If the stream is already destroyed, we can resolve immediately
       this._chunks = [];
       return this._chunks;
     }
@@ -444,10 +445,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 }
 
-function processBodyInit(
-  bodyInit: BodyPonyfillInit | null,
-  signal?: AbortSignal,
-): {
+function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   bodyType?: BodyInitType;
   contentType: string | null;
   contentLength: number | null;
@@ -535,20 +533,6 @@ function processBodyInit(
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
-      },
-    };
-  }
-  if (bodyInit instanceof IncomingMessage) {
-    const passThrough = wrapIncomingMessageWithPassthrough({
-      incomingMessage: bodyInit,
-      signal,
-    });
-    return {
-      bodyType: BodyInitType.Readable,
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>(passThrough);
       },
     };
   }
