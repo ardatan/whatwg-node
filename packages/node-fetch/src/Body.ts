@@ -3,7 +3,7 @@ import { Buffer } from 'node:buffer';
 import { IncomingMessage } from 'node:http';
 import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { createDeferredPromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
@@ -148,47 +148,50 @@ export class PonyfillBody<TJSON = any> implements Body {
   _doCollectChunksFromReadableJob() {
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
-        return handleMaybePromise(
-          () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array>),
-          chunks => {
-            this._chunks = chunks;
-            return this._chunks;
-          },
-        );
+        return Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array>).then(chunks => {
+          this._chunks = chunks;
+          return this._chunks;
+        });
       }
       const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
       const chunks: Uint8Array[] = [];
       const collectValue = (): MaybePromise<Uint8Array[]> =>
-        handleMaybePromise(
-          () => iterator.next(),
-          ({ value, done }) => {
-            if (value) {
-              chunks.push(value);
-            }
-            if (!done) {
-              return collectValue();
-            }
-            this._chunks = chunks;
-            return this._chunks;
-          },
-        );
+        iterator.next().then(({ value, done }) => {
+          if (value) {
+            chunks.push(value);
+          }
+          if (!done) {
+            return collectValue();
+          }
+          this._chunks = chunks;
+          return this._chunks;
+        });
       return collectValue();
     }
     const _body = this.generateBody();
     if (!_body) {
       this._chunks = [];
-      return fakePromise(this._chunks);
-    }
-    return _body.readable.toArray().then(chunks => {
-      this._chunks = chunks;
       return this._chunks;
+    }
+
+    const chunks: Uint8Array[] = [];
+    const deferred = createDeferredPromise<Uint8Array[]>();
+    _body.readable.on('data', function nextChunk(chunk: Uint8Array) {
+      chunks.push(chunk);
     });
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const _this = this;
+    _body.readable.once('end', function endOfStream() {
+      _this._chunks = chunks;
+      deferred.resolve(chunks);
+    });
+    _body.readable.once('error', function errorOnStream(err: Error) {
+      deferred.reject(err);
+    });
+    return deferred.promise;
   }
 
   _collectChunksFromReadable() {
-    if (this._chunks) {
-      return fakePromise(this._chunks);
-    }
     this._chunks ||= this._doCollectChunksFromReadableJob();
     return this._chunks;
   }
@@ -217,18 +220,15 @@ export class PonyfillBody<TJSON = any> implements Body {
       });
       return fakePromise(this._blob);
     }
-    return fakePromise(
-      handleMaybePromise(
-        () => this._collectChunksFromReadable(),
-        chunks => {
-          this._blob = new PonyfillBlob(chunks, {
-            type: this.contentType || '',
-            size: this.contentLength,
-          });
-          return this._blob;
-        },
-      ),
-    );
+    return fakePromise()
+      .then(() => this._collectChunksFromReadable())
+      .then(chunks => {
+        this._blob = new PonyfillBlob(chunks, {
+          type: this.contentType || '',
+          size: this.contentLength,
+        });
+        return this._blob;
+      });
   }
 
   _formData: PonyfillFormData | null = null;
@@ -387,19 +387,16 @@ export class PonyfillBody<TJSON = any> implements Body {
         });
       }
     }
-    return fakePromise(
-      handleMaybePromise(
-        () => this._collectChunksFromReadable(),
-        chunks => {
-          if (chunks.length === 1) {
-            this._buffer = chunks[0] as Buffer;
-            return this._buffer;
-          }
-          this._buffer = Buffer.concat(chunks);
+    return fakePromise()
+      .then(() => this._collectChunksFromReadable())
+      .then(chunks => {
+        if (chunks.length === 1) {
+          this._buffer = chunks[0] as Buffer;
           return this._buffer;
-        },
-      ),
-    );
+        }
+        this._buffer = Buffer.concat(chunks);
+        return this._buffer;
+      });
   }
 
   bytes(): Promise<Uint8Array> {
