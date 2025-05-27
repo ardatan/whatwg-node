@@ -275,10 +275,10 @@ export class PonyfillBody<TJSON = any> implements Body {
 
     bb.on('field', (name, value, fieldnameTruncated, valueTruncated) => {
       if (fieldnameTruncated) {
-        throw new Error(`Field name size exceeded: ${formDataLimits?.fieldNameSize} bytes`);
+        bb.destroy(new Error(`Field name size exceeded: ${formDataLimits?.fieldNameSize} bytes`));
       }
       if (valueTruncated) {
-        throw new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`);
+        bb.destroy(new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`));
       }
       this._formData!.set(name, value);
     });
@@ -289,11 +289,11 @@ export class PonyfillBody<TJSON = any> implements Body {
         chunks.push(chunk);
       });
       fileStream.on('limit', () => {
-        throw new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`);
+        bb.destroy(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
       });
       fileStream.on('close', () => {
         if (fileStream.truncated) {
-          throw new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`);
+          bb.destroy(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
         }
         const file = new PonyfillFile(chunks, filename, { type: mimeType });
         this._formData!.set(name, file);
@@ -301,13 +301,13 @@ export class PonyfillBody<TJSON = any> implements Body {
     });
 
     bb.on('fieldsLimit', () => {
-      throw new Error(`Fields limit exceeded: ${formDataLimits?.fields}`);
+      bb.destroy(new Error(`Fields limit exceeded: ${formDataLimits?.fields}`));
     });
     bb.on('filesLimit', () => {
-      throw new Error(`Files limit exceeded: ${formDataLimits?.files}`);
+      bb.destroy(new Error(`Files limit exceeded: ${formDataLimits?.files}`));
     });
     bb.on('partsLimit', () => {
-      throw new Error(`Parts limit exceeded: ${formDataLimits?.parts}`);
+      bb.destroy(new Error(`Parts limit exceeded: ${formDataLimits?.parts}`));
     });
 
     return pipeline(stream, bb, {
