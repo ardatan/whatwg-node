@@ -277,9 +277,6 @@ export function sendNodeResponse(
   nodeRequest: NodeRequest,
   __useSingleWriteHead: boolean,
 ) {
-  if (nodeRequest.readableDidRead === false) {
-    nodeRequest.resume?.();
-  }
   if (serverResponse.closed || serverResponse.destroyed || serverResponse.writableEnded) {
     return;
   }
