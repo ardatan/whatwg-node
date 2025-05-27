@@ -422,11 +422,10 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (typeof bodyInit === 'string') {
-    const contentLength = Buffer.byteLength(bodyInit);
     return {
       bodyType: BodyInitType.String,
-      contentType: 'text/plain;charset=UTF-8',
-      contentLength,
+      contentType: null,
+      contentLength: null,
       bodyFactory() {
         const readable = Readable.from(
           Buffer.from(bodyInit, 'utf-8'), // Convert string to Buffer
