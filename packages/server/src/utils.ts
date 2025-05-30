@@ -33,6 +33,8 @@ export interface NodeRequest {
   query?: any | undefined;
   once?(event: string, listener: (...args: any[]) => void): void;
   aborted?: boolean | undefined;
+  readableDidRead?: boolean | undefined;
+  resume?(): void;
 }
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;

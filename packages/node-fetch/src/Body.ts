@@ -1,14 +1,18 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
-import { IncomingMessage } from 'node:http';
-import { addAbortSignal, Readable } from 'node:stream';
-import { Busboy, BusboyFileStream } from '@fastify/busboy';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { Busboy } from '@fastify/busboy';
+import {
+  createDeferredPromise,
+  fakeRejectPromise,
+  MaybePromise,
+} from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
-import { fakePromise, isArrayBufferView, wrapIncomingMessageWithPassthrough } from './utils.js';
+import { fakePromise, isArrayBufferView } from './utils.js';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -59,10 +63,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     private options: PonyfillBodyOptions = {},
   ) {
     this._signal = options.signal || null;
-    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(
-      bodyInit,
-      options?.signal,
-    );
+    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(bodyInit);
     this._bodyFactory = bodyFactory;
     this.contentType = contentType;
     this.contentLength = contentLength;
@@ -148,47 +149,55 @@ export class PonyfillBody<TJSON = any> implements Body {
   _doCollectChunksFromReadableJob() {
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
-        return handleMaybePromise(
-          () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array>),
-          chunks => {
-            this._chunks = chunks;
-            return this._chunks;
-          },
-        );
+        return Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array>).then(chunks => {
+          this._chunks = chunks;
+          return this._chunks;
+        });
       }
       const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
       const chunks: Uint8Array[] = [];
       const collectValue = (): MaybePromise<Uint8Array[]> =>
-        handleMaybePromise(
-          () => iterator.next(),
-          ({ value, done }) => {
-            if (value) {
-              chunks.push(value);
-            }
-            if (!done) {
-              return collectValue();
-            }
-            this._chunks = chunks;
-            return this._chunks;
-          },
-        );
+        iterator.next().then(({ value, done }) => {
+          if (value) {
+            chunks.push(value);
+          }
+          if (!done) {
+            return collectValue();
+          }
+          this._chunks = chunks;
+          return this._chunks;
+        });
       return collectValue();
     }
     const _body = this.generateBody();
     if (!_body) {
       this._chunks = [];
-      return fakePromise(this._chunks);
-    }
-    return _body.readable.toArray().then(chunks => {
-      this._chunks = chunks;
       return this._chunks;
+    }
+    if (_body.readable.destroyed) {
+      // If the stream is already destroyed, we can resolve immediately
+      this._chunks = [];
+      return this._chunks;
+    }
+
+    const chunks: Uint8Array[] = [];
+    const deferred = createDeferredPromise<Uint8Array[]>();
+    _body.readable.on('data', function nextChunk(chunk: Uint8Array) {
+      chunks.push(chunk);
     });
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const _this = this;
+    _body.readable.once('end', function endOfStream() {
+      _this._chunks = chunks;
+      deferred.resolve(chunks);
+    });
+    _body.readable.once('error', function errorOnStream(err: Error) {
+      deferred.reject(err);
+    });
+    return deferred.promise;
   }
 
   _collectChunksFromReadable() {
-    if (this._chunks) {
-      return fakePromise(this._chunks);
-    }
     this._chunks ||= this._doCollectChunksFromReadableJob();
     return this._chunks;
   }
@@ -217,18 +226,15 @@ export class PonyfillBody<TJSON = any> implements Body {
       });
       return fakePromise(this._blob);
     }
-    return fakePromise(
-      handleMaybePromise(
-        () => this._collectChunksFromReadable(),
-        chunks => {
-          this._blob = new PonyfillBlob(chunks, {
-            type: this.contentType || '',
-            size: this.contentLength,
-          });
-          return this._blob;
-        },
-      ),
-    );
+    return fakePromise()
+      .then(() => this._collectChunksFromReadable())
+      .then(chunks => {
+        this._blob = new PonyfillBlob(chunks, {
+          type: this.contentType || '',
+          size: this.contentLength,
+        });
+        return this._blob;
+      });
   }
 
   _formData: PonyfillFormData | null = null;
@@ -250,106 +256,63 @@ export class PonyfillBody<TJSON = any> implements Body {
       ...this.options.formDataLimits,
       ...opts?.formDataLimits,
     };
-    return new Promise((resolve, reject) => {
-      const stream = this.body?.readable;
-      if (!stream) {
-        return reject(new Error('No stream available'));
-      }
+    const stream = this.body?.readable;
+    if (!stream) {
+      return fakeRejectPromise(new Error('No stream available'));
+    }
 
-      // form data file that is currently being processed, it's
-      // important to keep track of it in case the stream ends early
-      let currFile: BusboyFileStream | null = null;
-
-      const bb = new Busboy({
-        headers: {
-          'content-length':
-            typeof this.contentLength === 'number'
-              ? this.contentLength.toString()
-              : this.contentLength || '',
-          'content-type': this.contentType || '',
-        },
-        limits: formDataLimits,
-        defCharset: 'utf-8',
-      });
-
-      if (this._signal) {
-        addAbortSignal(this._signal, bb);
-      }
-
-      let completed = false;
-      const complete = (err: unknown) => {
-        if (completed) return;
-        completed = true;
-        stream!.unpipe(bb);
-        bb.destroy();
-        if (currFile) {
-          currFile.destroy();
-          currFile = null;
-        }
-        if (err) {
-          reject(err);
-        } else {
-          // no error occured, this is a successful end/complete/finish
-          resolve(this._formData!);
-        }
-      };
-
-      // we dont need to listen to the stream close event because bb will close or error when necessary
-      // stream.on('close', complete);
-
-      // stream can be aborted, for example
-      stream.on('error', complete);
-
-      bb.on('field', (name, value, fieldnameTruncated, valueTruncated) => {
-        if (fieldnameTruncated) {
-          return complete(
-            new Error(`Field name size exceeded: ${formDataLimits?.fieldNameSize} bytes`),
-          );
-        }
-        if (valueTruncated) {
-          return complete(
-            new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`),
-          );
-        }
-        this._formData!.set(name, value);
-      });
-
-      bb.on('file', (name, fileStream, filename, _transferEncoding, mimeType) => {
-        currFile = fileStream;
-        const chunks: BlobPart[] = [];
-        fileStream.on('data', chunk => {
-          chunks.push(chunk);
-        });
-        fileStream.on('error', complete);
-        fileStream.on('limit', () => {
-          complete(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
-        });
-        fileStream.on('close', () => {
-          if (fileStream.truncated) {
-            complete(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
-          }
-          currFile = null;
-          const file = new PonyfillFile(chunks, filename, { type: mimeType });
-          this._formData!.set(name, file);
-        });
-      });
-
-      bb.on('fieldsLimit', () => {
-        complete(new Error(`Fields limit exceeded: ${formDataLimits?.fields}`));
-      });
-      bb.on('filesLimit', () => {
-        complete(new Error(`Files limit exceeded: ${formDataLimits?.files}`));
-      });
-      bb.on('partsLimit', () => {
-        complete(new Error(`Parts limit exceeded: ${formDataLimits?.parts}`));
-      });
-      bb.on('end', complete);
-      bb.on('finish', complete);
-      bb.on('close', complete);
-      bb.on('error', complete);
-
-      stream.pipe(bb);
+    const bb = new Busboy({
+      headers: {
+        'content-length':
+          typeof this.contentLength === 'number'
+            ? this.contentLength.toString()
+            : this.contentLength || '',
+        'content-type': this.contentType || '',
+      },
+      limits: formDataLimits,
+      defCharset: 'utf-8',
     });
+
+    bb.on('field', (name, value, fieldnameTruncated, valueTruncated) => {
+      if (fieldnameTruncated) {
+        bb.destroy(new Error(`Field name size exceeded: ${formDataLimits?.fieldNameSize} bytes`));
+      }
+      if (valueTruncated) {
+        bb.destroy(new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`));
+      }
+      this._formData!.set(name, value);
+    });
+
+    bb.on('file', (name, fileStream, filename, _transferEncoding, mimeType) => {
+      const chunks: BlobPart[] = [];
+      fileStream.on('data', chunk => {
+        chunks.push(chunk);
+      });
+      fileStream.on('limit', () => {
+        bb.destroy(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
+      });
+      fileStream.on('close', () => {
+        if (fileStream.truncated) {
+          bb.destroy(new Error(`File size limit exceeded: ${formDataLimits?.fileSize} bytes`));
+        }
+        const file = new PonyfillFile(chunks, filename, { type: mimeType });
+        this._formData!.set(name, file);
+      });
+    });
+
+    bb.on('fieldsLimit', () => {
+      bb.destroy(new Error(`Fields limit exceeded: ${formDataLimits?.fields}`));
+    });
+    bb.on('filesLimit', () => {
+      bb.destroy(new Error(`Files limit exceeded: ${formDataLimits?.files}`));
+    });
+    bb.on('partsLimit', () => {
+      bb.destroy(new Error(`Parts limit exceeded: ${formDataLimits?.parts}`));
+    });
+
+    return pipeline(stream, bb, {
+      signal: this._signal || undefined,
+    }).then(() => this._formData!);
   }
 
   buffer(): Promise<Buffer> {
@@ -387,19 +350,16 @@ export class PonyfillBody<TJSON = any> implements Body {
         });
       }
     }
-    return fakePromise(
-      handleMaybePromise(
-        () => this._collectChunksFromReadable(),
-        chunks => {
-          if (chunks.length === 1) {
-            this._buffer = chunks[0] as Buffer;
-            return this._buffer;
-          }
-          this._buffer = Buffer.concat(chunks);
+    return fakePromise()
+      .then(() => this._collectChunksFromReadable())
+      .then(chunks => {
+        if (chunks.length === 1) {
+          this._buffer = chunks[0] as Buffer;
           return this._buffer;
-        },
-      ),
-    );
+        }
+        this._buffer = Buffer.concat(chunks);
+        return this._buffer;
+      });
   }
 
   bytes(): Promise<Uint8Array> {
@@ -447,10 +407,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 }
 
-function processBodyInit(
-  bodyInit: BodyPonyfillInit | null,
-  signal?: AbortSignal,
-): {
+function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   bodyType?: BodyInitType;
   contentType: string | null;
   contentLength: number | null;
@@ -465,11 +422,10 @@ function processBodyInit(
     };
   }
   if (typeof bodyInit === 'string') {
-    const contentLength = Buffer.byteLength(bodyInit);
     return {
       bodyType: BodyInitType.String,
-      contentType: 'text/plain;charset=UTF-8',
-      contentLength,
+      contentType: null,
+      contentLength: null,
       bodyFactory() {
         const readable = Readable.from(
           Buffer.from(bodyInit, 'utf-8'), // Convert string to Buffer
@@ -538,20 +494,6 @@ function processBodyInit(
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);
         return body;
-      },
-    };
-  }
-  if (bodyInit instanceof IncomingMessage) {
-    const passThrough = wrapIncomingMessageWithPassthrough({
-      incomingMessage: bodyInit,
-      signal,
-    });
-    return {
-      bodyType: BodyInitType.Readable,
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>(passThrough);
       },
     };
   }
