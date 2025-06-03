@@ -2857,14 +2857,14 @@
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
 
-"@pulumi/cloudflare@4.16.0":
-  version "4.16.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-4.16.0.tgz#a49db37a7f7707bc402253631c103f547ffbe9ad"
-  integrity sha512-cwdB70bLeKL/VNIqqOD5fpHQcocVmpHuiHH589eR+QUfbLa4f+M8yA/TTCcxx2AFFctTqO5wgVuC+faL8xZmWQ==
+"@pulumi/cloudflare@6.2.1":
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/@pulumi/cloudflare/-/cloudflare-6.2.1.tgz#12ee38e36f1f407db01376cb39d7b5b3f7f4d20a"
+  integrity sha512-SiflTsAxTXs3lnJqR0Pfju/Q9Yb2sLsp2+2W8oEokek8szZ21ZzII+D+M9lMfdiqPGx1EOJ3cZrCz2MkB3garw==
   dependencies:
-    "@pulumi/pulumi" "^3.0.0"
+    "@pulumi/pulumi" "^3.142.0"
 
-"@pulumi/pulumi@3.173.0", "@pulumi/pulumi@^3.0.0", "@pulumi/pulumi@^3.142.0":
+"@pulumi/pulumi@3.173.0", "@pulumi/pulumi@^3.142.0":
   version "3.173.0"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.173.0.tgz#02646dab7cd11bbfaa49490eee26e5c2f2f2dd5e"
   integrity sha512-/qvSyYaNBV8RpB+B24H2CqF7DA+OHzUqMa/NUJWmCE41UNHPlscFgNMfR0EV7IKqH0woKtzA3DOloBZfPjINVg==
