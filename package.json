@@ -72,7 +72,7 @@
     "ts-jest": "29.3.4",
     "typescript": "5.8.3",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "3.2.0"
+    "vitest": "3.2.1"
   },
   "resolutions": {
     "@pulumi/pulumi": "3.173.0",
