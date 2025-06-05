@@ -45,11 +45,11 @@
     "@types/compression": "1.8.0",
     "@types/express": "5.0.2",
     "@types/koa": "2.15.0",
-    "@types/node": "22.15.29",
+    "@types/node": "22.15.30",
     "compression": "1.8.0",
     "express": "5.1.0",
     "fastify": "5.3.3",
-    "form-data": "4.0.2",
+    "form-data": "4.0.3",
     "koa": "3.0.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
