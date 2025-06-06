@@ -2864,7 +2864,7 @@
   dependencies:
     "@pulumi/pulumi" "^3.0.0"
 
-"@pulumi/pulumi@3.174.0", "@pulumi/pulumi@^3.0.0", "@pulumi/pulumi@^3.142.0":
+"@pulumi/pulumi@3.174.0", "@pulumi/pulumi@3.175.0", "@pulumi/pulumi@^3.0.0", "@pulumi/pulumi@^3.142.0":
   version "3.174.0"
   resolved "https://registry.yarnpkg.com/@pulumi/pulumi/-/pulumi-3.174.0.tgz#a114262b3d07a9da2116ab72d2602d136c368055"
   integrity sha512-NgkY96JE/0304nvOdktd4B2s3KVBxvV6AuSzTnjFxG52W/M8kk0MFEHR4oD2feM7TpO4XGMUwu5X980SrlG9UQ==
