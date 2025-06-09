@@ -47,10 +47,10 @@
     "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.3.0",
     "@types/node": "22.15.30",
-    "@types/react": "19.1.6",
-    "@types/react-dom": "19.1.5",
-    "@typescript-eslint/eslint-plugin": "8.33.1",
-    "@typescript-eslint/parser": "8.33.1",
+    "@types/react": "19.1.7",
+    "@types/react-dom": "19.1.6",
+    "@typescript-eslint/eslint-plugin": "8.34.0",
+    "@typescript-eslint/parser": "8.34.0",
     "babel-jest": "29.7.0",
     "bob-the-bundler": "7.0.1",
     "bun": "1.2.15",
@@ -72,7 +72,7 @@
     "ts-jest": "29.3.4",
     "typescript": "5.8.3",
     "vite-tsconfig-paths": "5.1.4",
-    "vitest": "3.2.2"
+    "vitest": "3.2.3"
   },
   "resolutions": {
     "@pulumi/pulumi": "3.175.0",
