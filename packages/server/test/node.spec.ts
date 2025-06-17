@@ -2,7 +2,6 @@ import { Buffer } from 'node:buffer';
 import { IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
-// @ts-expect-error Types are not available yet
 import { renderToReadableStream } from 'react-dom/server.edge';
 import { HttpResponse } from 'uWebSockets.js';
 import Hapi from '@hapi/hapi';
