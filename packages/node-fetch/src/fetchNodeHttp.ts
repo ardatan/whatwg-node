@@ -116,14 +116,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        if (outputStream != null) {
-          outputStream = wrapIncomingMessageWithPassthrough({
-            incomingMessage: nodeResponse,
-            passThrough: outputStream,
-            signal,
-            onError: reject,
-          });
-        }
+        outputStream = wrapIncomingMessageWithPassthrough({
+          incomingMessage: nodeResponse,
+          passThrough: outputStream,
+          signal,
+          onError: reject,
+        });
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
