@@ -6,7 +6,7 @@ describe('useErrorHandling', () => {
   runTestsForEachFetchImpl(
     (_, { createServerAdapter, fetchAPI }) => {
       it('should return error response when error is thrown', async () => {
-        const errorHandler = jest.fn(() => {});
+        const errorHandler: (...args: any[]) => any = jest.fn(() => {});
         let request: Request | undefined;
         const router = createServerAdapter(
           req => {
