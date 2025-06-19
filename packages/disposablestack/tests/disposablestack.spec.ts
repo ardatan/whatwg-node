@@ -25,7 +25,7 @@ function createTestCases<
         });
       },
       check(disposeFn: jest.Mock) {
-        expect(disposeFn).toBeCalled();
+        expect(disposeFn).toHaveBeenCalled();
       },
     },
     adopt: {
