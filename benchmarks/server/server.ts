@@ -44,7 +44,7 @@ if (process.env.SCENARIO === 'native') {
         CompressionStream: globalThis.CompressionStream,
         TransformStream: globalThis.TransformStream,
         Blob: BufferBlob,
-        File: undici.File,
+        File: globalThis.File,
         crypto: globalThis.crypto,
         btoa: globalThis.btoa,
         TextDecoder: globalThis.TextDecoder,
