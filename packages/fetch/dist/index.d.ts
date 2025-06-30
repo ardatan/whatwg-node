@@ -1,6 +1,5 @@
 /// <reference lib="dom" />
 /// <reference lib="dom.iterable" />
-/// <reference types="urlpattern-polyfill" />
 
 declare type _URLPattern = typeof URLPattern
 
