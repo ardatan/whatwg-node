@@ -1202,35 +1202,35 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@deno/darwin-arm64@2.3.7":
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/@deno/darwin-arm64/-/darwin-arm64-2.3.7.tgz#bdb6bb396cf9c7b22f15ac5a35d50e471223c043"
-  integrity sha512-HnWMV6yYKUKY1ZGKDE9ozKJhsQrvCuD56q+/DrRe4g297dhSjZ2etVssm9EBrLP+1jjDwRpPxatrTxVlkYLiBA==
+"@deno/darwin-arm64@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/darwin-arm64/-/darwin-arm64-2.4.0.tgz#5921a3c309ac795a843f93cef525aaada6e549bb"
+  integrity sha512-eXVs3SwJh3RZ5B0ywm1oobH6WcQRVJhqoWYKJYDjkeGlwelGruAj96xEsif1u66eY0k2Mt6OqdOjuy80k2g04A==
 
-"@deno/darwin-x64@2.3.7":
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/@deno/darwin-x64/-/darwin-x64-2.3.7.tgz#5e6986fb8ab560b23117af1968255d71e8477ab0"
-  integrity sha512-ejDR5LbMmiklSzAI8Al8cnIYqW+dg2SHyefFf+O2qcqMTgcdnhh9YK2ArlpzIGBM0yNuMV37m85mtRXHhsUYHQ==
+"@deno/darwin-x64@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/darwin-x64/-/darwin-x64-2.4.0.tgz#0332a9655c5dfae4ab8f6958bfada257effda9f9"
+  integrity sha512-MxsQv0ZCJpngsFkj8fTVRUdYZkubi6WLzDWvRHPskBckq0c5o0kaXAlWo6CUe5X9akNy+cxwcbHm7snYH04ufg==
 
-"@deno/linux-arm64-glibc@2.3.7":
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/@deno/linux-arm64-glibc/-/linux-arm64-glibc-2.3.7.tgz#942b10e7862120d6c8712f1f6073167c28022d56"
-  integrity sha512-OGUxXnmrezGCpXFBkc3wk4uBkaeqvl5uGHiQ72+uULJwtxga5R0oP224QjqnxjruR6sLcIahzKKbny1E8vMSfw==
+"@deno/linux-arm64-glibc@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/linux-arm64-glibc/-/linux-arm64-glibc-2.4.0.tgz#63fc886fc11071090b42a7d86308b130e2389d4e"
+  integrity sha512-qoiUrnCtj/8vUNW7CGkaOuHvcjjBqCwUbUIrXew94ArbNe3iNW8zfNk/ZNQWMVu0xNjA9OPgBQvJIScsaPVl2w==
 
-"@deno/linux-x64-glibc@2.3.7":
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/@deno/linux-x64-glibc/-/linux-x64-glibc-2.3.7.tgz#833a18334d64efafb88797b761482be2a7da4d03"
-  integrity sha512-wqu/aa5mm4dzHg1Fre9834MySs2aMW5YmVMrQS4b2cvB/h7au0EyERYKmKLUVtNuyqJJrcIG30rUDF7YeOo5UQ==
+"@deno/linux-x64-glibc@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/linux-x64-glibc/-/linux-x64-glibc-2.4.0.tgz#1a7ca34a5241b2f30cbdcf383c3aea01a1f8c8d0"
+  integrity sha512-Mm05VuqqSm/hjYIN7pHgLLQ7Z9Zab5I9XZH1qOOnhv2p5awcoG7D+2fQcSPXTxx9+C17tFvDSl3U/QhHVfaXZA==
 
-"@deno/win32-arm64@2.3.7":
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/@deno/win32-arm64/-/win32-arm64-2.3.7.tgz#fe3907b39d64fd989757a41704e866857c8d33b9"
-  integrity sha512-qW1kLO2xjN2Kk4Js0Q18FXFbsDiCA4RnzhMn/KuDCLpN/sxAp8wWGPE1KWMA2lPqLvKDx+tBLJIx0qTiC9wIOw==
+"@deno/win32-arm64@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/win32-arm64/-/win32-arm64-2.4.0.tgz#d50139090d645eaf7e8df2a6073c621a1635b81e"
+  integrity sha512-4FDpBjcBvI/zKRm9wifKEY+rPieDuHZ8qaAq6fwNwmgkTn6nEk+VxyIVW74QB0aBRsfvoUO+Vp4TwYKRwiKOfw==
 
-"@deno/win32-x64@2.3.7":
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/@deno/win32-x64/-/win32-x64-2.3.7.tgz#c8cf7bc7c80b0b54c86e11623d9a6e93dbb7c1e4"
-  integrity sha512-NaBJeYmeZZ3zFqGP1mmJ7lP6ZAqGSBpkP/ASh8TbevoHR16s5LJ1SgxUJ7SAtN55KjA14onp761f9QXuvPn5IQ==
+"@deno/win32-x64@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/@deno/win32-x64/-/win32-x64-2.4.0.tgz#658a01f66b1c9934de816c09f979b50c5b904a35"
+  integrity sha512-dzttzO7m23JtBtGTmjrqrDxCy47jhL/jVJ9PZe7aNQIoEIyiuSgrmuoFk42QVTpXaJnw0odXarIBZOiN6FZYmg==
 
 "@emnapi/core@^1.4.3":
   version "1.4.3"
@@ -1435,10 +1435,10 @@
     minimatch "^3.1.2"
     strip-json-comments "^3.1.1"
 
-"@eslint/js@9.30.0":
-  version "9.30.0"
-  resolved "https://registry.yarnpkg.com/@eslint/js/-/js-9.30.0.tgz#c396fa450d5505dd9b7b8846b33f0491aebd9a2d"
-  integrity sha512-Wzw3wQwPvc9sHM+NjakWTcPx11mbZyiYHuwWa/QfZ7cIRX7WK54PSk7bdyXDaoaopUcMatv1zaQvOAAO8hCdww==
+"@eslint/js@9.30.1":
+  version "9.30.1"
+  resolved "https://registry.yarnpkg.com/@eslint/js/-/js-9.30.1.tgz#ebe9dd52a38345784c486300175a28c6013c088d"
+  integrity sha512-zXhuECFlyep42KZUhWjfvsmXGX39W8K8LFb8AWXM9gSV9dQB+MrJGLKvW6Zw0Ggnbpw0VHTtrhFXYe3Gym18jg==
 
 "@eslint/object-schema@^2.1.6":
   version "2.1.6"
@@ -3380,9 +3380,9 @@
   integrity sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==
 
 "@types/k6@^1.0.0":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-1.0.2.tgz#da62b6faaafc969a76c19b838121c1502f878464"
-  integrity sha512-bpja1c7OXIJk06aPGN+Aw5f3QhP0PjvgX2Fwfa3rJUaUI+O1ZE3491g9hMjhH21ZlTaAhz7h6veyxaz/RqPUTg==
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@types/k6/-/k6-1.1.0.tgz#41ecc5b7bee0d4eaad423e1f2661c4c93fb215a0"
+  integrity sha512-PsC9JBjp93WUxfbKzA3qc8zltkY+ulnc8lVcFcUpAk/MQAP44XJ3U/OYx6qGvOR++v8HYxTsJmBqAr5MpFRZvQ==
 
 "@types/keygrip@*":
   version "1.0.6"
@@ -3422,10 +3422,10 @@
   resolved "https://registry.yarnpkg.com/@types/mime/-/mime-1.3.5.tgz#1ef302e01cf7d2b5a0fa526790c9123bf1d06690"
   integrity sha512-/pyBZWSLD2n0dcHE3hq8s8ZvcETHtEuF+3E7XVt0Ig2nvsVQXdghHVcEkIWjy9A0wKfTn97a/PSDYohKIlnP/w==
 
-"@types/node@*", "@types/node@24.0.8", "@types/node@>=13.7.0":
-  version "24.0.8"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.8.tgz#98f50977fe76ab78d02fc3bcb7f6c3b5f79a363c"
-  integrity sha512-WytNrFSgWO/esSH9NbpWUfTMGQwCGIKfCmNlmFDNiI5gGhgMmEA+V1AEvKLeBNvvtBnailJtkrEa2OIISwrVAA==
+"@types/node@*", "@types/node@24.0.10", "@types/node@>=13.7.0":
+  version "24.0.10"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.10.tgz#f65a169779bf0d70203183a1890be7bee8ca2ddb"
+  integrity sha512-ENHwaH+JIRTDIEEbDK6QSQntAYGtbvdDXnMXnZaZ6k13Du1dPMmprkEHIL7ok2Wl2aZevetwTAb5S+7yIF+enA==
   dependencies:
     undici-types "~7.8.0"
 
@@ -4959,17 +4959,17 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
   integrity sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==
 
-deno@2.3.7:
-  version "2.3.7"
-  resolved "https://registry.yarnpkg.com/deno/-/deno-2.3.7.tgz#fdd31d3ac541ff55f97fc1e550fc712b58d11191"
-  integrity sha512-32FqjdIBOAZO+VMHQOjevNq2o6UctBY+zmRqUAvS98F76Cdv/MMvEnhesyxpL6v/b7oU3fSlLIRWuTlvaiSIpg==
+deno@2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/deno/-/deno-2.4.0.tgz#5a60dcc4336f44e24d6db1af69ac9079dfe1010a"
+  integrity sha512-cRm6/RgQObuAyrbehCG9zCHnbBcx2gcQN6WGOEjVtCY8IptxStSsNlk5nwT3WhCrtb6WLFes33qw2+6V12RVRg==
   optionalDependencies:
-    "@deno/darwin-arm64" "2.3.7"
-    "@deno/darwin-x64" "2.3.7"
-    "@deno/linux-arm64-glibc" "2.3.7"
-    "@deno/linux-x64-glibc" "2.3.7"
-    "@deno/win32-arm64" "2.3.7"
-    "@deno/win32-x64" "2.3.7"
+    "@deno/darwin-arm64" "2.4.0"
+    "@deno/darwin-x64" "2.4.0"
+    "@deno/linux-arm64-glibc" "2.4.0"
+    "@deno/linux-x64-glibc" "2.4.0"
+    "@deno/win32-arm64" "2.4.0"
+    "@deno/win32-x64" "2.4.0"
 
 depd@2.0.0, depd@^2.0.0, depd@~2.0.0:
   version "2.0.0"
@@ -5521,10 +5521,10 @@ eslint-visitor-keys@^4.2.1:
   resolved "https://registry.yarnpkg.com/eslint-visitor-keys/-/eslint-visitor-keys-4.2.1.tgz#4cfea60fe7dd0ad8e816e1ed026c1d5251b512c1"
   integrity sha512-Uhdk5sfqcee/9H/rCOJikYz67o0a2Tw2hGRPOG2Y1R2dg7brRe1uG0yaNQDHu+TO/uQPF/5eCapvYSmHUjt7JQ==
 
-eslint@9.30.0:
-  version "9.30.0"
-  resolved "https://registry.yarnpkg.com/eslint/-/eslint-9.30.0.tgz#fb0c655f5e28fc1b2f4050c28efa1876d78034fc"
-  integrity sha512-iN/SiPxmQu6EVkf+m1qpBxzUhE12YqFLOSySuOyVLJLEF9nzTf+h/1AJYc1JWzCnktggeNrjvQGLngDzXirU6g==
+eslint@9.30.1:
+  version "9.30.1"
+  resolved "https://registry.yarnpkg.com/eslint/-/eslint-9.30.1.tgz#d4107b39964412acd9b5c0744f1c6df514fa1211"
+  integrity sha512-zmxXPNMOXmwm9E0yQLi5uqXHs7uq2UIiqEKo3Gq+3fwo1XrJ+hijAZImyF7hclW3E6oHz43Yk3RP8at6OTKflQ==
   dependencies:
     "@eslint-community/eslint-utils" "^4.2.0"
     "@eslint-community/regexpp" "^4.12.1"
@@ -5532,7 +5532,7 @@ eslint@9.30.0:
     "@eslint/config-helpers" "^0.3.0"
     "@eslint/core" "^0.14.0"
     "@eslint/eslintrc" "^3.3.1"
-    "@eslint/js" "9.30.0"
+    "@eslint/js" "9.30.1"
     "@eslint/plugin-kit" "^0.3.1"
     "@humanfs/node" "^0.16.6"
     "@humanwhocodes/module-importer" "^1.0.1"
