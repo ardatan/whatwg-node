@@ -45,7 +45,7 @@
     "@types/compression": "1.8.1",
     "@types/express": "5.0.3",
     "@types/koa": "2.15.0",
-    "@types/node": "24.0.11",
+    "@types/node": "24.0.12",
     "compression": "1.8.0",
     "express": "5.1.0",
     "fastify": "5.4.0",
