@@ -1,5 +1,18 @@
 # @whatwg-node/fetch
 
+## 0.10.9
+
+### Patch Changes
+
+- [#2553](https://github.com/ardatan/whatwg-node/pull/2553)
+  [`752b0eb`](https://github.com/ardatan/whatwg-node/commit/752b0ebdc88654ef4ae1e13eb860980f437b4110)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Fix the conflict of urlpattern-ponyfill
+  and \`@types/node\`
+
+- Updated dependencies
+  [[`b69157b`](https://github.com/ardatan/whatwg-node/commit/b69157bd97aba8fb4c761f8d16afc549c35acfa0)]:
+  - @whatwg-node/node-fetch@0.7.22
+
 ## 0.10.8
 
 ### Patch Changes
@@ -7,7 +20,6 @@
 - [#2424](https://github.com/ardatan/whatwg-node/pull/2424)
   [`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)
   Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
-
   - Avoid creating `AbortController` and `AbortSignal` if not needed with `new Request` because it
     is expensive
   - Avoid creating a map for `Headers` and try to re-use the init object for `Headers` for
@@ -77,7 +89,6 @@
 - [#2082](https://github.com/ardatan/whatwg-node/pull/2082)
   [`b217e30`](https://github.com/ardatan/whatwg-node/commit/b217e305b5a5d63e164cf83ef45e7d1e95fefa0e)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency
     [`@whatwg-node/node-fetch@^0.7.9` ↗︎](https://www.npmjs.com/package/@whatwg-node/node-fetch/v/0.7.9)
     (from `^0.7.8`, in `dependencies`)
@@ -465,7 +476,6 @@
 - [#495](https://github.com/ardatan/whatwg-node/pull/495)
   [`1a2a92f`](https://github.com/ardatan/whatwg-node/commit/1a2a92fcc4e06342bcc5b18b8c7f2373edfa1552)
   Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
-
   - Updated dependency
     [`urlpattern-polyfill@^8.0.0` ↗︎](https://www.npmjs.com/package/urlpattern-polyfill/v/8.0.0)
     (from `^7.0.0`, in `dependencies`)
@@ -583,7 +593,6 @@
 - [#314](https://github.com/ardatan/whatwg-node/pull/314)
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency
     [`@whatwg-node/node-fetch@^0.0.4` ↗︎](https://www.npmjs.com/package/@whatwg-node/node-fetch/v/0.0.4)
     (from `0.0.4`, in `dependencies`)
@@ -645,7 +654,6 @@
 - [#154](https://github.com/ardatan/whatwg-node/pull/154)
   [`9f4fe48`](https://github.com/ardatan/whatwg-node/commit/9f4fe489ff1d08d873a2dd26c02abc54da08dc48)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency
     [`web-streams-polyfill@^3.2.1` ↗︎](https://www.npmjs.com/package/web-streams-polyfill/v/3.2.1)
     (from `^3.2.0`, in `dependencies`)
