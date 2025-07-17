@@ -179,9 +179,15 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
-    return _body.readable.toArray().then(chunks => {
-      this._chunks = chunks;
-      return this._chunks;
+    const chunks: Uint8Array[] = [];
+    return new Promise<Uint8Array[]>((resolve, reject) => {
+      _body.readable.on('data', chunk => {
+        chunks.push(chunk);
+      });
+      _body.readable.once('error', reject);
+      _body.readable.once('end', () => {
+        resolve((this._chunks = chunks));
+      });
     });
   }
 
