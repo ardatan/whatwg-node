@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.7.22
+
+### Patch Changes
+
+- [#2578](https://github.com/ardatan/whatwg-node/pull/2578)
+  [`b69157b`](https://github.com/ardatan/whatwg-node/commit/b69157bd97aba8fb4c761f8d16afc549c35acfa0)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid `.toArray` and use `Readable`'s native
+  listeners directly
+
 ## 0.7.21
 
 ### Patch Changes
@@ -7,7 +16,6 @@
 - [#2424](https://github.com/ardatan/whatwg-node/pull/2424)
   [`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)
   Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
-
   - Avoid creating `AbortController` and `AbortSignal` if not needed with `new Request` because it
     is expensive
   - Avoid creating a map for `Headers` and try to re-use the init object for `Headers` for
@@ -56,7 +64,6 @@
 - [#2305](https://github.com/ardatan/whatwg-node/pull/2305)
   [`380984a`](https://github.com/ardatan/whatwg-node/commit/380984ae072ece9f1d0106164a78143d81a1d02e)
   Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
-
   - Added dependency
     [`@fastify/busboy@^3.1.1` ↗︎](https://www.npmjs.com/package/@fastify/busboy/v/3.1.1) (to
     `dependencies`)
@@ -224,7 +231,6 @@
 - [#1929](https://github.com/ardatan/whatwg-node/pull/1929)
   [`b88b85c`](https://github.com/ardatan/whatwg-node/commit/b88b85c301923719f4722bdfe070728725bcc1b5)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Removed dependency
     [`@kamilkisiela/fast-url-parser@^1.1.4` ↗︎](https://www.npmjs.com/package/@kamilkisiela/fast-url-parser/v/1.1.4)
     (from `dependencies`)
@@ -248,7 +254,6 @@
   Thanks [@ardatan](https://github.com/ardatan)! - - Remove URL ponyfill implementation based on
   `fast-url-parser` and `fast-querystring`, because Node now uses Ada URL parser which is fast
   enough.
-
   - Fix `ReadableStream[Symbol.asyncIterator]`
 
   `ReadableStream` uses `Readable` so it uses `Symbol.asyncIterator` method of `Readable` but the
@@ -373,12 +378,10 @@
 - [#1617](https://github.com/ardatan/whatwg-node/pull/1617)
   [`ed368bf`](https://github.com/ardatan/whatwg-node/commit/ed368bf6ab65e8141406a8b66f54d01785144490)
   Thanks [@ardatan](https://github.com/ardatan)! - # Fixes for usage of `node-libcurl`
-
   - Fix \`Error: SSL peer certificate or SSH remove key was not ok error\`, and use
     `tls.rootCertificates` as default certificates.
 
   [Learn more](https://github.com/JCMais/node-libcurl/blob/develop/COMMON_ISSUES.md)
-
   - Fix `API function called from within callback` by preventing the use of `curl_easy_perform` and
     `curl_multi_perform` inside callbacks.
 
@@ -604,7 +607,6 @@
 - [#990](https://github.com/ardatan/whatwg-node/pull/990)
   [`c6806ff`](https://github.com/ardatan/whatwg-node/commit/c6806ff4228a03ce03caa0b3766efb34eb07c3e6)
   Thanks [@kamilkisiela](https://github.com/kamilkisiela)! - dependencies updates:
-
   - Added dependency
     [`@kamilkisiela/fast-url-parser@^1.1.4` ↗︎](https://www.npmjs.com/package/@kamilkisiela/fast-url-parser/v/1.1.4)
     (to `dependencies`)
@@ -885,7 +887,6 @@
 
 - [`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency
     [`fast-querystring@^1.1.1` ↗︎](https://www.npmjs.com/package/fast-querystring/v/1.1.1) (to
     `dependencies`)
@@ -926,7 +927,6 @@
 - [#314](https://github.com/ardatan/whatwg-node/pull/314)
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency
     [`@whatwg-node/events@^0.0.2` ↗︎](https://www.npmjs.com/package/@whatwg-node/events/v/0.0.2)
     (from `0.0.2`, in `dependencies`)
