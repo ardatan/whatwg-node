@@ -75,7 +75,7 @@
     "vitest": "3.2.4"
   },
   "resolutions": {
-    "@pulumi/pulumi": "3.183.0",
+    "@pulumi/pulumi": "3.184.0",
     "cookie": "1.0.2",
     "esbuild": "0.25.6"
   },
