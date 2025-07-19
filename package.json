@@ -46,7 +46,7 @@
     "@jest/globals": "30.0.4",
     "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.3.0",
-    "@types/node": "24.0.14",
+    "@types/node": "24.0.15",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
     "@typescript-eslint/eslint-plugin": "8.37.0",
@@ -56,7 +56,7 @@
     "bun": "1.2.18",
     "deno": "2.4.2",
     "eslint": "9.31.0",
-    "eslint-config-prettier": "10.1.5",
+    "eslint-config-prettier": "10.1.8",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-n": "17.21.0",
@@ -77,7 +77,7 @@
   "resolutions": {
     "@pulumi/pulumi": "3.184.0",
     "cookie": "1.0.2",
-    "esbuild": "0.25.6"
+    "esbuild": "0.25.7"
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
