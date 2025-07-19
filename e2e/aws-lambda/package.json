@@ -15,7 +15,7 @@
     "@pulumi/aws": "7.0.0",
     "@pulumi/aws-native": "1.31.0",
     "@pulumi/pulumi": "3.184.0",
-    "@types/aws-lambda": "8.10.151",
+    "@types/aws-lambda": "8.10.152",
     "@types/node": "24.0.15",
     "esbuild": "0.25.7",
     "ts-node": "10.9.2",
