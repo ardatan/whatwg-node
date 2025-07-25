@@ -76,6 +76,7 @@ export function pipeThrough({
   });
 
   if (signal) {
+    // this is faster than `import('node:signal').addAbortSignal(signal, src)`
     function onAbort() {
       src.destroy(new AbortError());
     }
