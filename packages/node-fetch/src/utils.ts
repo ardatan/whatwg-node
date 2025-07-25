@@ -1,7 +1,6 @@
 import { once } from 'node:events';
 import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable, Writable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { addAbortListener, PassThrough, Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -55,25 +54,22 @@ export function wrapIncomingMessageWithPassthrough({
   incomingMessage,
   signal,
   passThrough = new PassThrough(),
-  onError = (e: Error) => {
-    passThrough.destroy(e);
-  },
 }: {
   incomingMessage: IncomingMessage;
   passThrough?: PassThrough | undefined;
   signal?: AbortSignal | undefined;
-  onError?: (e: Error) => void;
 }) {
-  pipeline(incomingMessage, passThrough, {
-    signal,
+  passThrough = incomingMessage.pipe(passThrough, {
     end: true,
-  })
-    .then(() => {
+  });
+  if (signal) {
+    addAbortListener(signal, () => {
+      passThrough.destroy(signal.reason);
       if (!incomingMessage.destroyed) {
-        incomingMessage.resume();
+        incomingMessage.destroy(signal.reason);
       }
-    })
-    .catch(onError);
+    });
+  }
   return passThrough;
 }
 
