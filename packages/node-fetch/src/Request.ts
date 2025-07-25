@@ -93,6 +93,8 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
         this.agent = requestInit.agent;
       }
     }
+
+    this._signal = requestInit?.signal || undefined;
   }
 
   headersSerializer?: HeadersSerializer | undefined;
