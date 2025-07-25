@@ -109,6 +109,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrer: string;
   referrerPolicy: ReferrerPolicy;
   _url: string | undefined;
+  _signal: AbortSignal | undefined;
 
   get signal(): AbortSignal {
     this._signal ||= new AbortController().signal;
