@@ -134,7 +134,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       const outputStream = wrapIncomingMessageWithPassthrough({
         incomingMessage: stream as IncomingMessage,
         signal,
-        onError: deferredPromise.reject,
       });
       const headersFlat = headersBuf
         .toString('utf8')
