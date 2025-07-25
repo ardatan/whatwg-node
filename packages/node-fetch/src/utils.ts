@@ -1,5 +1,5 @@
 import { once } from 'node:events';
-import { addAbortSignal, Readable, Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -76,7 +76,11 @@ export function pipeThrough({
   });
 
   if (signal) {
-    addAbortSignal(signal, src);
+    function onAbort() {
+      src.destroy(new AbortError());
+    }
+    signal.addEventListener('abort', onAbort, { once: true });
+    src.once('close', () => signal.removeEventListener('abort', onAbort));
   }
 
   src.pipe(dest, { end: true /* already default */ });
@@ -91,5 +95,13 @@ export function safeWrite(chunk: any, stream: Writable) {
   const result = stream.write(chunk);
   if (!result) {
     return once(stream, 'drain');
+  }
+}
+
+// https://github.com/nodejs/node/blob/f692878dec6354c0a82241f224906981861bc840/lib/internal/errors.js#L961-L973
+class AbortError extends Error {
+  constructor(message = 'The operation was aborted', options = undefined) {
+    super(message, options);
+    this.name = 'AbortError';
   }
 }
