@@ -61,6 +61,11 @@ export default function run() {
     JSON.stringify({
       name: 'World',
     }),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
   );
 
   check(res, {
