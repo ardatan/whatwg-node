@@ -10,9 +10,9 @@ import {
   endStream,
   getHeadersObj,
   isNodeReadable,
+  pipeThrough,
   safeWrite,
   shouldRedirect,
-  wrapIncomingMessageWithPassthrough,
 } from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
@@ -117,9 +117,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         }
 
         if (outputStream != null) {
-          outputStream = wrapIncomingMessageWithPassthrough({
-            incomingMessage: nodeResponse,
-            passThrough: outputStream,
+          pipeThrough({
+            src: nodeResponse,
+            dest: outputStream,
             signal,
             onError: reject,
           });

@@ -1,7 +1,5 @@
 import { once } from 'node:events';
-import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable, Writable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -51,30 +49,52 @@ export function shouldRedirect(status?: number): boolean {
   return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
 }
 
-export function wrapIncomingMessageWithPassthrough({
-  incomingMessage,
+export function pipeThrough({
+  src,
+  dest,
   signal,
-  passThrough = new PassThrough(),
-  onError = (e: Error) => {
-    passThrough.destroy(e);
-  },
+  onError,
 }: {
-  incomingMessage: IncomingMessage;
-  passThrough?: PassThrough | undefined;
+  src: Readable;
+  dest: Writable;
   signal?: AbortSignal | undefined;
-  onError?: (e: Error) => void;
+  onError?: ((e: Error) => void) | undefined;
 }) {
-  pipeline(incomingMessage, passThrough, {
-    signal,
-    end: true,
-  })
-    .then(() => {
-      if (!incomingMessage.destroyed) {
-        incomingMessage.resume();
+  if (onError) {
+    // listen for errors on the destination stream if necessary. if the readable
+    // stream (src) emits an error, the writable destination (dest) will be
+    // destroyed with that error (see below)
+    dest.once('error', onError);
+  }
+
+  src.once('error', (e: Error) => {
+    // if the readable stream (src) emits an error during pipe, the writable
+    // destination (dest) is not closed automatically. that needs to be
+    // done manually. the readable stream is closed when error is emitted,
+    // so only the writable destination needs to be destroyed
+    dest.destroy(e);
+  });
+
+  if (signal) {
+    function handleAbort() {
+      try {
+        signal!.throwIfAborted();
+      } catch (abortError: any) {
+        // destroying the src stream will destroy the dest stream as well
+        src.destroy(abortError);
       }
-    })
-    .catch(onError);
-  return passThrough;
+    }
+    if (signal.aborted) {
+      // if the signal is already aborted, we can just destroy the
+      // src stream and not start pipe at all
+      handleAbort();
+      return;
+    }
+
+    signal.addEventListener('abort', handleAbort, { once: true });
+  }
+
+  src.pipe(dest, { end: true /* already default */ });
 }
 
 export function endStream(stream: { end: () => void }) {
