@@ -1,5 +1,5 @@
 import { once } from 'node:events';
-import { Readable, Writable } from 'node:stream';
+import { addAbortSignal, Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -76,22 +76,7 @@ export function pipeThrough({
   });
 
   if (signal) {
-    function handleAbort() {
-      try {
-        signal!.throwIfAborted();
-      } catch (abortError: any) {
-        // destroying the src stream will destroy the dest stream as well
-        src.destroy(abortError);
-      }
-    }
-    if (signal.aborted) {
-      // if the signal is already aborted, we can just destroy the
-      // src stream and not start pipe at all
-      handleAbort();
-      return;
-    }
-
-    signal.addEventListener('abort', handleAbort, { once: true });
+    addAbortSignal(signal, src);
   }
 
   src.pipe(dest, { end: true /* already default */ });
