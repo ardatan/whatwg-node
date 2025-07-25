@@ -34,8 +34,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     signal = undefined;
   } else if (fetchRequest._signal) {
     signal = fetchRequest._signal;
-  } else {
-    signal = fetchRequest.signal;
   }
 
   curlHandle.setStreamProgressCallback(function () {
