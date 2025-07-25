@@ -1,5 +1,5 @@
 import { once } from 'node:events';
-import { Readable, Writable } from 'node:stream';
+import { finished, Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -81,7 +81,7 @@ export function pipeThrough({
       src.destroy(new AbortError());
     }
     signal.addEventListener('abort', onAbort, { once: true });
-    src.once('close', () => signal.removeEventListener('abort', onAbort));
+    finished(src, () => signal.removeEventListener('abort', onAbort));
   }
 
   src.pipe(dest, { end: true /* already default */ });
