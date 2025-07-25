@@ -56,7 +56,17 @@ export function handleSummary(data) {
 }
 
 export default function run() {
-  const res = http.get(`http://127.0.0.1:4000`);
+  const res = http.post(
+    `http://127.0.0.1:4000`,
+    JSON.stringify({
+      name: 'World',
+    }),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
 
   check(res, {
     'no-errors': resp => resp.status === 200,
