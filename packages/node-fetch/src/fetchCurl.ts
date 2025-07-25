@@ -1,16 +1,10 @@
 import { Buffer } from 'node:buffer';
-import { IncomingMessage } from 'node:http';
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import {
-  defaultHeadersSerializer,
-  isNodeReadable,
-  shouldRedirect,
-  wrapIncomingMessageWithPassthrough,
-} from './utils.js';
+import { defaultHeadersSerializer, isNodeReadable, pipeThrough, shouldRedirect } from './utils.js';
 
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
@@ -131,8 +125,10 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.once(
     'stream',
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      const outputStream = wrapIncomingMessageWithPassthrough({
-        incomingMessage: stream as IncomingMessage,
+      const passThrough = new PassThrough();
+      pipeThrough({
+        src: stream,
+        dest: passThrough,
         signal,
         onError: deferredPromise.reject,
       });
@@ -149,7 +145,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
               if (!stream.destroyed) {
                 stream.resume();
               }
-              outputStream.destroy();
+              passThrough.destroy();
               deferredPromise.reject(new Error('redirect is not allowed'));
             }
             return true;
@@ -159,14 +155,14 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       const headersInit = headersFlat.map(
         headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
       );
-      const ponyfillResponse = new PonyfillResponse(outputStream, {
+      const ponyfillResponse = new PonyfillResponse(passThrough, {
         status,
         headers: headersInit,
         url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,
         redirected: Number(curlHandle.getInfo(Curl.info.REDIRECT_COUNT)) > 0,
       });
       deferredPromise.resolve(ponyfillResponse);
-      streamResolved = outputStream;
+      streamResolved = passThrough;
     },
   );
   setImmediate(() => {
