@@ -1,5 +1,5 @@
 import { once } from 'node:events';
-import { finished, Readable, Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -77,11 +77,23 @@ export function pipeThrough({
 
   if (signal) {
     // this is faster than `import('node:signal').addAbortSignal(signal, src)`
+    const srcRef = new WeakRef(src);
+    const signalRef = new WeakRef(signal);
+    function cleanup() {
+      signalRef.deref()?.removeEventListener('abort', onAbort);
+      srcRef.deref()?.removeListener('end', cleanup);
+      srcRef.deref()?.removeListener('error', cleanup);
+      srcRef.deref()?.removeListener('close', cleanup);
+    }
     function onAbort() {
-      src.destroy(new AbortError());
+      srcRef.deref()?.destroy(new AbortError());
+      cleanup();
     }
     signal.addEventListener('abort', onAbort, { once: true });
-    finished(src, () => signal.removeEventListener('abort', onAbort));
+    // this is faster than `import('node:signal').finished(src, cleanup)`
+    src.once('end', cleanup);
+    src.once('error', cleanup);
+    src.once('close', cleanup);
   }
 
   src.pipe(dest, { end: true /* already default */ });
