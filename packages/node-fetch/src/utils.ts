@@ -81,7 +81,7 @@ export function pipeThrough({
       src.destroy(new AbortError());
     }
     signal.addEventListener('abort', onAbort, { once: true });
-    src.once('end', () => signal.removeEventListener('abort', onAbort));
+    src.once('close', () => signal.removeEventListener('abort', onAbort));
   }
 
   src.pipe(dest, { end: true /* already default */ });
