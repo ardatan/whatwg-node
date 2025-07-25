@@ -1,6 +1,5 @@
 import { once } from 'node:events';
-import { IncomingMessage } from 'node:http';
-import { addAbortListener, PassThrough, Readable, Writable } from 'node:stream';
+import { Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -48,29 +47,6 @@ export function isIterable(value: any): value is Iterable<unknown> {
 
 export function shouldRedirect(status?: number): boolean {
   return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
-}
-
-export function wrapIncomingMessageWithPassthrough({
-  incomingMessage,
-  signal,
-  passThrough = new PassThrough(),
-}: {
-  incomingMessage: IncomingMessage;
-  passThrough?: PassThrough | undefined;
-  signal?: AbortSignal | undefined;
-}) {
-  passThrough = incomingMessage.pipe(passThrough, {
-    end: true,
-  });
-  if (signal) {
-    addAbortListener(signal, () => {
-      passThrough.destroy(signal.reason);
-      if (!incomingMessage.destroyed) {
-        incomingMessage.destroy(signal.reason);
-      }
-    });
-  }
-  return passThrough;
 }
 
 export function endStream(stream: { end: () => void }) {
