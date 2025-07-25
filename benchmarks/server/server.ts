@@ -6,7 +6,14 @@ import { createServerAdapter, Response } from '@whatwg-node/server';
 let serverAdapter: RequestListener;
 if (process.env.SCENARIO === 'native') {
   serverAdapter = createServerAdapter(
-    req => req.json().then(({ name }) => globalThis.Response.json({ message: `Hello, ${name}!` })),
+    req => {
+      if (req.method === 'POST') {
+        return req
+          .json()
+          .then(({ name }) => globalThis.Response.json({ message: `Hello, ${name}!` }));
+      }
+      return new globalThis.Response();
+    },
     {
       fetchAPI: {
         fetch: globalThis.fetch,
@@ -31,8 +38,12 @@ if (process.env.SCENARIO === 'native') {
   );
 } else if (process.env.SCENARIO === 'undici') {
   serverAdapter = (createServerAdapter as any)(
-    (req: Request) =>
-      req.json().then(({ name }) => undici.Response.json({ message: `Hello, ${name}!` })),
+    (req: Request) => {
+      if (req.method === 'POST') {
+        return req.json().then(({ name }) => undici.Response.json({ message: `Hello, ${name}!` }));
+      }
+      return new undici.Response();
+    },
     {
       fetchAPI: {
         fetch: undici.fetch,
@@ -56,9 +67,12 @@ if (process.env.SCENARIO === 'native') {
     },
   );
 } else {
-  serverAdapter = createServerAdapter(req =>
-    req.json().then(({ name }) => Response.json({ message: `Hello, ${name}!` })),
-  );
+  serverAdapter = createServerAdapter(req => {
+    if (req.method === 'POST') {
+      return req.json().then(({ name }) => Response.json({ message: `Hello, ${name}!` }));
+    }
+    return new Response();
+  });
 }
 
 createServer(serverAdapter).listen(4000, () => {
