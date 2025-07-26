@@ -114,21 +114,20 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        if (outputStream != null) {
-          pipeThrough({
-            src: nodeResponse,
-            dest: outputStream,
-            signal,
-            onError: reject,
-          });
-        }
+        outputStream ||= new PassThrough();
+        pipeThrough({
+          src: nodeResponse,
+          dest: outputStream,
+          signal,
+          onError: reject,
+        });
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
+        const ponyfillResponse = new PonyfillResponse(outputStream, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
