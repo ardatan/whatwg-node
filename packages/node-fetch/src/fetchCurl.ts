@@ -30,12 +30,10 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.enable(CurlFeature.StreamResponse);
 
   let signal: AbortSignal | undefined;
-  if (fetchRequest._signal === null) {
+  if (fetchRequest._signal == null) {
     signal = undefined;
   } else if (fetchRequest._signal) {
     signal = fetchRequest._signal;
-  } else {
-    signal = fetchRequest.signal;
   }
 
   curlHandle.setStreamProgressCallback(function () {

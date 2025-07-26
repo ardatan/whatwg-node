@@ -42,12 +42,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       let signal: AbortSignal | undefined;
 
-      if (fetchRequest._signal === null) {
+      if (fetchRequest._signal == null) {
         signal = undefined;
       } else if (fetchRequest._signal) {
         signal = fetchRequest._signal;
-      } else {
-        signal = fetchRequest.signal;
       }
 
       let nodeRequest: ReturnType<typeof requestFn>;
