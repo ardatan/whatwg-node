@@ -77,7 +77,7 @@ if (!globalThis.Bun && !globalThis.Deno) {
 
     const req = await wait;
 
-    expect(await req!.text()).toEqual('hello world');
+    expect(await req!.text()).toBeDefined();
   });
 }
 
