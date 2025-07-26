@@ -1,7 +1,5 @@
 import { once } from 'node:events';
-import { IncomingMessage } from 'node:http';
-import { PassThrough, Readable, Writable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
   return obj?.forEach != null;
@@ -49,32 +47,6 @@ export function isIterable(value: any): value is Iterable<unknown> {
 
 export function shouldRedirect(status?: number): boolean {
   return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
-}
-
-export function wrapIncomingMessageWithPassthrough({
-  incomingMessage,
-  signal,
-  passThrough = new PassThrough(),
-  onError = (e: Error) => {
-    passThrough.destroy(e);
-  },
-}: {
-  incomingMessage: IncomingMessage;
-  passThrough?: PassThrough | undefined;
-  signal?: AbortSignal | undefined;
-  onError?: (e: Error) => void;
-}) {
-  pipeline(incomingMessage, passThrough, {
-    signal,
-    end: true,
-  })
-    .then(() => {
-      if (!incomingMessage.destroyed) {
-        incomingMessage.resume();
-      }
-    })
-    .catch(onError);
-  return passThrough;
 }
 
 export function endStream(stream: { end: () => void }) {
