@@ -93,8 +93,6 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
         this.agent = requestInit.agent;
       }
     }
-
-    this._signal = requestInit?.signal || undefined;
   }
 
   headersSerializer?: HeadersSerializer | undefined;
@@ -111,7 +109,6 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   referrer: string;
   referrerPolicy: ReferrerPolicy;
   _url: string | undefined;
-  _signal: AbortSignal | undefined;
 
   get signal(): AbortSignal {
     this._signal ||= new AbortController().signal;
