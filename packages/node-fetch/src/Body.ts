@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
-import { Readable } from 'node:stream';
+import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
@@ -62,6 +62,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     this.contentLength = contentLength;
     this.bodyType = bodyType;
     this._buffer = buffer;
+    this._signal = options.signal;
   }
 
   private bodyType?: BodyInitType | undefined;
@@ -69,6 +70,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
   private _buffer?: Buffer | undefined;
+  _signal?: AbortSignal | undefined;
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody?.readable?.destroyed && this._buffer) {
@@ -173,6 +175,9 @@ export class PonyfillBody<TJSON = any> implements Body {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
+    if (_body.readable.destroyed) {
+      return fakePromise((this._chunks = []));
+    }
     const chunks: Uint8Array[] = [];
     return new Promise<Uint8Array[]>((resolve, reject) => {
       _body.readable.on('data', chunk => {
@@ -271,6 +276,10 @@ export class PonyfillBody<TJSON = any> implements Body {
         limits: formDataLimits,
         defCharset: 'utf-8',
       });
+
+      if (this._signal) {
+        addAbortSignal(this._signal, bb);
+      }
 
       let completed = false;
       const complete = (err: unknown) => {

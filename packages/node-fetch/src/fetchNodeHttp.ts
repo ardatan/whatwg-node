@@ -6,7 +6,14 @@ import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
-import { endStream, getHeadersObj, isNodeReadable, safeWrite, shouldRedirect } from './utils.js';
+import {
+  endStream,
+  getHeadersObj,
+  isNodeReadable,
+  pipeThrough,
+  safeWrite,
+  shouldRedirect,
+} from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
   if (url.startsWith('http:')) {
@@ -109,8 +116,19 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
         outputStream ||= new PassThrough();
 
-        nodeResponse.pipe(outputStream, {
-          end: true,
+        pipeThrough({
+          src: nodeResponse,
+          dest: outputStream,
+          signal,
+          onError: e => {
+            if (!nodeResponse.destroyed) {
+              nodeResponse.destroy(e);
+            }
+            if (!outputStream.destroyed) {
+              outputStream.destroy(e);
+            }
+            reject(e);
+          },
         });
 
         const statusCode = nodeResponse.statusCode || 200;
