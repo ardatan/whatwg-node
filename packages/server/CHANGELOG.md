@@ -1,5 +1,14 @@
 # @whatwg-node/server
 
+## 0.10.11
+
+### Patch Changes
+
+- [#2640](https://github.com/ardatan/whatwg-node/pull/2640)
+  [`22c568e`](https://github.com/ardatan/whatwg-node/commit/22c568e8e6c4357054136500006a85f1922fd1c9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Handle string bodies without streams to fix the
+  performance regression
+
 ## 0.10.10
 
 ### Patch Changes
@@ -20,7 +29,6 @@
 - [#2424](https://github.com/ardatan/whatwg-node/pull/2424)
   [`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)
   Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
-
   - Avoid creating `AbortController` and `AbortSignal` if not needed with `new Request` because it
     is expensive
   - Avoid creating a map for `Headers` and try to re-use the init object for `Headers` for
@@ -378,7 +386,6 @@
   [`a84e84a`](https://github.com/ardatan/whatwg-node/commit/a84e84aa5c14f23c30637ccd290a099a39c445a1)
   Thanks [@ardatan](https://github.com/ardatan)! - - New `onDispose` hook which is alias of
   `Symbol.asyncDispose` for Explicit Resource Management
-
   - Registration of the server adapter's disposal to the global process termination listener is now
     opt-in and configurable.
 
@@ -483,7 +490,6 @@
 
 - [`e88ab4a`](https://github.com/ardatan/whatwg-node/commit/e88ab4a826184c05d006620bbd3ef20942ea83d9)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency
     [`@whatwg-node/disposablestack@^0.0.5` ↗︎](https://www.npmjs.com/package/@whatwg-node/disposablestack/v/0.0.5)
     (to `dependencies`)
@@ -1258,7 +1264,6 @@
 - [#314](https://github.com/ardatan/whatwg-node/pull/314)
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Updated dependency
     [`@whatwg-node/fetch@^0.6.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.6.8)
     (from `0.6.8`, in `dependencies`)
@@ -1421,7 +1426,6 @@
 - [#219](https://github.com/ardatan/whatwg-node/pull/219)
   [`94c6ff3`](https://github.com/ardatan/whatwg-node/commit/94c6ff3ae27fb45acec9b44da411c45e407df0d2)
   Thanks [@ardatan](https://github.com/ardatan)! - Introduce new middlewares;
-
   - withCORS
   - withErrorHandling
 
@@ -1493,7 +1497,6 @@
   [`eb10500`](https://github.com/ardatan/whatwg-node/commit/eb105005fd01bd227eff8d52c22b39ea1a8c6700)
   Thanks [@ardatan](https://github.com/ardatan)! - - On Node 14, fix the return method of
   Response.body's AsyncIterator to close HTTP connection correctly
-
   - On Node 14, handle ReadableStream's cancel correctly if Response.body is a ReadableStream
   - Do not modify ReadableStream.cancel's behavior but handle it internally
   - On Node 18, do not combine Response.body's return and AbortController which causes a memory leak
@@ -1593,7 +1596,6 @@
 - [#121](https://github.com/ardatan/whatwg-node/pull/121)
   [`a67f447`](https://github.com/ardatan/whatwg-node/commit/a67f4473d8510617c19fd750b149b847e6099b07)
   Thanks [@ardatan](https://github.com/ardatan)! - Improvements;
-
   - `createServerAdapter` can now accept the request handler itself.
 
   ```ts
@@ -1603,7 +1605,6 @@
   ```
 
   Breaking Changes;
-
   - `baseObject` in the configuration has been removed! Now you can pass `baseObject` itself but
     `baseObject` needs to implement a `handle` method that is exactly same with `handleRequest`.
 

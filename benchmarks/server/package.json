@@ -1,6 +1,6 @@
 {
   "name": "@benchmarks/server",
-  "version": "0.0.57",
+  "version": "0.0.58",
   "type": "module",
   "private": true,
   "scripts": {
@@ -13,7 +13,7 @@
     "test": "start-server-and-test start http://127.0.0.1:4000/ping loadtest"
   },
   "dependencies": {
-    "@whatwg-node/server": "0.10.10"
+    "@whatwg-node/server": "0.10.11"
   },
   "devDependencies": {
     "start-server-and-test": "2.0.12"
