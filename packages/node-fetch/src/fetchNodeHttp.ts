@@ -10,9 +10,9 @@ import {
   endStream,
   getHeadersObj,
   isNodeReadable,
+  pipeThrough,
   safeWrite,
   shouldRedirect,
-  wrapIncomingMessageWithPassthrough,
 } from './utils.js';
 
 function getRequestFnForProtocol(url: string) {
@@ -42,12 +42,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       let signal: AbortSignal | undefined;
 
-      if (fetchRequest._signal === null) {
+      if (fetchRequest._signal == null) {
         signal = undefined;
       } else if (fetchRequest._signal) {
         signal = fetchRequest._signal;
-      } else {
-        signal = fetchRequest.signal;
       }
 
       let nodeRequest: ReturnType<typeof requestFn>;
@@ -116,14 +114,22 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        if (outputStream != null) {
-          outputStream = wrapIncomingMessageWithPassthrough({
-            incomingMessage: nodeResponse,
-            passThrough: outputStream,
-            signal,
-            onError: reject,
-          });
-        }
+        outputStream ||= new PassThrough();
+
+        pipeThrough({
+          src: nodeResponse,
+          dest: outputStream,
+          signal,
+          onError: e => {
+            if (!nodeResponse.destroyed) {
+              nodeResponse.destroy(e);
+            }
+            if (!outputStream.destroyed) {
+              outputStream.destroy(e);
+            }
+            reject(e);
+          },
+        });
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
