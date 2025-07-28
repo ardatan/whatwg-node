@@ -224,6 +224,8 @@ export function sendResponseToUwsOpts(
     return;
   }
   const bufferOfRes: Uint8Array = (fetchResponse as any)._buffer;
+  // @ts-expect-error - Handle the case where the response is a string
+  const strBody = fetchResponse['bodyType'] === 'String' ? fetchResponse.bodyInit : undefined;
   if (controller.signal.aborted) {
     return;
   }
@@ -244,13 +246,15 @@ export function sendResponseToUwsOpts(
         uwsResponse.writeHeader(key, value);
       }
     }
-    if (bufferOfRes) {
+    if (strBody) {
+      uwsResponse.end(strBody);
+    } else if (bufferOfRes) {
       uwsResponse.end(bufferOfRes);
     } else if (!fetchResponse.body) {
       uwsResponse.end();
     }
   });
-  if (bufferOfRes || !fetchResponse.body) {
+  if (strBody || bufferOfRes || !fetchResponse.body) {
     return;
   }
   controller.signal.addEventListener(
