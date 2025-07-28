@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.7.23
+
+### Patch Changes
+
+- [#2632](https://github.com/ardatan/whatwg-node/pull/2632)
+  [`7a44c69`](https://github.com/ardatan/whatwg-node/commit/7a44c6908f11c93415786d248a2d7cd6fcadfc1e)
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid Node's promise pipeline by piping streams
+  directly
+
 ## 0.7.22
 
 ### Patch Changes
