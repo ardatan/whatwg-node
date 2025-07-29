@@ -102,9 +102,10 @@ if (!globalThis.Bun && !globalThis.Deno) {
     const port = (server.address() as AddressInfo).port;
     const url = `http://localhost:${port}`;
     const response = await fetch(url);
+    let i = 0;
     // @ts-expect-error - ReadableStream is AsyncIterable
     for await (const chunk of response.body) {
-      if (Buffer.from(chunk).toString('utf-8') === 'chunk 2') {
+      if (i++ === 2) {
         break;
       }
     }
