@@ -79,6 +79,37 @@ if (!globalThis.Bun && !globalThis.Deno) {
 
     expect(await req!.text()).toBeDefined();
   });
+
+  it('should receive the client side "break" in the server side', async () => {
+    const onCancel$ = createDeferredPromise<void>();
+    server = createServer(
+      createServerAdapter(_req => {
+        let i = 0;
+        return new Response(
+          new ReadableStream({
+            async pull(controller) {
+              await new Promise(resolve => setTimeout(resolve, 300));
+              controller.enqueue(`chunk ${i++}`);
+            },
+            cancel() {
+              onCancel$.resolve();
+            },
+          }),
+        );
+      }),
+    );
+    await new Promise<void>(resolve => server?.listen(0, resolve));
+    const port = (server.address() as AddressInfo).port;
+    const url = `http://localhost:${port}`;
+    const response = await fetch(url);
+    // @ts-expect-error - ReadableStream is AsyncIterable
+    for await (const chunk of response.body) {
+      if (chunk.toString() === 'chunk 2') {
+        break;
+      }
+    }
+    await onCancel$.promise;
+  });
 }
 
 const bodies = [
@@ -136,34 +167,3 @@ for (const largeBody of bodies) {
     });
   });
 }
-
-it('should receive the client side "break" in the server side', async () => {
-  const onCancel$ = createDeferredPromise<void>();
-  server = createServer(
-    createServerAdapter(_req => {
-      let i = 0;
-      return new Response(
-        new ReadableStream({
-          async pull(controller) {
-            await new Promise(resolve => setTimeout(resolve, 300));
-            controller.enqueue(`chunk ${i++}`);
-          },
-          cancel() {
-            onCancel$.resolve();
-          },
-        }),
-      );
-    }),
-  );
-  await new Promise<void>(resolve => server?.listen(0, resolve));
-  const port = (server.address() as AddressInfo).port;
-  const url = `http://localhost:${port}`;
-  const response = await fetch(url);
-  // @ts-expect-error - ReadableStream is AsyncIterable
-  for await (const chunk of response.body) {
-    if (chunk.toString() === 'chunk 2') {
-      break;
-    }
-  }
-  await onCancel$.promise;
-});
