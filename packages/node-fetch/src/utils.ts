@@ -75,6 +75,14 @@ export function pipeThrough({
     dest.destroy(e);
   });
 
+  dest.once('close', () => {
+    // if the writable destination (dest) is closed, the readable stream (src)
+    // is not closed automatically. that needs to be done manually
+    if (!src.destroyed) {
+      src.destroy();
+    }
+  });
+
   if (signal) {
     // this is faster than `import('node:signal').addAbortSignal(signal, src)`
     const srcRef = new WeakRef(src);
