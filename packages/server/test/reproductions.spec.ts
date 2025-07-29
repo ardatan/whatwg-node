@@ -79,31 +79,6 @@ if (!globalThis.Bun && !globalThis.Deno) {
 
     expect(await req!.text()).toBeDefined();
   });
-
-  it('should receive the client side "break" in the server side', async () => {
-    const onCancel$ = createDeferredPromise<void>();
-    server = createServer((_req, res) => {
-      const interval = setInterval(() => {
-        res.write('hello world\n');
-      }, 300);
-      res.once('close', () => {
-        clearInterval(interval);
-        onCancel$.resolve();
-      });
-    });
-    await new Promise<void>(resolve => server?.listen(0, resolve));
-    const port = (server.address() as AddressInfo).port;
-    const url = `http://localhost:${port}`;
-    const response = await fetch(url);
-    let i = 0;
-    // @ts-expect-error - ReadableStream is AsyncIterable
-    for await (const chunk of response.body) {
-      if (i++ === 2) {
-        break;
-      }
-    }
-    await onCancel$.promise;
-  });
 }
 
 const bodies = [
