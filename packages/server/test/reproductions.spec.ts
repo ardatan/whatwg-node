@@ -3,7 +3,7 @@ import { AddressInfo } from 'node:net';
 import compression from 'compression';
 import express from 'express';
 import { afterEach, expect, it } from '@jest/globals';
-import { fetch, ReadableStream } from '@whatwg-node/fetch';
+import { fetch } from '@whatwg-node/fetch';
 import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
 
 let server: Server | undefined;
@@ -82,22 +82,15 @@ if (!globalThis.Bun && !globalThis.Deno) {
 
   it('should receive the client side "break" in the server side', async () => {
     const onCancel$ = createDeferredPromise<void>();
-    server = createServer(
-      createServerAdapter(_req => {
-        let i = 0;
-        return new Response(
-          new ReadableStream({
-            async pull(controller) {
-              await new Promise(resolve => setTimeout(resolve, 300));
-              controller.enqueue(`chunk ${i++}`);
-            },
-            cancel() {
-              onCancel$.resolve();
-            },
-          }),
-        );
-      }),
-    );
+    server = createServer((_req, res) => {
+      const interval = setInterval(() => {
+        res.write('hello world\n');
+      }, 300);
+      res.once('close', () => {
+        clearInterval(interval);
+        onCancel$.resolve();
+      });
+    });
     await new Promise<void>(resolve => server?.listen(0, resolve));
     const port = (server.address() as AddressInfo).port;
     const url = `http://localhost:${port}`;
