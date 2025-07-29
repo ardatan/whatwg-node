@@ -1,5 +1,5 @@
-import { createServer } from 'http';
-import { AddressInfo } from 'net';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
 import { afterEach, it } from '@jest/globals';
 import { Request } from '@whatwg-node/node-fetch';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
