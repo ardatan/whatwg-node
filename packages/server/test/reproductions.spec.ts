@@ -104,7 +104,7 @@ if (!globalThis.Bun && !globalThis.Deno) {
     const response = await fetch(url);
     // @ts-expect-error - ReadableStream is AsyncIterable
     for await (const chunk of response.body) {
-      if (chunk.toString() === 'chunk 2') {
+      if (Buffer.from(chunk).toString('utf-8') === 'chunk 2') {
         break;
       }
     }
