@@ -1,4 +1,4 @@
-import { request as httpRequest, STATUS_CODES } from 'node:http';
+import { request as httpRequest, IncomingMessage, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'node:zlib';
@@ -114,22 +114,22 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        outputStream ||= new PassThrough();
-
-        pipeThrough({
-          src: nodeResponse,
-          dest: outputStream,
-          signal,
-          onError: e => {
-            if (!nodeResponse.destroyed) {
-              nodeResponse.destroy(e);
-            }
-            if (!outputStream.destroyed) {
-              outputStream.destroy(e);
-            }
-            reject(e);
-          },
-        });
+        if (outputStream) {
+          pipeThrough({
+            src: nodeResponse,
+            dest: outputStream,
+            signal,
+            onError: e => {
+              if (!nodeResponse.destroyed) {
+                nodeResponse.destroy(e);
+              }
+              if (!outputStream.destroyed) {
+                outputStream.destroy(e);
+              }
+              reject(e);
+            },
+          });
+        }
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
@@ -143,6 +143,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           url: fetchRequest.url,
           signal,
         });
+        finalizationRegistry.register(ponyfillResponse, nodeResponse);
         resolve(ponyfillResponse);
       });
 
@@ -171,3 +172,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
     }
   });
 }
+
+const finalizationRegistry = new FinalizationRegistry<IncomingMessage>(incomingMessage => {
+  if (!incomingMessage.destroyed) {
+    incomingMessage.destroy();
+  }
+});
