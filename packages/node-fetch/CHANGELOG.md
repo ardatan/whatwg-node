@@ -1,5 +1,27 @@
 # @whatwg-node/node-fetch
 
+## 0.7.24
+
+### Patch Changes
+
+- [#2643](https://github.com/ardatan/whatwg-node/pull/2643)
+  [`941e5ce`](https://github.com/ardatan/whatwg-node/commit/941e5ced42ce7d6fc9fa1ee8c1494e149ffa0b20)
+  Thanks [@ardatan](https://github.com/ardatan)! - In case of iterator cancellation, ensure the
+  response stream a.k.a. `IncomingMessage` is properly closed.
+
+  ```ts
+  const response = await fetch('http://localhost:3000/stream')
+
+  for await (const chunk of response.body) {
+    console.log('Received chunk:', chunk)
+    if (chunk === 'stop') {
+      console.log('Stopping stream')
+      // In case of `break` which calls the `iterator.return()`, we need to ensure the stream is closed properly.
+      break
+    }
+  }
+  ```
+
 ## 0.7.23
 
 ### Patch Changes
