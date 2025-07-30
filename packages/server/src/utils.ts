@@ -19,7 +19,7 @@ export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   );
 }
 
-export interface NodeRequest {
+export type NodeRequest = Partial<IncomingMessage | Http2ServerRequest> & {
   protocol?: string | undefined;
   hostname?: string | undefined;
   body?: any | undefined;
@@ -32,10 +32,7 @@ export interface NodeRequest {
   socket?: Socket | undefined;
   query?: any | undefined;
   once?(event: string, listener: (...args: any[]) => void): void;
-  aborted?: boolean | undefined;
-  destroyed?: boolean | undefined;
-  destroy?(...args: any[]): any;
-}
+};
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
@@ -234,15 +231,10 @@ function configureSocket(rawRequest: NodeRequest) {
 
 function endResponse(serverResponse: NodeResponse, nodeRequest: NodeRequest) {
   if (!nodeRequest.destroyed) {
-    serverResponse.end(() => {
-      if (!nodeRequest.destroyed) {
-        nodeRequest.destroy?.();
-      }
-    });
-  } else {
-    // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
-    serverResponse.end(null, null, null);
+    nodeRequest.resume?.();
   }
+  // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+  serverResponse.end(null, null, null);
 }
 
 function sendAsyncIterable(
