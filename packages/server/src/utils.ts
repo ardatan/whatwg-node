@@ -234,10 +234,15 @@ function configureSocket(rawRequest: NodeRequest) {
 
 function endResponse(serverResponse: NodeResponse, nodeRequest: NodeRequest) {
   if (!nodeRequest.destroyed) {
-    nodeRequest.destroy?.();
+    serverResponse.end(() => {
+      if (!nodeRequest.destroyed) {
+        nodeRequest.destroy?.();
+      }
+    });
+  } else {
+    // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+    serverResponse.end(null, null, null);
   }
-  // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
-  serverResponse.end(null, null, null);
 }
 
 function sendAsyncIterable(
