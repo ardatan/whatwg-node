@@ -18,11 +18,9 @@ if (!globalThis.Bun && !globalThis.Deno) {
     const onCancel$ = createDeferredPromise<void>();
     server = createServer((_req, res) => {
       const interval = setInterval(() => {
-        console.log('Sending data to client');
         res.write('hello world\n');
       }, 300);
       res.once('close', () => {
-        console.log('Client closed the connection');
         clearInterval(interval);
         onCancel$.resolve();
       });
@@ -34,9 +32,7 @@ if (!globalThis.Bun && !globalThis.Deno) {
     let i = 0;
     // @ts-expect-error - ReadableStream is AsyncIterable
     for await (const chunk of response.body) {
-      console.log(`Received ${i}nth chunk`);
       if (i++ === 2) {
-        console.log('Breaking the stream');
         break;
       }
     }

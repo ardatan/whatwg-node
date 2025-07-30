@@ -1,4 +1,3 @@
-import { once } from 'node:events';
 import { Readable, Writable } from 'node:stream';
 
 function isHeadersInstance(obj: any): obj is Headers {
@@ -115,7 +114,9 @@ export function endStream(stream: { end: () => void }) {
 export function safeWrite(chunk: any, stream: Writable) {
   const result = stream.write(chunk);
   if (!result) {
-    return once(stream, 'drain');
+    return new Promise<void>(resolve => {
+      stream.once('drain', resolve);
+    });
   }
 }
 
