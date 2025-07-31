@@ -69,7 +69,7 @@ export class PonyfillBody<TJSON = any> implements Body {
 
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
-  private _buffer?: Buffer | undefined;
+  private _buffer?: Buffer<ArrayBuffer> | undefined;
   _signal?: AbortSignal | undefined;
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
@@ -112,7 +112,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
   }
 
-  public get body(): PonyfillReadableStream<Uint8Array> | null {
+  public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
     const _body = this.generateBody();
     if (_body != null) {
       const ponyfillReadableStream = _body;
@@ -139,22 +139,24 @@ export class PonyfillBody<TJSON = any> implements Body {
     return null;
   }
 
-  _chunks: MaybePromise<Uint8Array[]> | null = null;
+  _chunks: MaybePromise<Uint8Array<ArrayBuffer>[]> | null = null;
 
   _doCollectChunksFromReadableJob() {
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
         return handleMaybePromise(
-          () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array>),
+          () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>),
           chunks => {
             this._chunks = chunks;
             return this._chunks;
           },
         );
       }
-      const iterator = (this.bodyInit as AsyncIterable<Uint8Array>)[Symbol.asyncIterator]();
-      const chunks: Uint8Array[] = [];
-      const collectValue = (): MaybePromise<Uint8Array[]> =>
+      const iterator = (this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>)[
+        Symbol.asyncIterator
+      ]();
+      const chunks: Uint8Array<ArrayBuffer>[] = [];
+      const collectValue = (): MaybePromise<Uint8Array<ArrayBuffer>[]> =>
         handleMaybePromise(
           () => iterator.next(),
           ({ value, done }) => {
@@ -178,8 +180,8 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (_body.readable.destroyed) {
       return fakePromise((this._chunks = []));
     }
-    const chunks: Uint8Array[] = [];
-    return new Promise<Uint8Array[]>((resolve, reject) => {
+    const chunks: Uint8Array<ArrayBuffer>[] = [];
+    return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
       _body.readable.on('data', chunk => {
         chunks.push(chunk);
       });
@@ -357,7 +359,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     });
   }
 
-  buffer(): Promise<Buffer> {
+  buffer(): Promise<Buffer<ArrayBuffer>> {
     if (this._buffer) {
       return fakePromise(this._buffer);
     }
@@ -397,7 +399,7 @@ export class PonyfillBody<TJSON = any> implements Body {
         () => this._collectChunksFromReadable(),
         chunks => {
           if (chunks.length === 1) {
-            this._buffer = chunks[0] as Buffer;
+            this._buffer = chunks[0] as Buffer<ArrayBuffer>;
             return this._buffer;
           }
           this._buffer = Buffer.concat(chunks);
@@ -407,7 +409,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     );
   }
 
-  bytes(): Promise<Uint8Array> {
+  bytes(): Promise<Uint8Array<ArrayBuffer>> {
     return this.buffer();
   }
 
@@ -456,7 +458,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   bodyType?: BodyInitType;
   contentType: string | null;
   contentLength: number | null;
-  buffer?: Buffer;
+  buffer?: Buffer<ArrayBuffer>;
   bodyFactory(): PonyfillReadableStream<Uint8Array> | null;
 } {
   if (bodyInit == null) {
@@ -486,7 +488,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       bodyType: BodyInitType.Buffer,
       contentType: null,
       contentLength: bodyInit.length,
-      buffer: bodyInit,
+      buffer: bodyInit as Buffer<ArrayBuffer>,
       bodyFactory() {
         const readable = Readable.from(buffer);
         const body = new PonyfillReadableStream<Uint8Array>(readable);

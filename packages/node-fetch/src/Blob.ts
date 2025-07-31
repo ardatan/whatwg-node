@@ -21,11 +21,11 @@ interface BlobOptions {
   size?: number | null;
 }
 
-function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
+function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>): Buffer<ArrayBuffer> {
   if (typeof blobPart === 'string') {
     return Buffer.from(blobPart);
   } else if (Buffer.isBuffer(blobPart)) {
-    return blobPart;
+    return blobPart as Buffer<ArrayBuffer>;
   } else if (isArrayBufferView(blobPart)) {
     return Buffer.from(blobPart.buffer, blobPart.byteOffset, blobPart.byteLength);
   } else {
@@ -33,7 +33,7 @@ function getBlobPartAsBuffer(blobPart: Exclude<BlobPart, Blob>) {
   }
 }
 
-export function hasBufferMethod(obj: any): obj is { buffer(): Promise<Buffer> } {
+export function hasBufferMethod(obj: any): obj is { buffer(): Promise<Buffer<ArrayBuffer>> } {
   return obj != null && obj.buffer != null && typeof obj.buffer === 'function';
 }
 
@@ -85,7 +85,7 @@ export class PonyfillBlob implements Blob {
     }
   }
 
-  _buffer: Buffer | null = null;
+  _buffer: Buffer<ArrayBuffer> | null = null;
 
   buffer() {
     if (this._buffer) {
@@ -165,18 +165,18 @@ export class PonyfillBlob implements Blob {
     return this.buffer();
   }
 
-  bytes(): Promise<Uint8Array> {
+  bytes(): Promise<Uint8Array<ArrayBuffer>> {
     if (this._buffer) {
       return fakePromise(this._buffer);
     }
     if (this.blobParts.length === 1) {
       if (Buffer.isBuffer(this.blobParts[0])) {
-        this._buffer = this.blobParts[0];
-        return fakePromise(this.blobParts[0]);
+        this._buffer = this.blobParts[0] as Buffer<ArrayBuffer>;
+        return fakePromise(this._buffer);
       }
       if (this.blobParts[0] instanceof Uint8Array) {
         this._buffer = Buffer.from(this.blobParts[0]);
-        return fakePromise(this.blobParts[0]);
+        return fakePromise(this._buffer);
       }
       if (hasBytesMethod(this.blobParts[0])) {
         return this.blobParts[0].bytes();

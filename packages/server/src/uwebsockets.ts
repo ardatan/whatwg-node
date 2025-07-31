@@ -44,13 +44,13 @@ export function getRequestFromUWSRequest({
 
   let duplex: 'half' | undefined;
 
-  const chunks: Buffer[] = [];
+  const chunks: Buffer<ArrayBuffer>[] = [];
   const pushFns = [
-    (chunk: Buffer) => {
+    (chunk: Buffer<ArrayBuffer>) => {
       chunks.push(chunk);
     },
   ];
-  const push = (chunk: Buffer) => {
+  const push = (chunk: Buffer<ArrayBuffer>) => {
     for (const pushFn of pushFns) {
       pushFn(chunk);
     }
@@ -121,7 +121,7 @@ export function getRequestFromUWSRequest({
   if (query) {
     url += `?${query}`;
   }
-  let buffer: Buffer | undefined;
+  let buffer: Buffer<ArrayBuffer> | undefined;
   function getBody() {
     if (!getReadableStream) {
       return null;
@@ -142,7 +142,7 @@ export function getRequestFromUWSRequest({
     // @ts-ignore - not in the TS types yet
     duplex,
   });
-  function getBufferFromChunks() {
+  function getBufferFromChunks(): Buffer<ArrayBuffer> {
     if (!buffer) {
       buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks);
     }
