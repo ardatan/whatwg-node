@@ -4,7 +4,7 @@ import { isArrayBufferView } from './utils.js';
 export class PonyfillTextEncoder implements TextEncoder {
   constructor(public encoding: BufferEncoding = 'utf-8') {}
 
-  encode(input: string): Buffer {
+  encode(input: string): Buffer<ArrayBuffer> {
     return Buffer.from(input, this.encoding);
   }
 
