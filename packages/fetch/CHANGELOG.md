@@ -1,5 +1,17 @@
 # @whatwg-node/fetch
 
+## 0.10.10
+
+### Patch Changes
+
+- [#2656](https://github.com/ardatan/whatwg-node/pull/2656)
+  [`d2ef55c`](https://github.com/ardatan/whatwg-node/commit/d2ef55c7735c7127e4ed404dd8bbebe8fd3ebd00)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Fix TypeScript issues and bump the version
+  to get performance improvements for all dependent packages
+- Updated dependencies
+  [[`d2ef55c`](https://github.com/ardatan/whatwg-node/commit/d2ef55c7735c7127e4ed404dd8bbebe8fd3ebd00)]:
+  - @whatwg-node/node-fetch@0.7.25
+
 ## 0.10.9
 
 ### Patch Changes
