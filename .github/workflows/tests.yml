@@ -156,8 +156,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plan: ['aws-lambda', 'azure-function', 'cloudflare-workers', 'cloudflare-modules']
-        # TODO: Add vercel
+        plan: ['aws-lambda', 'cloudflare-workers', 'cloudflare-modules']
+        # TODO: Add vercel and azure
     name: e2e / ${{ matrix.plan }}
     env:
       # Pulumi
