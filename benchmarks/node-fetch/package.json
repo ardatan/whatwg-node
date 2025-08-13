@@ -8,7 +8,7 @@
     "start:server": "tsx server.ts"
   },
   "devDependencies": {
-    "@types/k6": "^1.0.0",
+    "@types/k6": "^1.2.0",
     "tsx": "^4.7.1"
   }
 }
