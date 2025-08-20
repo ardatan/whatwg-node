@@ -2933,10 +2933,10 @@
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
 
-"@pulumi/aws@7.4.0":
-  version "7.4.0"
-  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-7.4.0.tgz#d37d242b5089d3547f4bc05bfb39232ab1c88952"
-  integrity sha512-kYCW7Sw5dwK3yh1ynWEkWkbw5g5KkhGLA/nuht2kKIa691rCWZNllM6rMEGYhJnyVdTTgye9jeYIBO78nimC0g==
+"@pulumi/aws@7.5.0":
+  version "7.5.0"
+  resolved "https://registry.yarnpkg.com/@pulumi/aws/-/aws-7.5.0.tgz#7d1ee4e9ea054efb0b05a5a1924605321c96691a"
+  integrity sha512-oE6IcvNPSFz0IWfOWDxPElIG8DADhJRGoC9AAqF/5gF4Mx2IjCpLQaTGkxe1aEEIkem2jhKKG3xLbDkxsnLm/g==
   dependencies:
     "@pulumi/pulumi" "^3.142.0"
     mime "^2.0.0"
