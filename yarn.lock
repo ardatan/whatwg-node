@@ -1210,35 +1210,35 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@deno/darwin-arm64@2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@deno/darwin-arm64/-/darwin-arm64-2.4.4.tgz#b1b4890684d59fe0959786c931a1c370e3f6212e"
-  integrity sha512-mFxNliHJs3zHT515AoTICEYSv/zJTjXAU+QIZNXK3Yt1PaEHqbWYhxsMOp39Apb8ACgaAcGcJxPzsc6qecQVSg==
+"@deno/darwin-arm64@2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@deno/darwin-arm64/-/darwin-arm64-2.5.0.tgz#c52d8fcc6bd357d1875b80aed5d8bd98cc59eba6"
+  integrity sha512-1x8VmjfO7nPhVdKuRO0vVCSyxbzbhoiYpwTsM6c1dI1LLjLq/yLszHyStH0SE0gd+9XMVgrXLdrRPWrePW7WmQ==
 
-"@deno/darwin-x64@2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@deno/darwin-x64/-/darwin-x64-2.4.4.tgz#c64fb4b9ffe95d524d73ad6e12cbcdc494f497eb"
-  integrity sha512-3/15MyCithm77VFI9yesyLp+TLH5h3GQ0A2EEQISsWbJDWIOTMIAaL4suJHY0GMUKQZKOngoeyXyTqmGA/y0JQ==
+"@deno/darwin-x64@2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@deno/darwin-x64/-/darwin-x64-2.5.0.tgz#d81c2d0e739aefb06dd0181699f64339766c03c5"
+  integrity sha512-yiWqH+L4G7DLX/LSr/x2kImn1DaDh/G14TLdLuLBzcdwZ9XuM/lNjgSe7xc35WlhyXAkf0J/K2yi7kNqHJoItw==
 
-"@deno/linux-arm64-glibc@2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@deno/linux-arm64-glibc/-/linux-arm64-glibc-2.4.4.tgz#d6aeea67eed5939add1911b8a9a9612283419af9"
-  integrity sha512-M0TnQI8j0JxI2A8nFkFMV4bGSzqFU25PX9ZR50OI58Eurp5WY+tmisAusWReVVPtgL7jaVpkS0sEIJyufVIxmw==
+"@deno/linux-arm64-glibc@2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@deno/linux-arm64-glibc/-/linux-arm64-glibc-2.5.0.tgz#e42a6a8c2437ac96c655a37086c6a834d429557e"
+  integrity sha512-bkx6ITvYh9xS/GVbzzriotM3MA+3RIzDxohvmPosYfDzIckcROzTvvXkl73pLwvAnDfdbw7DF1qpUmU480vv4w==
 
-"@deno/linux-x64-glibc@2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@deno/linux-x64-glibc/-/linux-x64-glibc-2.4.4.tgz#1131712f965acb022a5051a7bb6495cf95eb997e"
-  integrity sha512-KsNEe5nWgz54XdTkI06jgUXgXQzQ//mI2u24qPclSm/GNkAwAZMnzcBPnRSZ0gCbLJpy8nDc7fc+j2ITlLifVw==
+"@deno/linux-x64-glibc@2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@deno/linux-x64-glibc/-/linux-x64-glibc-2.5.0.tgz#8e9a460d6493427b7de2581a28d64ce7eafd0a0d"
+  integrity sha512-0u3VXBU6yGAsCRATxi9uC9VW91/9MlhoqrURbbxJy0gPihrYoEWoUqi0b07BI4AIfy2EPUYvf82IcgTxemb0jw==
 
-"@deno/win32-arm64@2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@deno/win32-arm64/-/win32-arm64-2.4.4.tgz#7d520d2ce67588c8466cce8958b3acd7452b17a8"
-  integrity sha512-MPkhuVJVNF9PYiwrpRS0WfCwWxYmbB0CUgBE2+PC5FDbfmodfv+lv74w5HTPz2xITMdO4QqrOSSLz+JVCwjgSQ==
+"@deno/win32-arm64@2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@deno/win32-arm64/-/win32-arm64-2.5.0.tgz#74575f89b54b63ded2b19604eda9569270ea5e68"
+  integrity sha512-5mehFHYvMV/Kz9331FUnKwmocJBxvp/9dfwVK9Zn8MY1koLuvn8F6c0Tg0Vg+uZ9kwDSv9mhEvrkKLv2ZF2CPw==
 
-"@deno/win32-x64@2.4.4":
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/@deno/win32-x64/-/win32-x64-2.4.4.tgz#3b64d1b5e7a0de176eba6f7b3e3ebfb408429982"
-  integrity sha512-3tZcX6Jx1T7OSyeSXmQpK7zjZwvcc4kTK7PXtkpLuDwFXmObOmsNdbMQXuOIXvcmLlnUnVYJEfEo63zBZWR11g==
+"@deno/win32-x64@2.5.0":
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/@deno/win32-x64/-/win32-x64-2.5.0.tgz#a593912f50a1edbaac38a8833f779df8fade847f"
+  integrity sha512-5k0eYnFn55NV2/i6LwSi/BM1pUkDdmMlAyxKSb3PhiPd+EpS1cxAFEwn92MRmQq7mG2uoUixR1n4A3MrfU259w==
 
 "@emnapi/core@^1.4.3":
   version "1.5.0"
@@ -4996,17 +4996,17 @@ delegates@^1.0.0:
   resolved "https://registry.yarnpkg.com/delegates/-/delegates-1.0.0.tgz#84c6e159b81904fdca59a0ef44cd870d31250f9a"
   integrity sha512-bd2L678uiWATM6m5Z1VzNCErI3jiGzt6HGY8OVICs40JQq/HALfbyNJmp0UDakEY4pMMaN0Ly5om/B1VI/+xfQ==
 
-deno@2.4.4:
-  version "2.4.4"
-  resolved "https://registry.yarnpkg.com/deno/-/deno-2.4.4.tgz#0152133fd2217b21e02af675566fe03c32f9e924"
-  integrity sha512-uD357dB8icmaCuRy1xRbltEzA8/bbfMYtCV9W6cv8HDLw9mmfi57SwY4bpEw+wWGjk/2vbg3cIEEAE+2O8DnTg==
+deno@2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/deno/-/deno-2.5.0.tgz#ca5bbd9692bd1f6a9a99eddad86c1c87949f6699"
+  integrity sha512-GMqK9VJzwFhluLPfPP1iM/qbDnug9t5CsMTv4jpowQoWCJbdghi1aL4+2oiXNm0WPI5e/q5QAcoc1PUfhnL6LA==
   optionalDependencies:
-    "@deno/darwin-arm64" "2.4.4"
-    "@deno/darwin-x64" "2.4.4"
-    "@deno/linux-arm64-glibc" "2.4.4"
-    "@deno/linux-x64-glibc" "2.4.4"
-    "@deno/win32-arm64" "2.4.4"
-    "@deno/win32-x64" "2.4.4"
+    "@deno/darwin-arm64" "2.5.0"
+    "@deno/darwin-x64" "2.5.0"
+    "@deno/linux-arm64-glibc" "2.5.0"
+    "@deno/linux-x64-glibc" "2.5.0"
+    "@deno/win32-arm64" "2.5.0"
+    "@deno/win32-x64" "2.5.0"
 
 depd@2.0.0, depd@^2.0.0, depd@~2.0.0:
   version "2.0.0"
