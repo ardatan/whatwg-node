@@ -23,6 +23,7 @@
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
+    "version": "changeset version",
     "test": "jest --runInBand --forceExit",
     "test:bun": "bun test --bail",
     "test:deno": "deno test ./packages/**/*.spec.ts --allow-all --fail-fast --no-check --unstable-sloppy-imports --trace-leaks",
