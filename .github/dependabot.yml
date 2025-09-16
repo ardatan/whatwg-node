@@ -31,6 +31,7 @@ updates:
           - '*'
         exclude-patterns:
           - '@changesets/*'
+          - 'bun'
           - 'typescript'
           - '^@theguild/'
           - 'next'
