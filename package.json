@@ -23,12 +23,12 @@
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
-    "version": "changeset version",
     "test": "jest --runInBand --forceExit",
     "test:bun": "bun test --bail",
     "test:deno": "deno test ./packages/**/*.spec.ts --allow-all --fail-fast --no-check --unstable-sloppy-imports --trace-leaks",
     "test:leaks": "LEAK_TEST=1 jest --detectOpenHandles --detectLeaks --runInBand --forceExit",
-    "ts:check": "tsc --noEmit --skipLibCheck"
+    "ts:check": "tsc --noEmit --skipLibCheck",
+    "version": "changeset version"
   },
   "optionalDependencies": {
     "node-libcurl": "4.1.0",
