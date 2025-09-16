@@ -9,7 +9,7 @@ Fetch Standard.
 ## Installation
 
 ```bash
-yarn add @whatwg-node/fetch
+npm install @whatwg-node/fetch
 ```
 
 ## Why Fetch API and why this ponyfill in general?

@@ -25,11 +25,11 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
+          node-version-file: .node-version
       - name: Prettier Check
-        run: yarn prettier:check
+        run: npm run prettier:check
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -37,11 +37,11 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
+          node-version-file: .node-version
       - name: ESLint
-        run: yarn lint
+        run: npm run lint
 
   type-check:
     name: type check
@@ -50,11 +50,11 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
+          node-version-file: .node-version
       - name: Type Check
-        run: yarn ts:check
+        run: npm run ts:check
 
   unit:
     name: unit / node ${{matrix.node-version}}
@@ -74,9 +74,9 @@ jobs:
       - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - name: Cache Jest
         uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
         with:
@@ -89,13 +89,13 @@ jobs:
         with:
           timeout_minutes: 10
           max_attempts: 5
-          command: yarn test --ci
+          command: npm run test --ci
       - name: Leak Tests
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 10
           max_attempts: 5
-          command: yarn test:leaks --ci
+          command: npm run test:leaks --ci
 
   unit-bun:
     name: unit / bun
@@ -109,11 +109,11 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
+          node-version-file: .node-version
       - name: Test
-        run: yarn test:bun --ci
+        run: npm run test:bun --ci
 
   unit-deno:
     name: unit / deno
@@ -127,15 +127,15 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
+          node-version-file: .node-version
       - name: Test
         uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
         with:
           timeout_minutes: 10
           max_attempts: 5
-          command: yarn test:deno
+          command: npm run test:deno
 
   esm:
     name: esm
@@ -144,13 +144,13 @@ jobs:
       - name: Checkout Master
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
+          node-version-file: .node-version
       - name: Build Packages
-        run: yarn build
+        run: npm run build
       - name: Test ESM
-        run: yarn esm:check
+        run: npm run esm:check
 
   e2e:
     strategy:
@@ -185,25 +185,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
 
-      - name: Setup Node
-        uses: actions/setup-node@master
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          node-version: 24
-
-      - name: Cache Node Modules
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4
-        id: node-modules-cache-deployment-e2e
-        with:
-          path: '**/node_modules'
-          key: ${{runner.os}}-23-node-modules-${{hashFiles('yarn.lock')}}-${{hashFiles('patches/**/*')}}
-          restore-keys: |
-            ${{runner.os}}-23-node-modules-${{hashFiles('yarn.lock')}}-${{hashFiles('patches/**/*')}}
-      - name: Install Dependencies using Yarn
-        run: yarn install --ignore-engines --frozen-lockfile --immutable
-        if: steps.node-modules-cache-deployment-e2e.outputs.cache-hit != 'true'
+          node-version-file: .node-version
 
       - name: Build Packages
-        run: yarn build
+        run: npm run build
 
       - name: Install pulumi
         uses: pulumi/setup-pulumi@b374ceb6168550de27c6eba92e01c1a774040e11 # v2
@@ -215,13 +203,13 @@ jobs:
           echo "::set-output name=docker_host::$(docker context inspect --format '{{.Endpoints.docker.Host}}')"
 
       - name: Provision & Test
-        run: yarn e2e
+        run: npm run e2e
         working-directory: e2e/${{ matrix.plan }}
         env:
           COMMIT_ID: ${{ steps.vars.outputs.sha_short }}
 
       - name: Ensure Deletion
-        run: yarn e2e
+        run: npm run e2e
         if: ${{ always() }}
         working-directory: e2e/${{ matrix.plan }}
         env:

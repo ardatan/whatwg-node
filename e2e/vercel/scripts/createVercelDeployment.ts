@@ -125,7 +125,7 @@ export function createVercelDeployment(): DeploymentConfiguration<{
     prerequisites: async () => {
       // Build and bundle the function
       console.info('\t\tℹ️ Bundling the Vercel Function....');
-      await execPromise('yarn build', {
+      await execPromise('npm run build', {
         cwd: join(__dirname, '..'),
       });
     },

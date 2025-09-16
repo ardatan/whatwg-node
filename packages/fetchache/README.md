@@ -7,7 +7,7 @@ and [Conditional Requests](https://tools.ietf.org/html/rfc7232) standards.
 ## Installation
 
 ```bash
-yarn add fetchache
+npm install fetchache
 ```
 
 ## Usage
