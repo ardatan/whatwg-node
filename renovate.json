@@ -13,6 +13,7 @@
     {
       "excludePackagePatterns": [
         "@changesets/*",
+        "bun",
         "typescript",
         "typedoc*",
         "^@theguild/",
