@@ -178,7 +178,7 @@ serverImplMap['express'] = async function createExpressTestServer() {
     },
   };
 };
-if (!globalThis.Deno) {
+if (!globalThis.Deno && !globalThis.Bun) {
   serverImplMap['fastify'] = async function createFastifyTestServer() {
     let adapter: ServerAdapter<
       {
