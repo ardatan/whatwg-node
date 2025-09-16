@@ -80,6 +80,12 @@
     "esbuild": "0.25.9",
     "tmp": "0.2.4"
   },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.3.0"
+    }
+  },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [
       "eslint --fix"
