@@ -19,7 +19,7 @@ export function isAsyncIterable(body: any): body is AsyncIterable<any> {
   );
 }
 
-export interface NodeRequest {
+export type NodeRequest = Partial<IncomingMessage | Http2ServerRequest> & {
   protocol?: string | undefined;
   hostname?: string | undefined;
   body?: any | undefined;
@@ -32,8 +32,7 @@ export interface NodeRequest {
   socket?: Socket | undefined;
   query?: any | undefined;
   once?(event: string, listener: (...args: any[]) => void): void;
-  aborted?: boolean | undefined;
-}
+};
 
 export type NodeResponse = ServerResponse | Http2ServerResponse;
 
@@ -230,12 +229,19 @@ function configureSocket(rawRequest: NodeRequest) {
   rawRequest?.socket?.setKeepAlive?.(true);
 }
 
-function endResponse(serverResponse: NodeResponse) {
+function endResponse(serverResponse: NodeResponse, nodeRequest: NodeRequest) {
+  if (!nodeRequest.destroyed) {
+    nodeRequest.resume?.();
+  }
   // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
   serverResponse.end(null, null, null);
 }
 
-function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIterable<Uint8Array>) {
+function sendAsyncIterable(
+  serverResponse: NodeResponse,
+  asyncIterable: AsyncIterable<Uint8Array>,
+  nodeRequest: NodeRequest,
+) {
   let closed = false;
   const closeEventListener = () => {
     closed = true;
@@ -255,7 +261,7 @@ function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIte
       }
       return handleMaybePromise(
         () => safeWrite(value, serverResponse),
-        () => (closed ? endResponse(serverResponse) : pump()),
+        () => (closed ? endResponse(serverResponse, nodeRequest) : pump()),
       );
     });
   return pump();
@@ -280,7 +286,7 @@ export function sendNodeResponse(
   }
   if (!fetchResponse) {
     serverResponse.statusCode = 404;
-    endResponse(serverResponse);
+    endResponse(serverResponse, nodeRequest);
     return;
   }
   if (
@@ -332,7 +338,7 @@ export function sendNodeResponse(
     return handleMaybePromise(
       // @ts-expect-error - bodyInit is a private property
       () => safeWrite(fetchResponse.bodyInit, serverResponse),
-      () => endResponse(serverResponse),
+      () => endResponse(serverResponse, nodeRequest),
     );
   }
 
@@ -343,14 +349,14 @@ export function sendNodeResponse(
   if (bufOfRes) {
     return handleMaybePromise(
       () => safeWrite(bufOfRes, serverResponse),
-      () => endResponse(serverResponse),
+      () => endResponse(serverResponse, nodeRequest),
     );
   }
 
   // Other fetch implementations
   const fetchBody = fetchResponse.body;
   if (fetchBody == null) {
-    endResponse(serverResponse);
+    endResponse(serverResponse, nodeRequest);
     return;
   }
 
@@ -360,7 +366,7 @@ export function sendNodeResponse(
   ) {
     return handleMaybePromise(
       () => safeWrite(fetchBody, serverResponse),
-      () => endResponse(serverResponse),
+      () => endResponse(serverResponse, nodeRequest),
     );
   }
 
@@ -381,7 +387,7 @@ export function sendNodeResponse(
   }
 
   if (isAsyncIterable(fetchBody)) {
-    return sendAsyncIterable(serverResponse, fetchBody);
+    return sendAsyncIterable(serverResponse, fetchBody, nodeRequest);
   }
 }
 
@@ -399,7 +405,7 @@ function sendReadableStream(
       .read()
       .then(({ done, value }) =>
         done
-          ? endResponse(serverResponse)
+          ? endResponse(serverResponse, nodeRequest)
           : handleMaybePromise(() => safeWrite(value, serverResponse), pump),
       );
   }
