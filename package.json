@@ -46,7 +46,7 @@
     "@jest/globals": "30.1.2",
     "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.3.0",
-    "@types/node": "24.3.3",
+    "@types/node": "24.5.0",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
     "@typescript-eslint/eslint-plugin": "8.44.0",
@@ -59,7 +59,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-n": "17.22.0",
+    "eslint-plugin-n": "17.23.0",
     "eslint-plugin-promise": "7.2.1",
     "eslint-plugin-standard": "5.0.0",
     "globals": "16.4.0",
@@ -69,7 +69,7 @@
     "patch-package": "8.0.0",
     "prettier": "3.6.2",
     "rimraf": "6.0.1",
-    "ts-jest": "29.4.1",
+    "ts-jest": "29.4.2",
     "typescript": "5.9.2",
     "vite-tsconfig-paths": "5.1.4",
     "vitest": "3.2.4"
@@ -78,7 +78,7 @@
     "@pulumi/pulumi": "3.196.0",
     "cookie": "1.0.2",
     "esbuild": "0.25.9",
-    "tmp": "0.2.4"
+    "tmp": "0.2.5"
   },
   "devEngines": {
     "packageManager": {
