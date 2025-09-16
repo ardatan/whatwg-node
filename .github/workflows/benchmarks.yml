@@ -27,12 +27,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
-          packageManager: yarn
+          node-version-file: .node-version
       - name: Build Packages
-        run: yarn build
+        run: npm run build
       - name: Setup K6
         run: |
           wget https://github.com/grafana/k6/releases/download/v0.37.0/k6-v0.37.0-linux-amd64.deb
@@ -41,7 +40,7 @@ jobs:
       - name: Start Benchmark
         working-directory: ./benchmarks/server
         run: |
-          yarn test
+          npm run test
         env:
           SCENARIO: ${{ matrix.scenario }}
           NODE_NO_WARNINGS: true
@@ -69,17 +68,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
       - name: Setup env
-        uses: the-guild-org/shared-config/setup@main
+        uses: the-guild-org/shared-config/setup@v1
         with:
-          nodeVersion: 24
-          packageManager: yarn
+          node-version-file: .node-version
       - name: Setup K6
         run: |
           wget https://github.com/grafana/k6/releases/download/v0.37.0/k6-v0.37.0-linux-amd64.deb
           sudo apt-get update
           sudo apt-get install ./k6-v0.37.0-linux-amd64.deb
       - name: Start server
-        run: yarn workspace @benchmarks/node-fetch run start:server &
+        working-directory: ./benchmarks/node-fetch
+        run: npm run start:server &
       - name: Wait for server
         run: curl --retry 5 --retry-delay 1 --retry-connrefused http://localhost:50001
       - name: Benchmark

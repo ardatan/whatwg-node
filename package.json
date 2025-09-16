@@ -6,7 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
-  "packageManager": "yarn@1.22.22",
+  "packageManager": "npm@11.6.0",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "bob build",
@@ -16,10 +16,10 @@
     "jest-with-gc": "node --expose-gc ./node_modules/.bin/jest",
     "lint": "eslint .",
     "postinstall": "patch-package && husky",
-    "prebuild": "yarn clean-dist",
-    "prerelease": "yarn build",
-    "prerelease-canary": "yarn build",
-    "pretest:deno": "yarn build",
+    "prebuild": "npm run clean-dist",
+    "prerelease": "npm run build",
+    "prerelease-canary": "npm run build",
+    "pretest:deno": "npm run build",
     "prettier": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write --list-different .",
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
@@ -74,11 +74,17 @@
     "vite-tsconfig-paths": "5.1.4",
     "vitest": "3.2.4"
   },
-  "resolutions": {
+  "overrides": {
     "@pulumi/pulumi": "3.196.0",
     "cookie": "1.0.2",
     "esbuild": "0.25.9",
     "tmp": "0.2.4"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "version": "11.6.0"
+    }
   },
   "lint-staged": {
     "packages/**/*.{ts,tsx}": [

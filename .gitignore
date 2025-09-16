@@ -73,7 +73,7 @@ junit.xml
 
 *.tgz
 
-package-lock.json
+yarn.lock
 
 eslint_report.json
 

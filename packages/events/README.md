@@ -7,7 +7,7 @@ ponyfills the missing parts, and export them as a module.
 ## Installation
 
 ```bash
-yarn add @whatwg-node/events
+npm install @whatwg-node/events
 ```
 
 ## Usage
