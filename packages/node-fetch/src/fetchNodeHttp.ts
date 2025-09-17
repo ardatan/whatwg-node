@@ -36,9 +36,8 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       const headersSerializer: typeof getHeadersObj =
         (fetchRequest.headersSerializer as any) || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
-      if (nodeHeaders['accept-encoding'] == null) {
-        nodeHeaders['accept-encoding'] = 'gzip, deflate, br';
-      }
+      nodeHeaders['accept-encoding'] ||= 'gzip, deflate, br';
+      nodeHeaders['user-agent'] ||= 'node';
 
       let signal: AbortSignal | undefined;
 

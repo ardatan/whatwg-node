@@ -263,6 +263,12 @@ describe('Node Fetch Ponyfill', () => {
         const res = await fetchPonyfill(baseUrl, { signal: AbortSignal.timeout(10_000) });
         await res.text();
       });
+      it('should have a user-agent header by default', async () => {
+        const response = await fetchPonyfill(baseUrl + '/headers');
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body.headers['User-Agent'] || body.headers['user-agent']).toBeDefined();
+      });
     },
   );
 });
