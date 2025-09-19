@@ -1,5 +1,12 @@
 # @e2e/shared-server
 
+## 0.0.150
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @whatwg-node/fetch@0.10.11
+
 ## 0.0.149
 
 ### Patch Changes

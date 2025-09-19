@@ -1,5 +1,15 @@
 # @whatwg-node/node-fetch
 
+## 0.8.0
+
+### Minor Changes
+
+- [#2786](https://github.com/ardatan/whatwg-node/pull/2786)
+  [`60d41d6`](https://github.com/ardatan/whatwg-node/commit/60d41d6df941ca16f733556a3d3586486236a146)
+  Thanks [@ardatan](https://github.com/ardatan)! - Add `User-Agent` with `node` value by default
+  similar to `undici`, because `fetch` implementation should provide one if the user doesn't provide
+  one per WHATWG spec
+
 ## 0.7.25
 
 ### Patch Changes
