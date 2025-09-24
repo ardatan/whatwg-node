@@ -6,7 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
-  "packageManager": "npm@11.6.0",
+  "packageManager": "npm@11.6.1",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "bob build",
@@ -55,7 +55,7 @@
     "babel-jest": "30.1.2",
     "bob-the-bundler": "7.0.1",
     "bun": "1.2.22",
-    "deno": "2.5.1",
+    "deno": "2.5.2",
     "eslint": "9.36.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-config-standard": "17.1.0",
