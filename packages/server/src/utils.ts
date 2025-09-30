@@ -304,7 +304,7 @@ export function sendNodeResponse(
     );
   } else {
     // @ts-expect-error - setHeaders exist
-    if (serverResponse.setHeaders) {
+    if (serverResponse.setHeaders && globalThis.process?.versions?.node?.startsWith('2')) {
       // @ts-expect-error - setHeaders exist
       serverResponse.setHeaders(fetchResponse.headers);
     } else {
