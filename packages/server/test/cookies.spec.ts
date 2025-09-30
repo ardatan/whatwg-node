@@ -22,6 +22,8 @@ describe('Cookies', () => {
           'name=value0; SameSite=None; Secure',
           'name=value1; SameSite=Strict; Secure',
         ]);
+        const resBody = await response.text();
+        expect(resBody).toBe('OK');
       });
     });
   });
