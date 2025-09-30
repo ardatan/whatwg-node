@@ -77,7 +77,11 @@ export class PonyfillHeaders implements Headers {
           for (const [key, value] of this.headersInit) {
             const normalizedKey = key.toLowerCase();
             if (normalizedKey === 'set-cookie') {
-              this._setCookies.push(value);
+              if (Array.isArray(value)) {
+                this._setCookies.push(...value);
+              } else if (value != null) {
+                this._setCookies.push(value);
+              }
               continue;
             }
             this._map.set(normalizedKey, value);
@@ -87,7 +91,11 @@ export class PonyfillHeaders implements Headers {
           this.headersInit.forEach((value, key) => {
             if (key === 'set-cookie') {
               this._setCookies ||= [];
-              this._setCookies.push(value);
+              if (Array.isArray(value)) {
+                this._setCookies.push(...value);
+              } else if (value != null) {
+                this._setCookies.push(value);
+              }
               return;
             }
             this._map!.set(key, value);
@@ -100,6 +108,10 @@ export class PonyfillHeaders implements Headers {
               const normalizedKey = initKey.toLowerCase();
               if (normalizedKey === 'set-cookie') {
                 this._setCookies ||= [];
+                if (Array.isArray(initValue)) {
+                  this._setCookies.push(...initValue);
+                  continue;
+                }
                 this._setCookies.push(initValue);
                 continue;
               }

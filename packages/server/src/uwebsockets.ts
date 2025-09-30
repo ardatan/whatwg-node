@@ -231,10 +231,15 @@ export function sendResponseToUwsOpts(
   }
   uwsResponse.cork(() => {
     uwsResponse.writeStatus(`${fetchResponse.status} ${fetchResponse.statusText}`);
+    let isSetCookieHandled = false;
     for (const [key, value] of fetchResponse.headers) {
       // content-length causes an error with Node.js's fetch
       if (key !== 'content-length') {
         if (key === 'set-cookie') {
+          if (isSetCookieHandled) {
+            continue;
+          }
+          isSetCookieHandled = true;
           const setCookies = fetchResponse.headers.getSetCookie?.();
           if (setCookies) {
             for (const setCookie of setCookies) {
