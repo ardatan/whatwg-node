@@ -303,8 +303,9 @@ export function sendNodeResponse(
       fetchResponse.headers.headersInit,
     );
   } else {
+    // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist
-    if (serverResponse.setHeaders) {
+    if (serverResponse.setHeaders && !globalThis.process?.versions?.node?.startsWith('1')) {
       // @ts-expect-error - setHeaders exist
       serverResponse.setHeaders(fetchResponse.headers);
     } else {
