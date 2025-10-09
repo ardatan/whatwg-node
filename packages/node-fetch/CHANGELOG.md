@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.8.1
+
+### Patch Changes
+
+- [#2821](https://github.com/ardatan/whatwg-node/pull/2821)
+  [`93f2932`](https://github.com/ardatan/whatwg-node/commit/93f2932a473872068d4ab2f2ba1a3ac2f3ed4822)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix handling multiple `set-cookie` headers
+  correctly with `uWebSockets.js` integration
+
 ## 0.8.0
 
 ### Minor Changes
