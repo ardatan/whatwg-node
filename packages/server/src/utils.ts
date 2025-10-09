@@ -269,6 +269,8 @@ function safeWrite(chunk: any, serverResponse: NodeResponse) {
   }
 }
 
+const isNode1x = globalThis.process?.versions?.node?.startsWith('1');
+
 export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
@@ -305,7 +307,7 @@ export function sendNodeResponse(
   } else {
     // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist
-    if (serverResponse.setHeaders && !globalThis.process?.versions?.node?.startsWith('1')) {
+    if (serverResponse.setHeaders && !isNode1x) {
       // @ts-expect-error - setHeaders exist
       serverResponse.setHeaders(fetchResponse.headers);
     } else {
