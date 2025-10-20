@@ -298,6 +298,7 @@ export function sendNodeResponse(
     // @ts-expect-error - _setCookies is a private property
     !fetchResponse.headers._setCookies?.length
   ) {
+    // @ts-expect-error - writeHead accepts headers object
     serverResponse.writeHead(
       fetchResponse.status,
       fetchResponse.statusText,
@@ -308,7 +309,7 @@ export function sendNodeResponse(
     // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist
     if (serverResponse.setHeaders && !isNode1x) {
-      // @ts-expect-error - setHeaders exist
+      // @ts-expect-error - writeHead bad typings
       serverResponse.setHeaders(fetchResponse.headers);
     } else {
       let setCookiesSet = false;
@@ -327,6 +328,7 @@ export function sendNodeResponse(
         serverResponse.setHeader(key, value);
       });
     }
+    // @ts-expect-error - writeHead bad typings
     serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText);
   }
 
