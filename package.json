@@ -80,7 +80,7 @@
     "cookie": "1.0.2",
     "esbuild": "0.25.11",
     "tmp": "0.2.5",
-    "vite": "7.1.11"
+    "vite": "7.1.12"
   },
   "devEngines": {
     "packageManager": {
