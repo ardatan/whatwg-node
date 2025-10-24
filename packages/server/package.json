@@ -43,8 +43,8 @@
   "devDependencies": {
     "@hapi/hapi": "21.4.3",
     "@types/compression": "1.8.1",
-    "@types/express": "5.0.3",
-    "@types/koa": "3.0.0",
+    "@types/express": "5.0.4",
+    "@types/koa": "3.0.1",
     "@types/node": "24.9.1",
     "compression": "1.8.1",
     "express": "5.1.0",
