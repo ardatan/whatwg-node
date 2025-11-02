@@ -78,7 +78,7 @@
   "overrides": {
     "@pulumi/pulumi": "3.205.0",
     "cookie": "1.0.2",
-    "esbuild": "0.25.11",
+    "esbuild": "0.25.12",
     "tmp": "0.2.5",
     "vite": "7.1.12"
   },
