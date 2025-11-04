@@ -83,6 +83,7 @@ export interface ServerAdapterObject<TServerContext> extends EventListenerObject
     request: Request,
     ...ctx: Partial<TServerContext & ServerAdapterInitialContext>[]
   ): MaybePromise<Response>;
+  handle(request: Request, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>;
   handle(
     fetchEvent: FetchEvent & Partial<TServerContext & ServerAdapterInitialContext>,
     ...ctx: Partial<TServerContext>[]
