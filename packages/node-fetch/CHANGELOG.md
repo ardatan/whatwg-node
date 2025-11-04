@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.8.2
+
+### Patch Changes
+
+- [`c9b2c87`](https://github.com/ardatan/whatwg-node/commit/c9b2c87bff6f36b71cd1bd97f81f1050efa8dd98)
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not override existing \`user-agent\`
+
 ## 0.8.1
 
 ### Patch Changes
