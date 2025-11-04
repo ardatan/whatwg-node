@@ -1,5 +1,13 @@
 # @whatwg-node/server
 
+## 0.10.14
+
+### Patch Changes
+
+- [`2fa56ae`](https://github.com/ardatan/whatwg-node/commit/2fa56aea1fc798b74feea592e54d7da22a8860b9)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the incompatibility issue between `Bun.serve`
+  and the adapter
+
 ## 0.10.13
 
 ### Patch Changes
