@@ -41,7 +41,7 @@
     "tslib": "^2.6.3"
   },
   "devDependencies": {
-    "@hapi/hapi": "21.4.3",
+    "@hapi/hapi": "21.4.4",
     "@types/compression": "1.8.1",
     "@types/express": "5.0.5",
     "@types/koa": "3.0.1",
