@@ -129,6 +129,8 @@ class AbortError extends Error {
   }
 }
 
+export const DEFAULT_ACCEPT_ENCODING = getSupportedFormats().join(', ');
+
 export function getSupportedFormats(): PonyfillCompressionFormat[] {
   const baseFormats = ['gzip', 'deflate', 'br'] as PonyfillCompressionFormat[];
   if (!globalThis.process?.versions?.node?.startsWith('2')) {

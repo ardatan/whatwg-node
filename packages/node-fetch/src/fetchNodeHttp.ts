@@ -7,6 +7,7 @@ import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import {
+  DEFAULT_ACCEPT_ENCODING,
   endStream,
   getHeadersObj,
   isNodeReadable,
@@ -36,7 +37,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       const headersSerializer: typeof getHeadersObj =
         (fetchRequest.headersSerializer as any) || getHeadersObj;
       const nodeHeaders = headersSerializer(fetchRequest.headers);
-      nodeHeaders['accept-encoding'] ||= 'gzip, deflate, br';
+      nodeHeaders['accept-encoding'] ||= DEFAULT_ACCEPT_ENCODING;
       if (nodeHeaders['user-agent'] == null && nodeHeaders['User-Agent'] == null) {
         nodeHeaders['user-agent'] = 'node';
       }
@@ -89,7 +90,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             outputStream = zlib.createBrotliDecompress();
             break;
           case 'zstd':
-            outputStream = zlib.createZstdDecompress();
+            if (zlib.createZstdDecompress != null) {
+              outputStream = zlib.createZstdDecompress();
+            }
             break;
         }
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
