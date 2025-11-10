@@ -1,5 +1,12 @@
 # @whatwg-node/node-fetch
 
+## 0.8.4
+
+### Patch Changes
+
+- [`0f53671`](https://github.com/ardatan/whatwg-node/commit/0f53671a379c86458f9dab0af04a022cb933e6bd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Add `zstd` to `Accept-Encoding` if available
+
 ## 0.8.3
 
 ### Patch Changes

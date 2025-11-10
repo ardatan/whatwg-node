@@ -1,5 +1,12 @@
 # @whatwg-node/server
 
+## 0.10.17
+
+### Patch Changes
+
+- [`0f53671`](https://github.com/ardatan/whatwg-node/commit/0f53671a379c86458f9dab0af04a022cb933e6bd)
+  Thanks [@ardatan](https://github.com/ardatan)! - Add `zstd` to `Accept-Encoding` if available
+
 ## 0.10.16
 
 ### Patch Changes

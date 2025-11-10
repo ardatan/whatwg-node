@@ -1,6 +1,6 @@
 {
   "name": "@whatwg-node/node-fetch",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "type": "module",
   "description": "Fetch API implementation for Node",
   "repository": {
