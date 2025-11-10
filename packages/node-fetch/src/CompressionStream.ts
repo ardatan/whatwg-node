@@ -1,4 +1,4 @@
-import { createBrotliCompress, createDeflate, createDeflateRaw, createGzip } from 'node:zlib';
+import zlib from 'node:zlib';
 import { PonyfillTransformStream } from './TransformStream.js';
 
 export type PonyfillCompressionFormat =
@@ -7,7 +7,8 @@ export type PonyfillCompressionFormat =
   | 'x-deflate'
   | 'deflate'
   | 'deflate-raw'
-  | 'br';
+  | 'br'
+  | 'zstd';
 
 export class PonyfillCompressionStream
   extends PonyfillTransformStream
@@ -16,24 +17,27 @@ export class PonyfillCompressionStream
   static supportedFormats: PonyfillCompressionFormat[] = globalThis.process?.version?.startsWith(
     'v2',
   )
-    ? ['gzip', 'deflate', 'br']
+    ? ['gzip', 'deflate', 'br', 'zstd']
     : ['gzip', 'deflate', 'deflate-raw', 'br'];
 
   constructor(compressionFormat: PonyfillCompressionFormat) {
     switch (compressionFormat) {
       case 'x-gzip':
       case 'gzip':
-        super(createGzip());
+        super(zlib.createGzip());
         break;
       case 'x-deflate':
       case 'deflate':
-        super(createDeflate());
+        super(zlib.createDeflate());
         break;
       case 'deflate-raw':
-        super(createDeflateRaw());
+        super(zlib.createDeflateRaw());
         break;
       case 'br':
-        super(createBrotliCompress());
+        super(zlib.createBrotliCompress());
+        break;
+      case 'zstd':
+        super(zlib.createZstdCompress());
         break;
       default:
         throw new Error(`Unsupported compression format: ${compressionFormat}`);

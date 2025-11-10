@@ -522,7 +522,13 @@ const supportedEncodingsByFetchAPI = new WeakMap<FetchAPI, CompressionFormat[]>(
 export function getSupportedEncodings(fetchAPI: FetchAPI) {
   let supportedEncodings = supportedEncodingsByFetchAPI.get(fetchAPI);
   if (!supportedEncodings) {
-    const possibleEncodings = ['deflate', 'gzip', 'deflate-raw', 'br'] as CompressionFormat[];
+    const possibleEncodings = [
+      'deflate',
+      'gzip',
+      'deflate-raw',
+      'br',
+      'zstd',
+    ] as CompressionFormat[];
     if ((fetchAPI.DecompressionStream as any)?.['supportedFormats']) {
       supportedEncodings = (fetchAPI.DecompressionStream as any)[
         'supportedFormats'

@@ -1,7 +1,7 @@
 import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
-import { createBrotliDecompress, createGunzip, createInflate, createInflateRaw } from 'node:zlib';
+import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -75,18 +75,21 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         switch (contentEncoding) {
           case 'x-gzip':
           case 'gzip':
-            outputStream = createGunzip();
+            outputStream = zlib.createGunzip();
             break;
           case 'x-deflate':
           case 'deflate':
-            outputStream = createInflate();
+            outputStream = zlib.createInflate();
             break;
           case 'x-deflate-raw':
           case 'deflate-raw':
-            outputStream = createInflateRaw();
+            outputStream = zlib.createInflateRaw();
             break;
           case 'br':
-            outputStream = createBrotliDecompress();
+            outputStream = zlib.createBrotliDecompress();
+            break;
+          case 'zstd':
+            outputStream = zlib.createZstdDecompress();
             break;
         }
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
