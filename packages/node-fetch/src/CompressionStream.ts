@@ -1,5 +1,6 @@
 import zlib from 'node:zlib';
 import { PonyfillTransformStream } from './TransformStream.js';
+import { getSupportedFormats } from './utils.js';
 
 export type PonyfillCompressionFormat =
   | 'x-gzip'
@@ -14,11 +15,7 @@ export class PonyfillCompressionStream
   extends PonyfillTransformStream
   implements CompressionStream
 {
-  static supportedFormats: PonyfillCompressionFormat[] = globalThis.process?.version?.startsWith(
-    'v2',
-  )
-    ? ['gzip', 'deflate', 'br', 'zstd']
-    : ['gzip', 'deflate', 'deflate-raw', 'br'];
+  static supportedFormats: PonyfillCompressionFormat[] = getSupportedFormats();
 
   constructor(compressionFormat: PonyfillCompressionFormat) {
     switch (compressionFormat) {
