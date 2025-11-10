@@ -1,5 +1,14 @@
 # @e2e/shared-server
 
+## 0.0.154
+
+### Patch Changes
+
+- Updated dependencies
+  [[`0079afd`](https://github.com/ardatan/whatwg-node/commit/0079afdc785c012fad22dd35963800a8199bfe89)]:
+  - @whatwg-node/fetch@0.10.13
+  - @whatwg-node/server@0.10.16
+
 ## 0.0.153
 
 ### Patch Changes

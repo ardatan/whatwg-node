@@ -1,5 +1,17 @@
 # @whatwg-node/fetch
 
+## 0.10.13
+
+### Patch Changes
+
+- [#2910](https://github.com/ardatan/whatwg-node/pull/2910)
+  [`0079afd`](https://github.com/ardatan/whatwg-node/commit/0079afdc785c012fad22dd35963800a8199bfe89)
+  Thanks [@ardatan](https://github.com/ardatan)! - Zstandard \`zstd\` support
+
+- Updated dependencies
+  [[`0079afd`](https://github.com/ardatan/whatwg-node/commit/0079afdc785c012fad22dd35963800a8199bfe89)]:
+  - @whatwg-node/node-fetch@0.8.3
+
 ## 0.10.12
 
 ### Patch Changes
