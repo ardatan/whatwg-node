@@ -4,6 +4,7 @@ import {
   Http2ServerRequest,
   Http2ServerResponse,
 } from 'node:http2';
+import express, { Router } from 'express';
 import { App } from 'uWebSockets.js';
 import { createServerAdapter } from '../src/createServerAdapter.js';
 
@@ -33,3 +34,9 @@ const httpServer = createHttpServer(adapter);
 httpServer.on('request', adapter);
 
 App().any('/*', adapter);
+
+const expressApp = express();
+expressApp.use(adapter);
+
+const expressRouter = Router();
+expressRouter.use(adapter);
