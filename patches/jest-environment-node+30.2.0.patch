@@ -1,0 +1,15 @@
+diff --git a/node_modules/jest-environment-node/build/index.js b/node_modules/jest-environment-node/build/index.js
+index 866ad66..c291347 100644
+--- a/node_modules/jest-environment-node/build/index.js
++++ b/node_modules/jest-environment-node/build/index.js
+@@ -63,7 +63,9 @@ function _jestValidate() {
+ // some globals we do not want, either because deprecated or we set it ourselves
+ const denyList = new Set(['GLOBAL', 'root', 'global', 'globalThis', 'Buffer', 'ArrayBuffer', 'Uint8Array',
+ // if env is loaded within a jest test
+-'jest-symbol-do-not-touch']);
++'jest-symbol-do-not-touch',
++'localStorage'
++]);
+ const nodeGlobals = new Map(Object.getOwnPropertyNames(globalThis).filter(global => !denyList.has(global)).map(nodeGlobalsKey => {
+   const descriptor = Object.getOwnPropertyDescriptor(globalThis, nodeGlobalsKey);
+   if (!descriptor) {
