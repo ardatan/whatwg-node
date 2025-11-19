@@ -45,21 +45,21 @@ the boilerplate we prefer to use
 [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
 ```ts
-import { Buffer } from 'node:buffer';
-import { pipeline } from 'node:stream/promises';
-import type { Context, LambdaFunctionURLEvent } from 'aws-lambda';
-import myServerAdapter from './myServerAdapter';
+import { Buffer } from 'node:buffer'
+import { pipeline } from 'node:stream/promises'
+import type { Context, LambdaFunctionURLEvent } from 'aws-lambda'
+import myServerAdapter from './myServerAdapter'
 
 interface ServerContext {
-  event: LambdaFunctionURLEvent;
-  lambdaContext: Context;
-  res: awslambda.ResponseStream;
+  event: LambdaFunctionURLEvent
+  lambdaContext: Context
+  res: awslambda.ResponseStream
 }
 
 export const handler = awslambda.streamifyResponse(async function handler(
   event: LambdaFunctionURLEvent,
   res,
-  lambdaContext,
+  lambdaContext
 ) {
   const response = await myServerAdapter.fetch(
     // Construct the URL
@@ -69,31 +69,63 @@ export const handler = awslambda.streamifyResponse(async function handler(
       headers: event.headers as HeadersInit,
       // Parse the body if needed
       body:
-        event.body && event.isBase64Encoded
-          ? Buffer.from(event.body, 'base64')
-          : event.body || null,
+        event.body && event.isBase64Encoded ? Buffer.from(event.body, 'base64') : event.body || null
     },
     {
       event,
       res,
-      lambdaContext,
-    },
-  );
+      lambdaContext
+    }
+  )
 
   // Attach the metadata to the response stream
   res = awslambda.HttpResponseStream.from(res, {
     statusCode: response.status,
-    headers: Object.fromEntries(response.headers.entries()),
-  });
+    headers: Object.fromEntries(response.headers.entries())
+  })
 
   if (response.body) {
     // @ts-expect-error - Pipe the response body to the response stream
-    await pipeline(response.body, res);
+    await pipeline(response.body, res)
   }
 
   // End the response stream
-  res.end();
-});
+  res.end()
+})
+```
+
+If you have missing types for `awslambda`, you can add `awslambda.d.ts` like following;
+
+```ts
+// awslambda.d.ts
+import type { Writable } from 'node:stream'
+import type { Context, Handler } from 'aws-lambda'
+
+declare global {
+  namespace awslambda {
+    export namespace HttpResponseStream {
+      function from(
+        responseStream: ResponseStream,
+        metadata: {
+          statusCode?: number
+          headers?: Record<string, string>
+        }
+      ): ResponseStream
+    }
+
+    export type ResponseStream = Writable & {
+      setContentType(type: string): void
+    }
+
+    export type StreamifyHandler<Event> = (
+      event: Event,
+      responseStream: ResponseStream,
+      context: Context
+    ) => Promise<unknown>
+
+    export function streamifyResponse<Event>(handler: StreamifyHandler<Event>): Handler<Event>
+  }
+}
 ```
 
 ### Cloudflare Workers
