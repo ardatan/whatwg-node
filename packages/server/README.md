@@ -45,56 +45,85 @@ the boilerplate we prefer to use
 [Serverless Express from Vendia](https://github.com/vendia/serverless-express).
 
 ```ts
-import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda'
-import type { Handler } from '@aws-cdk/aws-lambda'
+import { Buffer } from 'node:buffer'
+import { pipeline } from 'node:stream/promises'
+import type { Context, LambdaFunctionURLEvent } from 'aws-lambda'
 import myServerAdapter from './myServerAdapter'
 
 interface ServerContext {
-  event: APIGatewayEvent
+  event: LambdaFunctionURLEvent
   lambdaContext: Context
+  res: awslambda.ResponseStream
 }
 
-export async function handler(
-  event: APIGatewayEvent,
-  lambdaContext: Context
-): Promise<APIGatewayProxyResult> {
-  const url = new URL(event.path, 'http://localhost')
-  if (event.queryStringParameters != null) {
-    for (const name in event.queryStringParameters) {
-      const value = event.queryStringParameters[name]
-      if (value != null) {
-        url.searchParams.set(name, value)
-      }
-    }
-  }
-
+export const handler = awslambda.streamifyResponse(async function handler(
+  event: LambdaFunctionURLEvent,
+  res,
+  lambdaContext
+) {
   const response = await myServerAdapter.fetch(
-    url,
+    // Construct the URL
+    `https://${event.requestContext.domainName}${event.requestContext.http.path}?${event.rawQueryString}`,
     {
-      // For v1.0 you should use event.httpMethod
       method: event.requestContext.http.method,
       headers: event.headers as HeadersInit,
-      body: event.body
-        ? Buffer.from(event.body, event.isBase64Encoded ? 'base64' : 'utf8')
-        : undefined
+      // Parse the body if needed
+      body:
+        event.body && event.isBase64Encoded ? Buffer.from(event.body, 'base64') : event.body || null
     },
     {
       event,
+      res,
       lambdaContext
     }
   )
 
-  const responseHeaders: Record<string, string> = {}
-
-  response.headers.forEach((value, name) => {
-    responseHeaders[name] = value
+  // Attach the metadata to the response stream
+  res = awslambda.HttpResponseStream.from(res, {
+    statusCode: response.status,
+    headers: Object.fromEntries(response.headers.entries())
   })
 
-  return {
-    statusCode: response.status,
-    headers: responseHeaders,
-    body: await response.text(),
-    isBase64Encoded: false
+  if (response.body) {
+    // @ts-expect-error - Pipe the response body to the response stream
+    await pipeline(response.body, res)
+  }
+
+  // End the response stream
+  res.end()
+})
+```
+
+If you have missing types for `awslambda`, you can add `awslambda.d.ts` like following;
+
+```ts
+// awslambda.d.ts
+import type { Writable } from 'node:stream'
+import type { Context, Handler } from 'aws-lambda'
+
+declare global {
+  namespace awslambda {
+    export namespace HttpResponseStream {
+      function from(
+        responseStream: ResponseStream,
+        metadata: {
+          statusCode?: number
+          headers?: Record<string, string>
+        }
+      ): ResponseStream
+    }
+
+    export type ResponseStream = Writable & {
+      setContentType(type: string): void
+    }
+
+    export type StreamifyHandler<Event> = (
+      event: Event,
+      responseStream: ResponseStream,
+      context: Context
+    ) => Promise<unknown>
+
+    export function streamifyResponse<Event>(handler: StreamifyHandler<Event>): Handler<Event>
   }
 }
 ```
