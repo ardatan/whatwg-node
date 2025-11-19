@@ -48,9 +48,7 @@ the boilerplate we prefer to use
 import { Buffer } from 'node:buffer';
 import { pipeline } from 'node:stream/promises';
 import type { Context, LambdaFunctionURLEvent } from 'aws-lambda';
-import { createTestServerAdapter } from '@e2e/shared-server';
-
-const app = createTestServerAdapter<ServerContext>();
+import myServerAdapter from './myServerAdapter';
 
 interface ServerContext {
   event: LambdaFunctionURLEvent;
@@ -63,7 +61,7 @@ export const handler = awslambda.streamifyResponse(async function handler(
   res,
   lambdaContext,
 ) {
-  const response = await app.fetch(
+  const response = await myServerAdapter.fetch(
     // Construct the URL
     `https://${event.requestContext.domainName}${event.requestContext.http.path}?${event.rawQueryString}`,
     {
