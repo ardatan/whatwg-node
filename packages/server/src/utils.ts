@@ -168,19 +168,22 @@ export function normalizeNodeRequest(
       request.headers.set('content-type', 'application/json; charset=utf-8');
     }
     return new Proxy(request, {
-      get: (target, prop: keyof Request, receiver) => {
+      get(_target, prop: keyof Request, receiver) {
         switch (prop) {
           case 'json':
             return () => fakePromise(maybeParsedBody);
           case 'text':
             return () => fakePromise(JSON.stringify(maybeParsedBody));
-          default:
-            if (globalThis.Bun) {
-              // workaround for https://github.com/oven-sh/bun/issues/12368
-              // Proxy.get doesn't seem to get `receiver` correctly
-              return Reflect.get(target, prop);
+          default: {
+            const val: any = Reflect.get(request, prop, request);
+            if (typeof val === 'function') {
+              return function requestMethodWrapper(this: Request, ...args: any[]) {
+                return val.apply(this === receiver ? request : this, args);
+              };
             }
-            return Reflect.get(target, prop, receiver);
+
+            return val;
+          }
         }
       },
     });
