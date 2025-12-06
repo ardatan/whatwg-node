@@ -109,12 +109,15 @@ export function pipeThrough({
   src.pipe(dest, { end: true /* already default */ });
 }
 
-export function endStream(stream: { end: () => void }) {
-  // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+export function endStream(stream: { end: (...args: any[]) => void }) {
+  // Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
   return stream.end(null, null, null);
 }
 
-export function safeWrite(chunk: any, stream: Writable) {
+export function safeWrite<TWritable extends Writable>(
+  chunk: Parameters<TWritable['write']>[0],
+  stream: TWritable,
+) {
   const result = stream.write(chunk);
   if (!result) {
     return once(stream, 'drain');
