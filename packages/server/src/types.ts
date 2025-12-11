@@ -11,8 +11,8 @@ export interface FetchEvent extends Event {
 
 export interface ServerAdapterBaseObject<
   TServerContext,
-  THandleRequest extends
-    ServerAdapterRequestHandler<TServerContext> = ServerAdapterRequestHandler<TServerContext>,
+  THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
+    ServerAdapterRequestHandler<TServerContext>,
 > {
   /**
    * An async function that takes `Request` and the server context and returns a `Response`.
