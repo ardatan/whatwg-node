@@ -676,11 +676,21 @@ const response = await adapter.handleNodeRequest(req, { customContext: 'value' }
 
 ##### `handleNodeRequestAndResponse(nodeRequest, nodeResponse, ...context)`
 
-Handles a Node.js request/response pair and returns a `Response`.
+Handles a Node.js request/response pair and returns a WHATWG `Response` object.
+
+**⚠️ Important:** This method returns a `Response` object but **does not automatically write it to
+the Node.js response object**. You need to manually send the response or use `requestListener()`
+instead for automatic response handling.
 
 ```ts
+// Returns a Response but doesn't write to `res`
 const response = await adapter.handleNodeRequestAndResponse(req, res, { customContext: 'value' })
+
+// Use requestListener or adapter(req, res) instead for automatic handling
 ```
+
+**Use case:** This method is useful when you need access to the WHATWG `Response` object for
+inspection or further processing before sending it.
 
 ##### `requestListener(nodeRequest, nodeResponse, ...context)`
 
