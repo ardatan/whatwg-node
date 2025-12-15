@@ -694,7 +694,7 @@ inspection or further processing before sending it.
 
 ##### `requestListener(nodeRequest, nodeResponse, ...context)`
 
-A Node.js compatible request listener that can be used with `http.createServer()` or similar.
+A Node.js-compatible request listener that can be used with `http.createServer()` or similar.
 
 ```ts
 import { createServer } from 'http'
