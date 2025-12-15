@@ -1014,21 +1014,3 @@ interface FetchEvent extends Event {
   respondWith(response: MaybePromiseLike<Response>): void
 }
 ```
-
-### Utilities
-
-#### `isNodeRequest(input: any): boolean`
-
-Type guard to check if input is a Node.js request.
-
-#### `isServerResponse(input: any): boolean`
-
-Type guard to check if input is a Node.js response.
-
-#### `isFetchEvent(input: any): boolean`
-
-Type guard to check if input is a FetchEvent.
-
-#### `completeAssign(...objects: any[]): any`
-
-Deep assign that copies accessors and symbols (used internally for context merging).
