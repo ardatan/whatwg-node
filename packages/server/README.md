@@ -617,3 +617,400 @@ console.log(await res.json()) // { greetings: "Hello, John" }
 await adapter.dispose()
 // The fetch request for `analytics` will be awaited here
 ```
+
+## API Reference
+
+### `createServerAdapter(handler, options?)`
+
+Creates a server adapter that can handle HTTP requests across different platforms.
+
+**Parameters:**
+
+- `handler: (request: Request, context: TServerContext) => MaybePromise<Response>` - The main
+  request handler function that receives a WHATWG `Request` object and returns a `Response`.
+- `options?: ServerAdapterOptions` - Optional configuration object with the following properties:
+  - `plugins?: ServerAdapterPlugin[]` - Array of plugins to extend adapter functionality
+  - `fetchAPI?: Partial<FetchAPI>` - Custom Fetch API implementation (defaults to
+    `@whatwg-node/fetch`)
+  - `disposeOnProcessTerminate?: boolean` - **(Node.js only)** If `true`, automatically dispose the
+    adapter when the process terminates
+
+**Returns:** `ServerAdapter` - An adapter instance with the following methods and properties:
+
+#### Adapter Methods
+
+##### `fetch(input, init?, context?)`
+
+WHATWG Fetch spec compliant method for handling requests.
+
+```ts
+const response = await adapter.fetch('http://localhost:4000/api', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ data: 'value' })
+})
+```
+
+**Signatures:**
+
+- `fetch(request: Request, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>`
+- `fetch(url: string | URL, init?: RequestInit, ...ctx: Partial<TServerContext>[]): MaybePromise<Response>`
+
+##### `handleRequest(request, context)`
+
+Basic request listener that takes a `Request` and server context.
+
+```ts
+const response = await adapter.handleRequest(request, serverContext)
+```
+
+##### `handleNodeRequest(nodeRequest, ...context)` _(Deprecated)_
+
+Converts a Node.js `IncomingMessage` to a `Request` and returns a `Response`.
+
+```ts
+const response = await adapter.handleNodeRequest(req, { customContext: 'value' })
+```
+
+**Deprecated:** Use `handleNodeRequestAndResponse` instead.
+
+##### `handleNodeRequestAndResponse(nodeRequest, nodeResponse, ...context)`
+
+Handles a Node.js request/response pair and returns a WHATWG `Response` object.
+
+**⚠️ Important:** This method returns a `Response` object but **does not automatically write it to
+the Node.js response object**. You need to manually send the response or use `requestListener()`
+instead for automatic response handling.
+
+```ts
+// Returns a Response but doesn't write to `res`
+const response = await adapter.handleNodeRequestAndResponse(req, res, { customContext: 'value' })
+
+// Use requestListener or adapter(req, res) instead for automatic handling
+```
+
+**Use case:** This method is useful when you need access to the WHATWG `Response` object for
+inspection or further processing before sending it.
+
+##### `requestListener(nodeRequest, nodeResponse, ...context)`
+
+A Node.js-compatible request listener that can be used with `http.createServer()` or similar.
+
+```ts
+import { createServer } from 'http'
+
+const server = createServer(adapter.requestListener)
+```
+
+##### `handleEvent(fetchEvent, ...context)`
+
+Handles a `FetchEvent` (used in Cloudflare Workers, Service Workers, etc.).
+
+```ts
+self.addEventListener('fetch', adapter.handleEvent)
+```
+
+##### `handleUWS(uwsResponse, uwsRequest, ...context)`
+
+Handles requests from uWebSockets.js.
+
+```ts
+app.any('/*', adapter.handleUWS)
+```
+
+##### `handle(input, ...context)`
+
+Generic handler that automatically detects the input type and routes to the appropriate handler.
+Supports:
+
+- Node.js `IncomingMessage` + `ServerResponse`
+- WHATWG `Request`
+- `FetchEvent`
+- uWebSockets.js request/response
+- Request containers (`{ request: Request }`)
+
+##### `dispose()`
+
+Disposes the adapter and cleans up all resources. Returns a `Promise<void>`.
+
+```ts
+await adapter.dispose()
+```
+
+##### `waitUntil(promise)`
+
+Registers a promise to be awaited before the adapter is disposed. Useful for background tasks.
+
+```ts
+adapter.waitUntil(logAnalytics(request).catch(err => console.error('Analytics failed:', err)))
+```
+
+#### Adapter Properties
+
+##### `disposableStack`
+
+Returns the internal `AsyncDisposableStack` for advanced resource management.
+
+#### Special Behaviors
+
+The adapter also works as:
+
+- **Function:** Can be called directly as a generic handler. When called with Node.js
+  request/response objects like `adapter(req, res, ...context)`, it's equivalent to calling
+  `adapter.handle(req, res, ...context)` which internally routes to `requestListener()`. Additional
+  context objects can be passed as spread arguments.
+- **Event Listener:** Can be used with `addEventListener('fetch', adapter)`
+- **AsyncDisposable:** Supports `await using adapter = createServerAdapter(...)`
+
+**Direct call examples:**
+
+```ts
+// Node.js - equivalent to requestListener
+adapter(nodeReq, nodeRes)
+adapter(nodeReq, nodeRes, { customContext: 'value' })
+
+// WHATWG Request - equivalent to fetch
+adapter(request)
+adapter(request, { customContext: 'value' })
+
+// FetchEvent - equivalent to handleEvent
+adapter(fetchEvent)
+
+// uWebSockets.js - equivalent to handleUWS
+adapter(uwsRes, uwsReq)
+```
+
+### Built-in Plugins
+
+#### `useCORS(options?)`
+
+Adds CORS (Cross-Origin Resource Sharing) support to your server.
+
+**Parameters:**
+
+- `options?: CORSPluginOptions` - Can be:
+  - `boolean` - `true` enables CORS with defaults, `false` disables it
+  - `CORSOptions` object:
+    - `origin?: string | string[]` - Allowed origins (`'*'` allows all)
+    - `methods?: string[]` - Allowed HTTP methods
+    - `allowedHeaders?: string[]` - Allowed request headers
+    - `exposedHeaders?: string[]` - Headers exposed to the client
+    - `credentials?: boolean` - Allow credentials
+    - `maxAge?: number` - Preflight cache duration in seconds
+  - `(request: Request, context: TServerContext) => MaybePromise<CORSOptions>` - Dynamic CORS
+    options factory
+
+**Example:**
+
+```ts
+import { createServerAdapter, useCORS } from '@whatwg-node/server'
+
+const adapter = createServerAdapter(handler, {
+  plugins: [
+    useCORS({
+      origin: ['https://example.com', 'https://app.example.com'],
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      maxAge: 86400
+    })
+  ]
+})
+```
+
+#### `useErrorHandling(errorHandler?)`
+
+Adds error handling to your request handler.
+
+**Parameters:**
+
+- `errorHandler?: (error: any, request: Request, context: TServerContext) => MaybePromise<Response> | void` -
+  Custom error handler function
+
+**Default Behavior:**
+
+The default error handler checks for `HTTPError` instances or objects with `status`, `headers`, or
+`details` properties and returns appropriate responses. Other errors are logged and return a 500
+status.
+
+**HTTPError Class:**
+
+```ts
+import { HTTPError } from '@whatwg-node/server'
+
+throw new HTTPError(404, 'Resource not found', { 'X-Custom-Header': 'value' }, { id: 123 })
+```
+
+**Example:**
+
+```ts
+import { createServerAdapter, useErrorHandling } from '@whatwg-node/server'
+
+const adapter = createServerAdapter(handler, {
+  plugins: [
+    useErrorHandling((error, request, context) => {
+      console.error('Request failed:', error)
+      return new Response(JSON.stringify({ error: error.message }), {
+        status: error.status || 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    })
+  ]
+})
+```
+
+#### `useContentEncoding()`
+
+Automatically handles request decompression and response compression based on `Content-Encoding` and
+`Accept-Encoding` headers.
+
+**Supported encodings:** `gzip`, `deflate`, `br` (Brotli), `zstd`, `deflate-raw` (depends on runtime
+support)
+
+**Example:**
+
+```ts
+import { createServerAdapter, useContentEncoding } from '@whatwg-node/server'
+
+const adapter = createServerAdapter(handler, {
+  plugins: [useContentEncoding()]
+})
+```
+
+This plugin will:
+
+- Decompress incoming request bodies based on `Content-Encoding` header
+- Compress outgoing response bodies based on `Accept-Encoding` header
+- Return `415 Unsupported Media Type` for unsupported encodings
+
+### Plugin System
+
+#### Creating Custom Plugins
+
+A plugin is an object implementing the `ServerAdapterPlugin` interface:
+
+```ts
+import { ServerAdapterPlugin } from '@whatwg-node/server'
+
+const myPlugin: ServerAdapterPlugin = {
+  // Optional: Wrap the entire request handling pipeline
+  instrumentation?: {
+    request: ({ request }, wrapped) => {
+      console.log('Before request')
+      const result = wrapped()
+      console.log('After request')
+      return result
+    }
+  },
+
+  // Optional: Called for every incoming request
+  onRequest({ request, setRequest, serverContext, fetchAPI, url, requestHandler, setRequestHandler, endResponse }) {
+    // Modify the request
+    const newRequest = new fetchAPI.Request(request.url, {
+      ...request,
+      headers: { ...request.headers, 'X-Custom-Header': 'value' }
+    })
+    setRequest(newRequest)
+
+    // Or short-circuit the request
+    if (!request.headers.get('authorization')) {
+      endResponse(new fetchAPI.Response('Unauthorized', { status: 401 }))
+    }
+
+    // Or replace the request handler
+    setRequestHandler(async (req, ctx) => {
+      // Custom handling logic
+      return requestHandler(req, ctx)
+    })
+  },
+
+  // Optional: Called after request is processed
+  onResponse({ request, response, setResponse, serverContext, fetchAPI }) {
+    // Modify the response
+    response.headers.set('X-Server', 'My Server')
+
+    // Or replace the response
+    setResponse(new fetchAPI.Response(response.body, {
+      ...response,
+      headers: { ...response.headers, 'X-Custom': 'value' }
+    }))
+  },
+
+  // Optional: Called when adapter is disposed
+  onDispose: async () => {
+    // Clean up resources
+    await cleanup()
+  },
+
+  // Alternative disposal methods (Explicit Resource Management)
+  [Symbol.dispose]: () => { /* sync cleanup */ },
+  [Symbol.asyncDispose]: async () => { /* async cleanup */ }
+}
+```
+
+#### Plugin Hook Payloads
+
+##### `onRequest` Payload
+
+| Field               | Type                           | Description                           |
+| ------------------- | ------------------------------ | ------------------------------------- |
+| `request`           | `Request`                      | The incoming WHATWG Request object    |
+| `setRequest`        | `(request: Request) => void`   | Replace the request object            |
+| `serverContext`     | `TServerContext`               | The server context object             |
+| `fetchAPI`          | `FetchAPI`                     | WHATWG Fetch API implementation       |
+| `url`               | `URL`                          | Parsed URL of the request             |
+| `requestHandler`    | `Function`                     | The current request handler           |
+| `setRequestHandler` | `(handler: Function) => void`  | Replace the request handler           |
+| `endResponse`       | `(response: Response) => void` | Short-circuit and end with a response |
+
+##### `onResponse` Payload
+
+| Field           | Type                           | Description                         |
+| --------------- | ------------------------------ | ----------------------------------- |
+| `request`       | `Request`                      | The incoming WHATWG Request object  |
+| `response`      | `Response`                     | The outgoing WHATWG Response object |
+| `setResponse`   | `(response: Response) => void` | Replace the response object         |
+| `serverContext` | `TServerContext`               | The server context object           |
+| `fetchAPI`      | `FetchAPI`                     | WHATWG Fetch API implementation     |
+
+### Types
+
+#### `ServerAdapterRequestHandler<TServerContext>`
+
+```ts
+type ServerAdapterRequestHandler<TServerContext> = (
+  request: Request,
+  context: TServerContext & ServerAdapterInitialContext
+) => MaybePromise<Response>
+```
+
+#### `ServerAdapterInitialContext`
+
+The base context object available to all request handlers:
+
+```ts
+type ServerAdapterInitialContext = {
+  waitUntil: (promise: Promise<void> | void) => void
+}
+```
+
+#### `ServerAdapterNodeContext`
+
+Context object when using Node.js handlers:
+
+```ts
+type ServerAdapterNodeContext = {
+  req: IncomingMessage | Http2ServerRequest
+  res: ServerResponse | Http2ServerResponse
+}
+```
+
+#### `FetchEvent`
+
+```ts
+interface FetchEvent extends Event {
+  waitUntil(promise: MaybePromise<void>): void
+  request: Request
+  respondWith(response: MaybePromiseLike<Response>): void
+}
+```
