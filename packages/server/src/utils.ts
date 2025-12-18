@@ -397,7 +397,8 @@ function sendReadableStream(
 ) {
   const reader = readableStream.getReader();
   nodeRequest?.once?.('error', err => {
-    reader.cancel(err);
+    // Handle and ignore any error from cancel() (e.g., if already closed)
+    reader.cancel(err).catch(() => {});
   });
   function pump(): Promise<void> {
     return reader
@@ -406,7 +407,15 @@ function sendReadableStream(
         done
           ? endResponse(serverResponse)
           : handleMaybePromise(() => safeWrite(value, serverResponse), pump),
-      );
+      )
+      .catch(err => {
+        if (!serverResponse.destroyed) {
+          serverResponse.destroy(err);
+        } else {
+          // If the serverResponse is already destroyed, re-throw the error to be handled upstream
+          throw err;
+        }
+      });
   }
   return pump();
 }
