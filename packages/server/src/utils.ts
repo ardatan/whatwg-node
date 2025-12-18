@@ -425,9 +425,19 @@ function sendReadableStream(
 ) {
   const reader = readableStream.getReader();
   nodeRequest?.once?.('error', err => {
-    reader.cancel(err);
+    // Ignore cancel() failures (e.g. stream already closed/errored)
+    reader.cancel(err).catch(() => {});
   });
-  return pumpToWritable(() => reader.read(), serverResponse);
+  return handleMaybePromise(
+    () => pumpToWritable(() => reader.read(), serverResponse),
+    () => {},
+    err => {
+      // Body aborted/errored: destroy Node response so the client socket closes (RST)
+      if (!serverResponse.destroyed) {
+        serverResponse.destroy(err);
+      }
+    },
+  );
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {
