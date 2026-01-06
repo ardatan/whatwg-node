@@ -1,5 +1,17 @@
 # @whatwg-node/server
 
+## 0.10.18
+
+### Patch Changes
+
+- [#2963](https://github.com/ardatan/whatwg-node/pull/2963)
+  [`99e6722`](https://github.com/ardatan/whatwg-node/commit/99e672219dd09e0177dabb3235e8d4f807b56032)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Fix Node 24 + Express compatibility
+
+- [#2963](https://github.com/ardatan/whatwg-node/pull/2963)
+  [`99e6722`](https://github.com/ardatan/whatwg-node/commit/99e672219dd09e0177dabb3235e8d4f807b56032)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Improve streaming
+
 ## 0.10.17
 
 ### Patch Changes
@@ -1324,8 +1336,8 @@
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
   - Updated dependency
-    [`@whatwg-node/fetch@^0.6.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.6.8)
-    (from `0.6.8`, in `dependencies`)
+    [`@whatwg-node/fetch@^0.6.8` ↗︎](https://www.npmjs.com/package/@whatwg-node/fetch/v/0.6.8) (from
+    `0.6.8`, in `dependencies`)
 
 - [#314](https://github.com/ardatan/whatwg-node/pull/314)
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
@@ -1399,9 +1411,8 @@
 - [#154](https://github.com/ardatan/whatwg-node/pull/154)
   [`9f4fe48`](https://github.com/ardatan/whatwg-node/commit/9f4fe489ff1d08d873a2dd26c02abc54da08dc48)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-  - Removed dependency
-    [`@types/node@^18.0.6` ↗︎](https://www.npmjs.com/package/@types/node/v/18.0.6) (from
-    `peerDependencies`)
+  - Removed dependency [`@types/node@^18.0.6` ↗︎](https://www.npmjs.com/package/@types/node/v/18.0.6)
+    (from `peerDependencies`)
 - Updated dependencies
   [[`9f4fe48`](https://github.com/ardatan/whatwg-node/commit/9f4fe489ff1d08d873a2dd26c02abc54da08dc48),
   [`9f4fe48`](https://github.com/ardatan/whatwg-node/commit/9f4fe489ff1d08d873a2dd26c02abc54da08dc48)]:

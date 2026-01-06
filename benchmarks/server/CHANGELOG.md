@@ -1,5 +1,14 @@
 # @benchmarks/server
 
+## 0.0.65
+
+### Patch Changes
+
+- Updated dependencies
+  [[`99e6722`](https://github.com/ardatan/whatwg-node/commit/99e672219dd09e0177dabb3235e8d4f807b56032),
+  [`99e6722`](https://github.com/ardatan/whatwg-node/commit/99e672219dd09e0177dabb3235e8d4f807b56032)]:
+  - @whatwg-node/server@0.10.18
+
 ## 0.0.64
 
 ### Patch Changes
