@@ -4,6 +4,7 @@ import compression from 'compression';
 import express from 'express';
 import { afterEach, expect, it } from '@jest/globals';
 import { fetch } from '@whatwg-node/fetch';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { createDeferredPromise, createServerAdapter, Response } from '@whatwg-node/server';
 
 let server: Server | undefined;
@@ -136,3 +137,45 @@ for (const largeBody of bodies) {
     });
   });
 }
+
+it('express + body_parser + url property in the plugin', async () => {
+  let url: string | undefined;
+  const serverAdapter = createServerAdapter(
+    request =>
+      handleMaybePromise(
+        () => request.json(),
+        body => Response.json(body),
+      ),
+    {
+      fetchAPI: {
+        Request: globalThis.Request,
+        URL: globalThis.URL,
+      },
+      plugins: [
+        {
+          onRequest({ request }) {
+            url = request.url;
+          },
+        },
+      ],
+    },
+  );
+  const app = express();
+  app.use(express.json());
+  app.use(serverAdapter);
+  server = await new Promise<Server>((resolve, reject) => {
+    const server = app.listen(0, err => (err ? reject(err) : resolve(server)));
+  });
+  const port = (server.address() as AddressInfo).port;
+  const bodyJson = { hello: 'world' };
+  const response = await fetch(`http://localhost:${port}/test-path`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(bodyJson),
+  });
+  const body = await response.json();
+  expect(body).toEqual(bodyJson);
+  expect(url).toBe(`http://localhost:${port}/test-path`);
+});

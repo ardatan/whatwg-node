@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
-import type { Readable } from 'node:stream';
+import type { Readable, Writable } from 'node:stream';
 import {
   createDeferredPromise,
   fakePromise,
@@ -168,19 +168,22 @@ export function normalizeNodeRequest(
       request.headers.set('content-type', 'application/json; charset=utf-8');
     }
     return new Proxy(request, {
-      get: (target, prop: keyof Request, receiver) => {
+      get(_target, prop: keyof Request, receiver) {
         switch (prop) {
           case 'json':
             return () => fakePromise(maybeParsedBody);
           case 'text':
             return () => fakePromise(JSON.stringify(maybeParsedBody));
-          default:
-            if (globalThis.Bun) {
-              // workaround for https://github.com/oven-sh/bun/issues/12368
-              // Proxy.get doesn't seem to get `receiver` correctly
-              return Reflect.get(target, prop);
+          default: {
+            const val: any = Reflect.get(request, prop, request);
+            if (typeof val === 'function') {
+              return function requestMethodWrapper(this: Request, ...args: any[]) {
+                return val.apply(this === receiver ? request : this, args);
+              };
             }
-            return Reflect.get(target, prop, receiver);
+
+            return val;
+          }
         }
       },
     });
@@ -248,24 +251,50 @@ function sendAsyncIterable(serverResponse: NodeResponse, asyncIterable: AsyncIte
     serverResponse.removeListener('error', closeEventListener);
   });
   const iterator = asyncIterable[Symbol.asyncIterator]();
-  const pump = (): Promise<void> =>
-    iterator.next().then(({ done, value }) => {
-      if (closed || done) {
-        return;
+  return pumpToWritable(
+    () => iterator.next(),
+    serverResponse,
+    () => closed,
+  );
+}
+
+interface PumpSourceResult<T> {
+  done?: boolean;
+  value?: T;
+}
+
+type PumpSource<T> = () => MaybePromise<PumpSourceResult<T>>;
+
+function endDest(dest: Writable) {
+  // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
+  dest.end(null, null, null);
+}
+
+function pumpToWritable<
+  TDest extends Writable,
+  TValue extends Parameters<Writable['write']>[0],
+  TSource extends PumpSource<TValue>,
+>(source: TSource, dest: TDest, isClosed?: () => boolean) {
+  const pump = (): MaybePromise<void> =>
+    handleMaybePromise(source, sourceResult => {
+      if (isClosed?.() || sourceResult.done) {
+        return endDest(dest);
       }
       return handleMaybePromise(
-        () => safeWrite(value, serverResponse),
-        () => (closed ? endResponse(serverResponse) : pump()),
+        () => safeWrite(sourceResult.value, dest),
+        () => (isClosed?.() ? endDest(dest) : pump()),
       );
     });
   return pump();
 }
 
-function safeWrite(chunk: any, serverResponse: NodeResponse) {
-  // @ts-expect-error http and http2 writes are actually compatible
-  const result = serverResponse.write(chunk);
+function safeWrite<TWritable extends Writable>(
+  chunk: Parameters<TWritable['write']>[0],
+  destination: TWritable,
+) {
+  const result = destination.write(chunk);
   if (!result) {
-    return new Promise(resolve => serverResponse.once('drain', resolve));
+    return new Promise(resolve => destination.once('drain', resolve));
   }
 }
 
@@ -334,9 +363,11 @@ export function sendNodeResponse(
 
   // @ts-expect-error - Handle the case where the response is a string
   if (fetchResponse['bodyType'] === 'String') {
-    return handleMaybePromise(
+    const bodyString: string =
       // @ts-expect-error - bodyInit is a private property
-      () => safeWrite(fetchResponse.bodyInit, serverResponse),
+      fetchResponse['bodyInit'];
+    return handleMaybePromise(
+      () => safeWrite(bodyString, serverResponse),
       () => endResponse(serverResponse),
     );
   }
@@ -399,16 +430,7 @@ function sendReadableStream(
   nodeRequest?.once?.('error', err => {
     reader.cancel(err);
   });
-  function pump(): Promise<void> {
-    return reader
-      .read()
-      .then(({ done, value }) =>
-        done
-          ? endResponse(serverResponse)
-          : handleMaybePromise(() => safeWrite(value, serverResponse), pump),
-      );
-  }
-  return pump();
+  return pumpToWritable(() => reader.read(), serverResponse);
 }
 
 export function isRequestInit(val: unknown): val is RequestInit {

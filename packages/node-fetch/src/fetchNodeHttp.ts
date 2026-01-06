@@ -159,6 +159,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           () => endStream(nodeRequest),
           reject,
         );
+      } else if (fetchRequest['bodyType'] === 'String') {
+        handleMaybePromise(
+          () => safeWrite(fetchRequest['bodyInit'] as string, nodeRequest),
+          () => endStream(nodeRequest),
+          reject,
+        );
       } else {
         const nodeReadable = (
           fetchRequest.body != null
