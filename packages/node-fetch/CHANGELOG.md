@@ -1,5 +1,14 @@
 # @whatwg-node/node-fetch
 
+## 0.8.5
+
+### Patch Changes
+
+- [#2963](https://github.com/ardatan/whatwg-node/pull/2963)
+  [`99e6722`](https://github.com/ardatan/whatwg-node/commit/99e672219dd09e0177dabb3235e8d4f807b56032)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Write string directly while sending
+  request body to `node:http`'s `OutgoingMessage`.
+
 ## 0.8.4
 
 ### Patch Changes

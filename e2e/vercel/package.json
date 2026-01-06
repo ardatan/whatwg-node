@@ -1,6 +1,6 @@
 {
   "name": "@e2e/vercel",
-  "version": "0.0.155",
+  "version": "0.0.156",
   "private": true,
   "scripts": {
     "build": "node scripts/bundle.js",
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@e2e/shared-scripts": "0.0.0",
-    "@e2e/shared-server": "0.0.155",
+    "@e2e/shared-server": "0.0.156",
     "encoding": "0.1.13",
     "next": "16.1.1",
     "react": "19.2.3",
