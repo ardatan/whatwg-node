@@ -75,7 +75,7 @@
     "ts-jest": "29.4.6",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.0.4",
-    "vitest": "4.0.16"
+    "vitest": "4.0.17"
   },
   "overrides": {
     "@pulumi/pulumi": "3.215.0",
