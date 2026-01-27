@@ -6,7 +6,6 @@ import {
   execPromise,
 } from '@e2e/shared-scripts';
 import * as aws from '@pulumi/aws';
-import * as awsNative from '@pulumi/aws-native';
 import { version } from '@pulumi/aws/package.json';
 import * as pulumi from '@pulumi/pulumi';
 import { Stack } from '@pulumi/pulumi/automation';
@@ -52,7 +51,7 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
       });
 
       const lambdaRolePolicy = new aws.iam.RolePolicy('role-policy', {
-        role: lambdaRole.id,
+        role: lambdaRole,
         policy: {
           Version: '2012-10-17',
           Statement: [
@@ -80,14 +79,14 @@ export function createAwsLambdaDeployment(): DeploymentConfiguration<{
 
       new aws.lambda.Permission('streaming-permission', {
         action: 'lambda:InvokeFunctionUrl',
-        function: func.arn,
+        function: func,
         principal: '*',
         functionUrlAuthType: 'NONE',
       });
 
-      const lambdaGw = new awsNative.lambda.Url('streaming-url', {
-        authType: 'NONE',
-        targetFunctionArn: func.arn,
+      const lambdaGw = new aws.lambda.FunctionUrl('streaming-url', {
+        authorizationType: 'NONE',
+        functionName: func.name,
         invokeMode: 'RESPONSE_STREAM',
       });
 
