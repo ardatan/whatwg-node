@@ -8,7 +8,7 @@ const app = createTestServerAdapter<ServerContext>();
 interface ServerContext {
   event: LambdaFunctionURLEvent;
   lambdaContext: Context;
-  res: awslambda.ResponseStream;
+  res: awslambda.HttpResponseStream;
 }
 
 export const handler = awslambda.streamifyResponse(async function handler(
