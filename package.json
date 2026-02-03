@@ -32,7 +32,7 @@
   },
   "optionalDependencies": {
     "node-libcurl": "4.1.0",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.56.0"
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.57.0"
   },
   "devDependencies": {
     "@babel/core": "7.29.0",
