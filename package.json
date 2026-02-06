@@ -82,7 +82,7 @@
   "overrides": {
     "@pulumi/pulumi": "3.219.0",
     "cookie": "1.1.1",
-    "esbuild": "0.27.2",
+    "esbuild": "0.27.3",
     "glob": "13.0.1",
     "lodash": "4.17.23",
     "qs": "6.14.1",
