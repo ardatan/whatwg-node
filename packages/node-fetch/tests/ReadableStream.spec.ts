@@ -97,7 +97,6 @@ pullCount: 3
   });
   it('should send data from start without pull lazily', async () => {
     let interval: any;
-    let timeout: any;
     const rs = new PonyfillReadableStream({
       start(controller) {
         let startCount = 0;
@@ -107,7 +106,6 @@ pullCount: 3
       },
       cancel() {
         clearInterval(interval);
-        clearTimeout(timeout);
       },
     });
     const reader = rs.getReader();
