@@ -37,7 +37,7 @@ export function parse(str: string, options: ParseOptions = {}): Map<string, Cook
 
   for (let i = 0; i < pairs.length; i++) {
     const pair = pairs[i];
-    let eqIdx = pair.indexOf('=');
+    const eqIdx = pair.indexOf('=');
 
     // skip things that don't look like key=value
     if (eqIdx < 0) {
@@ -45,7 +45,7 @@ export function parse(str: string, options: ParseOptions = {}): Map<string, Cook
     }
 
     const key = pair.substr(0, eqIdx).trim();
-    let val = pair.substr(++eqIdx, pair.length).trim();
+    let val = pair.substr(eqIdx, pair.length).trim();
 
     // quoted values
     if (val[0] === '"') {

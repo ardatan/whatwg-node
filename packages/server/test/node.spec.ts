@@ -176,8 +176,6 @@ describe('Node Specific Cases', () => {
 
           expect(result.length).toBe(27045);
           expect(successFn).toHaveBeenCalledTimes(5);
-
-          result = null;
         });
 
         if (!globalThis.Bun && !globalThis.Deno) {
@@ -460,11 +458,10 @@ describe('Node Specific Cases', () => {
                 );
                 await testServer.addOnceHandler(serverAdapter);
                 const ctrl = new AbortController();
-                let resText: string | null = null;
                 const res = await fetch(testServer.url, {
                   signal: ctrl.signal,
                 });
-                resText = await res.text();
+                const resText = await res.text();
                 if (res.status !== status && res.status === 500) {
                   throw new Error(
                     `Unexpected status ${res.status} for status ${status}; ${resText}`,

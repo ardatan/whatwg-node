@@ -10,6 +10,5 @@ declare global {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var Bun: any;
 }
