@@ -6,7 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
-  "packageManager": "npm@11.10.0",
+  "packageManager": "npm@11.10.1",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "bob build",
@@ -83,7 +83,7 @@
     "@pulumi/pulumi": "3.222.0",
     "cookie": "1.1.1",
     "esbuild": "0.27.3",
-    "glob": "13.0.5",
+    "glob": "13.0.6",
     "lodash": "4.17.23",
     "qs": "6.15.0",
     "tar": "7.5.9",
