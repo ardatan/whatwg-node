@@ -25,6 +25,8 @@ your users can use it in their browsers, Deno, Bun, Cloudflare Works, and in Nod
 
 ## Why we should still use these for Node.js even if it already implements them natively
 
+### Differences from Node.js `fetch`
+
 Even if newer Node.js already implements Fetch API and Data Text Encoding API natively, we still
 recommend to use this package, because this package implements them for Node.js in more efficient
 way.
@@ -39,6 +41,9 @@ way.
   you can consume incoming multipart(file uploads) requests with `.formData` in Node.js.
 - `fetch` implementation of Node.js uses `undici` and it doesn't support HTTP 2, our implementation
   supports it natively thanks to `node-libcurl`.
+- `file:` protocol support... As in Bun, Deno and other similar Fetch implementations, undici's fetch doesn't support `file:` protocol. 
+`@whatwg-node/fetch` allows you to support it in platform agnostic way.
+
 
 ### Faster HTTP Client in Node.js with HTTP/2 support
 
