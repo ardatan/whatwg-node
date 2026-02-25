@@ -41,9 +41,9 @@ way.
   you can consume incoming multipart(file uploads) requests with `.formData` in Node.js.
 - `fetch` implementation of Node.js uses `undici` and it doesn't support HTTP 2, our implementation
   supports it natively thanks to `node-libcurl`.
-- `file:` protocol support... As in Bun, Deno and other similar Fetch implementations, undici's fetch doesn't support `file:` protocol. 
-`@whatwg-node/fetch` allows you to support it in platform agnostic way.
-
+- `file:` protocol support... As in Bun, Deno and other similar Fetch implementations, undici's
+  fetch doesn't support `file:` protocol. `@whatwg-node/fetch` allows you to support it in platform
+  agnostic way.
 
 ### Faster HTTP Client in Node.js with HTTP/2 support
 
