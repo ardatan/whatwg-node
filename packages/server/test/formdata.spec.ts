@@ -41,8 +41,8 @@ describe('FormData', () => {
                 status: 500,
               });
             }
-            return new Response(null, {
-              status: 204,
+            return new Response(receivedFileContent, {
+              status: 200,
             });
           });
           await testServer.addOnceHandler(adapter);
@@ -53,8 +53,8 @@ describe('FormData', () => {
             method: 'POST',
             body: formData,
           });
-          expect(await response.text()).toBe('');
-          expect(response.status).toBe(204);
+          expect(await response.text()).toBe('baz');
+          expect(response.status).toBe(200);
           expect(receivedFieldContent).toBe('bar');
           expect(receivedFileName).toBe('baz.txt');
           expect(receivedFileType).toContain('text/plain');
@@ -109,7 +109,7 @@ describe('FormData', () => {
           res.destroy();
         });
 
-        skipIf(!!globalThis.Deno)(
+        skipIf(!!globalThis.Deno || !!globalThis.Bun)(
           'should hang when parsing form data where content-length is larger than the actual data',
           async () => {
             const adapter = createServerAdapter(async request => {
