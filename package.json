@@ -6,7 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
-  "packageManager": "npm@11.11.1",
+  "packageManager": "npm@11.10.1",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "bob build",
@@ -93,7 +93,7 @@
   "devEngines": {
     "packageManager": {
       "name": "npm",
-      "version": "11.11.1"
+      "version": "11.10.1"
     }
   },
   "lint-staged": {
