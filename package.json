@@ -6,7 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
-  "packageManager": "npm@11.10.1",
+  "packageManager": "npm@11.11.0",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "bob build",
