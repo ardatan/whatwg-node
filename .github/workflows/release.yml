@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   stable:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     permissions:
       contents: write
       id-token: write
