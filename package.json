@@ -6,7 +6,7 @@
     "e2e/*",
     "benchmarks/*"
   ],
-  "packageManager": "npm@11.11.0",
+  "packageManager": "npm@11.11.1",
   "scripts": {
     "bench": "vitest bench --project bench",
     "build": "bob build",
@@ -47,7 +47,7 @@
     "@jest/globals": "30.3.0",
     "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.5.0",
-    "@types/node": "25.4.0",
+    "@types/node": "25.5.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@typescript-eslint/eslint-plugin": "8.57.0",
@@ -77,12 +77,12 @@
     "ts-jest": "29.4.6",
     "typescript": "5.9.3",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "4.0.18"
+    "vitest": "4.1.0"
   },
   "overrides": {
     "@pulumi/pulumi": "3.225.1",
     "cookie": "1.1.1",
-    "esbuild": "0.27.3",
+    "esbuild": "0.27.4",
     "glob": "13.0.6",
     "lodash": "4.17.23",
     "qs": "6.15.0",
