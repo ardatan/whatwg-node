@@ -94,7 +94,7 @@
   "devEngines": {
     "packageManager": {
       "name": "npm",
-      "version": "11.10.1"
+      "version": "11.9.0"
     }
   },
   "lint-staged": {
