@@ -76,6 +76,7 @@
     "tar": "7.5.11",
     "ts-jest": "29.4.6",
     "typescript": "5.9.3",
+    "undici": "7.24.4",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "4.1.0"
   },
@@ -85,16 +86,19 @@
     "esbuild": "0.27.4",
     "glob": "13.0.6",
     "lodash": "4.17.23",
+    "miniflare": {
+      "undici": "7.24.4"
+    },
     "qs": "6.15.0",
     "tar": "7.5.11",
     "tmp": "0.2.5",
-    "undici": "7.24.3",
+    "undici": "7.24.4",
     "vite": "8.0.0"
   },
   "devEngines": {
     "packageManager": {
       "name": "npm",
-      "version": "11.11.1"
+      "version": "^11.10.1"
     }
   },
   "lint-staged": {
