@@ -70,8 +70,8 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
   private _buffer?: Buffer<ArrayBuffer> | undefined;
-  private _bodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
-  private _bodyProxyReadable: Readable | null = null;
+  private _cachedBodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
+  private _cachedBodyProxyReadable: Readable | null = null;
   _signal?: AbortSignal | undefined;
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
@@ -120,10 +120,10 @@ export class PonyfillBody<TJSON = any> implements Body {
       const readable = _body.readable;
       // Reuse the cached proxy unless the underlying readable has been regenerated
       // (which happens when a destroyed stream is rebuilt from the buffer)
-      if (this._bodyProxy === null || this._bodyProxyReadable !== readable) {
+      if (this._cachedBodyProxy === null || this._cachedBodyProxyReadable !== readable) {
         const ponyfillReadableStream = _body;
-        this._bodyProxyReadable = readable;
-        this._bodyProxy = new Proxy(readable as any, {
+        this._cachedBodyProxyReadable = readable;
+        this._cachedBodyProxy = new Proxy(readable as any, {
           get(_, prop) {
             if (prop in ponyfillReadableStream) {
               const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
@@ -142,7 +142,7 @@ export class PonyfillBody<TJSON = any> implements Body {
           },
         });
       }
-      return this._bodyProxy;
+      return this._cachedBodyProxy;
     }
     return null;
   }

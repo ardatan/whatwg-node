@@ -91,6 +91,15 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
+function isNonEmptyObject(obj: any): boolean {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   fetchAPI: FetchAPI,
@@ -150,7 +159,7 @@ export function normalizeNodeRequest(
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
   const maybeParsedBody = nodeRequest.body;
-  if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
+  if (maybeParsedBody != null && isNonEmptyObject(maybeParsedBody)) {
     if (isRequestBody(maybeParsedBody)) {
       return new fetchAPI.Request(fullUrl, {
         method: nodeRequest.method || 'GET',
