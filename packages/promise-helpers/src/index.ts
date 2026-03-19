@@ -35,7 +35,7 @@ export function handleMaybePromise<TInput, TOutput>(
   // Rare path: keep the full fakePromise chain when a finallyFactory is provided so that
   // its semantics match a real Promise.finally() (re-throw, suppression of original rejection, etc.).
   if (finallyFactory) {
-    let result$ = fakePromise<TOutput>()
+    let result$ = fakePromise<TOutput>(undefined as any)
       .then(inputFactory as any)
       .then(outputSuccessFactory as any, outputErrorFactory);
     result$ = result$.finally(finallyFactory);
