@@ -34,10 +34,12 @@ export function handleMaybePromise<TInput, TOutput>(
 ): MaybePromiseLike<TOutput> {
   // Rare path: keep the full fakePromise chain when a finallyFactory is provided so that
   // its semantics match a real Promise.finally() (re-throw, suppression of original rejection, etc.).
+  // The `as unknown as` casts are necessary because fakePromise() returns Promise<void> but
+  // we need to thread the TInput → TOutput types through the chain; the runtime semantics are correct.
   if (finallyFactory) {
-    let result$ = fakePromise<TOutput>(undefined as any)
-      .then(inputFactory as any)
-      .then(outputSuccessFactory as any, outputErrorFactory);
+    let result$ = (fakePromise() as unknown as Promise<TInput>)
+      .then(inputFactory)
+      .then(outputSuccessFactory, outputErrorFactory);
     result$ = result$.finally(finallyFactory);
     return unfakePromise(result$);
   }

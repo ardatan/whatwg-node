@@ -25,9 +25,14 @@ describeIf(!globalThis.Deno)('Cleanup Resources', () => {
         const response = await fetch(baseUrl + '/get');
         expect(response.ok).toBe(true);
       });
-      it('https - should free resources when body is not consumed', async () => {
-        const response = await fetch('https://httpbin.org/get');
-        expect(response.ok).toBe(true);
+      // Skip in CI: no HTTPS mock server is available; the HTTP test above already
+      // exercises the "free resources" path via the CI mock server.
+      const describeIfNotCI = process.env.CI ? describe.skip : describe;
+      describeIfNotCI('https', () => {
+        it('should free resources when body is not consumed', async () => {
+          const response = await fetch('https://httpbin.org/get');
+          expect(response.ok).toBe(true);
+        });
       });
     });
   });

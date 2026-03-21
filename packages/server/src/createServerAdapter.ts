@@ -319,6 +319,7 @@ function createServerAdapter<
     };
     // Inline handleNodeRequestAndResponse for the hot path to avoid extra function call
     // overhead, rest-parameter array allocations, and redundant checks.
+    // In the typical createServer(adapter) usage ctx is empty; the branch below is the fast path.
     const serverContext: any =
       ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
     const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
