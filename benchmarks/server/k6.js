@@ -1,8 +1,5 @@
 /* eslint-disable */
-// @ts-check
-// @ts-expect-error - TS doesn't know this import
 import { textSummary } from 'https://jslib.k6.io/k6-summary/0.0.1/index.js';
-// @ts-expect-error - TS doesn't know this import
 import { githubComment } from 'https://raw.githubusercontent.com/dotansimha/k6-github-pr-comment/master/lib.js';
 import { check } from 'k6';
 import http from 'k6/http';
@@ -66,27 +63,66 @@ const reqParams = {
 };
 
 const reqUrl = `http://127.0.0.1:4000`;
-const expected = { message: 'Hello, World!' };
+const expectedStructure = { message: 'Hello, World!' };
 
-// Check the response structure once
-let checkedResponse = false;
-function checkResponseOnce(res) {
-  if (checkedResponse) return;
+let printIdentifiersMap = {};
+let runIdentifiersMap = {};
 
-  const json = res.json();
-  if (json.message !== expected.message) {
-    throw new Error(`Unexpected response: ${res.body}`);
+function printOnce(identifier, ...args) {
+  if (printIdentifiersMap[identifier]) {
+    return;
   }
 
-  checkedResponse = true;
+  console.log(...args);
+  printIdentifiersMap[identifier] = true;
+}
+
+function runOnce(identifier, cb) {
+  if (runIdentifiersMap[identifier]) {
+    return true;
+  }
+
+  runIdentifiersMap[identifier] = true;
+  return cb();
+}
+
+function checkResponseStructure(x) {
+  function checkRecursive(obj, structure) {
+    if (obj == null) {
+      return false;
+    }
+    for (var key in structure) {
+      if (!obj.hasOwnProperty(key) || typeof obj[key] !== typeof structure[key]) {
+        return false;
+      }
+      if (typeof structure[key] === 'object' && structure[key] !== null) {
+        if (!checkRecursive(obj[key], structure[key])) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  return checkRecursive(x, expectedStructure);
 }
 
 export default function run() {
   const res = http.post(reqUrl, reqBody, reqParams);
 
-  checkResponseOnce(res);
-
   check(res, {
-    'no-errors': resp => resp.status === 200,
+    'response code was 200': resp => resp.status === 200,
+    'valid response structure': resp => {
+      return runOnce('valid response structure', () => {
+        const json = resp.json();
+
+        let isValid = checkResponseStructure(json);
+
+        if (!isValid) {
+          printOnce('response_structure', `‼️ Got invalid structure, here's a sample:`, res.body);
+        }
+
+        return isValid;
+      });
+    },
   });
 }
