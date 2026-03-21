@@ -74,6 +74,15 @@ export interface ServerAdapterOptions<TServerContext> {
 
 const EMPTY_OBJECT = {};
 
+// Hoisted to avoid per-request closure allocations in the requestListener hot path
+function logUnexpectedRequestError(err: any) {
+  console.error(`Unexpected error while handling request: ${err.message || err}`);
+}
+
+function responsePassthrough(response: Response): Response {
+  return response;
+}
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
@@ -113,6 +122,9 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
+
+  // Defined once per adapter instance to avoid per-request closure allocations
+  const requestHandlerErrorFn = (err: any) => handleErrorFromRequestHandler(err, fetchAPI.Response);
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
@@ -305,21 +317,20 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
+    // Inline handleNodeRequestAndResponse for the hot path to avoid extra function call
+    // overhead, rest-parameter array allocations, and redundant checks.
+    const serverContext: any =
+      ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
     return handleMaybePromise(
       () =>
         handleMaybePromise(
-          () =>
-            handleNodeRequestAndResponse(
-              nodeRequest,
-              nodeResponse,
-              defaultServerContext as any,
-              ...ctx,
-            ),
-          response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+          () => handleRequest(request, serverContext),
+          responsePassthrough,
+          requestHandlerErrorFn,
         ),
       response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
-      err => console.error(`Unexpected error while handling request: ${err.message || err}`),
+      logUnexpectedRequestError,
     );
   }
 
