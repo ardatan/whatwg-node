@@ -87,20 +87,20 @@ jobs:
         if: ${{ matrix.node-version != 18 }}
         run: npm install -g npm@latest
       - name: Cache Jest
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5
         with:
           path: .cache/jest
           key: ${{ runner.os }}-${{matrix.node-version}}-jest-${{ hashFiles('yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{matrix.node-version}}-jest-
       - name: Unit Tests
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           timeout_minutes: 10
           max_attempts: 5
           command: npm run test --ci
       - name: Leak Tests
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           timeout_minutes: 10
           max_attempts: 5
@@ -144,7 +144,7 @@ jobs:
       - name: Upgrade npm
         run: npm install -g npm@latest
       - name: Test
-        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08 # v3
+        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
         with:
           timeout_minutes: 10
           max_attempts: 5
