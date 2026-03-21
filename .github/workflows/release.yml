@@ -30,7 +30,9 @@ jobs:
 
   dependencies:
     uses: the-guild-org/shared-config/.github/workflows/changesets-dependencies.yml@v1
-    if: ${{ github.event.pull_request.title != 'Upcoming Release Changes' }}
+    if:
+      ${{ github.event.pull_request.title != 'Upcoming Release Changes' && github.base_ref ==
+      'master' }}
     secrets:
       githubToken: ${{ secrets.GITHUB_TOKEN }}
 
