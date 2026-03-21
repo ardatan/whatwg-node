@@ -59,14 +59,32 @@ const reqBody = JSON.stringify({
   name: 'World',
 });
 
-const reqHeaders = {
-  'Content-Type': 'application/json',
+const reqParams = {
+  headers: {
+    'Content-Type': 'application/json',
+  },
 };
 
 const reqUrl = `http://127.0.0.1:4000`;
+const expected = { message: 'Hello, World!' };
+
+// Check the response structure once
+let checkedResponse = false;
+function checkResponseOnce(res) {
+  if (checkedResponse) return;
+
+  const json = res.json();
+  if (json.message !== expected.message) {
+    throw new Error(`Unexpected response: ${res.body}`);
+  }
+
+  checkedResponse = true;
+}
 
 export default function run() {
-  const res = http.post(reqUrl, reqBody, reqHeaders);
+  const res = http.post(reqUrl, reqBody, reqParams);
+
+  checkResponseOnce(res);
 
   check(res, {
     'no-errors': resp => resp.status === 200,
