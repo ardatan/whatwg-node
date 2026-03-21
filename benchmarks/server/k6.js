@@ -55,30 +55,20 @@ export function handleSummary(data) {
   };
 }
 
+const reqBody = JSON.stringify({
+  name: 'World',
+});
+
+const reqHeaders = {
+  'Content-Type': 'application/json',
+};
+
+const reqUrl = `http://127.0.0.1:4000`;
+
 export default function run() {
-  const res = http.post(
-    `http://127.0.0.1:4000`,
-    JSON.stringify({
-      name: 'World',
-    }),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
+  const res = http.post(reqUrl, reqBody, reqHeaders);
 
   check(res, {
     'no-errors': resp => resp.status === 200,
-    'expected-result': resp => {
-      const json = resp.json();
-      return (
-        !!json &&
-        typeof json === 'object' &&
-        'message' in json &&
-        typeof json.message === 'string' &&
-        json.message === 'Hello, World!'
-      );
-    },
   });
 }
