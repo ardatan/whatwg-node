@@ -43,5 +43,7 @@
     "vitest.config.ts",
     "vitest.projects.ts"
   ],
-  "exclude": ["**/node_modules", "**/test-files", "**/dist", "**/e2e", "**/benchmark"]
+  "exclude": ["**/node_modules", "**/test-files", "**/dist", "**/e2e", "**/benchmark"],
+
+  "ignoreDeprecations": "6.0"
 }
