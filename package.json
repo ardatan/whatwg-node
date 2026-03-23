@@ -73,12 +73,12 @@
     "prettier": "3.8.1",
     "qs": "6.15.0",
     "rimraf": "6.1.3",
-    "tar": "7.5.12",
+    "tar": "7.5.13",
     "ts-jest": "29.4.6",
     "typescript": "5.9.3",
     "undici": "7.24.5",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "4.1.0"
+    "vitest": "4.1.1"
   },
   "overrides": {
     "@pulumi/pulumi": "3.227.0",
@@ -90,10 +90,10 @@
       "undici": "7.24.5"
     },
     "qs": "6.15.0",
-    "tar": "7.5.12",
+    "tar": "7.5.13",
     "tmp": "0.2.5",
     "undici": "7.24.5",
-    "vite": "8.0.1"
+    "vite": "8.0.2"
   },
   "devEngines": {
     "packageManager": {
