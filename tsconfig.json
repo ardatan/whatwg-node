@@ -33,7 +33,9 @@
       "@whatwg-node/promise-helpers": ["packages/promise-helpers/src/index.ts"],
       "@e2e/*": ["e2e/*/src/index.ts"],
       "fetchache": ["packages/fetchache/src/index.ts"]
-    }
+    },
+
+    "ignoreDeprecations": "6.0"
   },
   "include": [
     "packages",
@@ -43,7 +45,5 @@
     "vitest.config.ts",
     "vitest.projects.ts"
   ],
-  "exclude": ["**/node_modules", "**/test-files", "**/dist", "**/e2e", "**/benchmark"],
-
-  "ignoreDeprecations": "6.0"
+  "exclude": ["**/node_modules", "**/test-files", "**/dist", "**/e2e", "**/benchmark"]
 }
