@@ -35,7 +35,9 @@
       "fetchache": ["packages/fetchache/src/index.ts"]
     },
 
-    "ignoreDeprecations": "6.0"
+    "ignoreDeprecations": "6.0",
+    "rootDir": ".",
+    "types": ["node", "jest"]
   },
   "include": [
     "packages",
