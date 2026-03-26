@@ -1,4 +1,4 @@
-import { fakePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { createDeferredPromise, fakePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import type { FetchAPI } from './types.js';
 
 export interface UWSRequest {
@@ -12,8 +12,7 @@ export interface UWSRequest {
 
 export interface UWSResponse {
   onData(callback: (chunk: ArrayBuffer, isLast: boolean) => void): void;
-  onDataV2(callback: (chunk: ArrayBuffer | null, maxRemainingBodyLength: bigint) => void): void;
-  collectBody(maxSize: number, handler: (fullBody: ArrayBuffer | null) => void): void;
+  onDataV2?(callback: (chunk: ArrayBuffer | null, maxRemainingBodyLength: bigint) => void): void;
   onAborted(callback: () => void): void;
   writeStatus(status: string): void;
   writeHeader(key: string, value: string): void;
@@ -45,12 +44,8 @@ export function getRequestFromUWSRequest({
   const method = req.getMethod();
 
   const headers = new fetchAPI.Headers();
-  let contentLength: number | undefined;
   req.forEach((key, value) => {
     headers.append(key, value);
-    if (contentLength == null && key === 'content-length') {
-      contentLength = parseInt(value, 10);
-    }
   });
 
   let url = `http://localhost${req.getUrl()}`;
@@ -59,9 +54,7 @@ export function getRequestFromUWSRequest({
     url += `?${query}`;
   }
 
-  const duplex = contentLength ? undefined : 'half';
-
-  function prepareRequestWithBody(body?: BodyInit) {
+  function prepareRequestWithBody(body?: BodyInit, isDuplexHalf = false) {
     return new fetchAPI.Request(url, {
       method,
       headers,
@@ -69,7 +62,7 @@ export function getRequestFromUWSRequest({
       body,
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - not in the TS types yet
-      duplex,
+      duplex: isDuplexHalf ? 'half' : undefined,
     });
   }
 
@@ -79,16 +72,49 @@ export function getRequestFromUWSRequest({
 
   if (method === 'get' || method === 'head') {
     return prepareRequestWithBody();
-  } else if (contentLength && res.collectBody) {
-    return new Promise(resolve =>
-      res.collectBody(contentLength!, fullBody => {
-        let body: BodyInit | undefined;
-        if (fullBody) {
-          body = copyChunk(fullBody);
+  } else if (res.onDataV2) {
+    const deferred = createDeferredPromise<Request>();
+    let stream: ReadableStream | undefined;
+    let streamCtrl: ReadableStreamDefaultController<any> | undefined;
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        if (streamCtrl) {
+          streamCtrl.error(controller.signal.reason);
+        } else {
+          deferred.reject(controller.signal.reason);
         }
-        resolve(prepareRequestWithBody(body));
-      }),
+      },
+      { once: true },
     );
+    res.onDataV2((chunk, maxRemainingBodyLength) => {
+      if (chunk) {
+        if (maxRemainingBodyLength === ZERO_BIGINT) {
+          if (streamCtrl) {
+            streamCtrl.enqueue(chunk);
+            streamCtrl.close();
+          } else {
+            deferred.resolve(prepareRequestWithBody(chunk));
+          }
+          /* Done! */
+        } else {
+          if (streamCtrl) {
+            const copiedChunk = copyChunk(chunk);
+            streamCtrl.enqueue(copiedChunk);
+          } else {
+            stream = new fetchAPI.ReadableStream({
+              start(ctrl) {
+                streamCtrl = ctrl;
+                const copiedChunk = copyChunk(chunk);
+                ctrl.enqueue(copiedChunk);
+              },
+            });
+            deferred.resolve(prepareRequestWithBody(stream, true));
+          }
+        }
+      }
+    });
+    return deferred.promise;
   } else {
     return prepareRequestWithBody(
       new fetchAPI.ReadableStream({
@@ -200,3 +226,5 @@ export function sendResponseToUwsOpts(
 }
 
 export { fakePromise };
+
+const ZERO_BIGINT = BigInt(0);
