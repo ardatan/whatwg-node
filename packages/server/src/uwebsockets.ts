@@ -75,7 +75,7 @@ export function getRequestFromUWSRequest({
   } else if (res.onDataV2) {
     const deferred = createDeferredPromise<Request>();
     let stream: ReadableStream | undefined;
-    let streamCtrl: ReadableStreamDefaultController<any> | undefined;
+    let streamCtrl: ReadableStreamDefaultController<Uint8Array> | undefined;
     controller.signal.addEventListener(
       'abort',
       () => {
@@ -91,7 +91,7 @@ export function getRequestFromUWSRequest({
       if (chunk) {
         if (maxRemainingBodyLength === ZERO_BIGINT) {
           if (streamCtrl) {
-            streamCtrl.enqueue(chunk);
+            streamCtrl.enqueue(new Uint8Array(chunk));
             streamCtrl.close();
           } else {
             deferred.resolve(prepareRequestWithBody(chunk));
