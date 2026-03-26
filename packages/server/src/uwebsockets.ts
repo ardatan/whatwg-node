@@ -12,8 +12,8 @@ export interface UWSRequest {
 
 export interface UWSResponse {
   onData(callback: (chunk: ArrayBuffer, isLast: boolean) => void): void;
-  onDataV2(callback: (chunk: ArrayBuffer, maxRemainingBodyLength: bigint) => void): void;
-  collectBody(maxSize: number, handler: (fullBody: ArrayBuffer) => void): void;
+  onDataV2(callback: (chunk: ArrayBuffer | null, maxRemainingBodyLength: bigint) => void): void;
+  collectBody(maxSize: number, handler: (fullBody: ArrayBuffer | null) => void): void;
   onAborted(callback: () => void): void;
   writeStatus(status: string): void;
   writeHeader(key: string, value: string): void;
@@ -81,16 +81,23 @@ export function getRequestFromUWSRequest({
     return prepareRequestWithBody();
   } else if (contentLength && res.collectBody) {
     return new Promise(resolve =>
-      res.collectBody(contentLength!, fullBody =>
-        resolve(prepareRequestWithBody(copyChunk(fullBody))),
-      ),
+      res.collectBody(contentLength!, fullBody => {
+        let body: BodyInit | undefined;
+        if (fullBody) {
+          body = copyChunk(fullBody);
+        }
+        resolve(prepareRequestWithBody(body));
+      }),
     );
   } else {
     return prepareRequestWithBody(
       new fetchAPI.ReadableStream({
         start(streamCtrl) {
           res.onData((chunk, isLast) => {
-            streamCtrl.enqueue(copyChunk(chunk));
+            if (chunk) {
+              const copiedChunk = copyChunk(chunk);
+              streamCtrl.enqueue(copiedChunk);
+            }
             if (isLast) {
               streamCtrl.close();
             }
