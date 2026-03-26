@@ -202,10 +202,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         return this;
       },
       [Symbol.asyncDispose]: async () => {
+        await iterator.return?.();
         if (!this.readable.destroyed) {
           this.readable.destroy();
         }
-        await iterator.return?.();
       },
       next: () => iterator.next(),
       return: () => {
