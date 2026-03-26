@@ -351,30 +351,34 @@ function createServerAdapter<
     res.onAborted = function (cb: () => void) {
       controller.signal.addEventListener('abort', cb, { once: true });
     };
-    const request = getRequestFromUWSRequest({
-      req,
-      res,
-      fetchAPI,
-      controller,
-    });
     return handleMaybePromise(
       () =>
+        getRequestFromUWSRequest({
+          req,
+          res,
+          fetchAPI,
+          controller,
+        }),
+      request =>
         handleMaybePromise(
-          () => handleRequest(request, serverContext),
-          response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+          () =>
+            handleMaybePromise(
+              () => handleRequest(request, serverContext),
+              response => response,
+              err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+            ),
+          response => {
+            if (!controller.signal.aborted && !resEnded) {
+              return handleMaybePromise(
+                () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
+                r => r,
+                err => {
+                  console.error(`Unexpected error while handling request: ${err.message || err}`);
+                },
+              );
+            }
+          },
         ),
-      response => {
-        if (!controller.signal.aborted && !resEnded) {
-          return handleMaybePromise(
-            () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
-            r => r,
-            err => {
-              console.error(`Unexpected error while handling request: ${err.message || err}`);
-            },
-          );
-        }
-      },
     );
   }
 

@@ -227,8 +227,8 @@ describe('Node Specific Cases', () => {
             method: 'POST',
             body: 'Hello World',
           });
-          expect(await response.text()).toContain('Hello World');
           expect(response.status).toBe(200);
+          expect(await response.text()).toContain('Hello World');
         });
 
         skipIf(

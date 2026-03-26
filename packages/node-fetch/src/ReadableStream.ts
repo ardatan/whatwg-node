@@ -16,11 +16,10 @@ function createController<T>(
   return {
     desiredSize,
     enqueue(chunk: any) {
-      const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
       if (!flushed) {
-        chunks.push(buf);
+        chunks.push(chunk);
       } else {
-        readable.push(buf);
+        readable.push(chunk);
       }
     },
     close() {
