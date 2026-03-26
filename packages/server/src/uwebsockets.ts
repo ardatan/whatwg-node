@@ -1,4 +1,4 @@
-import { createDeferredPromise, fakePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { fakePromise } from '@whatwg-node/promise-helpers';
 import type { FetchAPI } from './types.js';
 
 export interface UWSRequest {
