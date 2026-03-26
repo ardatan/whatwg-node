@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "dist",
+    "rootDir": ".",
     "module": "Node16",
     "moduleResolution": "node16",
     "skipLibCheck": true
