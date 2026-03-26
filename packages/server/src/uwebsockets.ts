@@ -40,7 +40,7 @@ export function getRequestFromUWSRequest({
   res,
   fetchAPI,
   controller,
-}: GetRequestFromUWSOpts): MaybePromise<Request> {
+}: GetRequestFromUWSOpts): Request {
   const method = req.getMethod();
 
   const headers = new fetchAPI.Headers();
@@ -54,89 +54,61 @@ export function getRequestFromUWSRequest({
     url += `?${query}`;
   }
 
-  function prepareRequestWithBody(body?: BodyInit, isDuplexHalf = false) {
-    return new fetchAPI.Request(url, {
-      method,
-      headers,
-      signal: controller.signal,
-      body,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore - not in the TS types yet
-      duplex: isDuplexHalf ? 'half' : undefined,
+  let body: ReadableStream<Uint8Array> | undefined;
+
+  function copyChunk(chunk: Uint8Array): Buffer<ArrayBuffer> {
+    return Buffer.copyBytesFrom(chunk, 0, chunk.byteLength);
+  }
+
+  if (method !== 'get' && method !== 'head') {
+    let streamCtrl: ReadableStreamDefaultController<Uint8Array>;
+    body = new fetchAPI.ReadableStream<Uint8Array>({
+      start(ctrl) {
+        streamCtrl = ctrl;
+      },
     });
-  }
-
-  function copyChunk(chunk: ArrayBuffer): Buffer<ArrayBuffer> {
-    return Buffer.copyBytesFrom(new Uint8Array(chunk), 0, chunk.byteLength);
-  }
-
-  if (method === 'get' || method === 'head') {
-    return prepareRequestWithBody();
-  } else if (res.onDataV2) {
-    const deferred = createDeferredPromise<Request>();
-    let stream: ReadableStream | undefined;
-    let streamCtrl: ReadableStreamDefaultController<Uint8Array> | undefined;
     controller.signal.addEventListener(
       'abort',
       () => {
-        if (streamCtrl) {
-          streamCtrl.error(controller.signal.reason);
-        } else {
-          deferred.reject(controller.signal.reason);
-        }
+        streamCtrl.error(controller.signal.reason);
       },
       { once: true },
     );
-    res.onDataV2((chunk, maxRemainingBodyLength) => {
-      if (chunk) {
-        if (maxRemainingBodyLength === ZERO_BIGINT) {
-          if (streamCtrl) {
-            streamCtrl.enqueue(new Uint8Array(chunk));
+    if (res.onDataV2) {
+      res.onDataV2((chunk, maxRemainingBodyLength) => {
+        if (chunk) {
+          const arr = new Uint8Array(chunk);
+          if (maxRemainingBodyLength === ZERO_BIGINT) {
+            streamCtrl.enqueue(arr);
             streamCtrl.close();
           } else {
-            deferred.resolve(prepareRequestWithBody(chunk));
-          }
-          /* Done! */
-        } else {
-          if (streamCtrl) {
-            const copiedChunk = copyChunk(chunk);
+            const copiedChunk = copyChunk(arr);
             streamCtrl.enqueue(copiedChunk);
-          } else {
-            stream = new fetchAPI.ReadableStream({
-              start(ctrl) {
-                streamCtrl = ctrl;
-                const copiedChunk = copyChunk(chunk);
-                ctrl.enqueue(copiedChunk);
-              },
-            });
-            deferred.resolve(prepareRequestWithBody(stream, true));
           }
         }
-      }
-    });
-    return deferred.promise;
-  } else {
-    return prepareRequestWithBody(
-      new fetchAPI.ReadableStream({
-        start(streamCtrl) {
-          res.onData((chunk, isLast) => {
-            if (chunk) {
-              const copiedChunk = copyChunk(chunk);
-              streamCtrl.enqueue(copiedChunk);
-            }
-            if (isLast) {
-              streamCtrl.close();
-            }
-          });
-          controller.signal.addEventListener(
-            'abort',
-            () => streamCtrl.error(controller.signal.reason),
-            { once: true },
-          );
-        },
-      }),
-    );
+      });
+    } else {
+      res.onData((chunk, isLast) => {
+        if (chunk) {
+          const arr = new Uint8Array(chunk);
+          const copiedChunk = copyChunk(arr);
+          streamCtrl.enqueue(copiedChunk);
+        }
+        if (isLast) {
+          streamCtrl.close();
+        }
+      });
+    }
   }
+  return new fetchAPI.Request(url, {
+    method,
+    headers,
+    signal: controller.signal,
+    body,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore - not in the TS types yet
+    duplex: body ? 'half' : undefined,
+  });
 }
 
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
