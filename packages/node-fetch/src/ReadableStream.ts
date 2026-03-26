@@ -195,11 +195,17 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     };
   }
 
-  [Symbol.asyncIterator]() {
+  [Symbol.asyncIterator](_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
     const iterator = this.readable[Symbol.asyncIterator]();
-    return {
+    const iterable = {
       [Symbol.asyncIterator]() {
         return this;
+      },
+      [Symbol.asyncDispose]: async () => {
+        if (!this.readable.destroyed) {
+          this.readable.destroy();
+        }
+        await iterator.return?.();
       },
       next: () => iterator.next(),
       return: () => {
@@ -215,6 +221,11 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         return iterator.throw?.(err) || fakePromise({ done: true, value: undefined });
       },
     };
+    return iterable as unknown as ReadableStreamAsyncIterator<T>;
+  }
+
+  values(_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
+    return this[Symbol.asyncIterator]();
   }
 
   tee(): [ReadableStream<T>, ReadableStream<T>] {
