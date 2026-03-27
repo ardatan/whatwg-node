@@ -9,26 +9,6 @@ function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);
 }
 
-/**
- * Normalises the `data` field returned by httpbin-compatible servers.
- * go-httpbin encodes binary / untyped request bodies as a base64 data URI
- * (`data:application/octet-stream;base64,<content>`), while kennethreitz/httpbin
- * and httpbin.org return the raw text.  This helper decodes the data URI so that
- * assertions work correctly against both server implementations.
- *
- * @param data - The raw string from the `data` field of the httpbin JSON response.
- * @returns The decoded UTF-8 string if `data` is a base64 data URI; otherwise `data` as-is.
- */
-function normalizeBodyData(data: string): string {
-  if (typeof data === 'string' && data.startsWith('data:') && data.includes(';base64,')) {
-    const base64Part = data.split(';base64,')[1];
-    if (base64Part) {
-      return Buffer.from(base64Part, 'base64').toString('utf-8');
-    }
-  }
-  return data;
-}
-
 describe('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(
     (
@@ -58,9 +38,7 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        // go-httpbin returns header values as arrays; kennethreitz/httpbin returns strings
-        const xTestHeader = body.headers['X-Test'];
-        expect(Array.isArray(xTestHeader) ? xTestHeader[0] : xTestHeader).toBe('test');
+        expect(body.headers['X-Test']).toBe('test');
       });
       it('should follow redirects', async () => {
         const response = await fetchPonyfill(baseUrl + '/redirect/1');
@@ -91,17 +69,16 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(normalizeBodyData(body.data)).toBe('test');
+        expect(body.data).toBe('test');
       });
       it('should accept Buffer bodies', async () => {
         const response = await fetchPonyfill(baseUrl + '/post', {
           method: 'POST',
           body: Buffer.from('test', 'utf-8'),
-          headers: { 'content-type': 'text/plain' },
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(normalizeBodyData(body.data)).toBe('test');
+        expect(body.data).toBe('test');
       });
       // Deno does not support Node.js streams as RequestInit.body yet
       testIf(
@@ -113,11 +90,10 @@ describe('Node Fetch Ponyfill', () => {
             duplex: 'half',
             // @ts-expect-error Readable is not part of RequestInit type yet
             body: Readable.from(Buffer.from('test')),
-            headers: { 'content-type': 'text/plain' },
           });
           expect(response.status).toBe(200);
           const body = await response.json();
-          expect(normalizeBodyData(body.data)).toBe('test');
+          expect(body.data).toBe('test');
         },
       );
       // Bun does not support ReadableStream in fetch yet
@@ -137,21 +113,20 @@ describe('Node Fetch Ponyfill', () => {
             }),
             // @ts-expect-error duplex is not part of RequestInit type yet
             duplex: 'half',
-            headers: { 'content-type': 'text/plain' },
           });
           expect(response.status).toBe(200);
           const body = await response.json();
-          expect(normalizeBodyData(body.data)).toBe('test');
+          expect(body.data).toBe('test');
         },
       );
       it('should accept Blob bodies', async () => {
         const response = await fetchPonyfill(baseUrl + '/post', {
           method: 'POST',
-          body: new PonyfillBlob(['test'], { type: 'text/plain' }),
+          body: new PonyfillBlob(['test']),
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(normalizeBodyData(body.data)).toBe('test');
+        expect(body.data).toBe('test');
       });
       it('should accept FormData bodies', async () => {
         const formdata = new PonyfillFormData();
@@ -167,11 +142,8 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        // go-httpbin returns form field values as arrays; kennethreitz/httpbin returns strings
-        const formTest = body.form.test;
-        expect(Array.isArray(formTest) ? formTest[0] : formTest).toBe('test');
-        const testFile = body.files['test-file'];
-        expect(Array.isArray(testFile) ? testFile[0] : testFile).toBe('test-content');
+        expect(body.form.test).toBe('test');
+        expect(body.files['test-file']).toBe('test-content');
       });
       it('should respect AbortSignal', () => {
         return expect(
@@ -183,7 +155,7 @@ describe('Node Fetch Ponyfill', () => {
       it('should respect AbortSignal on a streamed response', async () => {
         expect.assertions(2);
         const controller = new AbortController();
-        const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/102400?chunk_size=1024`, {
+        const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/${10 * 1024 * 1024 * 1024}`, {
           signal: controller.signal,
         });
         let cnt = 0;
@@ -225,11 +197,8 @@ describe('Node Fetch Ponyfill', () => {
         });
         it('should respect brotli', async () => {
           const response = await fetchPonyfill(baseUrl + '/brotli');
-          // go-httpbin does not support brotli encoding (returns 501); skip assertions in that case
-          if (response.status !== 200) {
-            return;
-          }
           expect(response.headers.get('content-encoding')).toBe('br');
+          expect(response.status).toBe(200);
           const body = await response.json();
           expect(body.brotli).toBe(true);
         });
