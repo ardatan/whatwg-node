@@ -9,6 +9,15 @@ function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);
 }
 
+// go-httpbin encodes binary bodies (no content-type or application/octet-stream) as
+// base64 data URIs; this helper decodes them so assertions work with both httpbin flavours.
+function normalizeBodyData(data: string): string {
+  if (typeof data === 'string' && data.startsWith('data:') && data.includes(';base64,')) {
+    return Buffer.from(data.split(';base64,')[1], 'base64').toString('utf-8');
+  }
+  return data;
+}
+
 describe('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(
     (
@@ -71,7 +80,7 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(body.data).toBe('test');
+        expect(normalizeBodyData(body.data)).toBe('test');
       });
       it('should accept Buffer bodies', async () => {
         const response = await fetchPonyfill(baseUrl + '/post', {
@@ -81,7 +90,7 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(body.data).toBe('test');
+        expect(normalizeBodyData(body.data)).toBe('test');
       });
       // Deno does not support Node.js streams as RequestInit.body yet
       testIf(
@@ -97,7 +106,7 @@ describe('Node Fetch Ponyfill', () => {
           });
           expect(response.status).toBe(200);
           const body = await response.json();
-          expect(body.data).toBe('test');
+          expect(normalizeBodyData(body.data)).toBe('test');
         },
       );
       // Bun does not support ReadableStream in fetch yet
@@ -121,7 +130,7 @@ describe('Node Fetch Ponyfill', () => {
           });
           expect(response.status).toBe(200);
           const body = await response.json();
-          expect(body.data).toBe('test');
+          expect(normalizeBodyData(body.data)).toBe('test');
         },
       );
       it('should accept Blob bodies', async () => {
@@ -131,7 +140,7 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(body.data).toBe('test');
+        expect(normalizeBodyData(body.data)).toBe('test');
       });
       it('should accept FormData bodies', async () => {
         const formdata = new PonyfillFormData();
