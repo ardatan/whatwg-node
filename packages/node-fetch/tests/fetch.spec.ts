@@ -9,11 +9,22 @@ function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);
 }
 
-// go-httpbin encodes binary bodies (no content-type or application/octet-stream) as
-// base64 data URIs; this helper decodes them so assertions work with both httpbin flavours.
+/**
+ * Normalises the `data` field returned by httpbin-compatible servers.
+ * go-httpbin encodes binary / untyped request bodies as a base64 data URI
+ * (`data:application/octet-stream;base64,<content>`), while kennethreitz/httpbin
+ * and httpbin.org return the raw text.  This helper decodes the data URI so that
+ * assertions work correctly against both server implementations.
+ *
+ * @param data - The raw string from the `data` field of the httpbin JSON response.
+ * @returns The decoded UTF-8 string if `data` is a base64 data URI; otherwise `data` as-is.
+ */
 function normalizeBodyData(data: string): string {
   if (typeof data === 'string' && data.startsWith('data:') && data.includes(';base64,')) {
-    return Buffer.from(data.split(';base64,')[1], 'base64').toString('utf-8');
+    const base64Part = data.split(';base64,')[1];
+    if (base64Part) {
+      return Buffer.from(base64Part, 'base64').toString('utf-8');
+    }
   }
   return data;
 }
