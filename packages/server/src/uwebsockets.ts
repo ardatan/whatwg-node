@@ -12,6 +12,8 @@ export interface UWSRequest {
 
 export interface UWSResponse {
   onData(callback: (chunk: ArrayBuffer, isLast: boolean) => void): void;
+  onDataV2?(callback: (chunk: ArrayBuffer | null, maxRemainingBodyLength: bigint) => void): void;
+  collectBody?(maxSize: number, handler: (body: ArrayBuffer | null) => void): void;
   onAborted(callback: () => void): void;
   writeStatus(status: string): void;
   writeHeader(key: string, value: string): void;
@@ -45,7 +47,7 @@ export function getRequestFromUWSRequest({
   let duplex: 'half' | undefined;
 
   const chunks: Buffer<ArrayBuffer>[] = [];
-  const pushFns = [
+  const pushFns: Array<(chunk: Buffer<ArrayBuffer>) => void> = [
     (chunk: Buffer<ArrayBuffer>) => {
       chunks.push(chunk);
     },
@@ -56,22 +58,14 @@ export function getRequestFromUWSRequest({
     }
   };
   let stopped = false;
-  const stopFns = [
-    () => {
-      stopped = true;
-    },
-  ];
+  const stopFns: Array<() => void> = [];
   const stop = () => {
+    if (stopped) return;
+    stopped = true;
     for (const stopFn of stopFns) {
       stopFn();
     }
   };
-  res.onData(function (ab, isLast) {
-    push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
-    if (isLast) {
-      stop();
-    }
-  });
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
@@ -82,6 +76,30 @@ export function getRequestFromUWSRequest({
       },
       { once: true },
     );
+    if (res.collectBody) {
+      res.collectBody(Number.MAX_SAFE_INTEGER, function (ab) {
+        if (ab !== null) {
+          push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+        }
+        stop();
+      });
+    } else if (res.onDataV2) {
+      res.onDataV2(function (ab, maxRemainingBodyLength) {
+        if (ab !== null) {
+          push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+        }
+        if (maxRemainingBodyLength === 0n) {
+          stop();
+        }
+      });
+    } else {
+      res.onData(function (ab, isLast) {
+        push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+        if (isLast) {
+          stop();
+        }
+      });
+    }
     let readableStream: ReadableStream;
     getReadableStream = () => {
       if (!readableStream) {
