@@ -159,7 +159,8 @@ describe('Node Fetch Ponyfill', () => {
         // go-httpbin returns form field values as arrays; kennethreitz/httpbin returns strings
         const formTest = body.form.test;
         expect(Array.isArray(formTest) ? formTest[0] : formTest).toBe('test');
-        expect(body.files['test-file']).toBe('test-content');
+        const testFile = body.files['test-file'];
+        expect(Array.isArray(testFile) ? testFile[0] : testFile).toBe('test-content');
       });
       it('should respect AbortSignal', () => {
         return expect(
