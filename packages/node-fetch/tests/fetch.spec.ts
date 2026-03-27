@@ -38,7 +38,9 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(body.headers['X-Test']).toBe('test');
+        // go-httpbin returns header values as arrays; kennethreitz/httpbin returns strings
+        const xTestHeader = body.headers['X-Test'];
+        expect(Array.isArray(xTestHeader) ? xTestHeader[0] : xTestHeader).toBe('test');
       });
       it('should follow redirects', async () => {
         const response = await fetchPonyfill(baseUrl + '/redirect/1');
@@ -75,6 +77,7 @@ describe('Node Fetch Ponyfill', () => {
         const response = await fetchPonyfill(baseUrl + '/post', {
           method: 'POST',
           body: Buffer.from('test', 'utf-8'),
+          headers: { 'content-type': 'text/plain' },
         });
         expect(response.status).toBe(200);
         const body = await response.json();
@@ -90,6 +93,7 @@ describe('Node Fetch Ponyfill', () => {
             duplex: 'half',
             // @ts-expect-error Readable is not part of RequestInit type yet
             body: Readable.from(Buffer.from('test')),
+            headers: { 'content-type': 'text/plain' },
           });
           expect(response.status).toBe(200);
           const body = await response.json();
@@ -113,6 +117,7 @@ describe('Node Fetch Ponyfill', () => {
             }),
             // @ts-expect-error duplex is not part of RequestInit type yet
             duplex: 'half',
+            headers: { 'content-type': 'text/plain' },
           });
           expect(response.status).toBe(200);
           const body = await response.json();
@@ -122,7 +127,7 @@ describe('Node Fetch Ponyfill', () => {
       it('should accept Blob bodies', async () => {
         const response = await fetchPonyfill(baseUrl + '/post', {
           method: 'POST',
-          body: new PonyfillBlob(['test']),
+          body: new PonyfillBlob(['test'], { type: 'text/plain' }),
         });
         expect(response.status).toBe(200);
         const body = await response.json();
@@ -142,7 +147,9 @@ describe('Node Fetch Ponyfill', () => {
         });
         expect(response.status).toBe(200);
         const body = await response.json();
-        expect(body.form.test).toBe('test');
+        // go-httpbin returns form field values as arrays; kennethreitz/httpbin returns strings
+        const formTest = body.form.test;
+        expect(Array.isArray(formTest) ? formTest[0] : formTest).toBe('test');
         expect(body.files['test-file']).toBe('test-content');
       });
       it('should respect AbortSignal', () => {
@@ -155,7 +162,7 @@ describe('Node Fetch Ponyfill', () => {
       it('should respect AbortSignal on a streamed response', async () => {
         expect.assertions(2);
         const controller = new AbortController();
-        const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/${10 * 1024 * 1024 * 1024}`, {
+        const fetchPromise = fetchPonyfill(baseUrl + `/stream-bytes/102400?chunk_size=1024`, {
           signal: controller.signal,
         });
         let cnt = 0;
