@@ -67,9 +67,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       httpbin:
-        image: kennethreitz/httpbin
+        image: ghcr.io/mccutchen/go-httpbin
         ports:
-          - 8888:80
+          - 8888:8080
     strategy:
       matrix:
         node-version: [18, 20, 24, 25]
@@ -111,9 +111,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       httpbin:
-        image: kennethreitz/httpbin
+        image: ghcr.io/mccutchen/go-httpbin
         ports:
-          - 8888:80
+          - 8888:8080
     steps:
       - name: Checkout Master
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -131,9 +131,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       httpbin:
-        image: kennethreitz/httpbin
+        image: ghcr.io/mccutchen/go-httpbin
         ports:
-          - 8888:80
+          - 8888:8080
     steps:
       - name: Checkout Master
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6

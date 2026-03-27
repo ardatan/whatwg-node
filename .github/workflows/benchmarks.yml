@@ -59,7 +59,7 @@ jobs:
           - consumeBody
     services:
       httpbin:
-        image: mccutchen/go-httpbin
+        image: ghcr.io/mccutchen/go-httpbin
         env:
           PORT: 50000
         ports:
