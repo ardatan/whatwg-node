@@ -164,7 +164,6 @@ describe('Node Fetch Ponyfill', () => {
           if (!response || !response.body) {
             throw new Error('Response or response body is null');
           }
-          // @ts-expect-error ReadableStream is an AsyncIterable but types are not updated yet
           for await (const _ of response.body) {
             if (controller.signal.aborted) {
               throw new Error('aborted but stream leaks');

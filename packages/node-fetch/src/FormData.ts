@@ -124,7 +124,6 @@ export function getStreamFromFormData(
           Buffer.from(`Content-Type: ${blobOrString.type || 'application/octet-stream'}\r\n\r\n`),
         );
         const entryStream = blobOrString.stream();
-        // @ts-expect-error - ReadableStream is async iterable
         currentAsyncIterator = entryStream[Symbol.asyncIterator]();
       }
       hasBefore = true;
