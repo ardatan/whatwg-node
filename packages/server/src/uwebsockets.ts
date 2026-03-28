@@ -77,11 +77,22 @@ export function getRequestFromUWSRequest({
       { once: true },
     );
     if (res.onDataV2) {
+      let preAllocBuffer: Buffer | undefined;
+      let writeOffset = 0;
       res.onDataV2(function (ab, maxRemainingBodyLength) {
         if (ab !== null) {
-          push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+          const chunkLen = ab.byteLength;
+          if (preAllocBuffer === undefined) {
+            preAllocBuffer = Buffer.allocUnsafe(chunkLen + Number(maxRemainingBodyLength));
+          }
+          Buffer.from(ab, 0, chunkLen).copy(preAllocBuffer, writeOffset);
+          push(preAllocBuffer.subarray(writeOffset, writeOffset + chunkLen) as Buffer<ArrayBuffer>);
+          writeOffset += chunkLen;
         }
         if (maxRemainingBodyLength === 0n) {
+          if (preAllocBuffer !== undefined) {
+            buffer = preAllocBuffer.subarray(0, writeOffset) as Buffer<ArrayBuffer>;
+          }
           stop();
         }
       });
