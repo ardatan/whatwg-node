@@ -76,14 +76,7 @@ export function getRequestFromUWSRequest({
       },
       { once: true },
     );
-    if (res.collectBody) {
-      res.collectBody(Number.MAX_SAFE_INTEGER, function (ab) {
-        if (ab !== null) {
-          push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
-        }
-        stop();
-      });
-    } else if (res.onDataV2) {
+    if (res.onDataV2) {
       res.onDataV2(function (ab, maxRemainingBodyLength) {
         if (ab !== null) {
           push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
