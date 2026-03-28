@@ -76,6 +76,8 @@ export function getRequestFromUWSRequest({
       },
       { once: true },
     );
+    // Node.js max safe buffer allocation size (2 GiB - 1 on 64-bit systems)
+    const MAX_BUFFER_ALLOC = 2147483647;
     if (res.onDataV2) {
       let preAllocBuffer: Buffer | undefined;
       let writeOffset = 0;
@@ -83,11 +85,28 @@ export function getRequestFromUWSRequest({
         if (ab !== null) {
           const chunkLen = ab.byteLength;
           if (preAllocBuffer === undefined) {
-            preAllocBuffer = Buffer.allocUnsafe(chunkLen + Number(maxRemainingBodyLength));
+            // maxRemainingBodyLength is the max allowed remaining (maxPayload - received),
+            // not the exact remaining. Guard against over-allocation or RangeError when it
+            // exceeds Node.js's maximum buffer size.
+            const remainingLen =
+              maxRemainingBodyLength > BigInt(MAX_BUFFER_ALLOC)
+                ? MAX_BUFFER_ALLOC + 1 // signal: too large, skip pre-alloc
+                : Number(maxRemainingBodyLength);
+            const totalSize = chunkLen + remainingLen;
+            if (totalSize <= MAX_BUFFER_ALLOC) {
+              preAllocBuffer = Buffer.allocUnsafe(totalSize);
+            }
           }
-          Buffer.from(ab, 0, chunkLen).copy(preAllocBuffer, writeOffset);
-          push(preAllocBuffer.subarray(writeOffset, writeOffset + chunkLen) as Buffer<ArrayBuffer>);
-          writeOffset += chunkLen;
+          if (preAllocBuffer !== undefined) {
+            Buffer.from(ab, 0, chunkLen).copy(preAllocBuffer, writeOffset);
+            push(
+              preAllocBuffer.subarray(writeOffset, writeOffset + chunkLen) as Buffer<ArrayBuffer>,
+            );
+            writeOffset += chunkLen;
+          } else {
+            // Fallback: total body size unknown or too large – collect per-chunk
+            push(Buffer.from(Buffer.from(ab, 0, chunkLen)) as Buffer<ArrayBuffer>);
+          }
         }
         if (maxRemainingBodyLength === 0n) {
           if (preAllocBuffer !== undefined) {
@@ -171,6 +190,10 @@ export function getRequestFromUWSRequest({
     return buffer;
   }
   function collectBuffer() {
+    if (!getReadableStream) {
+      // No body (e.g. GET / HEAD) – resolve immediately with empty buffer
+      return fakePromise(Buffer.alloc(0) as Buffer<ArrayBuffer>);
+    }
     if (stopped) {
       return fakePromise(getBufferFromChunks());
     }
