@@ -234,7 +234,8 @@ export function sendResponseToUwsOpts(
     let isSetCookieHandled = false;
     for (const [key, value] of fetchResponse.headers) {
       // content-length causes an error with Node.js's fetch
-      if (key !== 'content-length') {
+      // transfer-encoding is handled automatically by uWebSockets.js
+      if (key !== 'content-length' && key !== 'transfer-encoding') {
         if (key === 'set-cookie') {
           if (isSetCookieHandled) {
             continue;
