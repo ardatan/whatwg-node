@@ -76,7 +76,7 @@
     "tar": "7.5.13",
     "ts-jest": "29.4.6",
     "typescript": "6.0.2",
-    "undici": "7.24.6",
+    "undici": "7.24.7",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "4.1.2"
   },
@@ -87,12 +87,12 @@
     "glob": "13.0.6",
     "lodash": "4.17.23",
     "miniflare": {
-      "undici": "7.24.6"
+      "undici": "7.24.7"
     },
     "qs": "6.15.0",
     "tar": "7.5.13",
     "tmp": "0.2.5",
-    "undici": "7.24.6",
+    "undici": "7.24.7",
     "vite": "8.0.3"
   },
   "devEngines": {
