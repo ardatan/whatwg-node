@@ -74,7 +74,7 @@
     "qs": "6.15.0",
     "rimraf": "6.1.3",
     "tar": "7.5.13",
-    "ts-jest": "29.4.6",
+    "ts-jest": "29.4.7",
     "typescript": "6.0.2",
     "undici": "7.24.7",
     "vite-tsconfig-paths": "6.1.1",
