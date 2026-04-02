@@ -11,4 +11,5 @@ declare global {
 
 declare global {
   var Bun: any;
+  var Deno: any;
 }

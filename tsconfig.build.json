@@ -2,7 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "sourceMap": false,
-    "inlineSourceMap": false
+    "inlineSourceMap": false,
+    "rootDir": "./packages"
   },
   "exclude": [
     "**/test/*.ts",
