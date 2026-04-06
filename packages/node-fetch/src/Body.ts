@@ -74,6 +74,7 @@ export class PonyfillBody<TJSON = any> implements Body {
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody?.readable?.destroyed && this._buffer) {
+      // Re-create the body from the original buffer using a direct iterable (fast path)
       this._generatedBody.readable = Readable.from(this._buffer);
     }
     if (this._generatedBody) {
@@ -475,10 +476,10 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: 'text/plain;charset=UTF-8',
       contentLength,
       bodyFactory() {
-        const readable = Readable.from(
-          Buffer.from(bodyInit, 'utf-8'), // Convert string to Buffer
-        );
-        return new PonyfillReadableStream<Uint8Array>(readable);
+        // Use a single-element array iterable – avoids creating a Node.js Readable
+        // so getReader() can return a sync iterator for zero-overhead pumping.
+        const buf = Buffer.from(bodyInit, 'utf-8');
+        return new PonyfillReadableStream<Uint8Array>([buf] as unknown as Iterable<Uint8Array>);
       },
     };
   }
@@ -490,9 +491,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: bodyInit.length,
       buffer: bodyInit as Buffer<ArrayBuffer>,
       bodyFactory() {
-        const readable = Readable.from(buffer);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
+        return new PonyfillReadableStream<Uint8Array>([buffer] as unknown as Iterable<Uint8Array>);
       },
     };
   }
@@ -504,9 +503,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: null,
       buffer,
       bodyFactory() {
-        const readable = Readable.from(buffer);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
+        return new PonyfillReadableStream<Uint8Array>([buffer] as unknown as Iterable<Uint8Array>);
       },
     };
   }
@@ -539,9 +536,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength,
       buffer,
       bodyFactory() {
-        const readable = Readable.from(buffer);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
+        return new PonyfillReadableStream<Uint8Array>([buffer] as unknown as Iterable<Uint8Array>);
       },
     };
   }
@@ -563,8 +558,8 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType,
       contentLength: null,
       bodyFactory() {
-        const body = new PonyfillReadableStream<Uint8Array>(Readable.from(bodyInit.toString()));
-        return body;
+        const buf = Buffer.from(bodyInit.toString());
+        return new PonyfillReadableStream<Uint8Array>([buf] as unknown as Iterable<Uint8Array>);
       },
     };
   }

@@ -2,53 +2,8 @@ import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
-
-function createController<T>(
-  desiredSize: number,
-  readable: Readable,
-): ReadableStreamDefaultController<T> & { _flush(): void; _closed: boolean } {
-  let chunks: Buffer[] = [];
-  let _closed = false;
-  let flushed = false;
-  return {
-    desiredSize,
-    enqueue(chunk: any) {
-      const buf = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
-      if (!flushed) {
-        chunks.push(buf);
-      } else {
-        readable.push(buf);
-      }
-    },
-    close() {
-      if (chunks.length > 0) {
-        this._flush();
-      }
-      readable.push(null);
-      _closed = true;
-    },
-    error(error: Error) {
-      if (chunks.length > 0) {
-        this._flush();
-      }
-      readable.destroy(error);
-    },
-    get _closed() {
-      return _closed;
-    },
-    _flush() {
-      flushed = true;
-      if (chunks.length > 0) {
-        const concatenated = chunks.length > 1 ? Buffer.concat(chunks) : chunks[0];
-        readable.push(concatenated);
-        chunks = [];
-      }
-    },
-  };
-}
 
 function isNodeReadable(obj: any): obj is Readable {
   return obj?.read != null;
@@ -58,106 +13,363 @@ function isReadableStream(obj: any): obj is ReadableStream {
   return obj?.getReader != null;
 }
 
+function isAsyncIterable(obj: any): obj is AsyncIterable<unknown> {
+  return obj?.[Symbol.asyncIterator] != null;
+}
+
+function isSyncIterable(obj: any): obj is Iterable<unknown> {
+  return obj?.[Symbol.iterator] != null;
+}
+
+/** Shared mutable cancel-reason ref threaded into the generator closure. */
+interface CancelRef {
+  reason: unknown;
+  /** Resolves the current wait inside the generator so it can check for cancellation. */
+  wake?: () => void;
+  /** Flag set when the stream is cancelled, causing the generator loop to exit. */
+  cancelled?: boolean;
+}
+
+/**
+ * Async generator that drives an UnderlyingSource (start/pull/cancel) directly,
+ * without creating a Node.js Readable. This avoids stream event-emitter overhead
+ * for custom sources and is the performance-critical path.
+ */
+async function* createUnderlyingSourceIterable<T>(
+  source: UnderlyingSource<T>,
+  cancelRef: CancelRef,
+): AsyncGenerator<T, void, undefined> {
+  // Shared queue for chunks enqueued by both start (via interval/timeout) and pull
+  const sharedQueue: T[] = [];
+  let closed = false;
+  let closeError: unknown;
+
+  // Internal notify: resolves the current `await` inside the generator.
+  // The cancelRef.wake is pointed to this function so external cancel() can wake us.
+  let internalWake: (() => void) | null = null;
+
+  function wake() {
+    if (internalWake) {
+      const w = internalWake;
+      internalWake = null;
+      w();
+    }
+  }
+
+  // Wire up the cancelRef so external cancel() can wake the generator
+  cancelRef.wake = wake;
+
+  // The start controller: after start() returns, enqueues go directly into the shared queue
+  let startFlushed = false;
+  const startBuffer: T[] = [];
+
+  const startController: ReadableStreamDefaultController<T> = {
+    desiredSize: 1,
+    enqueue(chunk: T) {
+      const value = (typeof chunk === 'string' ? Buffer.from(chunk) : chunk) as T;
+      if (!startFlushed) {
+        startBuffer.push(value);
+      } else {
+        sharedQueue.push(value);
+        wake();
+      }
+    },
+    close() {
+      closed = true;
+      wake();
+    },
+    error(err: unknown) {
+      closeError = err;
+      wake();
+    },
+  };
+
+  // Call start (may be sync or async)
+  const startResult = source.start?.(startController);
+  if (startResult != null && typeof (startResult as any).then === 'function') {
+    await (startResult as Promise<unknown>);
+  }
+
+  // Flush any chunks enqueued synchronously during start
+  startFlushed = true;
+  for (const chunk of startBuffer) {
+    sharedQueue.push(chunk);
+  }
+  startBuffer.length = 0;
+
+  try {
+    while (!cancelRef.cancelled) {
+      // Yield everything currently in the shared queue
+      while (sharedQueue.length > 0) {
+        yield sharedQueue.shift()!;
+      }
+
+      if (closed || closeError !== undefined || cancelRef.cancelled) break;
+
+      if (!source.pull) {
+        // No pull defined – wait for start's async enqueues (e.g. setInterval) or cancel
+        await new Promise<void>(resolve => {
+          internalWake = resolve;
+        });
+        internalWake = null;
+        continue;
+      }
+
+      // Call pull with its own local buffer controller; flush after pull resolves
+      const pullBuffer: T[] = [];
+      let pullClosed = false;
+      let pullError: unknown;
+
+      const pullController: ReadableStreamDefaultController<T> = {
+        desiredSize: 1,
+        enqueue(chunk: T) {
+          const value = (typeof chunk === 'string' ? Buffer.from(chunk) : chunk) as T;
+          pullBuffer.push(value);
+        },
+        close() {
+          pullClosed = true;
+          closed = true;
+        },
+        error(err: unknown) {
+          pullError = err;
+        },
+      };
+
+      const pullResult = source.pull(pullController);
+      if (pullResult != null && typeof (pullResult as any).then === 'function') {
+        // Async pull: yield from the shared queue while waiting so that concurrent
+        // enqueues from start (e.g. setInterval) are emitted in the right order.
+        let pullDone = false;
+        (pullResult as Promise<unknown>).then(
+          () => {
+            pullDone = true;
+            wake();
+          },
+          (err: unknown) => {
+            pullError = err;
+            pullDone = true;
+            wake();
+          },
+        );
+
+        // Loop until pull resolves or stream is cancelled
+        for (;;) {
+          while (sharedQueue.length > 0) {
+            yield sharedQueue.shift()!;
+          }
+          if (pullDone || cancelRef.cancelled) break;
+          await new Promise<void>(resolve => {
+            internalWake = resolve;
+          });
+          internalWake = null;
+        }
+        if (cancelRef.cancelled) break;
+        // Drain any remaining shared-queue items that arrived while pull was finishing
+        while (sharedQueue.length > 0) {
+          yield sharedQueue.shift()!;
+        }
+      }
+
+      if (pullError !== undefined) throw pullError;
+
+      // Flush pull's local buffer into the main generator output
+      for (const chunk of pullBuffer) {
+        sharedQueue.push(chunk);
+      }
+
+      if (pullClosed) break;
+    }
+
+    // Yield any items left over after the loop exits
+    while (sharedQueue.length > 0) {
+      yield sharedQueue.shift()!;
+    }
+
+    if (closeError !== undefined) throw closeError;
+  } finally {
+    source.cancel?.(cancelRef.reason);
+  }
+}
+
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
-  readable: Readable;
+  /**
+   * Marker used by isPonyfillReadableStream() so we avoid triggering the lazy
+   * `.readable` getter just to check the stream type.
+   */
+  readonly _ponyfillReadable = true;
+
+  /**
+   * Lazily-created Node.js Readable. Set directly when the source is already a
+   * Readable, otherwise created on first access of the `.readable` getter.
+   */
+  private _readable?: Readable;
+
+  /**
+   * The fast-path async/sync iterable backing this stream. Used by getReader()
+   * and [Symbol.asyncIterator]() to bypass Node.js stream overhead.
+   */
+  private _iterable?: AsyncIterable<T> | Iterable<T>;
+
+  /**
+   * The single active iterator created from _iterable. Stored here so that
+   * subsequent calls to the `.readable` getter wrap the *same* iterator state,
+   * guaranteeing single-consumer semantics.
+   */
+  private _activeIterator?: AsyncIterator<T> | Iterator<T>;
+
+  /**
+   * For UnderlyingSource-backed streams: shared ref so cancel(reason) can
+   * pass the reason into the generator's finally block.
+   */
+  private _cancelRef?: CancelRef;
+
+  locked = false;
+
   constructor(
     underlyingSource?:
       | UnderlyingSource<T>
       | Readable
       | ReadableStream<T>
-      | PonyfillReadableStream<T>,
+      | PonyfillReadableStream<T>
+      | AsyncIterable<T>
+      | Iterable<T>,
   ) {
-    if (underlyingSource instanceof PonyfillReadableStream && underlyingSource.readable != null) {
-      this.readable = underlyingSource.readable;
+    if ((underlyingSource as any)?._ponyfillReadable === true) {
+      // Fast-copy internal state instead of going through the public getter
+      const src = underlyingSource as PonyfillReadableStream<T>;
+      if (src._readable != null) {
+        this._readable = src._readable;
+      } else {
+        this._iterable = src._iterable;
+      }
     } else if (isNodeReadable(underlyingSource)) {
-      this.readable = underlyingSource as Readable;
+      this._readable = underlyingSource as Readable;
     } else if (isReadableStream(underlyingSource)) {
-      this.readable = Readable.fromWeb(underlyingSource as Parameters<typeof Readable.fromWeb>[0]);
-    } else {
-      let started = false;
-      let ongoing = false;
-      const handleStart = (desiredSize: number) => {
-        if (!started) {
-          const controller = createController(desiredSize, this.readable);
-          started = true;
-          return handleMaybePromise(
-            () => underlyingSource?.start?.(controller),
-            () => {
-              controller._flush();
-              if (controller._closed) {
-                return false;
-              }
-              return true;
-            },
-          );
+      // Web ReadableStream: drive via its own reader without creating a Node Readable.
+      // Convert chunks to Buffer so callers get the same type as Node.js streams.
+      const stream = underlyingSource as ReadableStream<T>;
+      this._iterable = (async function* () {
+        const reader = stream.getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            // Ensure we yield a Buffer so toString('utf-8') etc. work correctly
+            yield value != null && !Buffer.isBuffer(value) && (value as any).byteLength != null
+              ? (Buffer.from(value as unknown as ArrayBufferView) as unknown as T)
+              : value;
+          }
+        } finally {
+          reader.releaseLock();
         }
-        return true;
-      };
-      const readImpl = (desiredSize: number) => {
-        return handleMaybePromise(
-          () => handleStart(desiredSize),
-          shouldContinue => {
-            if (!shouldContinue) {
-              return;
-            }
-            const controller = createController(desiredSize, this.readable);
-            return handleMaybePromise(
-              () => underlyingSource?.pull?.(controller),
-              () => {
-                controller._flush();
-                ongoing = false;
-              },
-            );
-          },
-        );
-      };
-      this.readable = new Readable({
-        read(desiredSize) {
-          if (ongoing) {
-            return;
-          }
-          ongoing = true;
-          return readImpl(desiredSize);
-        },
-        destroy(err, callback) {
-          if (underlyingSource?.cancel) {
-            try {
-              const res$ = underlyingSource.cancel(err);
-              if (res$?.then) {
-                return res$.then(
-                  () => {
-                    callback(null);
-                  },
-                  err => {
-                    callback(err);
-                  },
-                );
-              }
-            } catch (err: any) {
-              callback(err);
-              return;
-            }
-          }
-          callback(null);
-        },
-      });
+      })();
+    } else if (isAsyncIterable(underlyingSource) || isSyncIterable(underlyingSource)) {
+      this._iterable = underlyingSource as AsyncIterable<T> | Iterable<T>;
+    } else if (underlyingSource != null) {
+      // UnderlyingSource with start/pull/cancel – use the async generator
+      const cancelRef: CancelRef = { reason: undefined };
+      this._cancelRef = cancelRef;
+      this._iterable = createUnderlyingSourceIterable(
+        underlyingSource as UnderlyingSource<T>,
+        cancelRef,
+      );
     }
+    // else: empty stream – both remain undefined
+  }
+
+  /**
+   * Returns (or lazily creates) the Node.js Readable backing this stream.
+   * Kept for backward compatibility with code that accesses `.readable` directly
+   * (e.g. Body.ts). When the source is an iterable the Readable is created on
+   * first access and wraps the *same* iterator state.
+   */
+  get readable(): Readable {
+    if (!this._readable) {
+      if (this._activeIterator) {
+        // An iterator was already created via getReader / asyncIterator –
+        // wrap it so both paths share the same consumer position.
+        const iter = this._activeIterator;
+        this._activeIterator = undefined;
+        const wrapped: AsyncIterable<T> = {
+          [Symbol.asyncIterator]() {
+            return {
+              next: () => Promise.resolve(iter.next()),
+              return: (value?: any) =>
+                Promise.resolve(iter.return ? iter.return(value) : { done: true, value }),
+              throw: (err?: any) =>
+                iter.throw ? Promise.resolve(iter.throw(err)) : Promise.reject(err),
+            };
+          },
+        };
+        this._readable = Readable.from(wrapped);
+      } else if (this._iterable != null) {
+        this._readable = Readable.from(this._iterable as AsyncIterable<T>);
+      } else {
+        // Empty stream
+        const r = new Readable({ read() {} });
+        r.push(null);
+        this._readable = r;
+      }
+    }
+    return this._readable;
+  }
+
+  set readable(value: Readable) {
+    this._readable = value;
+    this._iterable = undefined;
+    this._activeIterator = undefined;
   }
 
   cancel(reason?: any): Promise<void> {
-    this.readable.destroy(reason);
-    // @ts-expect-error - we know it is void
-    return once(this.readable, 'close');
+    if (this._readable) {
+      this._readable.destroy(reason);
+      // @ts-expect-error - we know it is void
+      return once(this._readable, 'close');
+    }
+    if (this._cancelRef) {
+      this._cancelRef.reason = reason;
+      this._cancelRef.cancelled = true;
+      // Wake up any awaiting wait inside the generator so it can check the flag
+      this._cancelRef.wake?.();
+    }
+    if (this._activeIterator?.return) {
+      return Promise.resolve(this._activeIterator.return(reason)).then(() => {});
+    }
+    return fakePromise();
   }
 
-  locked = false;
+  /** Returns the active iterator, creating it from the iterable if needed. */
+  private _getIterator(): AsyncIterator<T> | Iterator<T> {
+    if (this._readable) {
+      return this._readable[Symbol.asyncIterator]();
+    }
+    if (this._activeIterator) {
+      return this._activeIterator;
+    }
+    const iterable = this._iterable;
+    if (iterable == null) {
+      const emptyIter = [][Symbol.iterator]() as unknown as Iterator<T>;
+      this._activeIterator = emptyIter;
+      return emptyIter;
+    }
+    let iter: Iterator<T> | AsyncIterator<T>;
+    if (Symbol.asyncIterator in (iterable as object)) {
+      iter = (iterable as AsyncIterable<T>)[Symbol.asyncIterator]();
+    } else {
+      iter = (iterable as Iterable<T>)[Symbol.iterator]();
+    }
+    this._activeIterator = iter;
+    return iter;
+  }
 
   getReader(options: { mode: 'byob' }): ReadableStreamBYOBReader;
   getReader(): ReadableStreamDefaultReader<T>;
   getReader(_options?: ReadableStreamGetReaderOptions): ReadableStreamReader<T> {
-    const iterator = this.readable[Symbol.asyncIterator]();
+    const iterator = this._getIterator();
     this.locked = true;
-    const thisReadable = this.readable;
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const thisStream = this;
+    const thisReadable = this._readable;
     return {
       read() {
         return iterator.next() as Promise<ReadableStreamReadResult<T>>;
@@ -165,63 +377,83 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       releaseLock: () => {
         if (iterator.return) {
           const retResult$ = iterator.return();
-          if (retResult$.then) {
-            retResult$.then(() => {
-              this.locked = false;
+          if (retResult$ && typeof (retResult$ as any).then === 'function') {
+            (retResult$ as Promise<any>).then(() => {
+              thisStream.locked = false;
             });
             return;
           }
         }
-        this.locked = false;
+        thisStream.locked = false;
       },
-      cancel: reason => {
+      cancel: (reason?: any) => {
+        // Propagate cancel reason into the generator's finally block
+        if (thisStream._cancelRef) {
+          thisStream._cancelRef.reason = reason;
+          thisStream._cancelRef.cancelled = true;
+          thisStream._cancelRef.wake?.();
+        }
         if (iterator.return) {
           const retResult$ = iterator.return(reason);
-          if (retResult$.then) {
-            return retResult$.then(() => {
-              this.locked = false;
+          if (retResult$ && typeof (retResult$ as any).then === 'function') {
+            return (retResult$ as Promise<any>).then(() => {
+              thisStream.locked = false;
             });
           }
         }
-        this.locked = false;
+        thisStream.locked = false;
         return fakePromise();
       },
       get closed() {
-        return Promise.race([
-          once(thisReadable, 'end'),
-          once(thisReadable, 'error').then(err => Promise.reject(err)),
-        ]) as Promise<any>;
+        if (thisReadable) {
+          return Promise.race([
+            once(thisReadable, 'end'),
+            once(thisReadable, 'error').then(err => Promise.reject(err)),
+          ]) as Promise<any>;
+        }
+        return fakePromise() as Promise<undefined>;
       },
     };
   }
 
   [Symbol.asyncIterator](_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
-    const iterator = this.readable[Symbol.asyncIterator]();
-    const iterable = {
+    const iterator = this._getIterator();
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const thisStream = this;
+    const thisReadable = this._readable;
+    const iterable: ReadableStreamAsyncIterator<T> = {
       [Symbol.asyncIterator]() {
         return this;
       },
       [Symbol.asyncDispose]: async () => {
-        await iterator.return?.();
-        if (!this.readable.destroyed) {
-          this.readable.destroy();
+        if (iterator.return) {
+          await iterator.return();
+        }
+        if (thisReadable && !thisReadable.destroyed) {
+          thisReadable.destroy();
         }
       },
-      next: () => iterator.next(),
-      return: () => {
-        if (!this.readable.destroyed) {
-          this.readable.destroy();
+      next: () => iterator.next() as Promise<IteratorResult<T>>,
+      return: (value?: any) => {
+        if (thisReadable && !thisReadable.destroyed) {
+          thisReadable.destroy();
         }
-        return iterator.return?.() || fakePromise({ done: true, value: undefined });
+        if (iterator.return) {
+          return iterator.return(value) as Promise<IteratorResult<T>>;
+        }
+        return fakePromise({ done: true, value: undefined }) as Promise<IteratorResult<T>>;
       },
-      throw: (err: Error) => {
-        if (!this.readable.destroyed) {
-          this.readable.destroy(err);
+      throw: (err?: any) => {
+        if (thisReadable && !thisReadable.destroyed) {
+          thisReadable.destroy(err);
         }
-        return iterator.throw?.(err) || fakePromise({ done: true, value: undefined });
+        if (iterator.throw) {
+          return iterator.throw(err) as Promise<IteratorResult<T>>;
+        }
+        return fakePromise({ done: true, value: undefined }) as Promise<IteratorResult<T>>;
       },
     };
-    return iterable as unknown as ReadableStreamAsyncIterator<T>;
+    return iterable;
   }
 
   values(_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
@@ -232,7 +464,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     throw new Error('Not implemented');
   }
 
-  private async pipeToWriter(writer: WritableStreamDefaultWriter<T>): Promise<void> {
+  private async _pipeToWriter(writer: WritableStreamDefaultWriter<T>): Promise<void> {
     try {
       for await (const chunk of this) {
         await writer.write(chunk);
@@ -245,13 +477,15 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   pipeTo(destination: WritableStream<T>): Promise<void> {
     if (isPonyfillWritableStream(destination)) {
-      return pipeline(this.readable, destination.writable, {
-        end: true,
-      });
-    } else {
-      const writer = destination.getWriter();
-      return this.pipeToWriter(writer);
+      const dest = destination as PonyfillWritableStream<T>;
+      if (this._readable) {
+        // Both sides can use the Node.js pipeline for large-stream efficiency
+        return pipeline(this._readable, dest.writable, { end: true });
+      }
+      // Source is iterable-backed: use writer to avoid creating a Readable
     }
+    const writer = destination.getWriter();
+    return this._pipeToWriter(writer);
   }
 
   pipeThrough<T2>({
@@ -262,12 +496,32 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     readable: ReadableStream<T2>;
   }): ReadableStream<T2> {
     this.pipeTo(writable).catch(err => {
-      this.readable.destroy(err);
+      if (this._readable) {
+        // Readable-backed source: destroy it
+        this._readable.destroy(err);
+      } else {
+        // Iterable-backed source: cancel it with the error reason
+        this.cancel(err);
+      }
     });
     if (isPonyfillReadableStream(readable)) {
-      readable.readable.once('error', err => this.readable.destroy(err));
-      readable.readable.once('finish', () => this.readable.push(null));
-      readable.readable.once('close', () => this.readable.push(null));
+      const r = readable as PonyfillReadableStream<T2>;
+      if (r._readable) {
+        r._readable.once('error', err => {
+          if (this._readable) {
+            this._readable.destroy(err);
+          } else {
+            // Iterable-backed source: propagate cancellation with the error reason
+            this.cancel(err);
+          }
+        });
+        r._readable.once('finish', () => {
+          if (this._readable) this._readable.push(null);
+        });
+        r._readable.once('close', () => {
+          if (this._readable) this._readable.push(null);
+        });
+      }
     }
     return readable;
   }
@@ -277,16 +531,16 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   static from<T>(iterable: AsyncIterable<T> | Iterable<T>): PonyfillReadableStream<T> {
-    return new PonyfillReadableStream(Readable.from(iterable));
+    return new PonyfillReadableStream<T>(iterable);
   }
 
   [Symbol.toStringTag] = 'ReadableStream';
 }
 
 function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> {
-  return obj?.readable != null;
+  return obj?._ponyfillReadable === true;
 }
 
 function isPonyfillWritableStream(obj: any): obj is PonyfillWritableStream {
-  return obj?.writable != null;
+  return obj?._ponyfillWritable === true;
 }
