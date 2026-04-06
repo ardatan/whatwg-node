@@ -239,7 +239,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       const src = underlyingSource as PonyfillReadableStream<T>;
       if (src._readable != null) {
         this._readable = src._readable;
-      } else {
+      } else if (src._iterable != null) {
         this._iterable = src._iterable;
       }
     } else if (isNodeReadable(underlyingSource)) {
@@ -256,7 +256,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
             if (done) break;
             // Ensure we yield a Buffer so toString('utf-8') etc. work correctly
             yield value != null && !Buffer.isBuffer(value) && (value as any).byteLength != null
-              ? (Buffer.from(value as unknown as ArrayBufferView) as unknown as T)
+              ? (Buffer.from(value as unknown as Uint8Array) as unknown as T)
               : value;
           }
         } finally {
@@ -289,7 +289,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         // An iterator was already created via getReader / asyncIterator –
         // wrap it so both paths share the same consumer position.
         const iter = this._activeIterator;
-        this._activeIterator = undefined;
+        delete this._activeIterator;
         const wrapped: AsyncIterable<T> = {
           [Symbol.asyncIterator]() {
             return {
@@ -316,8 +316,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   set readable(value: Readable) {
     this._readable = value;
-    this._iterable = undefined;
-    this._activeIterator = undefined;
+    delete this._iterable;
+    delete this._activeIterator;
   }
 
   cancel(reason?: any): Promise<void> {
@@ -418,8 +418,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   [Symbol.asyncIterator](_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
     const iterator = this._getIterator();
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const thisStream = this;
     const thisReadable = this._readable;
     const iterable: ReadableStreamAsyncIterator<T> = {
       [Symbol.asyncIterator]() {

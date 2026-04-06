@@ -211,7 +211,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
 
   set writable(value: Writable) {
     this._writable = value;
-    this._sink = undefined;
+    delete this._sink;
   }
 
   getWriter(): WritableStreamDefaultWriter<W> {
@@ -249,6 +249,6 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
     const w = this._writable;
     if (!w) return fakePromise();
     w.destroy(reason);
-    return once(w, 'close') as Promise<void>;
+    return once(w, 'close').then(() => undefined);
   }
 }
