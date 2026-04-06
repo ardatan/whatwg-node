@@ -310,6 +310,28 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         r.push(null);
         this._readable = r;
       }
+      // For UnderlyingSource-backed streams, patch _destroy on the Readable so that when
+      // it is destroyed (e.g. due to HTTP client abort), the generator is woken via
+      // cancelRef.wake() BEFORE the original _destroy calls generator.return().
+      // This is necessary because Readable.from(asyncGenerator) calls generator.return()
+      // inside _destroy, but when generator.next() is pending, generator.return() returns
+      // a Promise that never resolves (V8 bug). Waking the generator one microtask ahead
+      // lets it exit naturally so that generator.return() then succeeds immediately.
+      if (this._cancelRef) {
+        const cancelRef = this._cancelRef;
+        const readable = this._readable;
+        const origDestroy = (readable as any)._destroy.bind(readable);
+        (readable as any)._destroy = (err: Error | null, cb: (err?: Error | null) => void) => {
+          if (!cancelRef.cancelled) {
+            cancelRef.reason = err ?? undefined;
+            cancelRef.cancelled = true;
+            cancelRef.wake?.();
+          }
+          // Call origDestroy without the error so the stream emits only 'close', not
+          // 'error' + 'close'.  This prevents once(readable, 'close') from rejecting.
+          Promise.resolve().then(() => origDestroy(null, cb));
+        };
+      }
     }
     return this._readable;
   }
@@ -322,9 +344,23 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   cancel(reason?: any): Promise<void> {
     if (this._readable) {
-      this._readable.destroy(reason);
-      // @ts-expect-error - we know it is void
-      return once(this._readable, 'close');
+      // Also wake the generator via cancelRef so that the source's cancel() callback
+      // is invoked even when V8's generator.return() is a no-op (next() pending).
+      if (this._cancelRef && !this._cancelRef.cancelled) {
+        this._cancelRef.reason = reason;
+        this._cancelRef.cancelled = true;
+        this._cancelRef.wake?.();
+      }
+      // Build a close-waiter that resolves on both 'close' and 'error' so that
+      // destroy(reason) can still emit 'error' (needed for pipeThrough error
+      // propagation) without creating an unhandled rejection via events.once.
+      const readable = this._readable;
+      const waitForClose = new Promise<void>(resolve => {
+        readable.once('close', resolve);
+        readable.once('error', () => resolve());
+      });
+      readable.destroy(reason instanceof Error ? reason : undefined);
+      return waitForClose;
     }
     if (this._cancelRef) {
       this._cancelRef.reason = reason;
