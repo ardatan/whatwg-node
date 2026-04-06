@@ -125,7 +125,9 @@ export function getRequestFromUWSRequest({
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
   return new fetchAPI.WritableStream({
     write(chunk) {
-      uwsResponse.write(chunk);
+      uwsResponse.cork(() => {
+        uwsResponse.write(chunk);
+      });
     },
     close() {
       uwsResponse.end();
@@ -206,7 +208,9 @@ export function sendResponseToUwsOpts(
           if (controller.signal.aborted || sourceResult.done) {
             return uwsResponse.end(sourceResult.value);
           }
-          uwsResponse.write(sourceResult.value);
+          uwsResponse.cork(() => {
+            uwsResponse.write(sourceResult.value);
+          });
           return pump();
         },
       );
