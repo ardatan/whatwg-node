@@ -6,7 +6,7 @@ function isNodeReadable(obj: any): obj is Readable {
   return obj?.read != null;
 }
 
-function isReadableStream(obj: any): obj is ReadableStream {
+function isReadableStream(obj: any): obj is PonyfillReadableStream<any> {
   return obj?.getReader != null;
 }
 
@@ -220,41 +220,36 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       | AsyncIterable<T>
       | Iterable<T>,
   ) {
-    if ((underlyingSource as any)?._ponyfillReadable === true) {
-      // Fast-copy internal state instead of going through the public getter
-      const src = underlyingSource as PonyfillReadableStream<T>;
-      if (src._iterable != null) {
-        this._iterable = src._iterable;
-      }
-    } else if (isNodeReadable(underlyingSource)) {
+    if (isNodeReadable(underlyingSource)) {
       const readable = underlyingSource as Readable;
-      underlyingSource = {
-        start(controller) {
-          readable.on('data', chunk => controller.enqueue(chunk));
-          readable.once('end', () => controller.close());
-          readable.once('error', (err: unknown) => controller.error(err));
+      // UnderlyingSource with start/pull/cancel – use the async generator
+      const cancelRef: CancelRef = { reason: undefined };
+      this._iterable = createUnderlyingSourceIterable(
+        {
+          start(controller) {
+            readable.on('data', chunk => controller.enqueue(chunk));
+            readable.once('end', () => controller.close());
+            readable.once('error', (err: unknown) => controller.error(err));
+          },
+          cancel(reason) {
+            if (!readable.destroyed && !readable.closed && !readable.errored) {
+              readable.destroy(reason);
+            }
+          },
         },
-        cancel(reason) {
-          if (!readable.destroyed && !readable.closed && !readable.errored) {
-            readable.destroy(reason);
-          }
-        },
-      };
-    }
-    if (isReadableStream(underlyingSource)) {
-      return underlyingSource as any;
+        cancelRef,
+      );
+    } else if (isReadableStream(underlyingSource)) {
+      console.log('geldi3', underlyingSource); // --- IGNORE ---
+      return underlyingSource;
     } else if (isAsyncIterable(underlyingSource) || isSyncIterable(underlyingSource)) {
-      this._iterable = underlyingSource as AsyncIterable<T> | Iterable<T>;
+      this._iterable = underlyingSource;
     } else if (underlyingSource != null) {
       // UnderlyingSource with start/pull/cancel – use the async generator
       const cancelRef: CancelRef = { reason: undefined };
       this._cancelRef = cancelRef;
-      this._iterable = createUnderlyingSourceIterable(
-        underlyingSource as UnderlyingSource<T>,
-        cancelRef,
-      );
+      this._iterable = createUnderlyingSourceIterable(underlyingSource, cancelRef);
     }
-    // else: empty stream – both remain undefined
   }
 
   cancel(reason?: any): Promise<void> {
