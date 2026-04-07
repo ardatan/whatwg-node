@@ -234,6 +234,11 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           readable.once('end', () => controller.close());
           readable.once('error', (err: unknown) => controller.error(err));
         },
+        cancel(reason) {
+          if (!readable.destroyed && !readable.closed && !readable.errored) {
+            readable.destroy(reason);
+          }
+        },
       };
     }
     if (isReadableStream(underlyingSource)) {
