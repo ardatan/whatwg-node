@@ -88,17 +88,29 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   }
 
   headersSerializer?: HeadersSerializer | undefined;
+  // @ts-expect-error - It is initialized
   cache: RequestCache;
+  // @ts-expect-error - It is initialized
   credentials: RequestCredentials;
+  // @ts-expect-error - It is initialized
   destination: RequestDestination;
+  // @ts-expect-error - It is initialized
   headers: Headers;
+  // @ts-expect-error - It is initialized
   integrity: string;
+  // @ts-expect-error - It is initialized
   keepalive: boolean;
+  // @ts-expect-error - It is initialized
   method: string;
+  // @ts-expect-error - It is initialized
   mode: RequestMode;
+  // @ts-expect-error - It is initialized
   priority: 'auto' | 'high' | 'low';
+  // @ts-expect-error - It is initialized
   redirect: RequestRedirect;
+  // @ts-expect-error - It is initialized
   referrer: string;
+  // @ts-expect-error - It is initialized
   referrerPolicy: ReferrerPolicy;
   _url: string | undefined;
 
@@ -130,7 +142,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     return this._parsedUrl;
   }
 
-  duplex: 'half' | 'full';
+  duplex: 'half' | 'full' = 'half';
 
   agent: HTTPAgent | HTTPSAgent | false | undefined;
 
