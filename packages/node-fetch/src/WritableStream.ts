@@ -198,7 +198,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
    * Returns (or lazily creates) the Node.js Writable backing this stream.
    * Kept for backward compatibility with pipeline() and other Node.js code.
    */
-  get writable(): Writable {
+  generateWritable() {
     if (!this._writable) {
       if (this._sink) {
         this._writable = createWritableFromSink(this._sink);
@@ -209,16 +209,14 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
     return this._writable;
   }
 
-  set writable(value: Writable) {
-    this._writable = value;
-    this._sink = undefined;
-  }
-
   getWriter(): WritableStreamDefaultWriter<W> {
     if (this._sink) {
       return createWriterFromSink(this._sink);
     }
-    return createWriterFromWritable(this._writable ?? this.writable);
+    if (this._writable) {
+      return createWriterFromWritable(this._writable);
+    }
+    throw new Error('Cannot get writer from a stream with no sink or writable');
   }
 
   close(): Promise<void> {

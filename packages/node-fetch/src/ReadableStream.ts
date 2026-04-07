@@ -509,7 +509,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       const dest = destination as PonyfillWritableStream<T>;
       if (this._readable) {
         // Both sides can use the Node.js pipeline for large-stream efficiency
-        return pipeline(this._readable, dest.writable, { end: true });
+        return pipeline(this._readable, dest.generateWritable(), { end: true });
       }
       // Source is iterable-backed: use writer to avoid creating a Readable
     }
