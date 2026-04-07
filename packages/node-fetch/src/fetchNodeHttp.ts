@@ -121,22 +121,23 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        if (outputStream != null) {
-          pipeThrough({
-            src: nodeResponse,
-            dest: outputStream,
-            signal,
-            onError: e => {
-              if (!nodeResponse.destroyed) {
-                nodeResponse.destroy(e);
-              }
-              if (!outputStream!.destroyed) {
-                outputStream!.destroy(e);
-              }
-              reject(e);
-            },
-          });
-        }
+        // TODO: Find a better workaround
+        outputStream ||= new PassThrough();
+
+        pipeThrough({
+          src: nodeResponse,
+          dest: outputStream,
+          signal,
+          onError: e => {
+            if (!nodeResponse.destroyed) {
+              nodeResponse.destroy(e);
+            }
+            if (!outputStream!.destroyed) {
+              outputStream!.destroy(e);
+            }
+            reject(e);
+          },
+        });
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
