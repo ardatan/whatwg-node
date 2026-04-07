@@ -191,7 +191,7 @@ export function normalizeNodeRequest(
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   // @ts-expect-error - ReadableStream.from is missing in the TS types
-  const body = fetchAPI.ReadableStream.from(rawRequest);
+  const body = fetchAPI.ReadableStream.from ? fetchAPI.ReadableStream.from(rawRequest) : rawRequest;
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
     headers: normalizedHeaders,
