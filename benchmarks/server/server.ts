@@ -70,11 +70,12 @@ if (process.env.SCENARIO === 'native') {
 } else if (process.env.SCENARIO === 'vanilla') {
   serverAdapter = function (req: IncomingMessage, res: ServerResponse) {
     if (req.method === 'POST') {
-      let body = '';
+      const chunks: Buffer[] = [];
       req.on('data', chunk => {
-        body += chunk;
+        chunks.push(chunk);
       });
       req.on('end', () => {
+        const body = Buffer.concat(chunks).toString();
         const { name } = JSON.parse(body);
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ message: `Hello, ${name}!` }));
