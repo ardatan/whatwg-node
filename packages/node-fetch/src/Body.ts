@@ -21,7 +21,6 @@ enum BodyInitType {
 
 export type BodyPonyfillInit =
   | XMLHttpRequestBodyInit
-  | Readable
   | PonyfillReadableStream<Uint8Array>
   | AsyncIterable<Uint8Array>;
 

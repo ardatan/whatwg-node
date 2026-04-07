@@ -195,8 +195,7 @@ export function normalizeNodeRequest(
     headers: normalizedHeaders,
     signal: controller.signal,
     // @ts-expect-error - Missing types
-    body: fetchAPI.ReadableStream.from(rawRequest),
-    // @ts-expect-error - Missing types
+    body: rawRequest,
     duplex: 'half',
   });
 }
