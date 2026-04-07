@@ -112,9 +112,11 @@ export function getRequestFromUWSRequest({
             }
           });
         }
+        console.log('started');
       },
     });
   }
+  console.log('returned');
   return new fetchAPI.Request(url, {
     method,
     headers,

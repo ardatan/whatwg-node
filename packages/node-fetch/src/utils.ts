@@ -144,3 +144,7 @@ export function getSupportedFormats(): PonyfillCompressionFormat[] {
   }
   return baseFormats;
 }
+
+export function isAsyncIterable(obj: any): obj is AsyncIterable<unknown> {
+  return obj?.[Symbol.asyncIterator] != null;
+}

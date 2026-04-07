@@ -3,7 +3,7 @@ import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { fakePromise } from './utils.js';
+import { fakePromise, isAsyncIterable } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
 function isNodeReadable(obj: any): obj is Readable {
@@ -12,10 +12,6 @@ function isNodeReadable(obj: any): obj is Readable {
 
 function isReadableStream(obj: any): obj is ReadableStream {
   return obj?.getReader != null;
-}
-
-function isAsyncIterable(obj: any): obj is AsyncIterable<unknown> {
-  return obj?.[Symbol.asyncIterator] != null;
 }
 
 function isSyncIterable(obj: any): obj is Iterable<unknown> {
@@ -36,7 +32,7 @@ interface CancelRef {
  * without creating a Node.js Readable. This avoids stream event-emitter overhead
  * for custom sources and is the performance-critical path.
  */
-async function* createUnderlyingSourceIterable<T>(
+function createUnderlyingSourceIterable<T>(
   source: UnderlyingSource<T>,
   cancelRef: CancelRef,
 ): AsyncGenerator<T, void, undefined> {
@@ -87,109 +83,110 @@ async function* createUnderlyingSourceIterable<T>(
 
   // Call start (may be sync or async)
   const startResult = source.start?.(startController);
-  if (startResult != null && typeof (startResult as any).then === 'function') {
-    await (startResult as Promise<unknown>);
-  }
+  async function* createUnderlyingSourceIterableGen() {
+    await startResult;
 
-  // Flush any chunks enqueued synchronously during start
-  startFlushed = true;
-  for (const chunk of startBuffer) {
-    sharedQueue.push(chunk);
-  }
-  startBuffer.length = 0;
+    // Flush any chunks enqueued synchronously during start
+    startFlushed = true;
+    for (const chunk of startBuffer) {
+      sharedQueue.push(chunk);
+    }
+    startBuffer.length = 0;
 
-  try {
-    while (!cancelRef.cancelled) {
-      // Yield everything currently in the shared queue
-      while (sharedQueue.length > 0) {
-        yield sharedQueue.shift()!;
-      }
+    try {
+      while (!cancelRef.cancelled) {
+        // Yield everything currently in the shared queue
+        while (sharedQueue.length > 0) {
+          yield sharedQueue.shift()!;
+        }
 
-      if (closed || closeError !== undefined || cancelRef.cancelled) break;
+        if (closed || closeError !== undefined || cancelRef.cancelled) break;
 
-      if (!source.pull) {
-        // No pull defined – wait for start's async enqueues (e.g. setInterval) or cancel
-        await new Promise<void>(resolve => {
-          internalWake = resolve;
-        });
-        internalWake = null;
-        continue;
-      }
-
-      // Call pull with its own local buffer controller; flush after pull resolves
-      const pullBuffer: T[] = [];
-      let pullClosed = false;
-      let pullError: unknown;
-
-      const pullController: ReadableStreamDefaultController<T> = {
-        desiredSize: 1,
-        enqueue(chunk: T) {
-          const value = (typeof chunk === 'string' ? Buffer.from(chunk) : chunk) as T;
-          pullBuffer.push(value);
-        },
-        close() {
-          pullClosed = true;
-          closed = true;
-        },
-        error(err: unknown) {
-          pullError = err;
-        },
-      };
-
-      const pullResult = source.pull(pullController);
-      if (pullResult != null && typeof (pullResult as any).then === 'function') {
-        // Async pull: yield from the shared queue while waiting so that concurrent
-        // enqueues from start (e.g. setInterval) are emitted in the right order.
-        let pullDone = false;
-        (pullResult as Promise<unknown>).then(
-          () => {
-            pullDone = true;
-            wake();
-          },
-          (err: unknown) => {
-            pullError = err;
-            pullDone = true;
-            wake();
-          },
-        );
-
-        // Loop until pull resolves or stream is cancelled
-        for (;;) {
-          while (sharedQueue.length > 0) {
-            yield sharedQueue.shift()!;
-          }
-          if (pullDone || cancelRef.cancelled) break;
+        if (!source.pull) {
+          // No pull defined – wait for start's async enqueues (e.g. setInterval) or cancel
           await new Promise<void>(resolve => {
             internalWake = resolve;
           });
           internalWake = null;
+          continue;
         }
-        if (cancelRef.cancelled) break;
-        // Drain any remaining shared-queue items that arrived while pull was finishing
-        while (sharedQueue.length > 0) {
-          yield sharedQueue.shift()!;
+
+        // Call pull with its own local buffer controller; flush after pull resolves
+        const pullBuffer: T[] = [];
+        let pullClosed = false;
+        let pullError: unknown;
+
+        const pullController: ReadableStreamDefaultController<T> = {
+          desiredSize: 1,
+          enqueue(chunk: T) {
+            const value = (typeof chunk === 'string' ? Buffer.from(chunk) : chunk) as T;
+            pullBuffer.push(value);
+          },
+          close() {
+            pullClosed = true;
+            closed = true;
+          },
+          error(err: unknown) {
+            pullError = err;
+          },
+        };
+
+        const pullResult = source.pull(pullController);
+        if (pullResult != null && typeof (pullResult as any).then === 'function') {
+          // Async pull: yield from the shared queue while waiting so that concurrent
+          // enqueues from start (e.g. setInterval) are emitted in the right order.
+          let pullDone = false;
+          (pullResult as Promise<unknown>).then(
+            () => {
+              pullDone = true;
+              wake();
+            },
+            (err: unknown) => {
+              pullError = err;
+              pullDone = true;
+              wake();
+            },
+          );
+
+          // Loop until pull resolves or stream is cancelled
+          for (;;) {
+            while (sharedQueue.length > 0) {
+              yield sharedQueue.shift()!;
+            }
+            if (pullDone || cancelRef.cancelled) break;
+            await new Promise<void>(resolve => {
+              internalWake = resolve;
+            });
+            internalWake = null;
+          }
+          if (cancelRef.cancelled) break;
+          // Drain any remaining shared-queue items that arrived while pull was finishing
+          while (sharedQueue.length > 0) {
+            yield sharedQueue.shift()!;
+          }
         }
+
+        if (pullError !== undefined) throw pullError;
+
+        // Flush pull's local buffer into the main generator output
+        for (const chunk of pullBuffer) {
+          sharedQueue.push(chunk);
+        }
+
+        if (pullClosed) break;
       }
 
-      if (pullError !== undefined) throw pullError;
-
-      // Flush pull's local buffer into the main generator output
-      for (const chunk of pullBuffer) {
-        sharedQueue.push(chunk);
+      // Yield any items left over after the loop exits
+      while (sharedQueue.length > 0) {
+        yield sharedQueue.shift()!;
       }
 
-      if (pullClosed) break;
+      if (closeError !== undefined) throw closeError;
+    } finally {
+      source.cancel?.(cancelRef.reason);
     }
-
-    // Yield any items left over after the loop exits
-    while (sharedQueue.length > 0) {
-      yield sharedQueue.shift()!;
-    }
-
-    if (closeError !== undefined) throw closeError;
-  } finally {
-    source.cancel?.(cancelRef.reason);
   }
+  return createUnderlyingSourceIterableGen();
 }
 
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
@@ -203,13 +200,13 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
    * Lazily-created Node.js Readable. Set directly when the source is already a
    * Readable, otherwise created on first access of the `.readable` getter.
    */
-  private _readable?: Readable;
+  _readable?: Readable;
 
   /**
    * The fast-path async/sync iterable backing this stream. Used by getReader()
    * and [Symbol.asyncIterator]() to bypass Node.js stream overhead.
    */
-  private _iterable?: AsyncIterable<T> | Iterable<T> | undefined;
+  _iterable?: AsyncIterable<T> | Iterable<T> | undefined;
 
   /**
    * The single active iterator created from _iterable. Stored here so that
@@ -284,7 +281,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
    * (e.g. Body.ts). When the source is an iterable the Readable is created on
    * first access and wraps the *same* iterator state.
    */
-  get readable(): Readable {
+  generateReadable(): Readable {
     if (!this._readable) {
       if (this._activeIterator) {
         // An iterator was already created via getReader / asyncIterator –
@@ -337,8 +334,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     return this._readable;
   }
 
-  set readable(value: Readable) {
-    this._readable = value;
+  regenerateReadableFromValue(value: Uint8Array) {
+    this._readable = Readable.from(value);
     this._iterable = undefined;
     this._activeIterator = undefined;
   }
