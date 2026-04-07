@@ -20,6 +20,8 @@ export interface UWSResponse {
   close(): void;
   write(body: any): boolean;
   cork(callback: () => void): void;
+  pause(): void;
+  resume(): void;
 }
 
 export type UWSHandler = (res: UWSResponse, req: UWSRequest) => void | Promise<void>;
@@ -112,11 +114,9 @@ export function getRequestFromUWSRequest({
             }
           });
         }
-        console.log('started');
       },
     });
   }
-  console.log('returned');
   return new fetchAPI.Request(url, {
     method,
     headers,
