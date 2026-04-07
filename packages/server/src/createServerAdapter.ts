@@ -76,11 +76,11 @@ const EMPTY_OBJECT = {};
 
 // Hoisted to avoid per-request closure allocations in the requestListener hot path
 function logUnexpectedRequestError(err: any) {
-  console.error(`Unexpected error while handling request: ${err.message || err}`);
+  console.error(`Unexpected error while handling request: ${err.stack || err.message || err}`);
 }
 
-function responsePassthrough(response: Response): Response {
-  return response;
+function identical<T>(val: T): T {
+  return val;
 }
 
 function createServerAdapter<
@@ -327,7 +327,7 @@ function createServerAdapter<
       () =>
         handleMaybePromise(
           () => handleRequest(request, serverContext),
-          responsePassthrough,
+          identical,
           requestHandlerErrorFn,
         ),
       response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
@@ -377,17 +377,15 @@ function createServerAdapter<
       () =>
         handleMaybePromise(
           () => handleRequest(request, serverContext),
-          response => response,
+          identical,
           err => handleErrorFromRequestHandler(err, fetchAPI.Response),
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
-            r => r,
-            err => {
-              console.error(`Unexpected error while handling request: ${err.message || err}`);
-            },
+            identical,
+            logUnexpectedRequestError,
           );
         }
       },
