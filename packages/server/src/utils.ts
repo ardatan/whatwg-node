@@ -190,12 +190,14 @@ export function normalizeNodeRequest(
   }
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
+  // @ts-expect-error - ReadableStream.from is missing in the TS types
+  const body = fetchAPI.ReadableStream.from(rawRequest);
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
     headers: normalizedHeaders,
     signal: controller.signal,
-    // @ts-expect-error - Missing types
-    body: rawRequest,
+    body,
+    // @ts-expect-error - duplex: half is missing in the TS types
     duplex: 'half',
   });
 }
