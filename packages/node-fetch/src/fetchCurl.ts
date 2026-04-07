@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import { PonyfillReadableStream } from './ReadableStream.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
@@ -148,7 +149,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       const headersInit = headersFlat.map(
         headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
       );
-      const ponyfillResponse = new PonyfillResponse(outputStream, {
+      const stream = PonyfillReadableStream.from(outputStream);
+      const ponyfillResponse = new PonyfillResponse(stream, {
         status,
         headers: headersInit,
         url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,

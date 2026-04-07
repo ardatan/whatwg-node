@@ -446,7 +446,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
         // Use a single-element array iterable – avoids creating a Node.js Readable
         // so getReader() can return a sync iterator for zero-overhead pumping.
         const buf = Buffer.from(bodyInit, 'utf-8');
-        return new PonyfillReadableStream<Uint8Array>([buf]);
+        return PonyfillReadableStream.from([buf]);
       },
     };
   }
@@ -458,7 +458,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: bodyInit.length,
       buffer: bodyInit as Buffer<ArrayBuffer>,
       bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>([buffer]);
+        return PonyfillReadableStream.from([buffer]);
       },
     };
   }
@@ -470,7 +470,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: null,
       buffer,
       bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>([buffer]);
+        return PonyfillReadableStream.from([buffer]);
       },
     };
   }
@@ -481,7 +481,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: null,
       contentLength: null,
       bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>(readable);
+        return PonyfillReadableStream.from(readable);
       },
     };
   }
@@ -514,7 +514,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength,
       buffer,
       bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>([buffer]);
+        return PonyfillReadableStream.from([buffer]);
       },
     };
   }
@@ -526,7 +526,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: null,
       bodyFactory() {
         const buf = Buffer.from(bodyInit.toString());
-        return new PonyfillReadableStream<Uint8Array>([buf]);
+        return PonyfillReadableStream.from([buf]);
       },
     };
   }
@@ -543,12 +543,13 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (isIterableOrAsyncIterable(bodyInit)) {
+    const iterable = bodyInit;
     return {
       contentType: null,
       contentLength: null,
       bodyType: BodyInitType.AsyncIterable,
       bodyFactory() {
-        return new PonyfillReadableStream<Uint8Array>(bodyInit);
+        return PonyfillReadableStream.from(iterable);
       },
     };
   }

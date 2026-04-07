@@ -3,6 +3,7 @@ import { request as httpsRequest } from 'node:https';
 import { Readable, type PassThrough } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { PonyfillReadableStream } from './ReadableStream.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -143,8 +144,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         if (statusText == null) {
           statusText = '';
         }
+        const stream = PonyfillReadableStream.from(outputStream || nodeResponse);
         resolve(
-          new PonyfillResponse(outputStream || nodeResponse, {
+          new PonyfillResponse(stream, {
             status: statusCode,
             statusText,
             headers: nodeResponse.headers as Record<string, string>,

@@ -211,39 +211,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   locked = false;
 
-  constructor(
-    underlyingSource?:
-      | UnderlyingSource<T>
-      | Readable
-      | ReadableStream<T>
-      | PonyfillReadableStream<T>
-      | AsyncIterable<T>
-      | Iterable<T>,
-  ) {
-    if (isNodeReadable(underlyingSource)) {
-      const readable = underlyingSource as Readable;
-      // UnderlyingSource with start/pull/cancel – use the async generator
-      const cancelRef: CancelRef = { reason: undefined };
-      this._iterable = createUnderlyingSourceIterable(
-        {
-          start(controller) {
-            readable.on('data', chunk => controller.enqueue(chunk));
-            readable.once('end', () => controller.close());
-            readable.once('error', (err: unknown) => controller.error(err));
-          },
-          cancel(reason) {
-            if (!readable.destroyed && !readable.closed && !readable.errored) {
-              readable.destroy(reason);
-            }
-          },
-        },
-        cancelRef,
-      );
-    } else if (isReadableStream(underlyingSource)) {
-      return underlyingSource;
-    } else if (isAsyncIterable(underlyingSource) || isSyncIterable(underlyingSource)) {
-      this._iterable = underlyingSource;
-    } else if (underlyingSource != null) {
+  constructor(underlyingSource?: UnderlyingSource<T>) {
+    if (underlyingSource != null) {
       // UnderlyingSource with start/pull/cancel – use the async generator
       const cancelRef: CancelRef = { reason: undefined };
       this._cancelRef = cancelRef;
@@ -398,8 +367,31 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     return isReadableStream(instance);
   }
 
-  static from<T>(iterable: AsyncIterable<T> | Iterable<T>): PonyfillReadableStream<T> {
-    return new PonyfillReadableStream<T>(iterable);
+  static from<T>(
+    source: AsyncIterable<T> | Iterable<T> | Readable | PonyfillReadableStream<T>,
+  ): PonyfillReadableStream<T> {
+    if (isNodeReadable(source)) {
+      const readable = source;
+      return new PonyfillReadableStream<T>({
+        start(controller) {
+          readable.on('data', chunk => controller.enqueue(chunk));
+          readable.once('end', () => controller.close());
+          readable.once('error', (err: unknown) => controller.error(err));
+        },
+        cancel(reason) {
+          if (!readable.destroyed && !readable.closed && !readable.errored) {
+            readable.destroy(reason);
+          }
+        },
+      });
+    } else if (isReadableStream(source)) {
+      return source;
+    }
+    const stream = new PonyfillReadableStream<T>();
+    if (isAsyncIterable(source) || isSyncIterable(source)) {
+      stream._iterable = source;
+    }
+    return stream;
   }
 
   [Symbol.toStringTag] = 'ReadableStream';

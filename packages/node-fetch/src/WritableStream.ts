@@ -149,13 +149,17 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
 
   locked = false;
 
-  constructor(underlyingSink?: UnderlyingSink<W> | Writable) {
-    if (underlyingSink instanceof Writable) {
-      this._writable = underlyingSink;
-    } else if (underlyingSink != null) {
+  constructor(underlyingSink?: UnderlyingSink<W>) {
+    if (underlyingSink != null) {
       this._sink = underlyingSink;
     }
     // else: empty stream – both remain undefined
+  }
+
+  static from(writable: Writable): PonyfillWritableStream {
+    const stream = new PonyfillWritableStream();
+    stream._writable = writable;
+    return stream;
   }
 
   /**

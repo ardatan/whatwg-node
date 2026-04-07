@@ -48,7 +48,7 @@ export class PonyfillTransformStream<I = any, O = any> implements TransformStrea
     } else {
       this.transform = new Transform();
     }
-    this.writable = new PonyfillWritableStream(this.transform);
-    this.readable = new PonyfillReadableStream(this.transform);
+    this.writable = PonyfillWritableStream.from(this.transform);
+    this.readable = PonyfillReadableStream.from(this.transform);
   }
 }
