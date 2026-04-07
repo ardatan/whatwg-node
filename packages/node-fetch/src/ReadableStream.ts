@@ -209,14 +209,14 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
    * The fast-path async/sync iterable backing this stream. Used by getReader()
    * and [Symbol.asyncIterator]() to bypass Node.js stream overhead.
    */
-  private _iterable?: AsyncIterable<T> | Iterable<T>;
+  private _iterable?: AsyncIterable<T> | Iterable<T> | undefined;
 
   /**
    * The single active iterator created from _iterable. Stored here so that
    * subsequent calls to the `.readable` getter wrap the *same* iterator state,
    * guaranteeing single-consumer semantics.
    */
-  private _activeIterator?: AsyncIterator<T> | Iterator<T>;
+  private _activeIterator?: AsyncIterator<T> | Iterator<T> | undefined;
 
   /**
    * For UnderlyingSource-backed streams: shared ref so cancel(reason) can
@@ -290,7 +290,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         // An iterator was already created via getReader / asyncIterator –
         // wrap it so both paths share the same consumer position.
         const iter = this._activeIterator;
-        delete this._activeIterator;
+        this._activeIterator = undefined;
         const wrapped: AsyncIterable<T> = {
           [Symbol.asyncIterator]() {
             return {
@@ -339,8 +339,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   set readable(value: Readable) {
     this._readable = value;
-    delete this._iterable;
-    delete this._activeIterator;
+    this._iterable = undefined;
+    this._activeIterator = undefined;
   }
 
   cancel(reason?: any): Promise<void> {

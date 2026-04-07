@@ -181,7 +181,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
    * The underlying sink. Stored directly to bypass Node.js Writable overhead
    * when getWriter() is used without ever accessing .writable.
    */
-  private _sink?: UnderlyingSink<W>;
+  private _sink?: UnderlyingSink<W> | undefined;
 
   locked = false;
 
@@ -211,7 +211,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
 
   set writable(value: Writable) {
     this._writable = value;
-    delete this._sink;
+    this._sink = undefined;
   }
 
   getWriter(): WritableStreamDefaultWriter<W> {
