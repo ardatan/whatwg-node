@@ -136,7 +136,9 @@ export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchA
       });
     },
     close() {
-      uwsResponse.end();
+      uwsResponse.cork(() => {
+        uwsResponse.end();
+      });
     },
   });
 }
@@ -182,10 +184,10 @@ export function sendResponseToUwsOpts(
         uwsResponse.writeHeader(key, value);
       }
     }
-    if (strBody) {
-      uwsResponse.end(strBody);
-    } else if (bufferOfRes) {
+    if (bufferOfRes) {
       uwsResponse.end(bufferOfRes);
+    } else if (strBody) {
+      uwsResponse.end(strBody);
     } else if (!fetchResponse.body) {
       uwsResponse.end();
     }
@@ -212,7 +214,9 @@ export function sendResponseToUwsOpts(
         () => iterator.next(),
         sourceResult => {
           if (controller.signal.aborted || sourceResult.done) {
-            return uwsResponse.end(sourceResult.value);
+            return uwsResponse.cork(() => {
+              uwsResponse.end(sourceResult.value);
+            });
           }
           uwsResponse.cork(() => {
             uwsResponse.write(sourceResult.value);
