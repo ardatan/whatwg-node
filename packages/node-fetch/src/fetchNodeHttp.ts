@@ -170,7 +170,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           fetchRequest.body != null
             ? isNodeReadable(fetchRequest.body)
               ? fetchRequest.body
-              : Readable.from(fetchRequest.body)
+              : Readable.from(fetchRequest.body, {
+                  objectMode: false,
+                })
             : null
         ) as Readable | null;
         if (nodeReadable) {

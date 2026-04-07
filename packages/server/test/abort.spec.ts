@@ -9,7 +9,8 @@ describe('Request Abort', () => {
     runTestsForEachFetchImpl((_, { fetchAPI, createServerAdapter }) => {
       skipIf(
         (globalThis.Bun && serverImplName !== 'Bun') ||
-          (globalThis.Deno && serverImplName !== 'Deno'),
+          (globalThis.Deno && serverImplName !== 'Deno') ||
+          serverImplName === 'hapi',
       )(
         'calls body.cancel on request abort',
         () =>

@@ -299,12 +299,16 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
             };
           },
         };
-        this._readable = Readable.from(wrapped);
+        this._readable = Readable.from(wrapped, {
+          objectMode: false,
+        });
       } else if (this._iterable != null) {
-        this._readable = Readable.from(this._iterable as AsyncIterable<T>);
+        this._readable = Readable.from(this._iterable as AsyncIterable<T>, {
+          objectMode: false,
+        });
       } else {
         // Empty stream
-        const r = new Readable({ read() {} });
+        const r = new Readable({ read() {}, objectMode: false });
         r.push(null);
         this._readable = r;
       }
@@ -335,7 +339,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   regenerateReadableFromValue(value: Uint8Array) {
-    this._readable = Readable.from(value);
+    this._readable = Readable.from(value, {
+      objectMode: false,
+    });
     this._iterable = undefined;
     this._activeIterator = undefined;
   }

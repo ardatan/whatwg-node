@@ -610,7 +610,9 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: null,
       bodyType: BodyInitType.AsyncIterable,
       bodyFactory() {
-        const readable = Readable.from(bodyInit);
+        const readable = Readable.from(bodyInit, {
+          objectMode: false,
+        });
         return new PonyfillReadableStream(readable);
       },
     };

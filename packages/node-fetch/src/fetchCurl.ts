@@ -47,7 +47,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       fetchRequest.body != null
         ? isNodeReadable(fetchRequest.body)
           ? fetchRequest.body
-          : Readable.from(fetchRequest.body)
+          : Readable.from(fetchRequest.body, {
+              objectMode: false,
+            })
         : null
     ) as Readable | null;
 
