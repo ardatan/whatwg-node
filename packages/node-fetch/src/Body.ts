@@ -506,17 +506,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (bodyInit instanceof Readable) {
-    const body = new PonyfillReadableStream<Uint8Array>(bodyInit);
-    return {
-      bodyType: BodyInitType.Readable,
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        return body;
-      },
-    };
-  }
   if (isURLSearchParams(bodyInit)) {
     const contentType = 'application/x-www-form-urlencoded;charset=UTF-8';
     return {
@@ -539,16 +528,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: null,
       bodyFactory() {
         return formData;
-      },
-    };
-  }
-
-  if (isReadableStream(bodyInit)) {
-    return {
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        return bodyInit as PonyfillReadableStream<Uint8Array>;
       },
     };
   }
@@ -578,8 +557,4 @@ function isBlob(value: any): value is Blob {
 
 function isURLSearchParams(value: any): value is URLSearchParams {
   return value?.sort != null;
-}
-
-function isReadableStream(value: any): value is ReadableStream {
-  return value?.getReader != null;
 }
