@@ -97,7 +97,7 @@ function createWriterFromSink<W>(sink: UnderlyingSink<W>): WritableStreamDefault
         if (result instanceof Promise) return result as Promise<void>;
         return fakePromise();
       } catch (err) {
-        return Promise.reject(err);
+        return fakeRejectPromise(err);
       }
     },
     close() {
@@ -108,7 +108,7 @@ function createWriterFromSink<W>(sink: UnderlyingSink<W>): WritableStreamDefault
         if (result instanceof Promise) return result as Promise<void>;
         return fakePromise();
       } catch (err) {
-        return Promise.reject(err);
+        return fakeRejectPromise(err);
       }
     },
     abort(reason?: any) {
