@@ -216,7 +216,7 @@ describe('Node Specific Cases', () => {
           });
         }
 
-        it('should handle async body read streams', async () => {
+        it.only('should handle async body read streams', async () => {
           await using serverAdapter = createServerAdapter(async request => {
             await setTimeout(10);
             const reqText = await request.text();

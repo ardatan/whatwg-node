@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
+import { fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
@@ -293,11 +294,11 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         const wrapped: AsyncIterable<T> = {
           [Symbol.asyncIterator]() {
             return {
-              next: () => Promise.resolve(iter.next()),
+              next: () => fakePromise(iter.next()),
               return: (value?: any) =>
-                Promise.resolve(iter.return ? iter.return(value) : { done: true, value }),
+                fakePromise(iter.return ? iter.return(value) : { done: true, value }),
               throw: (err?: any) =>
-                iter.throw ? Promise.resolve(iter.throw(err)) : Promise.reject(err),
+                iter.throw ? fakePromise(iter.throw(err)) : fakeRejectPromise(err),
             };
           },
         };
@@ -320,8 +321,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       if (this._cancelRef) {
         const cancelRef = this._cancelRef;
         const readable = this._readable;
-        const origDestroy = (readable as any)._destroy.bind(readable);
-        (readable as any)._destroy = (err: Error | null, cb: (err?: Error | null) => void) => {
+        const origDestroy = readable._destroy.bind(readable);
+        readable._destroy = (err: Error | null, cb: (err?: Error | null) => void) => {
           if (!cancelRef.cancelled) {
             cancelRef.reason = err ?? undefined;
             cancelRef.cancelled = true;
@@ -329,7 +330,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           }
           // Call origDestroy without the error so the stream emits only 'close', not
           // 'error' + 'close'.  This prevents once(readable, 'close') from rejecting.
-          Promise.resolve().then(() => origDestroy(null, cb));
+          origDestroy(null, cb);
         };
       }
     }
@@ -369,7 +370,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       this._cancelRef.wake?.();
     }
     if (this._activeIterator?.return) {
-      return Promise.resolve(this._activeIterator.return(reason)).then(() => {});
+      return fakePromise(this._activeIterator.return(reason)).then(() => {});
     }
     return fakePromise();
   }
@@ -389,10 +390,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       return emptyIter;
     }
     let iter: Iterator<T> | AsyncIterator<T>;
-    if (Symbol.asyncIterator in (iterable as object)) {
-      iter = (iterable as AsyncIterable<T>)[Symbol.asyncIterator]();
+    if (isAsyncIterable(iterable)) {
+      iter = iterable[Symbol.asyncIterator]();
     } else {
-      iter = (iterable as Iterable<T>)[Symbol.iterator]();
+      iter = iterable[Symbol.iterator]();
     }
     this._activeIterator = iter;
     return iter;
@@ -408,17 +409,16 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     const thisReadable = this._readable;
     return {
       read() {
-        return iterator.next() as Promise<ReadableStreamReadResult<T>>;
+        return fakePromise(iterator.next());
       },
       releaseLock: () => {
         if (iterator.return) {
-          const retResult$ = iterator.return();
-          if (retResult$ && typeof (retResult$ as any).then === 'function') {
-            (retResult$ as Promise<any>).then(() => {
+          return handleMaybePromise(
+            () => iterator.return!(),
+            () => {
               thisStream.locked = false;
-            });
-            return;
-          }
+            },
+          );
         }
         thisStream.locked = false;
       },
@@ -430,12 +430,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           thisStream._cancelRef.wake?.();
         }
         if (iterator.return) {
-          const retResult$ = iterator.return(reason);
-          if (retResult$ && typeof (retResult$ as any).then === 'function') {
-            return (retResult$ as Promise<any>).then(() => {
-              thisStream.locked = false;
-            });
-          }
+          return fakePromise(iterator.return(reason)).then(() => {
+            thisStream.locked = false;
+          });
         }
         thisStream.locked = false;
         return fakePromise();
@@ -444,7 +441,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         if (thisReadable) {
           return Promise.race([
             once(thisReadable, 'end'),
-            once(thisReadable, 'error').then(err => Promise.reject(err)),
+            once(thisReadable, 'error').then(err => fakeRejectPromise(err)),
           ]) as Promise<any>;
         }
         return fakePromise() as Promise<undefined>;
@@ -459,13 +456,14 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       [Symbol.asyncIterator]() {
         return this;
       },
-      [Symbol.asyncDispose]: async () => {
-        if (iterator.return) {
-          await iterator.return();
-        }
-        if (thisReadable && !thisReadable.destroyed) {
-          thisReadable.destroy();
-        }
+      [Symbol.asyncDispose]: () => {
+        return fakePromise()
+          .then(() => iterator.return?.())
+          .then(() => {
+            if (thisReadable && !thisReadable.destroyed) {
+              thisReadable.destroy();
+            }
+          });
       },
       next: () => iterator.next() as Promise<IteratorResult<T>>,
       return: (value?: any) => {

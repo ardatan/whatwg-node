@@ -57,7 +57,8 @@ export function getRequestFromUWSRequest({
     url += `?${query}`;
   }
 
-  let body: ReadableStream<Uint8Array> | undefined;
+  // eslint-disable-next-line no-undef-init
+  let body: ReadableStream<Uint8Array> | Buffer | undefined = undefined;
 
   if (method !== 'get' && method !== 'head') {
     body = new fetchAPI.ReadableStream<Uint8Array>({
@@ -95,6 +96,9 @@ export function getRequestFromUWSRequest({
               }
             }
             if (maxRemainingBodyLength === ZERO_BIGINT) {
+              if (preAllocatedBuffer != null) {
+                body = preAllocatedBuffer;
+              }
               streamCtrl.close();
             }
           });
