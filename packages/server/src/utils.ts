@@ -150,7 +150,7 @@ export function normalizeNodeRequest(
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
   const maybeParsedBody = nodeRequest.body;
-  if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
+  if (isNonEmptyObject(maybeParsedBody)) {
     if (isRequestBody(maybeParsedBody)) {
       return new fetchAPI.Request(fullUrl, {
         method: nodeRequest.method || 'GET',
@@ -752,4 +752,15 @@ export function createCustomAbortControllerSignal() {
       return AbortSignal.prototype;
     },
   });
+}
+
+export function isNonEmptyObject(obj: any): boolean {
+  if (obj != null) {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }

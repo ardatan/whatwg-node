@@ -51,6 +51,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   bodyUsed = false;
   contentType: string | null = null;
   contentLength: number | null = null;
+  private _cachedBodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
 
   constructor(
     private bodyInit: BodyPonyfillInit | null,
@@ -114,31 +115,33 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
-    const _body = this.generateBody();
-    if (_body != null) {
-      const ponyfillReadableStream = _body;
-      return new Proxy(ponyfillReadableStream as any, {
-        get(_, prop) {
-          if (prop in ponyfillReadableStream) {
-            const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
-            if (typeof ponyfillReadableStreamProp === 'function') {
-              return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
+    const ponyfillReadableStream = this.generateBody();
+    if (ponyfillReadableStream != null) {
+      if (this._cachedBodyProxy == null) {
+        this._cachedBodyProxy = new Proxy(ponyfillReadableStream as any, {
+          get(_, prop) {
+            if (prop in ponyfillReadableStream) {
+              const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
+              if (typeof ponyfillReadableStreamProp === 'function') {
+                return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
+              }
+              return ponyfillReadableStreamProp;
             }
-            return ponyfillReadableStreamProp;
-          }
-          if (prop in Readable.prototype) {
-            const readable = _body.generateReadable();
-            const readableProp: any = (readable as any)[prop];
-            if (typeof readableProp === 'function') {
-              return readableProp.bind(readable);
+            if (prop in Readable.prototype) {
+              const readable = ponyfillReadableStream.generateReadable();
+              const readableProp: any = (readable as any)[prop];
+              if (typeof readableProp === 'function') {
+                return readableProp.bind(readable);
+              }
+              return readableProp;
             }
-            return readableProp;
-          }
-        },
-        getPrototypeOf() {
-          return Readable.prototype;
-        },
-      });
+          },
+          getPrototypeOf() {
+            return Readable.prototype;
+          },
+        });
+      }
+      return this._cachedBodyProxy;
     }
     return null;
   }
