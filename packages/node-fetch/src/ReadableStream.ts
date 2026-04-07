@@ -240,7 +240,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         cancelRef,
       );
     } else if (isReadableStream(underlyingSource)) {
-      console.log('geldi3', underlyingSource); // --- IGNORE ---
       return underlyingSource;
     } else if (isAsyncIterable(underlyingSource) || isSyncIterable(underlyingSource)) {
       this._iterable = underlyingSource;

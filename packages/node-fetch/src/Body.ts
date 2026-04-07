@@ -474,6 +474,17 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
+  if (isReadable(bodyInit)) {
+    const readable = bodyInit as Readable;
+    return {
+      bodyType: BodyInitType.Readable,
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        return new PonyfillReadableStream<Uint8Array>(readable);
+      },
+    };
+  }
   if (isReadableStream(bodyInit)) {
     return {
       contentType: null,
@@ -521,25 +532,23 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   }
   if (isFormData(bodyInit)) {
     const boundary = Math.random().toString(36).substr(2);
-    const formData = getStreamFromFormData(bodyInit, boundary);
     const contentType = `multipart/form-data; boundary=${boundary}`;
     return {
       bodyType: BodyInitType.FormData,
       contentType,
       contentLength: null,
       bodyFactory() {
-        return formData;
+        return getStreamFromFormData(bodyInit, boundary);
       },
     };
   }
   if (isIterableOrAsyncIterable(bodyInit)) {
-    const readableStream = new PonyfillReadableStream<Uint8Array>(bodyInit);
     return {
       contentType: null,
       contentLength: null,
       bodyType: BodyInitType.AsyncIterable,
       bodyFactory() {
-        return readableStream;
+        return new PonyfillReadableStream<Uint8Array>(bodyInit);
       },
     };
   }
@@ -561,6 +570,10 @@ function isURLSearchParams(value: any): value is URLSearchParams {
 
 function isReadableStream(value: any): value is PonyfillReadableStream<Uint8Array> {
   return value?.getReader != null && typeof value.getReader === 'function';
+}
+
+function isReadable(value: any): value is Readable {
+  return value?.read != null;
 }
 
 function isIterableOrAsyncIterable(
