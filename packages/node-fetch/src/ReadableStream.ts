@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise, isAsyncIterable } from './utils.js';
 
 function isNodeReadable(obj: any): obj is Readable {
@@ -33,7 +33,7 @@ function createUnderlyingSourceIterable<T>(
   cancelRef: CancelRef,
 ): AsyncGenerator<T, void, undefined> {
   // Shared queue for chunks enqueued by both start (via interval/timeout) and pull
-  const sharedQueue: T[] = [];
+  let sharedQueue: T[] = [];
   let closed = false;
   let closeError: unknown;
 
@@ -81,18 +81,22 @@ function createUnderlyingSourceIterable<T>(
   async function* createUnderlyingSourceIterableGen() {
     await startResult;
 
-    // Flush any chunks enqueued synchronously during start
+    // Flush any chunks enqueued synchronously during start – yield directly
     startFlushed = true;
     for (const chunk of startBuffer) {
-      sharedQueue.push(chunk);
+      yield chunk;
     }
     startBuffer.length = 0;
 
     try {
       while (!cancelRef.cancelled) {
-        // Yield everything currently in the shared queue
-        while (sharedQueue.length > 0) {
-          yield sharedQueue.shift()!;
+        // Yield everything currently in the shared queue (batch drain – O(1) amortized)
+        if (sharedQueue.length > 0) {
+          const batch = sharedQueue;
+          sharedQueue = [];
+          for (const chunk of batch) {
+            yield chunk;
+          }
         }
 
         if (closed || closeError !== undefined || cancelRef.cancelled) break;
@@ -144,8 +148,12 @@ function createUnderlyingSourceIterable<T>(
 
           // Loop until pull resolves or stream is cancelled
           for (;;) {
-            while (sharedQueue.length > 0) {
-              yield sharedQueue.shift()!;
+            if (sharedQueue.length > 0) {
+              const batch = sharedQueue;
+              sharedQueue = [];
+              for (const chunk of batch) {
+                yield chunk;
+              }
             }
             if (pullDone || cancelRef.cancelled) break;
             await new Promise<void>(resolve => {
@@ -155,8 +163,12 @@ function createUnderlyingSourceIterable<T>(
           }
           if (cancelRef.cancelled) break;
           // Drain any remaining shared-queue items that arrived while pull was finishing
-          while (sharedQueue.length > 0) {
-            yield sharedQueue.shift()!;
+          if (sharedQueue.length > 0) {
+            const batch = sharedQueue;
+            sharedQueue = [];
+            for (const chunk of batch) {
+              yield chunk;
+            }
           }
         }
 
@@ -171,8 +183,12 @@ function createUnderlyingSourceIterable<T>(
       }
 
       // Yield any items left over after the loop exits
-      while (sharedQueue.length > 0) {
-        yield sharedQueue.shift()!;
+      if (sharedQueue.length > 0) {
+        const batch = sharedQueue;
+        sharedQueue = [];
+        for (const chunk of batch) {
+          yield chunk;
+        }
       }
 
       if (closeError !== undefined) throw closeError;
@@ -209,6 +225,12 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
    */
   private _cancelRef?: CancelRef;
 
+  /**
+   * Optional external cancel callback, used by from(Readable) to destroy
+   * the underlying Node.js Readable without UnderlyingSource overhead.
+   */
+  _cancel?: (reason?: any) => void;
+
   locked = false;
 
   constructor(underlyingSource?: UnderlyingSource<T>) {
@@ -221,6 +243,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   cancel(reason?: any): Promise<void> {
+    this._cancel?.(reason);
     if (this._cancelRef) {
       this._cancelRef.reason = reason;
       this._cancelRef.cancelled = true;
@@ -333,20 +356,27 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     throw new Error('Not implemented');
   }
 
-  private async _pipeToWriter(writer: WritableStreamDefaultWriter<T>): Promise<void> {
-    try {
-      for await (const chunk of this) {
-        await writer.write(chunk);
-      }
-      await writer.close();
-    } catch (err) {
-      await writer.abort(err);
-    }
-  }
-
   pipeTo(destination: WritableStream<T>): Promise<void> {
     const writer = destination.getWriter();
-    return this._pipeToWriter(writer);
+    const iterator = this._getIterator();
+    const pump = (): MaybePromise<void> =>
+      handleMaybePromise(
+        () => iterator.next(),
+        result => {
+          if (result.done) {
+            return handleMaybePromise(
+              () => writer.close(),
+              () => {},
+            );
+          }
+          return handleMaybePromise(
+            () => writer.write(result.value),
+            () => pump(),
+          );
+        },
+        err => writer.abort(err),
+      );
+    return fakePromise(pump());
   }
 
   pipeThrough<T2>({
@@ -371,19 +401,17 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     source: AsyncIterable<T> | Iterable<T> | Readable | PonyfillReadableStream<T>,
   ): PonyfillReadableStream<T> {
     if (isNodeReadable(source)) {
+      // Node.js Readable is AsyncIterable – use it directly to bypass
+      // UnderlyingSource async generator and event listener overhead.
       const readable = source;
-      return new PonyfillReadableStream<T>({
-        start(controller) {
-          readable.on('data', chunk => controller.enqueue(chunk));
-          readable.once('end', () => controller.close());
-          readable.once('error', (err: unknown) => controller.error(err));
-        },
-        cancel(reason) {
-          if (!readable.destroyed && !readable.closed && !readable.errored) {
-            readable.destroy(reason);
-          }
-        },
-      });
+      const stream = new PonyfillReadableStream<T>();
+      stream._iterable = readable as AsyncIterable<T>;
+      stream._cancel = (reason?: any) => {
+        if (!readable.destroyed && !readable.closed && !readable.errored) {
+          readable.destroy(reason);
+        }
+      };
+      return stream;
     } else if (isReadableStream(source)) {
       return source;
     }

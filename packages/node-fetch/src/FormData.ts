@@ -110,18 +110,18 @@ export function getStreamFromFormData(
     if (value) {
       const [key, blobOrString] = value;
       if (typeof blobOrString === 'string') {
-        controller.enqueue(Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n`));
-        controller.enqueue(Buffer.from(blobOrString));
+        controller.enqueue(
+          Buffer.from(`Content-Disposition: form-data; name="${key}"\r\n\r\n${blobOrString}`),
+        );
       } else {
         let filenamePart = '';
         if (blobOrString.name) {
           filenamePart = `; filename="${blobOrString.name}"`;
         }
         controller.enqueue(
-          Buffer.from(`Content-Disposition: form-data; name="${key}"${filenamePart}\r\n`),
-        );
-        controller.enqueue(
-          Buffer.from(`Content-Type: ${blobOrString.type || 'application/octet-stream'}\r\n\r\n`),
+          Buffer.from(
+            `Content-Disposition: form-data; name="${key}"${filenamePart}\r\nContent-Type: ${blobOrString.type || 'application/octet-stream'}\r\n\r\n`,
+          ),
         );
         const entryStream = blobOrString.stream();
         currentAsyncIterator = entryStream[Symbol.asyncIterator]();
