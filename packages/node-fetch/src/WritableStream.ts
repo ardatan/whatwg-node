@@ -1,6 +1,6 @@
 import { once } from 'node:events';
 import { Writable } from 'node:stream';
-import { fakePromise, fakeRejectPromise } from '@whatwg-node/promise-helpers';
+import { fakePromise, fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { endStream, safeWrite } from './utils.js';
 
 /**
@@ -11,38 +11,18 @@ function createWritableFromSink<W>(sink: UnderlyingSink<W>): Writable {
   const abortCtrl = new AbortController();
   const writable = new Writable({
     write(chunk: W, _encoding: BufferEncoding, callback: (error?: Error | null) => void) {
-      try {
-        const result = sink.write?.(chunk, controller);
-        if (result instanceof Promise) {
-          result.then(
-            () => {
-              callback();
-            },
-            err => {
-              callback(err);
-            },
-          );
-        } else {
-          callback();
-        }
-      } catch (err) {
-        callback(err as Error);
-      }
+      handleMaybePromise(
+        () => sink.write?.(chunk, controller),
+        () => callback(),
+        err => callback(err as Error),
+      );
     },
     final(callback: (error?: Error | null) => void) {
-      const result = sink.close?.();
-      if (result instanceof Promise) {
-        result.then(
-          () => {
-            callback();
-          },
-          err => {
-            callback(err);
-          },
-        );
-      } else {
-        callback();
-      }
+      handleMaybePromise(
+        () => sink.close?.(),
+        () => callback(),
+        err => callback(err as Error),
+      );
     },
   });
   const controller: WritableStreamDefaultController = {
@@ -92,34 +72,18 @@ function createWriterFromSink<W>(sink: UnderlyingSink<W>): WritableStreamDefault
     },
     write(chunk: W) {
       if (chunk == null) return fakePromise();
-      try {
-        const result = sink.write?.(chunk, controller);
-        if (result instanceof Promise) return result as Promise<void>;
-        return fakePromise();
-      } catch (err) {
-        return fakeRejectPromise(err);
-      }
+      return fakePromise().then(() => sink.write?.(chunk, controller));
     },
     close() {
       if (aborted) return fakeRejectPromise(new Error('Aborted'));
       closed = true;
-      try {
-        const result = sink.close?.();
-        if (result instanceof Promise) return result as Promise<void>;
-        return fakePromise();
-      } catch (err) {
-        return fakeRejectPromise(err);
-      }
+      return fakePromise(() => sink.close?.()).then(() => undefined);
     },
     abort(reason?: any) {
       aborted = true;
       closed = true;
       abortCtrl.abort(reason);
-      if (sink.abort) {
-        const result = sink.abort(reason);
-        if (result instanceof Promise) return result as Promise<void>;
-      }
-      return fakePromise();
+      return fakePromise(() => sink.abort?.(reason)).then(() => undefined);
     },
   };
 }
@@ -221,9 +185,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
 
   close(): Promise<void> {
     if (this._sink) {
-      const result = this._sink.close?.();
-      if (result instanceof Promise) return result;
-      return fakePromise();
+      return fakePromise(this._sink.close?.());
     }
     const w = this._writable;
     if (!w) return fakePromise();
@@ -239,8 +201,7 @@ export class PonyfillWritableStream<W = any> implements WritableStream<W> {
   abort(reason?: any): Promise<void> {
     if (this._sink) {
       if (this._sink.abort) {
-        const result = this._sink.abort(reason);
-        if (result instanceof Promise) return result;
+        return fakePromise(this._sink.abort(reason));
       }
       return fakePromise();
     }

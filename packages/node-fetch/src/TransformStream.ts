@@ -1,4 +1,5 @@
 import { Transform } from 'node:stream';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { PonyfillReadableStream } from './ReadableStream.js';
 import { endStream } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
@@ -29,42 +30,18 @@ export class PonyfillTransformStream<I = any, O = any> implements TransformStrea
       const transform = new Transform({
         read() {},
         write(chunk: I, _encoding: BufferEncoding, callback: (error?: Error | null) => void) {
-          try {
-            const result = transformer.transform?.(chunk, controller);
-            if (result instanceof Promise) {
-              result.then(
-                () => {
-                  callback();
-                },
-                err => {
-                  callback(err);
-                },
-              );
-            } else {
-              callback();
-            }
-          } catch (err) {
-            callback(err as Error);
-          }
+          handleMaybePromise(
+            () => transformer.transform?.(chunk, controller),
+            () => callback(),
+            err => callback(err as Error),
+          );
         },
         final(callback: (error?: Error | null) => void) {
-          try {
-            const result = transformer.flush?.(controller);
-            if (result instanceof Promise) {
-              result.then(
-                () => {
-                  callback();
-                },
-                err => {
-                  callback(err);
-                },
-              );
-            } else {
-              callback();
-            }
-          } catch (err) {
-            callback(err as Error);
-          }
+          handleMaybePromise(
+            () => transformer.flush?.(controller),
+            () => callback(),
+            err => callback(err as Error),
+          );
         },
       });
       this.transform = transform;
