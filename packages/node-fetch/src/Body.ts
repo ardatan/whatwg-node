@@ -474,12 +474,13 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (bodyInit instanceof PonyfillReadableStream) {
+  if (isReadableStream(bodyInit)) {
     return {
-      bodyType: BodyInitType.ReadableStream,
-      bodyFactory: () => bodyInit,
       contentType: null,
       contentLength: null,
+      bodyFactory() {
+        return bodyInit as PonyfillReadableStream<Uint8Array>;
+      },
     };
   }
   if (isBlob(bodyInit)) {
@@ -518,7 +519,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-
   if (isFormData(bodyInit)) {
     const boundary = Math.random().toString(36).substr(2);
     const formData = getStreamFromFormData(bodyInit, boundary);
@@ -532,17 +532,6 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-
-  if (isReadableStream(bodyInit)) {
-    return {
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        return bodyInit as PonyfillReadableStream<Uint8Array>;
-      },
-    };
-  }
-
   if (isIterableOrAsyncIterable(bodyInit)) {
     const readableStream = new PonyfillReadableStream<Uint8Array>(bodyInit);
     return {
