@@ -38,7 +38,15 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     } else if (isURL(input)) {
       _parsedUrl = input;
     } else if (isRequest(input)) {
-      return input;
+      if (input._parsedUrl) {
+        _parsedUrl = input._parsedUrl;
+      } else if (input._url) {
+        _url = input._url;
+      } else {
+        _url = input.url;
+      }
+      bodyInit = input.body;
+      requestInit = input;
     }
 
     if (options != null) {
@@ -88,29 +96,17 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
   }
 
   headersSerializer?: HeadersSerializer | undefined;
-  // @ts-expect-error - It is initialized
   cache: RequestCache;
-  // @ts-expect-error - It is initialized
   credentials: RequestCredentials;
-  // @ts-expect-error - It is initialized
   destination: RequestDestination;
-  // @ts-expect-error - It is initialized
   headers: Headers;
-  // @ts-expect-error - It is initialized
   integrity: string;
-  // @ts-expect-error - It is initialized
   keepalive: boolean;
-  // @ts-expect-error - It is initialized
   method: string;
-  // @ts-expect-error - It is initialized
   mode: RequestMode;
-  // @ts-expect-error - It is initialized
   priority: 'auto' | 'high' | 'low';
-  // @ts-expect-error - It is initialized
   redirect: RequestRedirect;
-  // @ts-expect-error - It is initialized
   referrer: string;
-  // @ts-expect-error - It is initialized
   referrerPolicy: ReferrerPolicy;
   _url: string | undefined;
 
