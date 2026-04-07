@@ -225,12 +225,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
    */
   private _cancelRef?: CancelRef;
 
-  /**
-   * Optional external cancel callback, used by from(Readable) to destroy
-   * the underlying Node.js Readable without UnderlyingSource overhead.
-   */
-  _cancel?: (reason?: any) => void;
-
   locked = false;
 
   constructor(underlyingSource?: UnderlyingSource<T>) {
@@ -243,7 +237,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   cancel(reason?: any): Promise<void> {
-    this._cancel?.(reason);
     if (this._cancelRef) {
       this._cancelRef.reason = reason;
       this._cancelRef.cancelled = true;
@@ -401,17 +394,19 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     source: AsyncIterable<T> | Iterable<T> | Readable | PonyfillReadableStream<T>,
   ): PonyfillReadableStream<T> {
     if (isNodeReadable(source)) {
-      // Node.js Readable is AsyncIterable – use it directly to bypass
-      // UnderlyingSource async generator and event listener overhead.
       const readable = source;
-      const stream = new PonyfillReadableStream<T>();
-      stream._iterable = readable as AsyncIterable<T>;
-      stream._cancel = (reason?: any) => {
-        if (!readable.destroyed && !readable.closed && !readable.errored) {
-          readable.destroy(reason);
-        }
-      };
-      return stream;
+      return new PonyfillReadableStream<T>({
+        start(controller) {
+          readable.on('data', chunk => controller.enqueue(chunk));
+          readable.once('end', () => controller.close());
+          readable.once('error', (err: unknown) => controller.error(err));
+        },
+        cancel(reason) {
+          if (!readable.destroyed && !readable.closed && !readable.errored) {
+            readable.destroy(reason);
+          }
+        },
+      });
     } else if (isReadableStream(source)) {
       return source;
     }
