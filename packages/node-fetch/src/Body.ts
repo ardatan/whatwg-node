@@ -475,10 +475,9 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (bodyInit instanceof PonyfillReadableStream) {
-    const readableStream: PonyfillReadableStream<Uint8Array> = bodyInit;
     return {
       bodyType: BodyInitType.ReadableStream,
-      bodyFactory: () => readableStream,
+      bodyFactory: () => bodyInit,
       contentType: null,
       contentLength: null,
     };
@@ -508,12 +507,12 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (bodyInit instanceof Readable) {
+    const body = new PonyfillReadableStream<Uint8Array>(bodyInit);
     return {
       bodyType: BodyInitType.Readable,
       contentType: null,
       contentLength: null,
       bodyFactory() {
-        const body = new PonyfillReadableStream<Uint8Array>(bodyInit);
         return body;
       },
     };
@@ -532,13 +531,14 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   }
   if (isFormData(bodyInit)) {
     const boundary = Math.random().toString(36).substr(2);
+    const formData = getStreamFromFormData(bodyInit, boundary);
     const contentType = `multipart/form-data; boundary=${boundary}`;
     return {
       bodyType: BodyInitType.FormData,
       contentType,
       contentLength: null,
       bodyFactory() {
-        return getStreamFromFormData(bodyInit, boundary);
+        return formData;
       },
     };
   }
@@ -548,21 +548,19 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: null,
       contentLength: null,
       bodyFactory() {
-        return new PonyfillReadableStream(bodyInit);
+        return bodyInit as PonyfillReadableStream<Uint8Array>;
       },
     };
   }
 
   if ((bodyInit as any)[Symbol.iterator] || (bodyInit as any)[Symbol.asyncIterator]) {
+    const readableStream = new PonyfillReadableStream<Uint8Array>(bodyInit);
     return {
       contentType: null,
       contentLength: null,
       bodyType: BodyInitType.AsyncIterable,
       bodyFactory() {
-        const readable = Readable.from(bodyInit, {
-          objectMode: false,
-        });
-        return new PonyfillReadableStream(readable);
+        return readableStream;
       },
     };
   }
