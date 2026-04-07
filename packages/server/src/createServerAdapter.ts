@@ -352,16 +352,15 @@ function createServerAdapter<
       : new AbortController();
     const originalResEnd = res.end.bind(res);
     let resEnded = false;
-    let aborted = false;
     res.end = function (data: any) {
       resEnded = true;
-      if (!aborted) {
+      if (!res.onAbortedCalled) {
         return originalResEnd(data);
       }
     };
     const originalOnAborted = res.onAborted.bind(res);
     originalOnAborted(function () {
-      aborted = true;
+      res.onAbortedCalled = true;
       controller.abort();
     });
     res.onAborted = function (cb: () => void) {

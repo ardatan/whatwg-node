@@ -307,7 +307,9 @@ if (globalThis.Bun) {
         ctx.body =
           response.body instanceof globalThis.ReadableStream
             ? Readable.fromWeb(response.body as any)
-            : response.body || '';
+            : Readable.from(response.body!, {
+                objectMode: false,
+              }) || '';
       } catch (err: any) {
         ctx.status = 500;
         ctx.body = err.message;

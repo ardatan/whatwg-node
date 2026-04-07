@@ -51,7 +51,6 @@ export class PonyfillBody<TJSON = any> implements Body {
   bodyUsed = false;
   contentType: string | null = null;
   contentLength: number | null = null;
-  private _cachedBodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
 
   constructor(
     private bodyInit: BodyPonyfillInit | null,
@@ -73,19 +72,15 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _buffer?: Buffer<ArrayBuffer> | undefined;
   _signal?: AbortSignal | undefined;
 
-  private generateBody(): PonyfillReadableStream<Uint8Array> | null {
-    if (this._generatedBody?._readable?.destroyed && this._buffer) {
-      // Re-create the body from the original buffer using a direct iterable (fast path)
-      this._generatedBody.regenerateReadableFromValue(this._buffer);
-    }
+  get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
     if (this._generatedBody) {
-      return this._generatedBody;
+      return this._generatedBody as PonyfillReadableStream<Uint8Array<ArrayBuffer>>;
     }
     const body = this._bodyFactory();
 
     this._generatedBody = body;
 
-    return body;
+    return body as PonyfillReadableStream<Uint8Array<ArrayBuffer>>;
   }
 
   protected handleContentLengthHeader(this: PonyfillBody & { headers: Headers }, forceSet = false) {
@@ -112,38 +107,6 @@ export class PonyfillBody<TJSON = any> implements Body {
     } else {
       this.contentLength = parseInt(contentLengthInHeaders, 10);
     }
-  }
-
-  public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
-    const ponyfillReadableStream = this.generateBody();
-    if (ponyfillReadableStream != null) {
-      if (this._cachedBodyProxy == null) {
-        this._cachedBodyProxy = new Proxy(ponyfillReadableStream as any, {
-          get(_, prop) {
-            if (prop in ponyfillReadableStream) {
-              const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
-              if (typeof ponyfillReadableStreamProp === 'function') {
-                return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
-              }
-              return ponyfillReadableStreamProp;
-            }
-            if (prop in Readable.prototype) {
-              const readable = ponyfillReadableStream.generateReadable();
-              const readableProp: any = (readable as any)[prop];
-              if (typeof readableProp === 'function') {
-                return readableProp.bind(readable);
-              }
-              return readableProp;
-            }
-          },
-          getPrototypeOf() {
-            return Readable.prototype;
-          },
-        });
-      }
-      return this._cachedBodyProxy;
-    }
-    return null;
   }
 
   _chunks: MaybePromise<Uint8Array<ArrayBuffer>[]> | null = null;
@@ -185,25 +148,13 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this.bodyType === BodyInitType.AsyncIterable) {
       return handleAsyncIterable(this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>);
     }
-    const _body = this.generateBody();
+    const _body = this.body;
     if (!_body) {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
     if (_body._iterable) {
       return handleAsyncIterable(_body._iterable);
-    }
-    if (_body._readable != null && !_body._readable?.destroyed) {
-      const chunks: Uint8Array<ArrayBuffer>[] = [];
-      return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
-        _body._readable!.on('data', chunk => {
-          chunks.push(chunk);
-        });
-        _body._readable!.once('error', reject);
-        _body._readable!.once('end', () => {
-          resolve((this._chunks = chunks));
-        });
-      });
     }
     return fakePromise((this._chunks ||= []));
   }
@@ -265,7 +216,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise(this._formData);
     }
     this._formData = new PonyfillFormData();
-    const _body = this.generateBody();
+    const _body = this.body;
     if (_body == null) {
       return fakePromise(this._formData);
     }
@@ -274,7 +225,9 @@ export class PonyfillBody<TJSON = any> implements Body {
       ...opts?.formDataLimits,
     };
     return new Promise((resolve, reject) => {
-      const stream = this.body?.generateReadable();
+      const stream = Readable.from(_body, {
+        objectMode: false,
+      });
       if (!stream) {
         return reject(new Error('No stream available'));
       }
@@ -522,10 +475,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-  if (
-    bodyInit instanceof PonyfillReadableStream &&
-    (bodyInit._readable != null || bodyInit._iterable != null)
-  ) {
+  if (bodyInit instanceof PonyfillReadableStream) {
     const readableStream: PonyfillReadableStream<Uint8Array> = bodyInit;
     return {
       bodyType: BodyInitType.ReadableStream,

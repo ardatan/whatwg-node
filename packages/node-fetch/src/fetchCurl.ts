@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { PassThrough, Readable } from 'node:stream';
+import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
@@ -124,10 +124,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   });
   curlHandle.once(
     'stream',
-    function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      const outputStream = stream.pipe(new PassThrough(), {
-        end: true,
-      });
+    function streamListener(outputStream: Readable, status: number, headersBuf: Buffer) {
       const headersFlat = headersBuf
         .toString('utf8')
         .split(/\r?\n|\r/g)
@@ -138,8 +135,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
               headerFilter.toLowerCase().includes('location') &&
               shouldRedirect(status)
             ) {
-              if (!stream.destroyed) {
-                stream.resume();
+              if (!outputStream.destroyed) {
+                outputStream.resume();
               }
               outputStream.destroy();
               deferredPromise.reject(new Error('redirect is not allowed'));

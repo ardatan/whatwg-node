@@ -194,8 +194,9 @@ export function normalizeNodeRequest(
     method: nodeRequest.method,
     headers: normalizedHeaders,
     signal: controller.signal,
-    // @ts-expect-error - AsyncIterable is supported as body
-    body: rawRequest,
+    // @ts-expect-error - Missing types
+    body: fetchAPI.ReadableStream.from(rawRequest),
+    // @ts-expect-error - Missing types
     duplex: 'half',
   });
 }

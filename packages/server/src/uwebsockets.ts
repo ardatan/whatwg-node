@@ -22,6 +22,7 @@ export interface UWSResponse {
   cork(callback: () => void): void;
   pause(): void;
   resume(): void;
+  onAbortedCalled?: boolean;
 }
 
 export type UWSHandler = (res: UWSResponse, req: UWSRequest) => void | Promise<void>;
@@ -131,14 +132,18 @@ export function getRequestFromUWSRequest({
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
   return new fetchAPI.WritableStream({
     write(chunk) {
-      uwsResponse.cork(() => {
-        uwsResponse.write(chunk);
-      });
+      if (!uwsResponse.onAbortedCalled) {
+        uwsResponse.cork(() => {
+          uwsResponse.write(chunk);
+        });
+      }
     },
     close() {
-      uwsResponse.cork(() => {
-        uwsResponse.end();
-      });
+      if (!uwsResponse.onAbortedCalled) {
+        uwsResponse.cork(() => {
+          uwsResponse.end();
+        });
+      }
     },
   });
 }
@@ -213,15 +218,17 @@ export function sendResponseToUwsOpts(
       handleMaybePromise(
         () => iterator.next(),
         sourceResult => {
-          if (controller.signal.aborted || sourceResult.done) {
-            return uwsResponse.cork(() => {
-              uwsResponse.end(sourceResult.value);
+          if (!uwsResponse.onAbortedCalled) {
+            if (controller.signal.aborted || sourceResult.done) {
+              return uwsResponse.cork(() => {
+                uwsResponse.end(sourceResult.value);
+              });
+            }
+            uwsResponse.cork(() => {
+              uwsResponse.write(sourceResult.value);
             });
+            return pump();
           }
-          uwsResponse.cork(() => {
-            uwsResponse.write(sourceResult.value);
-          });
-          return pump();
         },
       );
     return pump();

@@ -1,6 +1,6 @@
 import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
-import { PassThrough, Readable } from 'node:stream';
+import { Readable, type PassThrough } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
@@ -121,37 +121,37 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        // TODO: Find a better workaround
-        outputStream ||= new PassThrough();
-
-        pipeThrough({
-          src: nodeResponse,
-          dest: outputStream,
-          signal,
-          onError: e => {
-            if (!nodeResponse.destroyed) {
-              nodeResponse.destroy(e);
-            }
-            if (!outputStream!.destroyed) {
-              outputStream!.destroy(e);
-            }
-            reject(e);
-          },
-        });
+        if (outputStream) {
+          pipeThrough({
+            src: nodeResponse,
+            dest: outputStream,
+            signal,
+            onError: e => {
+              if (!nodeResponse.destroyed) {
+                nodeResponse.destroy(e);
+              }
+              if (!outputStream!.destroyed) {
+                outputStream!.destroy(e);
+              }
+              reject(e);
+            },
+          });
+        }
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
-          status: statusCode,
-          statusText,
-          headers: nodeResponse.headers as Record<string, string>,
-          url: fetchRequest.url,
-          signal,
-        });
-        resolve(ponyfillResponse);
+        resolve(
+          new PonyfillResponse(outputStream || nodeResponse, {
+            status: statusCode,
+            statusText,
+            headers: nodeResponse.headers as Record<string, string>,
+            url: fetchRequest.url,
+            signal,
+          }),
+        );
       });
 
       if (fetchRequest['_buffer'] != null) {

@@ -1,10 +1,6 @@
-import { Buffer } from 'node:buffer';
-import { once } from 'node:events';
 import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-import { fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise, isAsyncIterable } from './utils.js';
-import { PonyfillWritableStream } from './WritableStream.js';
 
 function isNodeReadable(obj: any): obj is Readable {
   return obj?.read != null;
@@ -63,11 +59,10 @@ function createUnderlyingSourceIterable<T>(
   const startController: ReadableStreamDefaultController<T> = {
     desiredSize: 1,
     enqueue(chunk: T) {
-      const value = (typeof chunk === 'string' ? Buffer.from(chunk) : chunk) as T;
       if (!startFlushed) {
-        startBuffer.push(value);
+        startBuffer.push(chunk);
       } else {
-        sharedQueue.push(value);
+        sharedQueue.push(chunk);
         wake();
       }
     },
@@ -119,8 +114,7 @@ function createUnderlyingSourceIterable<T>(
         const pullController: ReadableStreamDefaultController<T> = {
           desiredSize: 1,
           enqueue(chunk: T) {
-            const value = (typeof chunk === 'string' ? Buffer.from(chunk) : chunk) as T;
-            pullBuffer.push(value);
+            pullBuffer.push(chunk);
           },
           close() {
             pullClosed = true;
@@ -132,7 +126,7 @@ function createUnderlyingSourceIterable<T>(
         };
 
         const pullResult = source.pull(pullController);
-        if (pullResult != null && typeof (pullResult as any).then === 'function') {
+        if ((pullResult as any)?.then != null) {
           // Async pull: yield from the shared queue while waiting so that concurrent
           // enqueues from start (e.g. setInterval) are emitted in the right order.
           let pullDone = false;
@@ -197,12 +191,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readonly _ponyfillReadable = true;
 
   /**
-   * Lazily-created Node.js Readable. Set directly when the source is already a
-   * Readable, otherwise created on first access of the `.readable` getter.
-   */
-  _readable?: Readable;
-
-  /**
    * The fast-path async/sync iterable backing this stream. Used by getReader()
    * and [Symbol.asyncIterator]() to bypass Node.js stream overhead.
    */
@@ -235,32 +223,21 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     if ((underlyingSource as any)?._ponyfillReadable === true) {
       // Fast-copy internal state instead of going through the public getter
       const src = underlyingSource as PonyfillReadableStream<T>;
-      if (src._readable != null) {
-        this._readable = src._readable;
-      } else if (src._iterable != null) {
+      if (src._iterable != null) {
         this._iterable = src._iterable;
       }
     } else if (isNodeReadable(underlyingSource)) {
-      this._readable = underlyingSource as Readable;
-    } else if (isReadableStream(underlyingSource)) {
-      // Web ReadableStream: drive via its own reader without creating a Node Readable.
-      // Convert chunks to Buffer so callers get the same type as Node.js streams.
-      const stream = underlyingSource as ReadableStream<T>;
-      this._iterable = (async function* () {
-        const reader = stream.getReader();
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            // Ensure we yield a Buffer so toString('utf-8') etc. work correctly
-            yield value != null && !Buffer.isBuffer(value) && (value as any).byteLength != null
-              ? (Buffer.from(value as unknown as Uint8Array) as unknown as T)
-              : value;
-          }
-        } finally {
-          reader.releaseLock();
-        }
-      })();
+      const readable = underlyingSource as Readable;
+      underlyingSource = {
+        start(controller) {
+          readable.on('data', chunk => controller.enqueue(chunk));
+          readable.once('end', () => controller.close());
+          readable.once('error', (err: unknown) => controller.error(err));
+        },
+      };
+    }
+    if (isReadableStream(underlyingSource)) {
+      return underlyingSource as any;
     } else if (isAsyncIterable(underlyingSource) || isSyncIterable(underlyingSource)) {
       this._iterable = underlyingSource as AsyncIterable<T> | Iterable<T>;
     } else if (underlyingSource != null) {
@@ -275,97 +252,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     // else: empty stream – both remain undefined
   }
 
-  /**
-   * Returns (or lazily creates) the Node.js Readable backing this stream.
-   * Kept for backward compatibility with code that accesses `.readable` directly
-   * (e.g. Body.ts). When the source is an iterable the Readable is created on
-   * first access and wraps the *same* iterator state.
-   */
-  generateReadable(): Readable {
-    if (!this._readable) {
-      if (this._activeIterator) {
-        // An iterator was already created via getReader / asyncIterator –
-        // wrap it so both paths share the same consumer position.
-        const iter = this._activeIterator;
-        this._activeIterator = undefined;
-        const wrapped: AsyncIterable<T> = {
-          [Symbol.asyncIterator]() {
-            return {
-              next: () => fakePromise(iter.next()),
-              return: (value?: any) =>
-                fakePromise(iter.return ? iter.return(value) : { done: true, value }),
-              throw: (err?: any) =>
-                iter.throw ? fakePromise(iter.throw(err)) : fakeRejectPromise(err),
-            };
-          },
-        };
-        this._readable = Readable.from(wrapped, {
-          objectMode: false,
-        });
-      } else if (this._iterable != null) {
-        this._readable = Readable.from(this._iterable as AsyncIterable<T>, {
-          objectMode: false,
-        });
-      } else {
-        // Empty stream
-        const r = new Readable({ read() {}, objectMode: false });
-        r.push(null);
-        this._readable = r;
-      }
-      // For UnderlyingSource-backed streams, patch _destroy on the Readable so that when
-      // it is destroyed (e.g. due to HTTP client abort), the generator is woken via
-      // cancelRef.wake() BEFORE the original _destroy calls generator.return().
-      // This is necessary because Readable.from(asyncGenerator) calls generator.return()
-      // inside _destroy, but when generator.next() is pending, generator.return() returns
-      // a Promise that never resolves (V8 bug). Waking the generator one microtask ahead
-      // lets it exit naturally so that generator.return() then succeeds immediately.
-      if (this._cancelRef) {
-        const cancelRef = this._cancelRef;
-        const readable = this._readable;
-        const origDestroy = readable._destroy.bind(readable);
-        readable._destroy = (err: Error | null, cb: (err?: Error | null) => void) => {
-          if (!cancelRef.cancelled) {
-            cancelRef.reason = err ?? undefined;
-            cancelRef.cancelled = true;
-            cancelRef.wake?.();
-          }
-          // Call origDestroy without the error so the stream emits only 'close', not
-          // 'error' + 'close'.  This prevents once(readable, 'close') from rejecting.
-          origDestroy(null, cb);
-        };
-      }
-    }
-    return this._readable;
-  }
-
-  regenerateReadableFromValue(value: Uint8Array) {
-    this._readable = Readable.from(value, {
-      objectMode: false,
-    });
-    this._iterable = undefined;
-    this._activeIterator = undefined;
-  }
-
   cancel(reason?: any): Promise<void> {
-    if (this._readable) {
-      // Also wake the generator via cancelRef so that the source's cancel() callback
-      // is invoked even when V8's generator.return() is a no-op (next() pending).
-      if (this._cancelRef && !this._cancelRef.cancelled) {
-        this._cancelRef.reason = reason;
-        this._cancelRef.cancelled = true;
-        this._cancelRef.wake?.();
-      }
-      // Build a close-waiter that resolves on both 'close' and 'error' so that
-      // destroy(reason) can still emit 'error' (needed for pipeThrough error
-      // propagation) without creating an unhandled rejection via events.once.
-      const readable = this._readable;
-      const waitForClose = new Promise<void>(resolve => {
-        readable.once('close', resolve);
-        readable.once('error', () => resolve());
-      });
-      readable.destroy(reason instanceof Error ? reason : undefined);
-      return waitForClose;
-    }
     if (this._cancelRef) {
       this._cancelRef.reason = reason;
       this._cancelRef.cancelled = true;
@@ -380,9 +267,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   /** Returns the active iterator, creating it from the iterable if needed. */
   private _getIterator(): AsyncIterator<T> | Iterator<T> {
-    if (this._readable) {
-      return this._readable[Symbol.asyncIterator]();
-    }
     if (this._activeIterator) {
       return this._activeIterator;
     }
@@ -409,7 +293,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     this.locked = true;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const thisStream = this;
-    const thisReadable = this._readable;
     return {
       read() {
         return fakePromise(iterator.next());
@@ -441,20 +324,13 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         return fakePromise();
       },
       get closed() {
-        if (thisReadable) {
-          return Promise.race([
-            once(thisReadable, 'end'),
-            once(thisReadable, 'error').then(err => fakeRejectPromise(err)),
-          ]) as Promise<any>;
-        }
-        return fakePromise() as Promise<undefined>;
+        return fakePromise();
       },
     };
   }
 
   [Symbol.asyncIterator](_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
     const iterator = this._getIterator();
-    const thisReadable = this._readable;
     const iterable: ReadableStreamAsyncIterator<T> = {
       [Symbol.asyncIterator]() {
         return this;
@@ -462,26 +338,16 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       [Symbol.asyncDispose]: () => {
         return fakePromise()
           .then(() => iterator.return?.())
-          .then(() => {
-            if (thisReadable && !thisReadable.destroyed) {
-              thisReadable.destroy();
-            }
-          });
+          .then(() => undefined);
       },
       next: () => iterator.next() as Promise<IteratorResult<T>>,
       return: (value?: any) => {
-        if (thisReadable && !thisReadable.destroyed) {
-          thisReadable.destroy();
-        }
         if (iterator.return) {
           return iterator.return(value) as Promise<IteratorResult<T>>;
         }
         return fakePromise({ done: true, value: undefined }) as Promise<IteratorResult<T>>;
       },
       throw: (err?: any) => {
-        if (thisReadable && !thisReadable.destroyed) {
-          thisReadable.destroy(err);
-        }
         if (iterator.throw) {
           return iterator.throw(err) as Promise<IteratorResult<T>>;
         }
@@ -511,14 +377,6 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   pipeTo(destination: WritableStream<T>): Promise<void> {
-    if (isPonyfillWritableStream(destination)) {
-      const dest = destination as PonyfillWritableStream<T>;
-      if (this._readable) {
-        // Both sides can use the Node.js pipeline for large-stream efficiency
-        return pipeline(this._readable, dest.generateWritable(), { end: true });
-      }
-      // Source is iterable-backed: use writer to avoid creating a Readable
-    }
     const writer = destination.getWriter();
     return this._pipeToWriter(writer);
   }
@@ -531,33 +389,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     readable: ReadableStream<T2>;
   }): ReadableStream<T2> {
     this.pipeTo(writable).catch(err => {
-      if (this._readable) {
-        // Readable-backed source: destroy it
-        this._readable.destroy(err);
-      } else {
-        // Iterable-backed source: cancel it with the error reason
-        this.cancel(err);
-      }
+      // Iterable-backed source: cancel it with the error reason
+      this.cancel(err);
     });
-    if (isPonyfillReadableStream(readable)) {
-      const r = readable as PonyfillReadableStream<T2>;
-      if (r._readable) {
-        r._readable.once('error', err => {
-          if (this._readable) {
-            this._readable.destroy(err);
-          } else {
-            // Iterable-backed source: propagate cancellation with the error reason
-            this.cancel(err);
-          }
-        });
-        r._readable.once('finish', () => {
-          if (this._readable) this._readable.push(null);
-        });
-        r._readable.once('close', () => {
-          if (this._readable) this._readable.push(null);
-        });
-      }
-    }
     return readable;
   }
 
@@ -570,12 +404,4 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   [Symbol.toStringTag] = 'ReadableStream';
-}
-
-function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> {
-  return obj?._ponyfillReadable === true;
-}
-
-function isPonyfillWritableStream(obj: any): obj is PonyfillWritableStream {
-  return obj?._ponyfillWritable === true;
 }

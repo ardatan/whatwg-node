@@ -38,15 +38,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     } else if (isURL(input)) {
       _parsedUrl = input;
     } else if (isRequest(input)) {
-      if (input._parsedUrl) {
-        _parsedUrl = input._parsedUrl;
-      } else if (input._url) {
-        _url = input._url;
-      } else {
-        _url = input.url;
-      }
-      bodyInit = input.body;
-      requestInit = input;
+      return input;
     }
 
     if (options != null) {

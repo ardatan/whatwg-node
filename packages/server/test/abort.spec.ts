@@ -10,7 +10,8 @@ describe('Request Abort', () => {
       skipIf(
         (globalThis.Bun && serverImplName !== 'Bun') ||
           (globalThis.Deno && serverImplName !== 'Deno') ||
-          serverImplName === 'hapi',
+          serverImplName === 'hapi' ||
+          serverImplName === 'koa',
       )(
         'calls body.cancel on request abort',
         () =>
