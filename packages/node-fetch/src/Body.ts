@@ -518,6 +518,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
+
   if (isFormData(bodyInit)) {
     const boundary = Math.random().toString(36).substr(2);
     const formData = getStreamFromFormData(bodyInit, boundary);
@@ -532,7 +533,17 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
 
-  if ((bodyInit as any)[Symbol.iterator] || (bodyInit as any)[Symbol.asyncIterator]) {
+  if (isReadableStream(bodyInit)) {
+    return {
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        return bodyInit as PonyfillReadableStream<Uint8Array>;
+      },
+    };
+  }
+
+  if (isIterableOrAsyncIterable(bodyInit)) {
     const readableStream = new PonyfillReadableStream<Uint8Array>(bodyInit);
     return {
       contentType: null,
@@ -548,7 +559,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
 }
 
 function isFormData(value: any): value is FormData {
-  return value?.forEach != null;
+  return value?.forEach != null && value?.entries != null;
 }
 
 function isBlob(value: any): value is Blob {
@@ -557,4 +568,14 @@ function isBlob(value: any): value is Blob {
 
 function isURLSearchParams(value: any): value is URLSearchParams {
   return value?.sort != null;
+}
+
+function isReadableStream(value: any): value is PonyfillReadableStream<Uint8Array> {
+  return value?.getReader != null && typeof value.getReader === 'function';
+}
+
+function isIterableOrAsyncIterable(
+  value: any,
+): value is Iterable<unknown> | AsyncIterable<unknown> {
+  return value?.[Symbol.iterator] != null || value?.[Symbol.asyncIterator] != null;
 }
