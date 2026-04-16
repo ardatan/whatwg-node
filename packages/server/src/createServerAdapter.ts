@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -74,6 +74,15 @@ export interface ServerAdapterOptions<TServerContext> {
 
 const EMPTY_OBJECT = {};
 
+// Hoisted to avoid per-request closure allocations in the requestListener hot path
+function logUnexpectedRequestError(err: any) {
+  console.error(`Unexpected error while handling request: ${err.stack || err.message || err}`);
+}
+
+function identical<T>(val: T): T {
+  return val;
+}
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
@@ -113,6 +122,9 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
+
+  // Defined once per adapter instance to avoid per-request closure allocations
+  const requestHandlerErrorFn = (err: any) => handleErrorFromRequestHandler(err, fetchAPI.Response);
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
@@ -305,21 +317,21 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    return unfakePromise(
-      fakePromise()
-        .then(() =>
-          handleNodeRequestAndResponse(
-            nodeRequest,
-            nodeResponse,
-            defaultServerContext as any,
-            ...ctx,
-          ),
-        )
-        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
-        .catch(err =>
-          console.error(`Unexpected error while handling request: ${err.message || err}`),
+    // Inline handleNodeRequestAndResponse for the hot path to avoid extra function call
+    // overhead, rest-parameter array allocations, and redundant checks.
+    // In the typical createServer(adapter) usage ctx is empty; the branch below is the fast path.
+    const serverContext: any =
+      ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
+    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
+    return handleMaybePromise(
+      () =>
+        handleMaybePromise(
+          () => handleRequest(request, serverContext),
+          identical,
+          requestHandlerErrorFn,
         ),
+      response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
+      logUnexpectedRequestError,
     );
   }
 
@@ -342,10 +354,13 @@ function createServerAdapter<
     let resEnded = false;
     res.end = function (data: any) {
       resEnded = true;
-      return originalResEnd(data);
+      if (!res.onAbortedCalled) {
+        return originalResEnd(data);
+      }
     };
     const originalOnAborted = res.onAborted.bind(res);
     originalOnAborted(function () {
+      res.onAbortedCalled = true;
       controller.abort();
     });
     res.onAborted = function (cb: () => void) {
@@ -361,17 +376,15 @@ function createServerAdapter<
       () =>
         handleMaybePromise(
           () => handleRequest(request, serverContext),
-          response => response,
+          identical,
           err => handleErrorFromRequestHandler(err, fetchAPI.Response),
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
-            r => r,
-            err => {
-              console.error(`Unexpected error while handling request: ${err.message || err}`);
-            },
+            identical,
+            logUnexpectedRequestError,
           );
         }
       },

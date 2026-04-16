@@ -7,7 +7,7 @@ import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } f
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
-import { fakePromise, isArrayBufferView } from './utils.js';
+import { fakePromise, isArrayBufferView, isAsyncIterable } from './utils.js';
 
 enum BodyInitType {
   ReadableStream = 'ReadableStream',
@@ -21,7 +21,6 @@ enum BodyInitType {
 
 export type BodyPonyfillInit =
   | XMLHttpRequestBodyInit
-  | Readable
   | PonyfillReadableStream<Uint8Array>
   | AsyncIterable<Uint8Array>;
 
@@ -72,18 +71,15 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _buffer?: Buffer<ArrayBuffer> | undefined;
   _signal?: AbortSignal | undefined;
 
-  private generateBody(): PonyfillReadableStream<Uint8Array> | null {
-    if (this._generatedBody?.readable?.destroyed && this._buffer) {
-      this._generatedBody.readable = Readable.from(this._buffer);
-    }
+  get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
     if (this._generatedBody) {
-      return this._generatedBody;
+      return this._generatedBody as PonyfillReadableStream<Uint8Array<ArrayBuffer>>;
     }
     const body = this._bodyFactory();
 
     this._generatedBody = body;
 
-    return body;
+    return body as PonyfillReadableStream<Uint8Array<ArrayBuffer>>;
   }
 
   protected handleContentLengthHeader(this: PonyfillBody & { headers: Headers }, forceSet = false) {
@@ -112,49 +108,25 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
   }
 
-  public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
-    const _body = this.generateBody();
-    if (_body != null) {
-      const ponyfillReadableStream = _body;
-      const readable = _body.readable;
-      return new Proxy(_body.readable as any, {
-        get(_, prop) {
-          if (prop in ponyfillReadableStream) {
-            const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
-            if (typeof ponyfillReadableStreamProp === 'function') {
-              return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
-            }
-            return ponyfillReadableStreamProp;
-          }
-          if (prop in readable) {
-            const readableProp: any = (readable as any)[prop];
-            if (typeof readableProp === 'function') {
-              return readableProp.bind(readable);
-            }
-            return readableProp;
-          }
-        },
-      });
-    }
-    return null;
-  }
-
   _chunks: MaybePromise<Uint8Array<ArrayBuffer>[]> | null = null;
 
-  _doCollectChunksFromReadableJob() {
-    if (this.bodyType === BodyInitType.AsyncIterable) {
+  _doCollectChunksFromReadableJob(): MaybePromise<Uint8Array<ArrayBuffer>[]> {
+    const handleAsyncIterable = (iterable: AsyncIterable<Uint8Array> | Iterable<Uint8Array>) => {
       if (Array.fromAsync) {
         return handleMaybePromise(
-          () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>),
+          () => Array.fromAsync(iterable),
           chunks => {
-            this._chunks = chunks;
+            this._chunks = chunks as Uint8Array<ArrayBuffer>[];
             return this._chunks;
           },
         );
       }
-      const iterator = (this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>)[
-        Symbol.asyncIterator
-      ]();
+      let iterator: AsyncIterator<Uint8Array> | Iterator<Uint8Array>;
+      if (isAsyncIterable(iterable)) {
+        iterator = iterable[Symbol.asyncIterator]();
+      } else {
+        iterator = iterable[Symbol.iterator]();
+      }
       const chunks: Uint8Array<ArrayBuffer>[] = [];
       const collectValue = (): MaybePromise<Uint8Array<ArrayBuffer>[]> =>
         handleMaybePromise(
@@ -171,25 +143,19 @@ export class PonyfillBody<TJSON = any> implements Body {
           },
         );
       return collectValue();
+    };
+    if (this.bodyType === BodyInitType.AsyncIterable) {
+      return handleAsyncIterable(this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>);
     }
-    const _body = this.generateBody();
+    const _body = this.body;
     if (!_body) {
       this._chunks = [];
       return fakePromise(this._chunks);
     }
-    if (_body.readable.destroyed) {
-      return fakePromise((this._chunks = []));
+    if (_body._iterable) {
+      return handleAsyncIterable(_body._iterable);
     }
-    const chunks: Uint8Array<ArrayBuffer>[] = [];
-    return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
-      _body.readable.on('data', chunk => {
-        chunks.push(chunk);
-      });
-      _body.readable.once('error', reject);
-      _body.readable.once('end', () => {
-        resolve((this._chunks = chunks));
-      });
-    });
+    return fakePromise((this._chunks ||= []));
   }
 
   _collectChunksFromReadable() {
@@ -249,7 +215,7 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise(this._formData);
     }
     this._formData = new PonyfillFormData();
-    const _body = this.generateBody();
+    const _body = this.body;
     if (_body == null) {
       return fakePromise(this._formData);
     }
@@ -258,7 +224,9 @@ export class PonyfillBody<TJSON = any> implements Body {
       ...opts?.formDataLimits,
     };
     return new Promise((resolve, reject) => {
-      const stream = this.body?.readable;
+      const stream = Readable.from(_body, {
+        objectMode: false,
+      });
       if (!stream) {
         return reject(new Error('No stream available'));
       }
@@ -475,10 +443,10 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: 'text/plain;charset=UTF-8',
       contentLength,
       bodyFactory() {
-        const readable = Readable.from(
-          Buffer.from(bodyInit, 'utf-8'), // Convert string to Buffer
-        );
-        return new PonyfillReadableStream<Uint8Array>(readable);
+        // Use a single-element array iterable – avoids creating a Node.js Readable
+        // so getReader() can return a sync iterator for zero-overhead pumping.
+        const buf = Buffer.from(bodyInit, 'utf-8');
+        return PonyfillReadableStream.from([buf]);
       },
     };
   }
@@ -490,9 +458,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength: bodyInit.length,
       buffer: bodyInit as Buffer<ArrayBuffer>,
       bodyFactory() {
-        const readable = Readable.from(buffer);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
+        return PonyfillReadableStream.from([buffer]);
       },
     };
   }
@@ -504,19 +470,28 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType: null,
       buffer,
       bodyFactory() {
-        const readable = Readable.from(buffer);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
+        return PonyfillReadableStream.from([buffer]);
       },
     };
   }
-  if (bodyInit instanceof PonyfillReadableStream && bodyInit.readable != null) {
-    const readableStream: PonyfillReadableStream<Uint8Array> = bodyInit;
+  if (isReadable(bodyInit)) {
+    const readable = bodyInit as Readable;
     return {
-      bodyType: BodyInitType.ReadableStream,
-      bodyFactory: () => readableStream,
+      bodyType: BodyInitType.Readable,
       contentType: null,
       contentLength: null,
+      bodyFactory() {
+        return PonyfillReadableStream.from(readable);
+      },
+    };
+  }
+  if (isReadableStream(bodyInit)) {
+    return {
+      contentType: null,
+      contentLength: null,
+      bodyFactory() {
+        return bodyInit;
+      },
     };
   }
   if (isBlob(bodyInit)) {
@@ -539,20 +514,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentLength,
       buffer,
       bodyFactory() {
-        const readable = Readable.from(buffer);
-        const body = new PonyfillReadableStream<Uint8Array>(readable);
-        return body;
-      },
-    };
-  }
-  if (bodyInit instanceof Readable) {
-    return {
-      bodyType: BodyInitType.Readable,
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        const body = new PonyfillReadableStream<Uint8Array>(bodyInit);
-        return body;
+        return PonyfillReadableStream.from([buffer]);
       },
     };
   }
@@ -563,8 +525,8 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       contentType,
       contentLength: null,
       bodyFactory() {
-        const body = new PonyfillReadableStream<Uint8Array>(Readable.from(bodyInit.toString()));
-        return body;
+        const buf = Buffer.from(bodyInit.toString());
+        return PonyfillReadableStream.from([buf]);
       },
     };
   }
@@ -580,25 +542,14 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
       },
     };
   }
-
-  if (isReadableStream(bodyInit)) {
-    return {
-      contentType: null,
-      contentLength: null,
-      bodyFactory() {
-        return new PonyfillReadableStream(bodyInit);
-      },
-    };
-  }
-
-  if ((bodyInit as any)[Symbol.iterator] || (bodyInit as any)[Symbol.asyncIterator]) {
+  if (isIterableOrAsyncIterable(bodyInit)) {
+    const iterable = bodyInit;
     return {
       contentType: null,
       contentLength: null,
       bodyType: BodyInitType.AsyncIterable,
       bodyFactory() {
-        const readable = Readable.from(bodyInit);
-        return new PonyfillReadableStream(readable);
+        return PonyfillReadableStream.from(iterable);
       },
     };
   }
@@ -607,7 +558,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
 }
 
 function isFormData(value: any): value is FormData {
-  return value?.forEach != null;
+  return value?.forEach != null && value?.entries != null;
 }
 
 function isBlob(value: any): value is Blob {
@@ -618,6 +569,16 @@ function isURLSearchParams(value: any): value is URLSearchParams {
   return value?.sort != null;
 }
 
-function isReadableStream(value: any): value is ReadableStream {
-  return value?.getReader != null;
+function isReadableStream(value: any): value is PonyfillReadableStream<Uint8Array> {
+  return value?.getReader != null && typeof value.getReader === 'function';
+}
+
+function isReadable(value: any): value is Readable {
+  return value?.read != null;
+}
+
+function isIterableOrAsyncIterable(
+  value: any,
+): value is Iterable<unknown> | AsyncIterable<unknown> {
+  return value?.[Symbol.iterator] != null || value?.[Symbol.asyncIterator] != null;
 }

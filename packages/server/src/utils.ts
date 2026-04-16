@@ -150,7 +150,7 @@ export function normalizeNodeRequest(
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
   const maybeParsedBody = nodeRequest.body;
-  if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
+  if (isNonEmptyObject(maybeParsedBody)) {
     if (isRequestBody(maybeParsedBody)) {
       return new fetchAPI.Request(fullUrl, {
         method: nodeRequest.method || 'GET',
@@ -190,12 +190,14 @@ export function normalizeNodeRequest(
   }
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
+  // @ts-expect-error - ReadableStream.from is missing in the TS types
+  const body = fetchAPI.ReadableStream.from ? fetchAPI.ReadableStream.from(rawRequest) : rawRequest;
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
     headers: normalizedHeaders,
     signal: controller.signal,
-    // @ts-expect-error - AsyncIterable is supported as body
-    body: rawRequest,
+    body,
+    // @ts-expect-error - duplex: half is missing in the TS types
     duplex: 'half',
   });
 }
@@ -752,4 +754,15 @@ export function createCustomAbortControllerSignal() {
       return AbortSignal.prototype;
     },
   });
+}
+
+export function isNonEmptyObject(obj: any): boolean {
+  if (obj != null) {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        return true;
+      }
+    }
+  }
+  return false;
 }

@@ -138,7 +138,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     return this._parsedUrl;
   }
 
-  duplex: 'half' | 'full';
+  duplex: 'half' | 'full' = 'half';
 
   agent: HTTPAgent | HTTPSAgent | false | undefined;
 

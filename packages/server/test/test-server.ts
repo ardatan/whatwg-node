@@ -304,13 +304,21 @@ if (globalThis.Bun) {
           ctx.append(key, value);
         });
 
-        ctx.body =
-          response.body instanceof globalThis.ReadableStream
-            ? Readable.fromWeb(response.body as any)
-            : response.body || '';
+        if (response.body instanceof globalThis.ReadableStream) {
+          ctx.body = Readable.fromWeb(response.body as any);
+        } else if (response.body) {
+          ctx.body = Readable.from(response.body, {
+            objectMode: false,
+            emitClose: true,
+            autoDestroy: true,
+          });
+        } else {
+          ctx.body = '';
+        }
       } catch (err: any) {
         ctx.status = 500;
         ctx.body = err.message;
+        console.error('KOA FAILED', err);
       }
     });
 

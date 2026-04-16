@@ -1,7 +1,8 @@
 import { Buffer } from 'node:buffer';
-import { PassThrough, Readable } from 'node:stream';
+import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import { PonyfillReadableStream } from './ReadableStream.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
@@ -47,7 +48,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       fetchRequest.body != null
         ? isNodeReadable(fetchRequest.body)
           ? fetchRequest.body
-          : Readable.from(fetchRequest.body)
+          : Readable.from(fetchRequest.body, {
+              objectMode: false,
+            })
         : null
     ) as Readable | null;
 
@@ -122,10 +125,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   });
   curlHandle.once(
     'stream',
-    function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      const outputStream = stream.pipe(new PassThrough(), {
-        end: true,
-      });
+    function streamListener(outputStream: Readable, status: number, headersBuf: Buffer) {
       const headersFlat = headersBuf
         .toString('utf8')
         .split(/\r?\n|\r/g)
@@ -136,8 +136,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
               headerFilter.toLowerCase().includes('location') &&
               shouldRedirect(status)
             ) {
-              if (!stream.destroyed) {
-                stream.resume();
+              if (!outputStream.destroyed) {
+                outputStream.resume();
               }
               outputStream.destroy();
               deferredPromise.reject(new Error('redirect is not allowed'));
@@ -149,7 +149,8 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       const headersInit = headersFlat.map(
         headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
       );
-      const ponyfillResponse = new PonyfillResponse(outputStream, {
+      const stream = PonyfillReadableStream.from(outputStream);
+      const ponyfillResponse = new PonyfillResponse(stream, {
         status,
         headers: headersInit,
         url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,
