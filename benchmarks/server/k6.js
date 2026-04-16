@@ -6,7 +6,7 @@ import http from 'k6/http';
 
 export const options = {
   vus: 1,
-  duration: '30s',
+  duration: '90s',
   thresholds: {
     checks: ['rate>0.98'],
   },
