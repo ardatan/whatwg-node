@@ -32,16 +32,13 @@ export class PonyfillHeaders implements Headers {
     }
 
     if (Array.isArray(this.headersInit)) {
-      const found = this.headersInit.filter(
-        ([headerKey]) => headerKey.toLowerCase() === normalized,
-      );
-      if (found.length === 0) {
-        return null;
+      let result: string | null = null;
+      for (const [headerKey, value] of this.headersInit) {
+        if (headerKey.toLowerCase() === normalized) {
+          result = result === null ? value : `${result}, ${value}`;
+        }
       }
-      if (found.length === 1) {
-        return found[0][1];
-      }
-      return found.map(([, value]) => value).join(', ');
+      return result;
     } else if (isHeadersLike(this.headersInit)) {
       return this.headersInit.get(normalized);
     } else {
@@ -228,7 +225,9 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([key]) => key)[Symbol.iterator]();
+          for (const [key] of this.headersInit) {
+            yield key;
+          }
           return;
         }
         if (isHeadersLike(this.headersInit)) {
@@ -253,7 +252,9 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([, value]) => value)[Symbol.iterator]();
+          for (const [, value] of this.headersInit) {
+            yield value;
+          }
           return;
         }
         if (isHeadersLike(this.headersInit)) {
@@ -273,7 +274,9 @@ export class PonyfillHeaders implements Headers {
 
   *_entries(): IterableIterator<[string, string]> {
     if (this._setCookies?.length) {
-      yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
+      for (const cookie of this._setCookies) {
+        yield ['set-cookie', cookie] as [string, string];
+      }
     }
     if (!this._map) {
       if (this.headersInit) {

@@ -70,6 +70,8 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
   private _buffer?: Buffer<ArrayBuffer> | undefined;
+  private _cachedBodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
+  private _cachedBodyReadableRef: Readable | null = null;
   _signal?: AbortSignal | undefined;
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
@@ -115,26 +117,32 @@ export class PonyfillBody<TJSON = any> implements Body {
   public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
     const _body = this.generateBody();
     if (_body != null) {
-      const ponyfillReadableStream = _body;
       const readable = _body.readable;
-      return new Proxy(_body.readable as any, {
-        get(_, prop) {
-          if (prop in ponyfillReadableStream) {
-            const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
-            if (typeof ponyfillReadableStreamProp === 'function') {
-              return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
+      // Reuse the cached proxy unless the underlying readable has been regenerated
+      // (which happens when a destroyed stream is rebuilt from the buffer)
+      if (this._cachedBodyProxy === null || this._cachedBodyReadableRef !== readable) {
+        const ponyfillReadableStream = _body;
+        this._cachedBodyReadableRef = readable;
+        this._cachedBodyProxy = new Proxy(readable as any, {
+          get(_, prop) {
+            if (prop in ponyfillReadableStream) {
+              const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
+              if (typeof ponyfillReadableStreamProp === 'function') {
+                return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
+              }
+              return ponyfillReadableStreamProp;
             }
-            return ponyfillReadableStreamProp;
-          }
-          if (prop in readable) {
-            const readableProp: any = (readable as any)[prop];
-            if (typeof readableProp === 'function') {
-              return readableProp.bind(readable);
+            if (prop in readable) {
+              const readableProp: any = (readable as any)[prop];
+              if (typeof readableProp === 'function') {
+                return readableProp.bind(readable);
+              }
+              return readableProp;
             }
-            return readableProp;
-          }
-        },
-      });
+          },
+        });
+      }
+      return this._cachedBodyProxy;
     }
     return null;
   }
