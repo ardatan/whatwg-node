@@ -12,6 +12,7 @@ export interface UWSRequest {
 
 export interface UWSResponse {
   onData(callback: (chunk: ArrayBuffer, isLast: boolean) => void): void;
+  onDataV2?(callback: (chunk: ArrayBuffer | null, maxRemainingBodyLength: bigint) => void): void;
   onAborted(callback: () => void): void;
   writeStatus(status: string): void;
   writeHeader(key: string, value: string): void;
@@ -39,162 +40,75 @@ export function getRequestFromUWSRequest({
   res,
   fetchAPI,
   controller,
-}: GetRequestFromUWSOpts) {
+}: GetRequestFromUWSOpts): Request {
   const method = req.getMethod();
 
-  let duplex: 'half' | undefined;
-
-  const chunks: Buffer<ArrayBuffer>[] = [];
-  const pushFns = [
-    (chunk: Buffer<ArrayBuffer>) => {
-      chunks.push(chunk);
-    },
-  ];
-  const push = (chunk: Buffer<ArrayBuffer>) => {
-    for (const pushFn of pushFns) {
-      pushFn(chunk);
-    }
-  };
-  let stopped = false;
-  const stopFns = [
-    () => {
-      stopped = true;
-    },
-  ];
-  const stop = () => {
-    for (const stopFn of stopFns) {
-      stopFn();
-    }
-  };
-  res.onData(function (ab, isLast) {
-    push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
-    if (isLast) {
-      stop();
-    }
-  });
-  let getReadableStream: (() => ReadableStream) | undefined;
-  if (method !== 'get' && method !== 'head') {
-    duplex = 'half';
-    controller.signal.addEventListener(
-      'abort',
-      () => {
-        stop();
-      },
-      { once: true },
-    );
-    let readableStream: ReadableStream;
-    getReadableStream = () => {
-      if (!readableStream) {
-        readableStream = new fetchAPI.ReadableStream({
-          start(streamCtrl) {
-            for (const chunk of chunks) {
-              streamCtrl.enqueue(chunk);
-            }
-            if (stopped) {
-              streamCtrl.close();
-              return;
-            }
-            pushFns.push((chunk: Buffer) => {
-              streamCtrl.enqueue(chunk);
-            });
-            stopFns.push(() => {
-              if (controller.signal.reason) {
-                streamCtrl.error(controller.signal.reason);
-                return;
-              }
-              if (streamCtrl.desiredSize) {
-                streamCtrl.close();
-              }
-            });
-          },
-        });
-      }
-      return readableStream;
-    };
-  }
   const headers = new fetchAPI.Headers();
   req.forEach((key, value) => {
     headers.append(key, value);
   });
+
   let url = `http://localhost${req.getUrl()}`;
   const query = req.getQuery();
   if (query) {
     url += `?${query}`;
   }
-  let buffer: Buffer<ArrayBuffer> | undefined;
-  function getBody() {
-    if (!getReadableStream) {
-      return null;
-    }
-    if (stopped) {
-      return getBufferFromChunks();
-    }
-    return getReadableStream();
+
+  let body: ReadableStream<Uint8Array> | undefined;
+
+  function copyChunk(chunk: Uint8Array): Buffer<ArrayBuffer> {
+    return Buffer.copyBytesFrom(chunk, 0, chunk.byteLength);
   }
-  const request = new fetchAPI.Request(url, {
+
+  if (method !== 'get' && method !== 'head') {
+    let streamCtrl: ReadableStreamDefaultController<Uint8Array>;
+    body = new fetchAPI.ReadableStream<Uint8Array>({
+      start(ctrl) {
+        streamCtrl = ctrl;
+      },
+    });
+    controller.signal.addEventListener(
+      'abort',
+      () => {
+        streamCtrl.error(controller.signal.reason);
+      },
+      { once: true },
+    );
+    if (res.onDataV2) {
+      res.onDataV2((chunk, maxRemainingBodyLength) => {
+        if (chunk) {
+          const arr = new Uint8Array(chunk);
+          if (maxRemainingBodyLength === ZERO_BIGINT) {
+            streamCtrl.enqueue(arr);
+            streamCtrl.close();
+          } else {
+            const copiedChunk = copyChunk(arr);
+            streamCtrl.enqueue(copiedChunk);
+          }
+        }
+      });
+    } else {
+      res.onData((chunk, isLast) => {
+        if (chunk) {
+          const arr = new Uint8Array(chunk);
+          const copiedChunk = copyChunk(arr);
+          streamCtrl.enqueue(copiedChunk);
+        }
+        if (isLast) {
+          streamCtrl.close();
+        }
+      });
+    }
+  }
+  return new fetchAPI.Request(url, {
     method,
     headers,
-    get body() {
-      return getBody();
-    },
     signal: controller.signal,
+    body,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - not in the TS types yet
-    duplex,
+    duplex: body ? 'half' : undefined,
   });
-  function getBufferFromChunks(): Buffer<ArrayBuffer> {
-    if (!buffer) {
-      buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks);
-    }
-    return buffer;
-  }
-  function collectBuffer() {
-    if (stopped) {
-      return fakePromise(getBufferFromChunks());
-    }
-    return new Promise<Buffer>((resolve, reject) => {
-      try {
-        stopFns.push(() => {
-          resolve(getBufferFromChunks());
-        });
-      } catch (e) {
-        reject(e);
-      }
-    });
-  }
-  Object.defineProperties(request, {
-    body: {
-      get() {
-        return getBody();
-      },
-      configurable: true,
-      enumerable: true,
-    },
-    json: {
-      value() {
-        return collectBuffer()
-          .then(b => b.toString('utf8'))
-          .then(t => JSON.parse(t));
-      },
-      configurable: true,
-      enumerable: true,
-    },
-    text: {
-      value() {
-        return collectBuffer().then(b => b.toString('utf8'));
-      },
-      configurable: true,
-      enumerable: true,
-    },
-    arrayBuffer: {
-      value() {
-        return collectBuffer();
-      },
-      configurable: true,
-      enumerable: true,
-    },
-  });
-  return request;
 }
 
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
@@ -284,3 +198,5 @@ export function sendResponseToUwsOpts(
 }
 
 export { fakePromise };
+
+const ZERO_BIGINT = BigInt(0);
