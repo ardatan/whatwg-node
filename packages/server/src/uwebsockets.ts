@@ -12,6 +12,8 @@ export interface UWSRequest {
 
 export interface UWSResponse {
   onData(callback: (chunk: ArrayBuffer, isLast: boolean) => void): void;
+  onDataV2?(callback: (chunk: ArrayBuffer | null, maxRemainingBodyLength: bigint) => void): void;
+  collectBody?(maxSize: number, handler: (body: ArrayBuffer | null) => void): void;
   onAborted(callback: () => void): void;
   writeStatus(status: string): void;
   writeHeader(key: string, value: string): void;
@@ -45,7 +47,7 @@ export function getRequestFromUWSRequest({
   let duplex: 'half' | undefined;
 
   const chunks: Buffer<ArrayBuffer>[] = [];
-  const pushFns = [
+  const pushFns: Array<(chunk: Buffer<ArrayBuffer>) => void> = [
     (chunk: Buffer<ArrayBuffer>) => {
       chunks.push(chunk);
     },
@@ -56,22 +58,14 @@ export function getRequestFromUWSRequest({
     }
   };
   let stopped = false;
-  const stopFns = [
-    () => {
-      stopped = true;
-    },
-  ];
+  const stopFns: Array<() => void> = [];
   const stop = () => {
+    if (stopped) return;
+    stopped = true;
     for (const stopFn of stopFns) {
       stopFn();
     }
   };
-  res.onData(function (ab, isLast) {
-    push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
-    if (isLast) {
-      stop();
-    }
-  });
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
@@ -82,6 +76,53 @@ export function getRequestFromUWSRequest({
       },
       { once: true },
     );
+    // Node.js max safe buffer allocation size (2 GiB - 1 on 64-bit systems)
+    const MAX_BUFFER_ALLOC = 2147483647;
+    if (res.onDataV2) {
+      let preAllocBuffer: Buffer | undefined;
+      let writeOffset = 0;
+      res.onDataV2(function (ab, maxRemainingBodyLength) {
+        if (ab !== null) {
+          const chunkLen = ab.byteLength;
+          if (preAllocBuffer === undefined) {
+            // maxRemainingBodyLength is the max allowed remaining (maxPayload - received),
+            // not the exact remaining. Guard against over-allocation or RangeError when it
+            // exceeds Node.js's maximum buffer size.
+            const remainingLen =
+              maxRemainingBodyLength > BigInt(MAX_BUFFER_ALLOC)
+                ? MAX_BUFFER_ALLOC + 1 // signal: too large, skip pre-alloc
+                : Number(maxRemainingBodyLength);
+            const totalSize = chunkLen + remainingLen;
+            if (totalSize <= MAX_BUFFER_ALLOC) {
+              preAllocBuffer = Buffer.allocUnsafe(totalSize);
+            }
+          }
+          if (preAllocBuffer !== undefined) {
+            Buffer.from(ab, 0, chunkLen).copy(preAllocBuffer, writeOffset);
+            push(
+              preAllocBuffer.subarray(writeOffset, writeOffset + chunkLen) as Buffer<ArrayBuffer>,
+            );
+            writeOffset += chunkLen;
+          } else {
+            // Fallback: total body size unknown or too large – collect per-chunk
+            push(Buffer.from(Buffer.from(ab, 0, chunkLen)) as Buffer<ArrayBuffer>);
+          }
+        }
+        if (maxRemainingBodyLength === 0n) {
+          if (preAllocBuffer !== undefined) {
+            buffer = preAllocBuffer.subarray(0, writeOffset) as Buffer<ArrayBuffer>;
+          }
+          stop();
+        }
+      });
+    } else {
+      res.onData(function (ab, isLast) {
+        push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+        if (isLast) {
+          stop();
+        }
+      });
+    }
     let readableStream: ReadableStream;
     getReadableStream = () => {
       if (!readableStream) {
@@ -149,6 +190,10 @@ export function getRequestFromUWSRequest({
     return buffer;
   }
   function collectBuffer() {
+    if (!getReadableStream) {
+      // No body (e.g. GET / HEAD) – resolve immediately with empty buffer
+      return fakePromise(Buffer.alloc(0) as Buffer<ArrayBuffer>);
+    }
     if (stopped) {
       return fakePromise(getBufferFromChunks());
     }
