@@ -51,13 +51,13 @@ export function createCfDeployment(
           join(__dirname, '..', '..', projectName, 'dist', 'index.js'),
           'utf-8',
         ),
-        module: isModule,
-        name: stackName,
+        ...(isModule && { mainModule: 'index.js' }),
+        scriptName: stackName,
       });
 
       // Create a nice route for easy testing
-      new cf.WorkerRoute('worker-route', {
-        scriptName: workerScript.name,
+      new cf.WorkersRoute('worker-route', {
+        script: workerScript.scriptName,
         pattern: workerUrl + '*',
         zoneId: env('CLOUDFLARE_ZONE_ID'),
       });
