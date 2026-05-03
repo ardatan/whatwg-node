@@ -37,16 +37,16 @@ export function createCfDeployment(
       await stack.setConfig('cloudflare:apiToken', {
         value: env('CLOUDFLARE_API_TOKEN'),
       });
-      await stack.setConfig('cloudflare:accountId', {
-        value: env('CLOUDFLARE_ACCOUNT_ID'),
-      });
+      // Note: cloudflare:accountId is no longer a valid provider config key in v6.
+      // accountId is passed directly to each resource instead.
     },
     program: async () => {
       const stackName = pulumi.getStack();
       const workerUrl = `e2e.graphql-yoga.com/${stackName}`;
 
       // Deploy CF script as Worker
-      const workerScript = new cf.WorkerScript('worker', {
+      const workerScript = new cf.WorkersScript('worker', {
+        accountId: env('CLOUDFLARE_ACCOUNT_ID'),
         content: await fsPromises.readFile(
           join(__dirname, '..', '..', projectName, 'dist', 'index.js'),
           'utf-8',
