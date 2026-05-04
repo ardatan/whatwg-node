@@ -20,9 +20,9 @@ export function githubComment(data, options) {
   let thresholdCount = 0;
   for (let metricName in data.metrics) {
     if (data.metrics[metricName].thresholds) {
-      thresholdCount++;
       let thresholds = data.metrics[metricName].thresholds;
       for (let thresName in thresholds) {
+        thresholdCount++;
         if (!thresholds[thresName].ok) {
           thresholdFailures++;
         }
@@ -93,7 +93,7 @@ export function githubComment(data, options) {
       `https://api.github.com/repos/${org}/${repo}/commits/${commit}/pulls`,
       {
         headers: {
-          accept: 'application/vnd.github.groot-preview+json',
+          accept: 'application/vnd.github.v3+json',
           authorization: `Bearer ${token}`,
         },
       },
@@ -189,8 +189,8 @@ function countChecks(checks) {
   let passes = 0;
   let fails = 0;
   for (let check of checks) {
-    passes += parseInt(check.passes);
-    fails += parseInt(check.fails);
+    passes += parseInt(check.passes, 10);
+    fails += parseInt(check.fails, 10);
   }
   return { passes, fails };
 }
