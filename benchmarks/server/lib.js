@@ -168,7 +168,7 @@ function assert2XX(res, message) {
     return;
   }
 
-  if (res.status < 200 && res.status >= 300) {
+  if (res.status < 200 || res.status >= 300) {
     console.error(message, res.status, res.error, res.error_code);
   } else {
     console.warn(message, res.status, res.error, res.error_code);
