@@ -1,8 +1,8 @@
 /* eslint-disable */
-import { textSummary } from 'k6/summary';
-import { githubComment } from './lib.js';
 import { check } from 'k6';
 import http from 'k6/http';
+import { textSummary } from 'k6/summary';
+import { githubComment } from './lib.js';
 
 export const options = {
   vus: 1,
