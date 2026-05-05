@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { check } from 'k6';
 import http from 'k6/http';
-import { textSummary } from 'k6/summary';
+import { textSummary } from '../textSummary.js';
 import { githubComment } from './lib.js';
 
 export const options = {

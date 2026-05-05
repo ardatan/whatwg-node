@@ -2,7 +2,7 @@
 
 import http from 'k6/http';
 import { Trend } from 'k6/metrics';
-import { textSummary } from 'k6/summary';
+import { textSummary } from '../textSummary.js';
 import { githubComment } from './lib.js';
 
 const scenario = __ENV.SCENARIO;

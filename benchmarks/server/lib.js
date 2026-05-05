@@ -1,6 +1,6 @@
 /* eslint-disable */
 import http from 'k6/http';
-import { textSummary } from 'k6/summary';
+import { textSummary } from '../textSummary.js';
 
 export function githubComment(data, options) {
   if (!options.commit) {
