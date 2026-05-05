@@ -37,9 +37,6 @@ function strWidth(s) {
   var inLongEscSeq = false;
   var width = 0;
   for (var char of data) {
-    if (char.done) {
-      break;
-    }
     if (char == '\x1b') {
       inEscSeq = true;
       continue;
