@@ -81,7 +81,7 @@
     "vitest": "4.1.5"
   },
   "overrides": {
-    "@pulumi/pulumi": "3.234.0",
+    "@pulumi/pulumi": "3.235.0",
     "cookie": "1.1.1",
     "esbuild": "0.28.0",
     "glob": "13.0.6",
