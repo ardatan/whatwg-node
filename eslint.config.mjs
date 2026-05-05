@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import nPlugin from 'eslint-plugin-n';
 import globals from 'globals';
 import { FlatCompat } from '@eslint/eslintrc';
 import js from '@eslint/js';
@@ -30,12 +31,11 @@ export default [
       '*.js',
     ],
   },
-  ...compat.extends(
-    'eslint:recommended',
-    'standard',
-    'prettier',
-    'plugin:@typescript-eslint/recommended',
-  ),
+  ...compat
+    .extends('eslint:recommended', 'standard', 'prettier', 'plugin:@typescript-eslint/recommended')
+    .map(config =>
+      config.plugins?.n ? { ...config, plugins: { ...config.plugins, n: nPlugin } } : config,
+    ),
   {
     plugins: {
       '@typescript-eslint': typescriptEslint,
