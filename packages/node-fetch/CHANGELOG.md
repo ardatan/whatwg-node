@@ -1,5 +1,15 @@
 # @whatwg-node/node-fetch
 
+## 0.8.6
+
+### Patch Changes
+
+- [#3203](https://github.com/ardatan/whatwg-node/pull/3203)
+  [`771cad6`](https://github.com/ardatan/whatwg-node/commit/771cad6a6403b6f09692cfe990f0d40679efa550)
+  Thanks [@renovate](https://github.com/apps/renovate)! - Add TypeScript 6 compatibility: implement
+  `values()` method and `[Symbol.asyncDispose]` on `PonyfillReadableStream` to match the updated
+  `ReadableStream` interface
+
 ## 0.8.5
 
 ### Patch Changes
