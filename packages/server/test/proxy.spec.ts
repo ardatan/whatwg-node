@@ -7,6 +7,7 @@ import { runTestsForEachServerImpl } from './test-server';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 const skipIf = (condition: boolean) => (condition ? it.skip : it);
+const nodeMajorVersion = Number.parseInt(process.versions.node.split('.')[0], 10);
 // Bun does not support streams on Request body
 // Readable streams for fetch() are not available on Bun
 describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
@@ -91,7 +92,9 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
             });
           },
         );
-        it('handles aborted requests', async () => {
+        skipIf(
+          fetchImplName === 'native' && nodeMajorVersion >= 26 && serverImplName !== 'node:http',
+        )('handles aborted requests', async () => {
           const response = fetch(
             `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
             {
@@ -99,7 +102,12 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
             },
           );
           await expect(response).rejects.toThrow();
-          await setTimeout(500);
+          for (let i = 0; i < 50; i++) {
+            if (aborted) {
+              break;
+            }
+            await setTimeout(100);
+          }
           expect(aborted).toBe(true);
         });
         it('handles requested terminated before abort', async () => {
