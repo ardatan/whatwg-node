@@ -11,7 +11,7 @@ import { createDeferredPromise } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
-const nodeMajorVersion = Number.parseInt(process.versions.node.split('.')[0], 10);
+const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 10);
 
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
@@ -236,7 +236,7 @@ describe('Node Specific Cases', () => {
         skipIf(
           (globalThis.Bun && serverImplName !== 'Bun') ||
             (globalThis.Deno && serverImplName !== 'Deno') ||
-            (fetchImplName === 'native' && nodeMajorVersion >= 26),
+            (fetchImplName === 'native' && NODE_MAJOR_VERSION >= 26),
         )(
           'handles Request.signal inside adapter correctly',
           async () => {
@@ -275,7 +275,7 @@ describe('Node Specific Cases', () => {
         skipIf(
           (globalThis.Bun && serverImplName !== 'Bun') ||
             (globalThis.Deno && serverImplName !== 'Deno') ||
-            (fetchImplName === 'native' && nodeMajorVersion >= 26),
+            (fetchImplName === 'native' && NODE_MAJOR_VERSION >= 26),
         )(
           'handles Request.signal inside adapter with streaming bodies',
           async () => {

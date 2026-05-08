@@ -7,7 +7,10 @@ import { runTestsForEachServerImpl } from './test-server';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 const skipIf = (condition: boolean) => (condition ? it.skip : it);
-const nodeMajorVersion = Number.parseInt(process.versions.node.split('.')[0], 10);
+const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 10);
+const ABORT_POLL_INTERVAL_MS = 100;
+const MAX_ABORT_WAIT_MS = 5000;
+const MAX_ABORT_POLL_ATTEMPTS = MAX_ABORT_WAIT_MS / ABORT_POLL_INTERVAL_MS;
 // Bun does not support streams on Request body
 // Readable streams for fetch() are not available on Bun
 describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
@@ -93,7 +96,7 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
           },
         );
         skipIf(
-          fetchImplName === 'native' && nodeMajorVersion >= 26 && serverImplName !== 'node:http',
+          fetchImplName === 'native' && NODE_MAJOR_VERSION >= 26 && serverImplName !== 'node:http',
         )('handles aborted requests', async () => {
           const response = fetch(
             `http://localhost:${(proxyServer.address() as AddressInfo).port}/delay`,
@@ -102,11 +105,11 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
             },
           );
           await expect(response).rejects.toThrow();
-          for (let i = 0; i < 50; i++) {
+          for (let pollAttempt = 0; pollAttempt < MAX_ABORT_POLL_ATTEMPTS; pollAttempt++) {
             if (aborted) {
               break;
             }
-            await setTimeout(100);
+            await setTimeout(ABORT_POLL_INTERVAL_MS);
           }
           expect(aborted).toBe(true);
         });
