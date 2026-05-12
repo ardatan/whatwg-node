@@ -34,9 +34,19 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         fetchRequest.parsedUrl?.protocol || fetchRequest.url,
       );
 
-      const headersSerializer: typeof getHeadersObj =
-        (fetchRequest.headersSerializer as any) || getHeadersObj;
-      const nodeHeaders = headersSerializer(fetchRequest.headers);
+      let nodeHeaders: Record<string, string>;
+      if (fetchRequest.headersSerializer) {
+        const headerStrings = fetchRequest.headersSerializer(fetchRequest.headers);
+        nodeHeaders = {};
+        for (const header of headerStrings) {
+          const colonIndex = header.indexOf(': ');
+          if (colonIndex !== -1) {
+            nodeHeaders[header.slice(0, colonIndex)] = header.slice(colonIndex + 2);
+          }
+        }
+      } else {
+        nodeHeaders = getHeadersObj(fetchRequest.headers);
+      }
       nodeHeaders['accept-encoding'] ||= DEFAULT_ACCEPT_ENCODING;
       if (nodeHeaders['user-agent'] == null && nodeHeaders['User-Agent'] == null) {
         nodeHeaders['user-agent'] = 'node';

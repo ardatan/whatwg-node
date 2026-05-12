@@ -203,14 +203,6 @@ describe('Node Fetch Ponyfill', () => {
           expect(body.brotli).toBe(true);
         });
       });
-      it.skip('should load correctly', async () => {
-        const response = await fetchPonyfill(
-          'https://api.apis.guru/v2/specs/mashape.com/geodb/1.0.0/swagger.json',
-        );
-        expect(response.status).toBe(200);
-        const body = await response.json();
-        expect(body.swagger).toBe('2.0');
-      });
       it('should handle object urls for PonyfillBlob', async () => {
         const testJsonBlob = new PonyfillBlob([JSON.stringify({ test: 'test' })], {
           type: 'application/json',
