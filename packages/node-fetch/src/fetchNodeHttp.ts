@@ -39,9 +39,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         const headerStrings = fetchRequest.headersSerializer(fetchRequest.headers);
         nodeHeaders = {};
         for (const header of headerStrings) {
-          const colonIndex = header.indexOf(': ');
+          const colonIndex = header.indexOf(':');
           if (colonIndex !== -1) {
-            nodeHeaders[header.slice(0, colonIndex)] = header.slice(colonIndex + 2);
+            nodeHeaders[header.slice(0, colonIndex)] = header.slice(colonIndex + 1).trimStart();
           }
         }
       } else {
