@@ -89,10 +89,11 @@ jobs:
       - name: Cache Jest
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
         with:
-          path: .cache/jest
-          key: ${{ runner.os }}-${{matrix.node-version}}-jest-${{ hashFiles('yarn.lock') }}
+          path: ~/.npm
+          key:
+            ${{ runner.os }}-${{ matrix.node-version }}-jest-${{ hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-${{matrix.node-version}}-jest-
+            ${{ runner.os }}-${{ matrix.node-version }}-jest-
       - name: Unit Tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
