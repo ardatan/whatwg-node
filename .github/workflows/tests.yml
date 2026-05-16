@@ -92,7 +92,9 @@ jobs:
           path: |
             ~/.npm
             .cache/jest
-          key: ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-${{ hashFiles('package-lock.json') }}
+          key: >-
+            ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-${{ hashFiles('package-lock.json')
+            }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-
       - name: Unit Tests
