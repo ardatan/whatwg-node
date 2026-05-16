@@ -9,8 +9,11 @@ export function isHeadersLike(headers: any): headers is Headers {
 
 export class PonyfillHeaders implements Headers {
   private _map: Map<string, string> | undefined;
-  private objectNormalizedKeysOfHeadersInit: string[] = [];
-  private objectOriginalKeysOfHeadersInit: string[] = [];
+  // Lazy normalized-key → original-key index for plain-object headersInit lookups.
+  // Built on first cache-miss so the common direct-property hit (Node http already passes
+  // lowercased keys) doesn't pay any setup cost. Map lookup is O(1) vs. the previous
+  // parallel-array indexOf() scan.
+  private _objectKeyIndex: Map<string, string> | undefined;
   private _setCookies?: string[];
 
   constructor(private headersInit?: PonyfillHeadersInit) {}
@@ -48,17 +51,17 @@ export class PonyfillHeaders implements Headers {
         return initValue;
       }
 
-      if (!this.objectNormalizedKeysOfHeadersInit.length) {
-        Object.keys(this.headersInit).forEach(k => {
-          this.objectOriginalKeysOfHeadersInit.push(k);
-          this.objectNormalizedKeysOfHeadersInit.push(k.toLowerCase());
-        });
+      if (!this._objectKeyIndex) {
+        const idx = new Map<string, string>();
+        for (const k in this.headersInit) {
+          idx.set(k.toLowerCase(), k);
+        }
+        this._objectKeyIndex = idx;
       }
-      const index = this.objectNormalizedKeysOfHeadersInit.indexOf(normalized);
-      if (index === -1) {
+      const originalKey = this._objectKeyIndex.get(normalized);
+      if (originalKey === undefined) {
         return null;
       }
-      const originalKey = this.objectOriginalKeysOfHeadersInit[index];
       return this.headersInit[originalKey];
     }
   }

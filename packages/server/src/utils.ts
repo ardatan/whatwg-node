@@ -129,18 +129,24 @@ export function normalizeNodeRequest(
     ? createCustomAbortControllerSignal()
     : new AbortController();
   if (nodeResponse?.once) {
-    const closeEventListener: EventListener = () => {
-      if (!controller.signal.aborted) {
-        Object.defineProperty(rawRequest, 'aborted', { value: true });
-        controller.abort(nodeResponse.errored ?? undefined);
+    // Single shared closure for 'error' and 'close'. We track 'finish' with a flag
+    // rather than installing a third listener that calls removeListener('close', ...):
+    // - saves one closure allocation per request
+    // - avoids the removeListener bookkeeping on the response EventEmitter
+    // - if 'close' fires after 'finish' (normal flow), the flag short-circuits
+    //   the abort instead of needlessly aborting an already-completed response.
+    let finished = false;
+    const onAbort: EventListener = () => {
+      if (finished || controller.signal.aborted) {
+        return;
       }
+      Object.defineProperty(rawRequest, 'aborted', { value: true });
+      controller.abort(nodeResponse.errored ?? undefined);
     };
-
-    nodeResponse.once('error', closeEventListener);
-    nodeResponse.once('close', closeEventListener);
-
+    nodeResponse.once('error', onAbort);
+    nodeResponse.once('close', onAbort);
     nodeResponse.once('finish', () => {
-      nodeResponse.removeListener('close', closeEventListener);
+      finished = true;
     });
   }
 
@@ -323,26 +329,24 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
+  // Hoist private-property reads to local variables so V8 inline caches don't see
+  // repeated string-keyed property loads against the ponyfill headers object.
+  const ponyfillHeaders = fetchResponse.headers as unknown as {
+    headersInit?: any;
+    _map?: Map<string, string>;
+    _setCookies?: string[];
+  };
+  const headersInit = ponyfillHeaders?.headersInit;
   if (
     __useSingleWriteHead &&
-    // @ts-expect-error - headersInit is a private property
-    fetchResponse.headers?.headersInit &&
-    // @ts-expect-error - headersInit is a private property
-    !Array.isArray(fetchResponse.headers.headersInit) &&
-    // @ts-expect-error - headersInit is a private property
-    !fetchResponse.headers.headersInit.get &&
-    // @ts-expect-error - map is a private property
-    !fetchResponse.headers._map &&
-    // @ts-expect-error - _setCookies is a private property
-    !fetchResponse.headers._setCookies?.length
+    headersInit &&
+    !Array.isArray(headersInit) &&
+    !headersInit.get &&
+    !ponyfillHeaders._map &&
+    !ponyfillHeaders._setCookies?.length
   ) {
     // @ts-expect-error - writeHead accepts headers object
-    serverResponse.writeHead(
-      fetchResponse.status,
-      fetchResponse.statusText,
-      // @ts-expect-error - headersInit is a private property
-      fetchResponse.headers.headersInit,
-    );
+    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, headersInit);
   } else {
     // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist

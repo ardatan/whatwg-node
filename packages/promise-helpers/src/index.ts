@@ -179,11 +179,38 @@ export function iterateAsync<TInput, TOutput>(
   }
   const iterator = iterable[Symbol.iterator]();
   let index = 0;
+  // If the callback doesn't declare an `endEarly` parameter, skip allocating the
+  // per-iteration `endedEarly` flag and `endEarly` closure entirely. This is the common
+  // case for hooks that just observe each value (e.g. onResponseHooks).
+  const acceptsEndEarly = callback.length > 1;
+  if (!acceptsEndEarly) {
+    function iterateNoEnd(): MaybePromise<void> {
+      const { done: endOfIterator, value } = iterator.next();
+      if (endOfIterator) {
+        return;
+      }
+      return handleMaybePromise(
+        function handleCallback() {
+          return (callback as any)(value, undefined, index++);
+        },
+        function handleCallbackResult(result) {
+          if (result) {
+            results?.push(result);
+          }
+          return iterateNoEnd();
+        },
+      );
+    }
+    return iterateNoEnd();
+  }
   function iterate(): MaybePromise<void> {
     const { done: endOfIterator, value } = iterator.next();
     if (endOfIterator) {
       return;
     }
+    // Per-iteration closure for `endEarly` is intentional: callers can retain the callback
+    // reference and a stale call from a previous iteration must NOT stop the current one.
+    // See PR #3192 review comment for the regression this prevents.
     let endedEarly = false;
     function endEarly() {
       endedEarly = true;

@@ -123,19 +123,33 @@ export class PonyfillBody<TJSON = any> implements Body {
       if (this._cachedBodyProxy === null || this._cachedBodyReadableRef !== readable) {
         const ponyfillReadableStream = _body;
         this._cachedBodyReadableRef = readable;
+        // Cache bound methods so repeated property reads (e.g. `body.on(...)` called
+        // multiple times to register data/end/error listeners, or internal accesses
+        // during `pipe()`) don't allocate a fresh bound function per access.
+        // Without this, every Proxy `get` invokes Function.prototype.bind which is
+        // ~2x slower than a Map lookup in V8 and produces GC pressure.
+        const boundCache = new Map<PropertyKey, unknown>();
         this._cachedBodyProxy = new Proxy(readable as any, {
           get(_, prop) {
+            const cached = boundCache.get(prop);
+            if (cached !== undefined) {
+              return cached;
+            }
             if (prop in ponyfillReadableStream) {
               const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
               if (typeof ponyfillReadableStreamProp === 'function') {
-                return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
+                const bound = ponyfillReadableStreamProp.bind(ponyfillReadableStream);
+                boundCache.set(prop, bound);
+                return bound;
               }
               return ponyfillReadableStreamProp;
             }
             if (prop in readable) {
               const readableProp: any = (readable as any)[prop];
               if (typeof readableProp === 'function') {
-                return readableProp.bind(readable);
+                const bound = readableProp.bind(readable);
+                boundCache.set(prop, bound);
+                return bound;
               }
               return readableProp;
             }
