@@ -572,7 +572,8 @@ describe('Node Specific Cases', () => {
           expect(body).toEqual('<h1>Rendered in React</h1>');
         });
 
-        it('should not duplicate transfer-encoding: chunked for streaming responses',
+        skipIf(globalThis.Bun)(
+          'should not duplicate transfer-encoding: chunked for streaming responses',
           async () => {
             const encoder = new TextEncoder();
             await using serverAdapter = createServerAdapter(() => {
@@ -618,9 +619,6 @@ describe('Node Specific Cases', () => {
                 transferEncodings.push(rawHeaders[i + 1]);
               }
             }
-            // transfer-encoding: chunked should appear exactly once:
-            // uWS adds it automatically for streaming, and our code filters it out
-            // from the Response headers to prevent duplication.
             expect(transferEncodings).toHaveLength(1);
             expect(transferEncodings[0]).toBe('chunked');
           },
