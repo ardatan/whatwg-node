@@ -9,8 +9,11 @@ export function isHeadersLike(headers: any): headers is Headers {
 
 export class PonyfillHeaders implements Headers {
   private _map: Map<string, string> | undefined;
-  private objectNormalizedKeysOfHeadersInit: string[] = [];
-  private objectOriginalKeysOfHeadersInit: string[] = [];
+  // Lazy normalized-key → original-key index for plain-object headersInit lookups.
+  // Built on first cache-miss so the common direct-property hit (Node http already passes
+  // lowercased keys) doesn't pay any setup cost. Map lookup is O(1) vs. the previous
+  // parallel-array indexOf() scan.
+  private _objectKeyIndex: Map<string, string> | undefined;
   private _setCookies?: string[];
 
   constructor(private headersInit?: PonyfillHeadersInit) {}
@@ -32,16 +35,13 @@ export class PonyfillHeaders implements Headers {
     }
 
     if (Array.isArray(this.headersInit)) {
-      const found = this.headersInit.filter(
-        ([headerKey]) => headerKey.toLowerCase() === normalized,
-      );
-      if (found.length === 0) {
-        return null;
+      let result: string | null = null;
+      for (const [headerKey, value] of this.headersInit) {
+        if (headerKey.toLowerCase() === normalized) {
+          result = result === null ? value : `${result}, ${value}`;
+        }
       }
-      if (found.length === 1) {
-        return found[0][1];
-      }
-      return found.map(([, value]) => value).join(', ');
+      return result;
     } else if (isHeadersLike(this.headersInit)) {
       return this.headersInit.get(normalized);
     } else {
@@ -51,17 +51,17 @@ export class PonyfillHeaders implements Headers {
         return initValue;
       }
 
-      if (!this.objectNormalizedKeysOfHeadersInit.length) {
-        Object.keys(this.headersInit).forEach(k => {
-          this.objectOriginalKeysOfHeadersInit.push(k);
-          this.objectNormalizedKeysOfHeadersInit.push(k.toLowerCase());
-        });
+      if (!this._objectKeyIndex) {
+        const idx = new Map<string, string>();
+        for (const k in this.headersInit) {
+          idx.set(k.toLowerCase(), k);
+        }
+        this._objectKeyIndex = idx;
       }
-      const index = this.objectNormalizedKeysOfHeadersInit.indexOf(normalized);
-      if (index === -1) {
+      const originalKey = this._objectKeyIndex.get(normalized);
+      if (originalKey === undefined) {
         return null;
       }
-      const originalKey = this.objectOriginalKeysOfHeadersInit[index];
       return this.headersInit[originalKey];
     }
   }
@@ -228,7 +228,9 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([key]) => key)[Symbol.iterator]();
+          for (const [key] of this.headersInit) {
+            yield key;
+          }
           return;
         }
         if (isHeadersLike(this.headersInit)) {
@@ -253,7 +255,9 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([, value]) => value)[Symbol.iterator]();
+          for (const [, value] of this.headersInit) {
+            yield value;
+          }
           return;
         }
         if (isHeadersLike(this.headersInit)) {
@@ -273,7 +277,9 @@ export class PonyfillHeaders implements Headers {
 
   *_entries(): IterableIterator<[string, string]> {
     if (this._setCookies?.length) {
-      yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
+      for (const cookie of this._setCookies) {
+        yield ['set-cookie', cookie] as [string, string];
+      }
     }
     if (!this._map) {
       if (this.headersInit) {
