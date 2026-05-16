@@ -572,8 +572,7 @@ describe('Node Specific Cases', () => {
           expect(body).toEqual('<h1>Rendered in React</h1>');
         });
 
-        skipIf(serverImplName !== 'uWebSockets')(
-          'should not duplicate transfer-encoding: chunked for streaming responses (graphql-yoga#4412)',
+        it('should not duplicate transfer-encoding: chunked for streaming responses',
           async () => {
             const encoder = new TextEncoder();
             await using serverAdapter = createServerAdapter(() => {
