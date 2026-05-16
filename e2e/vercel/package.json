@@ -14,18 +14,18 @@
     "@e2e/shared-scripts": "0.0.0",
     "@e2e/shared-server": "0.0.156",
     "encoding": "0.1.13",
-    "next": "16.2.2",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "next": "16.2.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
   },
   "devDependencies": {
-    "@pulumi/pulumi": "3.228.0",
+    "@pulumi/pulumi": "3.239.0",
     "@types/react": "19.2.14",
-    "esbuild": "0.27.5",
-    "eslint": "10.1.0",
-    "eslint-config-next": "16.2.2",
+    "esbuild": "0.28.0",
+    "eslint": "10.4.0",
+    "eslint-config-next": "16.2.6",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
-    "typescript": "6.0.2"
+    "typescript": "6.0.3"
   }
 }

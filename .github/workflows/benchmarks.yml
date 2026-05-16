@@ -23,6 +23,7 @@ jobs:
           - ponyfill
           - undici
           - uws
+          - vanilla
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -34,9 +35,9 @@ jobs:
         run: npm run build
       - name: Setup K6
         run: |
-          wget https://github.com/grafana/k6/releases/download/v0.37.0/k6-v0.37.0-linux-amd64.deb
+          wget https://github.com/grafana/k6/releases/download/v0.50.0/k6-v0.50.0-linux-amd64.deb
           sudo apt-get update
-          sudo apt-get install ./k6-v0.37.0-linux-amd64.deb
+          sudo apt-get install ./k6-v0.50.0-linux-amd64.deb
       - name: Start Benchmark
         working-directory: ./benchmarks/server
         run: |
@@ -73,9 +74,9 @@ jobs:
           node-version-file: .node-version
       - name: Setup K6
         run: |
-          wget https://github.com/grafana/k6/releases/download/v0.37.0/k6-v0.37.0-linux-amd64.deb
+          wget https://github.com/grafana/k6/releases/download/v0.50.0/k6-v0.50.0-linux-amd64.deb
           sudo apt-get update
-          sudo apt-get install ./k6-v0.37.0-linux-amd64.deb
+          sudo apt-get install ./k6-v0.50.0-linux-amd64.deb
       - name: Start server
         working-directory: ./benchmarks/node-fetch
         run: npm run start:server &

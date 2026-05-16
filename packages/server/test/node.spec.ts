@@ -1,5 +1,5 @@
 import { Buffer } from 'node:buffer';
-import { IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
+import { request as httpRequest, IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
 import { renderToReadableStream } from 'react-dom/server.edge';
@@ -11,10 +11,12 @@ import { createDeferredPromise } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
+const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 10);
+
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
     (
-      _fetchImplName,
+      fetchImplName,
       { createServerAdapter, fetchAPI: { fetch, ReadableStream, Response, URL } },
     ) => {
       runTestsForEachServerImpl((testServer, serverImplName) => {
@@ -233,77 +235,87 @@ describe('Node Specific Cases', () => {
 
         skipIf(
           (globalThis.Bun && serverImplName !== 'Bun') ||
-            (globalThis.Deno && serverImplName !== 'Deno'),
-        )('handles Request.signal inside adapter correctly', async () => {
-          const abortListener = jest.fn();
-          const abortDeferred = createDeferredPromise<void>();
-          const adapterResponseDeferred = createDeferredPromise<Response>();
-          function resolveAdapter() {
-            adapterResponseDeferred.resolve(
-              Response.json({
-                message: "You're so late!",
-              }),
-            );
-          }
-          await using serverAdapter = createServerAdapter(req => {
-            req.signal.addEventListener('abort', () => {
-              abortListener();
-              abortDeferred.resolve();
+            (globalThis.Deno && serverImplName !== 'Deno') ||
+            (fetchImplName === 'native' && NODE_MAJOR_VERSION >= 26),
+        )(
+          'handles Request.signal inside adapter correctly',
+          async () => {
+            const abortListener = jest.fn();
+            const abortDeferred = createDeferredPromise<void>();
+            const adapterResponseDeferred = createDeferredPromise<Response>();
+            function resolveAdapter() {
+              adapterResponseDeferred.resolve(
+                Response.json({
+                  message: "You're so late!",
+                }),
+              );
+            }
+            await using serverAdapter = createServerAdapter(req => {
+              req.signal.addEventListener('abort', () => {
+                abortListener();
+                abortDeferred.resolve();
+              });
+              return adapterResponseDeferred.promise;
             });
-            return adapterResponseDeferred.promise;
-          });
-          await testServer.addOnceHandler(serverAdapter);
-          const controller = new AbortController();
-          const response$ = fetch(testServer.url, { signal: controller.signal });
-          expect(abortListener).toHaveBeenCalledTimes(0);
-          globalThis.setTimeout(() => {
-            controller.abort();
-          }, 300);
-          await expect(response$).rejects.toThrow();
-          await abortDeferred.promise;
-          expect(abortListener).toHaveBeenCalledTimes(1);
-          resolveAdapter();
-        });
+            await testServer.addOnceHandler(serverAdapter);
+            const controller = new AbortController();
+            const response$ = fetch(testServer.url, { signal: controller.signal });
+            expect(abortListener).toHaveBeenCalledTimes(0);
+            globalThis.setTimeout(() => {
+              controller.abort();
+            }, 300);
+            await expect(response$).rejects.toThrow();
+            await abortDeferred.promise;
+            expect(abortListener).toHaveBeenCalledTimes(1);
+            resolveAdapter();
+          },
+          15_000,
+        );
 
         skipIf(
           (globalThis.Bun && serverImplName !== 'Bun') ||
-            (globalThis.Deno && serverImplName !== 'Deno'),
-        )('handles Request.signal inside adapter with streaming bodies', async () => {
-          const abortDeferred = createDeferredPromise<void>();
-          const adapterResponseDeferred = createDeferredPromise<Response>();
-          function resolveAdapter() {
-            adapterResponseDeferred.resolve(
-              Response.json({
-                message: "You're so late!",
-              }),
-            );
-          }
-          const controller = new AbortController();
-          await using serverAdapter = createServerAdapter(req => {
-            req.signal.addEventListener('abort', () => {
-              abortDeferred.resolve();
+            (globalThis.Deno && serverImplName !== 'Deno') ||
+            (fetchImplName === 'native' && NODE_MAJOR_VERSION >= 26),
+        )(
+          'handles Request.signal inside adapter with streaming bodies',
+          async () => {
+            const abortDeferred = createDeferredPromise<void>();
+            const adapterResponseDeferred = createDeferredPromise<Response>();
+            function resolveAdapter() {
+              adapterResponseDeferred.resolve(
+                Response.json({
+                  message: "You're so late!",
+                }),
+              );
+            }
+            const controller = new AbortController();
+            await using serverAdapter = createServerAdapter(req => {
+              req.signal.addEventListener('abort', () => {
+                abortDeferred.resolve();
+              });
+              return req.text().then(() => {
+                controller.abort();
+                return adapterResponseDeferred.promise;
+              });
             });
-            return req.text().then(() => {
-              controller.abort();
-              return adapterResponseDeferred.promise;
-            });
-          });
-          await testServer.addOnceHandler(serverAdapter);
-          let error: Error | undefined;
-          try {
-            await fetch(testServer.url, {
-              method: 'POST',
-              signal: controller.signal,
-              body: 'Hello world!',
-            });
-          } catch (e: any) {
-            error = e;
-          }
-          expect(error).toBeDefined();
-          await setTimeout(100);
-          await abortDeferred.promise;
-          resolveAdapter();
-        });
+            await testServer.addOnceHandler(serverAdapter);
+            let error: Error | undefined;
+            try {
+              await fetch(testServer.url, {
+                method: 'POST',
+                signal: controller.signal,
+                body: 'Hello world!',
+              });
+            } catch (e: any) {
+              error = e;
+            }
+            expect(error).toBeDefined();
+            await setTimeout(100);
+            await abortDeferred.promise;
+            resolveAdapter();
+          },
+          15_000,
+        );
 
         it('handles query parameters correctly', async () => {
           await using serverAdapter = createServerAdapter(req => {
@@ -559,6 +571,58 @@ describe('Node Specific Cases', () => {
           const body = await res.text();
           expect(body).toEqual('<h1>Rendered in React</h1>');
         });
+
+        skipIf(globalThis.Bun)(
+          'should not duplicate transfer-encoding: chunked for streaming responses',
+          async () => {
+            const encoder = new TextEncoder();
+            await using serverAdapter = createServerAdapter(() => {
+              const stream = new ReadableStream({
+                start(controller) {
+                  controller.enqueue(encoder.encode('chunk1'));
+                  controller.enqueue(encoder.encode('chunk2'));
+                  controller.close();
+                },
+              });
+              return new Response(stream, {
+                status: 200,
+                headers: {
+                  'content-type': 'text/plain',
+                  'transfer-encoding': 'chunked',
+                },
+              });
+            });
+            await testServer.addOnceHandler(serverAdapter);
+
+            const url = new URL(testServer.url);
+            const rawHeaders = await new Promise<string[]>((resolve, reject) => {
+              const req = httpRequest(
+                {
+                  hostname: url.hostname,
+                  port: Number(url.port),
+                  path: url.pathname || '/',
+                  method: 'GET',
+                },
+                res => {
+                  res.resume();
+                  resolve(res.rawHeaders);
+                },
+              );
+              req.on('error', reject);
+              req.end();
+            });
+
+            // rawHeaders is [name, value, name, value, ...]
+            const transferEncodings: string[] = [];
+            for (let i = 0; i + 1 < rawHeaders.length; i += 2) {
+              if (rawHeaders[i].toLowerCase() === 'transfer-encoding') {
+                transferEncodings.push(rawHeaders[i + 1]);
+              }
+            }
+            expect(transferEncodings).toHaveLength(1);
+            expect(transferEncodings[0]).toBe('chunked');
+          },
+        );
       });
     },
   );

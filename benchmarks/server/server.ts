@@ -1,10 +1,10 @@
 import { Blob as BufferBlob } from 'node:buffer';
-import { createServer } from 'node:http';
+import { createServer, IncomingMessage, RequestListener, ServerResponse } from 'node:http';
 import * as undici from 'undici';
 import { App } from 'uWebSockets.js';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 
-let serverAdapter: ReturnType<typeof createServerAdapter>;
+let serverAdapter: RequestListener;
 if (process.env.SCENARIO === 'native') {
   serverAdapter = createServerAdapter(
     req => {
@@ -67,6 +67,23 @@ if (process.env.SCENARIO === 'native') {
       },
     },
   );
+} else if (process.env.SCENARIO === 'vanilla') {
+  serverAdapter = function (req: IncomingMessage, res: ServerResponse) {
+    if (req.method === 'POST') {
+      const chunks: Buffer[] = [];
+      req.on('data', chunk => {
+        chunks.push(chunk);
+      });
+      req.on('end', () => {
+        const body = Buffer.concat(chunks).toString();
+        const { name } = JSON.parse(body);
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ message: `Hello, ${name}!` }));
+      });
+    } else {
+      res.end();
+    }
+  };
 } else {
   serverAdapter = createServerAdapter(req => {
     if (req.method === 'POST') {
@@ -78,7 +95,7 @@ if (process.env.SCENARIO === 'native') {
 
 if (process.env.SCENARIO === 'uws') {
   App()
-    .any('/*', serverAdapter)
+    .any('/*', serverAdapter as any)
     .listen(4000, () => {
       console.log('uWebSockets.js server listening on 0.0.0.0:4000');
     });
