@@ -1,5 +1,16 @@
 # @whatwg-node/server
 
+## 0.10.19
+
+### Patch Changes
+
+- [#3376](https://github.com/ardatan/whatwg-node/pull/3376)
+  [`228b517`](https://github.com/ardatan/whatwg-node/commit/228b517da8493c4410dfaf9662deca910b9d34b0)
+  Thanks [@copilot-swe-agent](https://github.com/apps/copilot-swe-agent)! - Fix duplicate
+  `transfer-encoding: chunked` header when using uWebSockets.js. uWebSockets.js automatically adds
+  this header when streaming via `write()` + `end()`, so forwarding it from the fetch response
+  caused `chunked, chunked` which breaks strict load balancers (e.g. Google Cloud Load Balancer).
+
 ## 0.10.18
 
 ### Patch Changes
