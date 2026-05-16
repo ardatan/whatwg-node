@@ -179,23 +179,15 @@ export function iterateAsync<TInput, TOutput>(
   }
   const iterator = iterable[Symbol.iterator]();
   let index = 0;
-  // Hoist endEarly/endedEarly out of the per-iteration closure.
-  // Safety: each `iterateAsync` call creates its own independent closure scope, so
-  // separate concurrent calls never share this state.  Within a single call the
-  // iterations are strictly sequential — `iterate()` only schedules the *next*
-  // step inside `handleCallbackResult`, which runs *after* the current callback
-  // resolves — so `endedEarly` is always reset to false before the next callback
-  // runs.  This lets us reuse one flag and one function object across all steps.
-  let endedEarly = false;
-  function endEarly() {
-    endedEarly = true;
-  }
   function iterate(): MaybePromise<void> {
     const { done: endOfIterator, value } = iterator.next();
     if (endOfIterator) {
       return;
     }
-    endedEarly = false;
+    let endedEarly = false;
+    function endEarly() {
+      endedEarly = true;
+    }
     return handleMaybePromise(
       function handleCallback() {
         return callback(value, endEarly, index++);

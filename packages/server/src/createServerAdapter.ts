@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -77,10 +77,6 @@ const EMPTY_OBJECT = {};
 // Hoisted to avoid per-request closure allocations in the requestListener hot path
 function logUnexpectedRequestError(err: any) {
   console.error(`Unexpected error while handling request: ${err.message || err}`);
-}
-
-function responsePassthrough(response: Response): Response {
-  return response;
 }
 
 function createServerAdapter<
@@ -322,16 +318,20 @@ function createServerAdapter<
     // In the typical createServer(adapter) usage ctx is empty; the branch below is the fast path.
     const serverContext: any =
       ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
-    return handleMaybePromise(
-      () =>
-        handleMaybePromise(
-          () => handleRequest(request, serverContext),
-          responsePassthrough,
-          requestHandlerErrorFn,
-        ),
-      response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
-      logUnexpectedRequestError,
+    return unfakePromise(
+      fakePromise()
+        .then(() => {
+          const request = normalizeNodeRequest(
+            nodeRequest,
+            fetchAPI,
+            nodeResponse,
+            useCustomAbortCtrl,
+          );
+          return handleRequest(request, serverContext);
+        })
+        .catch(requestHandlerErrorFn)
+        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
+        .catch(logUnexpectedRequestError),
     );
   }
 

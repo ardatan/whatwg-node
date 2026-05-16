@@ -26,7 +26,7 @@ describeIf(!globalThis.Deno)('Cleanup Resources', () => {
         expect(response.ok).toBe(true);
       });
       it('https - should free resources when body is not consumed', async () => {
-        const response = await fetch('https://httpbin.org/get');
+        const response = await fetch(baseUrl + '/get');
         expect(response.ok).toBe(true);
       });
     });
