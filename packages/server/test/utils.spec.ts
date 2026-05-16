@@ -8,6 +8,7 @@ describe('sendResponseToUwsOpts', () => {
     const writtenHeaders: [string, string][] = [];
     const mock = {
       writtenHeaders,
+      onData(_cb: (chunk: ArrayBuffer, isLast: boolean) => void) {},
       onAborted(_cb: () => void) {},
       writeStatus(_status: string) {},
       writeHeader(key: string, value: string) {
