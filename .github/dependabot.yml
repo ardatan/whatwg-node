@@ -25,6 +25,10 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
+    cooldown:
+      default-days: 3
+      exclude:
+        - '@envelop/*'
     groups:
       actions-deps:
         patterns:
