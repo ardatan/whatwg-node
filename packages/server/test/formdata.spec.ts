@@ -81,16 +81,16 @@ describe('FormData', () => {
             contentType: 'text/plain',
           });
 
+          const headers = new Headers(formData.getHeaders());
+          headers.set('content-length', '10');
+
           const url = new URL(testServer.url);
 
           const req = http.request({
             method: 'post',
             hostname: url.hostname,
             port: url.port,
-            headers: {
-              ...formData.getHeaders(),
-              'content-length': 10,
-            },
+            headers: Object.fromEntries(headers.entries()),
           });
 
           formData.pipe(req);
@@ -136,14 +136,14 @@ describe('FormData', () => {
 
             const url = new URL(testServer.url);
 
+            const headers = new Headers(formData.getHeaders());
+            headers.set('content-length', '1000');
+
             const req = http.request({
               method: 'post',
               hostname: url.hostname,
               port: url.port,
-              headers: {
-                ...formData.getHeaders(),
-                'content-length': 1000,
-              },
+              headers: Object.fromEntries(headers.entries()),
             });
 
             formData.pipe(req);

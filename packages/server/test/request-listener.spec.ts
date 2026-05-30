@@ -188,6 +188,11 @@ describe('Request Listener', () => {
       await testServer.addOnceHandler(adapter);
       const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
       const returnedResponse = await fetchAPI.fetch(expectedRequest);
+      if (returnedResponse.status !== expectedResponse.status) {
+        throw new Error(
+          `Expected status ${expectedResponse.status} but got ${returnedResponse.status}, body: ${await returnedResponse.text()}`,
+        );
+      }
       compareResponse(returnedResponse, expectedResponse);
       await compareReadableStream(returnedResponse.body, getResponseBody());
     }
