@@ -97,6 +97,31 @@ describe('useRequestDeadline', () => {
         expect(handlerSignal?.aborted).toBe(true);
       });
 
+      it('body is readable in the handler after the request is reconstructed with the deadline signal', async () => {
+        let bodyText: string | undefined;
+        const adapter = createServerAdapter(
+          async req => {
+            bodyText = await req.text();
+            return new fetchAPI.Response('ok', { status: 200 });
+          },
+          {
+            plugins: [
+              useRequestDeadline({
+                timeout: 5000,
+                response: () => new fetchAPI.Response('deadline', { status: 504 }),
+              }),
+            ],
+            fetchAPI,
+          },
+        );
+
+        const response = await adapter.fetch(
+          new fetchAPI.Request('http://localhost/', { method: 'POST', body: 'hello body' }),
+        );
+        expect(response.status).toBe(200);
+        expect(bodyText).toBe('hello body');
+      });
+
       it('calls onResponse hooks after the deadline response is produced', async () => {
         const onResponse = jest.fn(({ response }: { response: Response }) => {
           // hook receives the deadline response

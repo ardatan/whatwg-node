@@ -40,7 +40,22 @@ export function useRequestDeadline<TServerContext = {}>(
     onRequest({ request, setRequest, requestHandler, setRequestHandler, fetchAPI }) {
       const deadlineSignal = AbortSignal.timeout(opts.timeout);
       const composedSignal = abortSignalAny([request.signal, deadlineSignal])!;
-      setRequest(new fetchAPI.Request(request, { signal: composedSignal }));
+      // TODO: replace with new fetchAPI.Request(request, { signal: composedSignal }) once
+      // node-fetch (used by the ponyfill) can copy-construct a Request whose body is a
+      // PonyfillReadableStream - right now it silently drops the body in that case.
+      // constructing from url + explicit fields is the workaround that keeps the body intact.
+      setRequest(
+        new fetchAPI.Request(request.url, {
+          method: request.method,
+          headers: request.headers,
+          body: request.body,
+          signal: composedSignal,
+          // 'half' duplex is required by the fetch spec when the request has a streaming body -
+          // without it, Node.js native fetch rejects the request with a TypeError at construction time.
+          // @ts-expect-error - not yet in the TypeScript lib types for RequestInit
+          duplex: 'half',
+        }),
+      );
 
       setRequestHandler(function handlerWithDeadline(req, ctx) {
         if (deadlineSignal.aborted) {
