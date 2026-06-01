@@ -1,4 +1,4 @@
-import { abortSignalAny } from '@graphql-hive/signal';
+import { abortSignalAny } from '../abortSignalAny.js';
 import type { ServerAdapterInitialContext } from '../types.js';
 import type { ServerAdapterPlugin } from './types.js';
 
