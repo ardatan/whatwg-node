@@ -13,7 +13,7 @@ import { createServerAdapter, useRequestDeadline } from '@whatwg-node/server'
 const adapter = createServerAdapter(myHandler, {
   plugins: [
     useRequestDeadline({
-      timeoutInMs: 5000,
+      timeout: 5000,
       response: req => new Response(`Request to ${req.url} timed out`, { status: 504 })
     })
   ]

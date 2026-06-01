@@ -14,7 +14,7 @@ describe('useRequestDeadline', () => {
           {
             plugins: [
               useRequestDeadline({
-                timeoutInMs: 50,
+                timeout: 50,
                 response: () => new fetchAPI.Response('deadline', { status: 504 }),
               }),
             ],
@@ -42,7 +42,7 @@ describe('useRequestDeadline', () => {
           {
             plugins: [
               useRequestDeadline({
-                timeoutInMs: 50,
+                timeout: 50,
                 response: deadlineResponse,
               }),
             ],
@@ -60,7 +60,7 @@ describe('useRequestDeadline', () => {
         const adapter = createServerAdapter(() => new fetchAPI.Response('ok', { status: 200 }), {
           plugins: [
             useRequestDeadline({
-              timeoutInMs: 200,
+              timeout: 200,
               response: () => new fetchAPI.Response('deadline', { status: 504 }),
             }),
           ],
@@ -84,7 +84,7 @@ describe('useRequestDeadline', () => {
           {
             plugins: [
               useRequestDeadline({
-                timeoutInMs: 50,
+                timeout: 50,
                 response: () => new fetchAPI.Response('deadline', { status: 504 }),
               }),
             ],
@@ -110,7 +110,7 @@ describe('useRequestDeadline', () => {
           {
             plugins: [
               useRequestDeadline({
-                timeoutInMs: 50,
+                timeout: 50,
                 response: () => new fetchAPI.Response('deadline', { status: 504 }),
               }),
               { onResponse },
