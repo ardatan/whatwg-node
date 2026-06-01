@@ -1,0 +1,129 @@
+import { describe, expect, it, jest } from '@jest/globals';
+import { useRequestDeadline } from '../src/plugins/useRequestDeadline.js';
+import { runTestsForEachFetchImpl } from './test-fetch.js';
+
+describe('useRequestDeadline', () => {
+  runTestsForEachFetchImpl(
+    (_, { createServerAdapter, fetchAPI }) => {
+      it('responds with the deadline response when the handler exceeds the timeout', async () => {
+        const adapter = createServerAdapter(
+          () =>
+            new Promise<Response>(resolve =>
+              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+            ),
+          {
+            plugins: [
+              useRequestDeadline({
+                timeoutInMs: 50,
+                response: () => new fetchAPI.Response('deadline', { status: 504 }),
+              }),
+            ],
+            fetchAPI,
+          },
+        );
+
+        const response = await adapter.fetch('http://localhost/');
+        expect(response.status).toBe(504);
+        expect(await response.text()).toBe('deadline');
+      });
+
+      it('passes the request to the deadline response factory', async () => {
+        const deadlineResponse = jest.fn(
+          (_req: Request) => new fetchAPI.Response('deadline', { status: 504 }),
+        );
+        let capturedRequest: Request | undefined;
+        const adapter = createServerAdapter(
+          req => {
+            capturedRequest = req;
+            return new Promise<Response>(resolve =>
+              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+            );
+          },
+          {
+            plugins: [
+              useRequestDeadline({
+                timeoutInMs: 50,
+                response: deadlineResponse,
+              }),
+            ],
+            fetchAPI,
+          },
+        );
+
+        await adapter.fetch('http://localhost/test-path');
+        expect(deadlineResponse).toHaveBeenCalledTimes(1);
+        // the request passed to the deadline factory is the same one the handler received
+        expect(deadlineResponse.mock.calls[0][0]).toBe(capturedRequest);
+      });
+
+      it('does not apply the deadline when the handler responds in time', async () => {
+        const adapter = createServerAdapter(() => new fetchAPI.Response('ok', { status: 200 }), {
+          plugins: [
+            useRequestDeadline({
+              timeoutInMs: 200,
+              response: () => new fetchAPI.Response('deadline', { status: 504 }),
+            }),
+          ],
+          fetchAPI,
+        });
+
+        const response = await adapter.fetch('http://localhost/');
+        expect(response.status).toBe(200);
+        expect(await response.text()).toBe('ok');
+      });
+
+      it('aborts the request signal when the deadline fires', async () => {
+        let handlerSignal: AbortSignal | undefined;
+        const adapter = createServerAdapter(
+          req => {
+            handlerSignal = req.signal;
+            return new Promise<Response>(resolve =>
+              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+            );
+          },
+          {
+            plugins: [
+              useRequestDeadline({
+                timeoutInMs: 50,
+                response: () => new fetchAPI.Response('deadline', { status: 504 }),
+              }),
+            ],
+            fetchAPI,
+          },
+        );
+
+        const response = await adapter.fetch('http://localhost/');
+        expect(response.status).toBe(504);
+        expect(handlerSignal?.aborted).toBe(true);
+      });
+
+      it('calls onResponse hooks after the deadline response is produced', async () => {
+        const onResponse = jest.fn(({ response }: { response: Response }) => {
+          // hook receives the deadline response
+          expect(response.status).toBe(504);
+        });
+        const adapter = createServerAdapter(
+          () =>
+            new Promise<Response>(resolve =>
+              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+            ),
+          {
+            plugins: [
+              useRequestDeadline({
+                timeoutInMs: 50,
+                response: () => new fetchAPI.Response('deadline', { status: 504 }),
+              }),
+              { onResponse },
+            ],
+            fetchAPI,
+          },
+        );
+
+        const response = await adapter.fetch('http://localhost/');
+        expect(response.status).toBe(504);
+        expect(onResponse).toHaveBeenCalledTimes(1);
+      });
+    },
+    { noLibCurl: true },
+  );
+});
