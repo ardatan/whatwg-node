@@ -50,6 +50,14 @@ export function useRequestDeadline<TServerContext = {}>(
           headers: request.headers,
           body: request.body,
           signal: composedSignal,
+          cache: request.cache,
+          credentials: request.credentials,
+          integrity: request.integrity,
+          keepalive: request.keepalive,
+          mode: request.mode,
+          redirect: request.redirect,
+          referrer: request.referrer,
+          referrerPolicy: request.referrerPolicy,
           // 'half' duplex is required by the fetch spec when the request has a streaming body -
           // without it, Node.js native fetch rejects the request with a TypeError at construction time.
           // @ts-expect-error - not yet in the TypeScript lib types for RequestInit
