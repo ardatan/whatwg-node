@@ -1,13 +1,14 @@
 import { abortSignalAny } from '@graphql-hive/signal';
+import type { ServerAdapterInitialContext } from '../types.js';
 import type { ServerAdapterPlugin } from './types.js';
 
-export interface RequestDeadlineOptions {
+export interface RequestDeadlineOptions<TServerContext = {}> {
   timeoutInMs: number;
-  response: (request: Request) => Response;
+  response: (request: Request, ctx: TServerContext & ServerAdapterInitialContext) => Response;
 }
 
-export function useRequestDeadline<TServerContext>(
-  opts: RequestDeadlineOptions,
+export function useRequestDeadline<TServerContext = {}>(
+  opts: RequestDeadlineOptions<TServerContext>,
 ): ServerAdapterPlugin<TServerContext> {
   return {
     onRequest({ request, setRequest, requestHandler, setRequestHandler, fetchAPI }) {
@@ -17,13 +18,13 @@ export function useRequestDeadline<TServerContext>(
 
       setRequestHandler(function handlerWithDeadline(req, ctx) {
         if (deadlineSignal.aborted) {
-          return opts.response(req);
+          return opts.response(req, ctx);
         }
         return new Promise((resolve, reject) => {
           deadlineSignal.addEventListener(
             'abort',
             () => {
-              resolve(opts.response(req));
+              resolve(opts.response(req, ctx));
             },
             { once: true },
           );
