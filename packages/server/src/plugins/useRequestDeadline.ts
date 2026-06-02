@@ -1,3 +1,4 @@
+import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { abortSignalAny } from '../abortSignalAny.js';
 import type { ServerAdapterInitialContext } from '../types.js';
 import type { ServerAdapterPlugin } from './types.js';
@@ -57,12 +58,7 @@ export function useRequestDeadline<TServerContext = {}>(
             },
             { once: true },
           );
-          const $ = requestHandler(req, ctx);
-          if ($ instanceof Promise) {
-            $.then(resolve, reject);
-          } else {
-            resolve($);
-          }
+          return handleMaybePromise(() => requestHandler(req, ctx), resolve, reject);
         });
       });
     },
