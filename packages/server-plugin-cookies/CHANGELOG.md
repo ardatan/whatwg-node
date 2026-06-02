@@ -1,5 +1,14 @@
 # @whatwg-node/server-plugin-cookies
 
+## 1.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  [[`228b517`](https://github.com/ardatan/whatwg-node/commit/228b517da8493c4410dfaf9662deca910b9d34b0),
+  [`9d02fd0`](https://github.com/ardatan/whatwg-node/commit/9d02fd0ece043eac68fafa8430473844338eb835)]:
+  - @whatwg-node/server@0.11.0
+
 ## 1.0.5
 
 ### Patch Changes
@@ -102,7 +111,6 @@
 - [#500](https://github.com/ardatan/whatwg-node/pull/500)
   [`2896da0`](https://github.com/ardatan/whatwg-node/commit/2896da0d524e1e42e16272f64c055fb868c2e41c)
   Thanks [@ardatan](https://github.com/ardatan)! - dependencies updates:
-
   - Added dependency
     [`@whatwg-node/cookie-store@0.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/cookie-store/v/0.0.0)
     (to `dependencies`)
