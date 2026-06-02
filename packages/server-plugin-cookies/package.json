@@ -33,6 +33,9 @@
     "./package.json": "./package.json"
   },
   "typings": "dist/typings/index.d.ts",
+  "peerDependencies": {
+    "@whatwg-node/server": "^0.10.0 | ^0.11.0"
+  },
   "dependencies": {
     "@whatwg-node/cookie-store": "^0.2.2",
     "@whatwg-node/server": "^0.11.0",
