@@ -1,5 +1,23 @@
 # @whatwg-node/server-plugin-cookies
 
+## 1.0.7
+
+### Patch Changes
+
+- [#3402](https://github.com/ardatan/whatwg-node/pull/3402)
+  [`bb195f8`](https://github.com/ardatan/whatwg-node/commit/bb195f851e09712bda2a20462f464ebbe8ca513e)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - dependencies updates:
+  - Removed dependency
+    [`@whatwg-node/server@^0.11.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.11.0)
+    (from `dependencies`)
+  - Added dependency
+    [`@whatwg-node/server@^0.10.0 || ^0.11.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/server/v/0.10.0)
+    (to `peerDependencies`)
+
+- [#3402](https://github.com/ardatan/whatwg-node/pull/3402)
+  [`bb195f8`](https://github.com/ardatan/whatwg-node/commit/bb195f851e09712bda2a20462f464ebbe8ca513e)
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - @whatwg-node/server is a peer dependency
+
 ## 1.0.6
 
 ### Patch Changes
