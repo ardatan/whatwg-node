@@ -39,7 +39,11 @@ export function useRequestDeadline<TServerContext = {}>(
 ): ServerAdapterPlugin<TServerContext> {
   return {
     onRequest({ request, requestHandler, setRequestHandler }) {
-      const deadlineSignal = AbortSignal.timeout(opts.timeout);
+      // AbortSignal.timeout() creates an internal timer with no cancellation handle, so it keeps
+      // the event loop alive and holds memory for the full timeout duration even when the request
+      // finishes early. using AbortController + setTimeout gives us a timer handle we can clearTimeout
+      const deadlineCtrl = new AbortController();
+      const deadlineSignal = deadlineCtrl.signal;
       const composedSignal = abortSignalAny([request.signal, deadlineSignal])!;
 
       // overwrite the request signal with the composed signal. we intentionally
@@ -51,14 +55,33 @@ export function useRequestDeadline<TServerContext = {}>(
           return opts.response(req, ctx);
         }
         return new Promise((resolve, reject) => {
-          deadlineSignal.addEventListener(
-            'abort',
-            () => {
-              resolve(opts.response(req, ctx));
+          const timer = setTimeout(() => {
+            deadlineCtrl.abort();
+            resolve(opts.response(req, ctx));
+          }, opts.timeout);
+
+          function onDeadlineAbort() {
+            clearTimeout(timer);
+            resolve(opts.response(req, ctx));
+          }
+
+          // handle the case where the deadline signal is aborted externally (e.g. via composedSignal)
+          // before the timer fires - we still need to clear the timer
+          deadlineSignal.addEventListener('abort', onDeadlineAbort, { once: true });
+
+          return handleMaybePromise(
+            () => requestHandler(req, ctx),
+            result => {
+              clearTimeout(timer);
+              deadlineSignal.removeEventListener('abort', onDeadlineAbort);
+              resolve(result);
             },
-            { once: true },
+            err => {
+              clearTimeout(timer);
+              deadlineSignal.removeEventListener('abort', onDeadlineAbort);
+              reject(err);
+            },
           );
-          return handleMaybePromise(() => requestHandler(req, ctx), resolve, reject);
         });
       });
     },

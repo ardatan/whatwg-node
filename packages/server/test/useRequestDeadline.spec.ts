@@ -98,7 +98,7 @@ describe('useRequestDeadline', () => {
         expect(handlerSignal?.aborted).toBe(true);
       });
 
-      it('body is readable in the handler after the request is reconstructed with the deadline signal', async () => {
+      it('body is readable in the handler after the request signal is redefined with the deadline signal', async () => {
         let bodyText: string | undefined;
         const adapter = createServerAdapter(
           async req => {
