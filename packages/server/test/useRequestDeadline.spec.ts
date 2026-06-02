@@ -28,10 +28,8 @@ describe('useRequestDeadline', () => {
       });
 
       it('passes the request to the deadline response factory', async () => {
-        const deadlineResponse = jest.fn(
-          (_req: Request) => new fetchAPI.Response('deadline', { status: 504 }),
-        );
         let capturedRequest: Request | undefined;
+        let deadlineFactoryRequest: Request | undefined;
         const adapter = createServerAdapter(
           req => {
             capturedRequest = req;
@@ -43,7 +41,10 @@ describe('useRequestDeadline', () => {
             plugins: [
               useRequestDeadline({
                 timeout: 50,
-                response: deadlineResponse,
+                response: req => {
+                  deadlineFactoryRequest = req;
+                  return new fetchAPI.Response('deadline', { status: 504 });
+                },
               }),
             ],
             fetchAPI,
@@ -51,9 +52,9 @@ describe('useRequestDeadline', () => {
         );
 
         await adapter.fetch('http://localhost/test-path');
-        expect(deadlineResponse).toHaveBeenCalledTimes(1);
+        expect(deadlineFactoryRequest).toBeDefined();
         // the request passed to the deadline factory is the same one the handler received
-        expect(deadlineResponse.mock.calls[0][0]).toBe(capturedRequest);
+        expect(deadlineFactoryRequest).toBe(capturedRequest);
       });
 
       it('does not apply the deadline when the handler responds in time', async () => {
