@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -74,6 +74,21 @@ export interface ServerAdapterOptions<TServerContext> {
 
 const EMPTY_OBJECT = {};
 
+// Hoisted to avoid per-request closure allocations in the requestListener hot path
+function logUnexpectedRequestError(err: any) {
+  console.error(`Unexpected error while handling request: ${err.message || err}`);
+}
+
+// Identity helpers hoisted out of the per-request hot path so they are not re-allocated
+// on every requestListener invocation. Used as `outputSuccessFactory` in handleMaybePromise
+// chains where we only want the error-handling behaviour but need to forward the value.
+function responsePassthrough(response: Response): Response {
+  return response;
+}
+function undefinedPassthrough(): undefined {
+  return undefined;
+}
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
@@ -113,6 +128,9 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
+
+  // Defined once per adapter instance to avoid per-request closure allocations
+  const requestHandlerErrorFn = (err: any) => handleErrorFromRequestHandler(err, fetchAPI.Response);
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
@@ -305,21 +323,46 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    return unfakePromise(
-      fakePromise()
-        .then(() =>
-          handleNodeRequestAndResponse(
-            nodeRequest,
-            nodeResponse,
-            defaultServerContext as any,
-            ...ctx,
-          ),
-        )
-        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
-        .catch(err =>
-          console.error(`Unexpected error while handling request: ${err.message || err}`),
+    // Inline handleNodeRequestAndResponse for the hot path to avoid extra function call
+    // overhead, rest-parameter array allocations, and redundant checks.
+    // In the typical createServer(adapter) usage ctx is empty; the branch below is the fast path.
+    const serverContext: any =
+      ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
+    // Use handleMaybePromise instead of a fakePromise().then() chain so the synchronous
+    // fast-path in @whatwg-node/promise-helpers kicks in: when handleRequest returns
+    // a sync (fake) Response we avoid allocating any Promise/fakePromise wrapper objects
+    // and skip several microtask hops per request.
+    //
+    // Note on error handling (mirrors the original fakePromise().then().catch().then().catch() chain):
+    //   1. Errors from normalizeNodeRequest / handleRequest are converted to an error Response by
+    //      `requestHandlerErrorFn` (inner handleMaybePromise's outputErrorFactory).
+    //   2. Errors from sendNodeResponse are logged via `logUnexpectedRequestError`. We wrap
+    //      sendNodeResponse in its own handleMaybePromise so the logger acts like a trailing
+    //      `.catch(...)` — `handleMaybePromise`'s outer outputErrorFactory only catches errors
+    //      from its inputFactory (i.e. Promise.then(onFulfilled, onRejected) semantics), so we
+    //      cannot rely on the outermost error handler to catch sendNodeResponse failures.
+    return handleMaybePromise(
+      () =>
+        handleMaybePromise(
+          () => {
+            const request = normalizeNodeRequest(
+              nodeRequest,
+              fetchAPI,
+              nodeResponse,
+              useCustomAbortCtrl,
+            );
+            return handleRequest(request, serverContext);
+          },
+          responsePassthrough,
+          requestHandlerErrorFn,
         ),
+      response =>
+        handleMaybePromise(
+          () => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
+          undefinedPassthrough,
+          logUnexpectedRequestError,
+        ),
+      logUnexpectedRequestError,
     );
   }
 

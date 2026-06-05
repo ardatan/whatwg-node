@@ -32,13 +32,56 @@ export function handleMaybePromise<TInput, TOutput>(
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
   finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
-  let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
-
+  // Rare path: keep the full fakePromise chain when a finallyFactory is provided so that
+  // its semantics match a real Promise.finally() (re-throw, suppression of original rejection, etc.).
+  // The `as unknown as` casts are necessary because fakePromise() returns Promise<void> but
+  // we need to thread the TInput → TOutput types through the chain; the runtime semantics are correct.
   if (finallyFactory) {
+    let result$ = (fakePromise() as unknown as Promise<TInput>)
+      .then(inputFactory)
+      .then(outputSuccessFactory, outputErrorFactory);
     result$ = result$.finally(finallyFactory);
+    return unfakePromise(result$);
   }
 
-  return unfakePromise(result$);
+  // --- Fast path: avoid all object allocations for the synchronous case ---
+
+  let input: MaybePromiseLike<TInput>;
+  try {
+    input = inputFactory();
+  } catch (err) {
+    if (outputErrorFactory) {
+      return unfakePromise(outputErrorFactory(err) as Promise<TOutput>);
+    }
+    throw err;
+  }
+
+  // unfakePromise() converts fakePromise(v) → v so they are treated as synchronous values,
+  // and throws for fakeRejectPromise(err) so they are treated as synchronous errors,
+  // matching the semantics of the old fakePromise chain.
+  let syncInput: MaybePromise<TInput>;
+  try {
+    syncInput = unfakePromise(input as Promise<TInput>);
+  } catch (err) {
+    if (outputErrorFactory) {
+      return unfakePromise(outputErrorFactory(err) as Promise<TOutput>);
+    }
+    throw err;
+  }
+
+  // Real async Promise: delegate to its .then() — returns a real Promise, no allocation needed.
+  if (isPromise(syncInput)) {
+    if (outputErrorFactory) {
+      return syncInput.then(outputSuccessFactory, outputErrorFactory);
+    }
+    return syncInput.then(outputSuccessFactory);
+  }
+
+  // Synchronous fast path: call the factories directly and unwrap any fakePromise wrapper
+  // from the output, mirroring the old unfakePromise(result$) call at the end of the chain.
+  // If outputSuccessFactory returns fakeRejectPromise, unfakePromise throws, which
+  // propagates without being caught by outputErrorFactory — same as old behaviour.
+  return unfakePromise(outputSuccessFactory(syncInput as TInput) as Promise<TOutput>);
 }
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
@@ -136,11 +179,38 @@ export function iterateAsync<TInput, TOutput>(
   }
   const iterator = iterable[Symbol.iterator]();
   let index = 0;
+  // If the callback doesn't declare an `endEarly` parameter, skip allocating the
+  // per-iteration `endedEarly` flag and `endEarly` closure entirely. This is the common
+  // case for hooks that just observe each value (e.g. onResponseHooks).
+  const acceptsEndEarly = callback.length > 1;
+  if (!acceptsEndEarly) {
+    function iterateNoEnd(): MaybePromise<void> {
+      const { done: endOfIterator, value } = iterator.next();
+      if (endOfIterator) {
+        return;
+      }
+      return handleMaybePromise(
+        function handleCallback() {
+          return (callback as any)(value, undefined, index++);
+        },
+        function handleCallbackResult(result) {
+          if (result) {
+            results?.push(result);
+          }
+          return iterateNoEnd();
+        },
+      );
+    }
+    return iterateNoEnd();
+  }
   function iterate(): MaybePromise<void> {
     const { done: endOfIterator, value } = iterator.next();
     if (endOfIterator) {
       return;
     }
+    // Per-iteration closure for `endEarly` is intentional: callers can retain the callback
+    // reference and a stale call from a previous iteration must NOT stop the current one.
+    // See PR #3192 review comment for the regression this prevents.
     let endedEarly = false;
     function endEarly() {
       endedEarly = true;
