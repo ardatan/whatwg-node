@@ -14,7 +14,7 @@
     "@e2e/shared-scripts": "0.0.0",
     "@e2e/shared-server": "0.0.157",
     "encoding": "0.1.13",
-    "next": "16.2.6",
+    "next": "16.2.9",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },
