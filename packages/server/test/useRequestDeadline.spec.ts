@@ -129,10 +129,21 @@ describe('useRequestDeadline', () => {
           expect(response.status).toBe(504);
         });
         const adapter = createServerAdapter(
-          () =>
-            new Promise<Response>(resolve =>
-              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
-            ),
+          req =>
+            new Promise<Response>((resolve, reject) => {
+              const timer = setTimeout(
+                () => resolve(new fetchAPI.Response('ok', { status: 200 })),
+                500,
+              );
+              req.signal.addEventListener(
+                'abort',
+                () => {
+                  clearTimeout(timer);
+                  reject(new Error('Request aborted'));
+                },
+                { once: true },
+              );
+            }),
           {
             plugins: [
               useRequestDeadline({
