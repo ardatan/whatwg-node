@@ -10,14 +10,14 @@
     "start": "func start"
   },
   "dependencies": {
-    "@azure/functions": "^4.13.0",
+    "@azure/functions": "^4.16.1",
     "@e2e/shared-scripts": "0.0.0",
     "tslib": "^2.6.3"
   },
   "devDependencies": {
     "@pulumi/azure-native": "3.19.0",
     "@pulumi/pulumi": "3.244.0",
-    "esbuild": "0.28.0",
+    "esbuild": "0.28.1",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "typescript": "6.0.3"
