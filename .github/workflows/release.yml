@@ -41,9 +41,10 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
+    # Skip for forks, release PR and dependabot PRs
     if:
       ${{ github.event.pull_request.head.repo.fork != true && github.event.pull_request.title !=
-      'Upcoming Release Changes' }}
+      'Upcoming Release Changes' && github.actor != 'dependabot[bot]' }}
     uses: the-guild-org/shared-config/.github/workflows/release-snapshot.yml@v1
     with:
       npmTag: alpha

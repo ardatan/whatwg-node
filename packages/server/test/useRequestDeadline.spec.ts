@@ -1,3 +1,4 @@
+import { setTimeout } from 'node:timers/promises';
 import { describe, expect, it, jest } from '@jest/globals';
 import { useRequestDeadline } from '../src/plugins/useRequestDeadline.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
@@ -7,9 +8,9 @@ describe('useRequestDeadline', () => {
     (_, { createServerAdapter, fetchAPI }) => {
       it('responds with the deadline response when the handler exceeds the timeout', async () => {
         const adapter = createServerAdapter(
-          () =>
-            new Promise<Response>(resolve =>
-              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+          req =>
+            setTimeout(500, null, { signal: req.signal }).then(
+              () => new fetchAPI.Response('ok', { status: 200 }),
             ),
           {
             plugins: [
@@ -33,8 +34,8 @@ describe('useRequestDeadline', () => {
         const adapter = createServerAdapter(
           req => {
             capturedRequest = req;
-            return new Promise<Response>(resolve =>
-              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+            return setTimeout(500, null, { signal: req.signal }).then(
+              () => new fetchAPI.Response('ok', { status: 200 }),
             );
           },
           {
@@ -78,8 +79,8 @@ describe('useRequestDeadline', () => {
         const adapter = createServerAdapter(
           req => {
             handlerSignal = req.signal;
-            return new Promise<Response>(resolve =>
-              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+            return setTimeout(500, null, { signal: req.signal }).then(
+              () => new fetchAPI.Response('ok', { status: 200 }),
             );
           },
           {
@@ -129,9 +130,9 @@ describe('useRequestDeadline', () => {
           expect(response.status).toBe(504);
         });
         const adapter = createServerAdapter(
-          () =>
-            new Promise<Response>(resolve =>
-              setTimeout(() => resolve(new fetchAPI.Response('ok', { status: 200 })), 500),
+          req =>
+            setTimeout(500, null, { signal: req.signal }).then(
+              () => new fetchAPI.Response('ok', { status: 200 }),
             ),
           {
             plugins: [
