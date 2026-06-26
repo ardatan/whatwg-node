@@ -199,7 +199,8 @@ jobs:
       VERCEL_AUTH_TOKEN: ${{ secrets.VERCEL_AUTH_TOKEN }}
       VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
     runs-on: ubuntu-latest
-    if: github.event.pull_request.head.repo.fork != true
+    # Disable for dependabot and fork PRs
+    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout Repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
