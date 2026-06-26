@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -52,7 +52,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -76,7 +76,7 @@ jobs:
       fail-fast: false
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Install Required Libraries
         run: sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev
       - name: Setup env
@@ -87,7 +87,7 @@ jobs:
         if: ${{ matrix.node-version != 18 }}
         run: npm install -g npm@latest
       - name: Cache npm and Jest
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             ~/.npm
@@ -120,7 +120,7 @@ jobs:
           - 8888:80
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -140,7 +140,7 @@ jobs:
           - 8888:80
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -159,7 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Master
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
@@ -203,7 +203,7 @@ jobs:
     if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
