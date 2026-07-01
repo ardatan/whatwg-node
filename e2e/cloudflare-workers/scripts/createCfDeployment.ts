@@ -59,7 +59,7 @@ export function createCfDeployment(
       new cf.WorkersRoute('worker-route', {
         script: workerScript.scriptName,
         pattern: workerUrl + '*',
-        zoneId: env('CLOUDFLARE_ZONE_ID'),
+        // zoneId: env('CLOUDFLARE_ZONE_ID'),
       });
 
       return {
