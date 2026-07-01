@@ -45,7 +45,7 @@ export function createCfDeployment(
       const workerUrl = `e2e.ardatan.workers.dev/${stackName}`;
 
       // Deploy CF script as Worker
-      const workerScript = new cf.WorkersScript('worker', {
+      /* const workerScript =  */ new cf.WorkersScript('worker', {
         accountId: env('CLOUDFLARE_ACCOUNT_ID'),
         content: await fsPromises.readFile(
           join(__dirname, '..', '..', projectName, 'dist', 'index.js'),
@@ -56,11 +56,11 @@ export function createCfDeployment(
       });
 
       // Create a nice route for easy testing
-      new cf.WorkersRoute('worker-route', {
-        script: workerScript.scriptName,
-        pattern: workerUrl + '*',
-        // zoneId: env('CLOUDFLARE_ZONE_ID'),
-      });
+      // new cf.WorkersRoute('worker-route', {
+      //   script: workerScript.scriptName,
+      //   pattern: workerUrl + '*',
+      //   zoneId: env('CLOUDFLARE_ZONE_ID'),
+      // });
 
       return {
         workerUrl: `https://${workerUrl}`,
