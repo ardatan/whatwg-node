@@ -45,7 +45,7 @@ export function createCfDeployment(
       const workerUrl = `e2e.ardatan.workers.dev/${stackName}`;
 
       // Deploy CF script as Worker
-      /* const workerScript =  */ new cf.WorkersScript('worker', {
+      const workerScript = new cf.WorkersScript('worker', {
         accountId: env('CLOUDFLARE_ACCOUNT_ID'),
         content: await fsPromises.readFile(
           join(__dirname, '..', '..', projectName, 'dist', 'index.js'),
@@ -53,6 +53,13 @@ export function createCfDeployment(
         ),
         ...(isModule && { mainModule: 'index.js' }),
         scriptName: stackName,
+      });
+
+      new cf.WorkersScriptSubdomain('worker-subdomain', {
+        accountId: env('CLOUDFLARE_ACCOUNT_ID'),
+        scriptName: workerScript.scriptName,
+        enabled: true,
+        previewsEnabled: true,
       });
 
       // Create a nice route for easy testing
