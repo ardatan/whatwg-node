@@ -42,7 +42,7 @@ export function createCfDeployment(
     },
     program: async () => {
       const stackName = pulumi.getStack();
-      const workerUrl = `e2e.ardatan.workers.dev/${stackName}`;
+      const workerUrl = `${stackName}.ardatan.workers.dev`;
 
       // Deploy CF script as Worker
       const workerScript = new cf.WorkersScript('worker', {
