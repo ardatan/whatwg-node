@@ -62,13 +62,6 @@ export function createCfDeployment(
         previewsEnabled: true,
       });
 
-      // Create a nice route for easy testing
-      // new cf.WorkersRoute('worker-route', {
-      //   script: workerScript.scriptName,
-      //   pattern: workerUrl + '*',
-      //   zoneId: env('CLOUDFLARE_ZONE_ID'),
-      // });
-
       return {
         workerUrl: `https://${workerUrl}`,
       };
