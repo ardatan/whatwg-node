@@ -141,7 +141,9 @@ export function getStreamFromFormData(
       if (currentAsyncIterator) {
         return currentAsyncIterator.next().then(({ done, value }) => {
           if (done) {
+            const iter = currentAsyncIterator;
             currentAsyncIterator = undefined;
+            iter?.return?.();
           }
           if (value) {
             return controller.enqueue(value);
