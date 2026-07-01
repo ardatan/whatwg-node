@@ -1,27 +1,29 @@
-import { setTimeout } from 'node:timers/promises';
 import { describe, expect, it, jest } from '@jest/globals';
 import { useRequestDeadline } from '../src/plugins/useRequestDeadline.js';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
+
+function slowHandler(req: Request, fetchAPI: { Response: typeof Response }): Promise<Response> {
+  return new Promise(resolve => {
+    const timer = globalThis.setTimeout(() => {
+      resolve(new fetchAPI.Response('ok', { status: 200 }));
+    }, 500);
+    req.signal.addEventListener('abort', () => globalThis.clearTimeout(timer), { once: true });
+  });
+}
 
 describe('useRequestDeadline', () => {
   runTestsForEachFetchImpl(
     (_, { createServerAdapter, fetchAPI }) => {
       it('responds with the deadline response when the handler exceeds the timeout', async () => {
-        const adapter = createServerAdapter(
-          req =>
-            setTimeout(500, null, { signal: req.signal }).then(
-              () => new fetchAPI.Response('ok', { status: 200 }),
-            ),
-          {
-            plugins: [
-              useRequestDeadline({
-                timeout: 50,
-                response: () => new fetchAPI.Response('deadline', { status: 504 }),
-              }),
-            ],
-            fetchAPI,
-          },
-        );
+        const adapter = createServerAdapter(req => slowHandler(req, fetchAPI), {
+          plugins: [
+            useRequestDeadline({
+              timeout: 50,
+              response: () => new fetchAPI.Response('deadline', { status: 504 }),
+            }),
+          ],
+          fetchAPI,
+        });
 
         const response = await adapter.fetch('http://localhost/');
         expect(response.status).toBe(504);
@@ -34,9 +36,7 @@ describe('useRequestDeadline', () => {
         const adapter = createServerAdapter(
           req => {
             capturedRequest = req;
-            return setTimeout(500, null, { signal: req.signal }).then(
-              () => new fetchAPI.Response('ok', { status: 200 }),
-            );
+            return slowHandler(req, fetchAPI);
           },
           {
             plugins: [
@@ -79,9 +79,7 @@ describe('useRequestDeadline', () => {
         const adapter = createServerAdapter(
           req => {
             handlerSignal = req.signal;
-            return setTimeout(500, null, { signal: req.signal }).then(
-              () => new fetchAPI.Response('ok', { status: 200 }),
-            );
+            return slowHandler(req, fetchAPI);
           },
           {
             plugins: [
@@ -129,22 +127,16 @@ describe('useRequestDeadline', () => {
           // hook receives the deadline response
           expect(response.status).toBe(504);
         });
-        const adapter = createServerAdapter(
-          req =>
-            setTimeout(500, null, { signal: req.signal }).then(
-              () => new fetchAPI.Response('ok', { status: 200 }),
-            ),
-          {
-            plugins: [
-              useRequestDeadline({
-                timeout: 50,
-                response: () => new fetchAPI.Response('deadline', { status: 504 }),
-              }),
-              { onResponse },
-            ],
-            fetchAPI,
-          },
-        );
+        const adapter = createServerAdapter(req => slowHandler(req, fetchAPI), {
+          plugins: [
+            useRequestDeadline({
+              timeout: 50,
+              response: () => new fetchAPI.Response('deadline', { status: 504 }),
+            }),
+            { onResponse },
+          ],
+          fetchAPI,
+        });
 
         const response = await adapter.fetch('http://localhost/');
         expect(response.status).toBe(504);
