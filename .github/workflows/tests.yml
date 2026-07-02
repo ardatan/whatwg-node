@@ -89,7 +89,7 @@ jobs:
       - if: ${{ matrix.node-version == 18 }}
         name: Setup Babel v7 for Node 18
         run: |
-          npm run setup-babel-v7
+          npm run setup-babel-7
           npm install
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -137,7 +137,7 @@ jobs:
       - if: ${{ matrix.node-version == 18 }}
         name: Setup Babel v7 for Node 18
         run: |
-          npm run setup-babel-v7
+          npm run setup-babel-7
           npm install
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
