@@ -86,6 +86,11 @@ jobs:
       - name: Upgrade npm
         if: ${{ matrix.node-version != 18 }}
         run: npm install -g npm@latest
+      - if: ${{ matrix.node-version == 18 }}
+        name: Setup Babel v7 for Node 18
+        run: |
+          npm run setup-babel-v7
+          npm install
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -97,20 +102,12 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-
-      - if: ${{ matrix.node-version != 18 }}
-        name: Unit Tests
+      - name: Unit Tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
           timeout_minutes: 10
           max_attempts: 5
           command: npm run test --ci
-      - if: ${{ matrix.node-version == 18 }}
-        name: Unit Tests
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
-        with:
-          timeout_minutes: 10
-          max_attempts: 5
-          command: npm run test:18 --ci
 
   unit-leaks:
     name: unit / leaks / node ${{matrix.node-version}}
@@ -137,6 +134,11 @@ jobs:
       - name: Upgrade npm
         if: ${{ matrix.node-version != 18 }}
         run: npm install -g npm@latest
+      - if: ${{ matrix.node-version == 18 }}
+        name: Setup Babel v7 for Node 18
+        run: |
+          npm run setup-babel-v7
+          npm install
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -148,20 +150,12 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-
-      - if: ${{ matrix.node-version != 18 }}
-        name: Leak Tests
+      - name: Leak Tests
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
           timeout_minutes: 10
           max_attempts: 5
           command: npm run test:leaks --ci
-      - if: ${{ matrix.node-version == 18 }}
-        name: Leak Tests
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
-        with:
-          timeout_minutes: 10
-          max_attempts: 5
-          command: npm run test:18:leaks --ci
 
   unit-bun:
     name: unit / bun
