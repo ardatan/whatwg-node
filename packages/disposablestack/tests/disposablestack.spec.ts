@@ -4,9 +4,9 @@ import { AsyncDisposableStack, DisposableStack, DisposableSymbols, patchSymbols 
 
 function createTestCases<
   TStack extends DisposableStack | AsyncDisposableStack,
-  TSymbol extends TStack extends DisposableStack
+  TSymbol extends (TStack extends DisposableStack
     ? (typeof DisposableSymbols)['dispose']
-    : (typeof DisposableSymbols)['asyncDispose'],
+    : (typeof DisposableSymbols)['asyncDispose']),
 >(
   disposeFnSymbol: TSymbol,
 ): Record<

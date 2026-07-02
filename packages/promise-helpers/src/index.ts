@@ -240,7 +240,7 @@ export function mapAsyncIterator<T, U>(
   let onEndWithValue: <R>(value: R) => MaybePromise<R>;
 
   if (onEnd) {
-    let onEndWithValueResult: any /** R in onEndWithValue */;
+    let onEndWithValueResult: any; /** R in onEndWithValue */
     onEndWithValue = value => {
       onEndWithValueResult ||= handleMaybePromise(
         onEnd,

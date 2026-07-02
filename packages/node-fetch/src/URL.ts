@@ -23,9 +23,7 @@ class URL extends NativeURL {
 
   static getBlobFromURL(url: string): Blob | PonyfillBlob | undefined {
     return (this.blobRegistry.get(url) || NodeBuffer?.resolveObjectURL?.(url)) as
-      | Blob
-      | PonyfillBlob
-      | undefined;
+      Blob | PonyfillBlob | undefined;
   }
 }
 
