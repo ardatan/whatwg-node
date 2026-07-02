@@ -3,7 +3,6 @@ import { request as httpRequest, IncomingMessage, ServerResponse, STATUS_CODES }
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
 import { renderToReadableStream } from 'react-dom/server.edge';
-import { HttpResponse } from 'uWebSockets.js';
 import Hapi from '@hapi/hapi';
 import { describe, expect, it, jest } from '@jest/globals';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
@@ -183,7 +182,7 @@ describe('Node Specific Cases', () => {
         if (!globalThis.Bun && !globalThis.Deno) {
           it('should not kill the server if response is ended on low level', async () => {
             await using serverAdapter = createServerAdapter<{
-              res: HttpResponse | ServerResponse;
+              res: ServerResponse;
               h: Hapi.ResponseToolkit;
             }>((_req, { res }) => {
               res.end('This should reach the client.');
