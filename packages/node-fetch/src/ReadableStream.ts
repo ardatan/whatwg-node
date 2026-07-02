@@ -62,10 +62,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readable: Readable;
   constructor(
     underlyingSource?:
-      | UnderlyingSource<T>
-      | Readable
-      | ReadableStream<T>
-      | PonyfillReadableStream<T>,
+      UnderlyingSource<T> | Readable | ReadableStream<T> | PonyfillReadableStream<T>,
   ) {
     if (underlyingSource instanceof PonyfillReadableStream && underlyingSource.readable != null) {
       this.readable = underlyingSource.readable;

@@ -527,11 +527,7 @@ const backgroundJobs: Promise<void>[] = []
 
 const plugin = {
   onRequest() {
-    backgroundJobs.push(
-      sendAnalytics({
-        /* ... */
-      })
-    )
+    backgroundJobs.push(sendAnalytics({/* ... */}))
   },
   onDispose: async () => {
     // Flush the queue of background jobs

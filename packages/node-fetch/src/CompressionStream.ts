@@ -3,13 +3,7 @@ import { PonyfillTransformStream } from './TransformStream.js';
 import { getSupportedFormats } from './utils.js';
 
 export type PonyfillCompressionFormat =
-  | 'x-gzip'
-  | 'gzip'
-  | 'x-deflate'
-  | 'deflate'
-  | 'deflate-raw'
-  | 'br'
-  | 'zstd';
+  'x-gzip' | 'gzip' | 'x-deflate' | 'deflate' | 'deflate-raw' | 'br' | 'zstd';
 
 export class PonyfillCompressionStream
   extends PonyfillTransformStream

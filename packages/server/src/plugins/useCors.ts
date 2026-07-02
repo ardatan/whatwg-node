@@ -13,9 +13,7 @@ export type CORSOptions =
   | false;
 
 export type CORSPluginOptions<TServerContext> =
-  | CORSOptionsFactory<TServerContext>
-  | CORSOptions
-  | boolean;
+  CORSOptionsFactory<TServerContext> | CORSOptions | boolean;
 
 export type CORSOptionsFactory<TServerContext> = (
   request: Request,

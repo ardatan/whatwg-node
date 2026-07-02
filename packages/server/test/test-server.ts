@@ -259,7 +259,7 @@ if (globalThis.Bun) {
       {
         hostname: '::',
       },
-      (...args: any[]) => handler(...args),
+      (req: Request, info: any) => handler(req, info),
     );
     return {
       name: 'Deno',
