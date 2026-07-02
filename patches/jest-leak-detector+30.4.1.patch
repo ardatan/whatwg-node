@@ -1,0 +1,36 @@
+diff --git a/node_modules/jest-leak-detector/build/index.js b/node_modules/jest-leak-detector/build/index.js
+index 630763b..fe4a0fc 100644
+--- a/node_modules/jest-leak-detector/build/index.js
++++ b/node_modules/jest-leak-detector/build/index.js
+@@ -83,10 +83,11 @@ class LeakDetector {
+     value = null;
+   }
+   async isLeaking() {
+-    this._runGarbageCollector();
++    (0, _v().setFlagsFromString)('--allow-natives-syntax');
+ 
+     // wait some ticks to allow GC to run properly, see https://github.com/nodejs/node/issues/34636#issuecomment-669366235
+     for (let i = 0; i < 10; i++) {
++      eval('%CollectGarbage(true)');
+       await tick();
+     }
+     if (this._isReferenceBeingHeld) {
+@@ -102,18 +103,6 @@ class LeakDetector {
+     }
+     return this._isReferenceBeingHeld;
+   }
+-  _runGarbageCollector() {
+-    const isGarbageCollectorHidden = globalThis.gc == null;
+-
+-    // GC is usually hidden, so we have to expose it before running.
+-    (0, _nodeV().setFlagsFromString)('--expose-gc');
+-    (0, _nodeVm().runInNewContext)('gc')();
+-
+-    // The GC was not initially exposed, so let's hide it again.
+-    if (isGarbageCollectorHidden) {
+-      (0, _nodeV().setFlagsFromString)('--no-expose-gc');
+-    }
+-  }
+ }
+ exports["default"] = LeakDetector;
+ })();
