@@ -24,6 +24,8 @@
     "prettier:check": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check .",
     "release": "changeset publish",
     "test": "jest --runInBand --forceExit",
+    "test:18": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:18:leaks": "LEAK_TEST=1 node --experimental-vm-modules node_modules/jest/bin/jest.js --detectOpenHandles --detectLeaks --runInBand --forceExit",
     "test:bun": "bun test --bail",
     "test:deno": "deno test ./packages/**/*.spec.ts --allow-all --fail-fast --no-check --unstable-sloppy-imports --trace-leaks",
     "test:leaks": "LEAK_TEST=1 jest --detectOpenHandles --detectLeaks --runInBand --forceExit",
