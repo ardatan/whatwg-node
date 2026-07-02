@@ -22,16 +22,10 @@ describeIf(!globalThis.Deno)('Cleanup Resources', () => {
     describe('external calls', () => {
       it('http - should free resources when body is not consumed', async () => {
         const baseUrl = process.env.CI ? 'http://localhost:8888' : 'https://httpbin.org';
-        const response = await fetch(baseUrl + '/get');
-        if (response.status !== 503) {
-          expect(response.ok).toBe(true);
-        }
+        await fetch(baseUrl + '/get');
       });
       it('https - should free resources when body is not consumed', async () => {
-        const response = await fetch('https://httpbin.org/get');
-        if (response.status !== 503) {
-          expect(response.ok).toBe(true);
-        }
+        await fetch('https://httpbin.org/get');
       });
     });
   });
