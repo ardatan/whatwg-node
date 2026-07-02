@@ -10,4 +10,4 @@ for (const devDep of Object.keys(packageJson.devDependencies)) {
   }
 }
 
-fs.writeFileSync(path.join(__dirname, 'package.json'), JSON.stringify(packageJson, null, 2));
+fs.writeFileSync(path.join(__dirname, '../package.json'), JSON.stringify(packageJson, null, 2));
