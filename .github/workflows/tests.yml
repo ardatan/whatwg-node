@@ -97,18 +97,19 @@ jobs:
             }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-
-      - name: Unit Tests
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
-        with:
-          timeout_minutes: 10
-          max_attempts: 5
-          command: npm run test --ci
-      - name: Leak Tests
-        uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
-        with:
-          timeout_minutes: 10
-          max_attempts: 5
-          command: npm run test:leaks --ci
+      - parallel:
+        - name: Unit Tests
+          uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
+          with:
+            timeout_minutes: 10
+            max_attempts: 5
+            command: npm run test --ci
+        - name: Leak Tests
+          uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
+          with:
+            timeout_minutes: 10
+            max_attempts: 5
+            command: npm run test:leaks --ci
 
   unit-bun:
     name: unit / bun
