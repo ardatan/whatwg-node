@@ -85,7 +85,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Upgrade npm
         if: ${{ matrix.node-version != 18 }}
-        run: npm install -g npm@latest
+        run: npm install -g npm@latest --no-engine-strict
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
