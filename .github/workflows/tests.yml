@@ -117,8 +117,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: Test
         run: npm run test:bun
 
