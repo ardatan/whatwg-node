@@ -28,8 +28,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: Prettier Check
         run: npm run prettier:check
   lint:
@@ -42,8 +40,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: ESLint
         run: npm run lint
 
@@ -57,8 +53,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: Type Check
         run: npm run ts:check
 
@@ -83,9 +77,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - name: Upgrade npm
-        if: ${{ matrix.node-version != 18 }}
-        run: npm install -g npm@latest
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -103,13 +94,13 @@ jobs:
             with:
               timeout_minutes: 10
               max_attempts: 5
-              command: npm run test --ci
+              command: npm run test
           - name: Leak Tests
             uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
             with:
               timeout_minutes: 10
               max_attempts: 5
-              command: npm run test:leaks --ci
+              command: npm run test:leaks
 
   unit-bun:
     name: unit / bun
@@ -126,10 +117,8 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: Test
-        run: npm run test:bun --ci
+        run: npm run test:bun
 
   unit-deno:
     name: unit / deno
@@ -146,8 +135,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: Test
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
         with:
@@ -165,8 +152,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-      - name: Upgrade npm
-        run: npm install -g npm@latest
       - name: Build Packages
         run: npm run build
       - name: Test ESM
@@ -210,9 +195,6 @@ jobs:
         uses: the-guild-org/shared-config/setup@v1
         with:
           node-version-file: .node-version
-
-      - name: Upgrade npm
-        run: npm install -g npm@latest
 
       - name: Build Packages
         run: npm run build
