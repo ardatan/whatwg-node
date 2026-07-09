@@ -129,7 +129,7 @@ jobs:
       - name: Upgrade npm
         run: npm install -g npm@latest
       - name: Test
-        run: npm run test:bun --ci
+        run: npm run test:bun
 
   unit-deno:
     name: unit / deno
