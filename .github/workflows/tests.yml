@@ -103,13 +103,13 @@ jobs:
             with:
               timeout_minutes: 10
               max_attempts: 5
-              command: npm run test --ci
+              command: npm run test
           - name: Leak Tests
             uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
             with:
               timeout_minutes: 10
               max_attempts: 5
-              command: npm run test:leaks --ci
+              command: npm run test:leaks
 
   unit-bun:
     name: unit / bun
