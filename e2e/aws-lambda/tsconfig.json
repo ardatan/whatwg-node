@@ -8,7 +8,10 @@
     "lib": ["dom"],
     "declaration": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@e2e/*": ["../*/src/index.ts"]
+    }
   },
   "files": ["src/index.ts", "scripts/e2e.ts"]
 }

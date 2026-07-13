@@ -14,7 +14,10 @@
     "noEmit": true,
     "incremental": true,
     "isolatedModules": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "paths": {
+      "@e2e/*": ["../*/src/index.ts"]
+    }
   },
   "include": ["next-env.d.ts", "./**/*.ts"],
   "exclude": ["node_modules"]
