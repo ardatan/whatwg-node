@@ -4,11 +4,14 @@
     "outDir": "dist",
     "target": "es2016",
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "lib": ["dom"],
     "declaration": true,
     "sourceMap": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "paths": {
+      "@e2e/*": ["../*/src/index.ts"]
+    }
   },
   "files": ["src/index.ts", "scripts/e2e.ts"]
 }

@@ -1,12 +1,13 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./",
     "outDir": "dist",
     "rootDir": ".",
     "module": "Node16",
     "moduleResolution": "node16",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "paths": {},
+    "lib": ["esnext", "dom"]
   },
   "include": ["server.ts"],
   "exclude": []
