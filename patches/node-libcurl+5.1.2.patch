@@ -1,0 +1,68 @@
+diff --git a/node_modules/node-libcurl/dist/Curl.js b/node_modules/node-libcurl/dist/Curl.js
+index 819dd15..dbe4cd4 100644
+--- a/node_modules/node-libcurl/dist/Curl.js
++++ b/node_modules/node-libcurl/dist/Curl.js
+@@ -26,7 +26,15 @@ const bindings = require('../lib/binding/node_libcurl.node');
+ const { Curl: _Curl, CurlVersionInfo } = bindings;
+ const decoder = new string_decoder_1.StringDecoder('utf8');
+ // Handle used by curl instances created by the Curl wrapper.
+-const multiHandle = new Multi_1.Multi();
++// Lazy + disposable so consumers (and Jest leak tests) can release libuv handles.
++// Upstream globalCleanup() is a noop since node-libcurl 5.
++let multiHandle = null;
++function getDefaultMulti() {
++    if (!multiHandle) {
++        multiHandle = new Multi_1.Multi();
++    }
++    return multiHandle;
++}
+ /**
+  * Wrapper around {@link Easy | `Easy`} class with a more *nodejs-friendly* interface.
+  *
+@@ -91,7 +99,7 @@ class Curl extends events_1.EventEmitter {
+     /**
+      * Returns the number of handles currently open in the internal {@link Multi | `Multi`} handle being used.
+      */
+-    static getCount = multiHandle.getCount;
++    static getCount = () => getDefaultMulti().getCount();
+     /**
+      * Whether this instance is running or not ({@link perform | `perform()`} was called).
+      *
+@@ -581,7 +589,7 @@ class Curl extends events_1.EventEmitter {
+             this.setOpt('NOPROGRESS', false);
+         }
+         // Use custom Multi instance if set, otherwise use the default global one
+-        const multi = this.multiInstance || multiHandle;
++        const multi = this.multiInstance || getDefaultMulti();
+         // On libcurl 8.17+ the multi handle uses the new CURLMOPT_NOTIFYFUNCTION API,
+         // and our NotifyCallback resolves the perform() promise while still inside
+         // curl_multi_socket_action. Microtask draining can then run the .then()
+@@ -715,7 +723,7 @@ class Curl extends events_1.EventEmitter {
+         }
+         this.removeAllListeners();
+         if (this.handle.isInsideMultiHandle) {
+-            multiHandle.removeHandle(this.handle);
++            getDefaultMulti().removeHandle(this.handle);
+         }
+         this.handle.setOpt(Curl.option.WRITEFUNCTION, null);
+         this.handle.setOpt(Curl.option.HEADERFUNCTION, null);
+@@ -960,7 +968,15 @@ class Curl extends events_1.EventEmitter {
+      * is being unloaded.
+      */
+     static globalCleanup = () => {
+-        /* noop */
++        if (multiHandle) {
++            try {
++                multiHandle.close();
++            }
++            catch {
++                // already closed
++            }
++            multiHandle = null;
++        }
+     };
+ }
+ exports.Curl = Curl;
+diff --git a/node_modules/node-libcurl/lib/binding/node_libcurl.node b/node_modules/node-libcurl/lib/binding/node_libcurl.node
+index c948fda..167a4e1 100755
+Binary files a/node_modules/node-libcurl/lib/binding/node_libcurl.node and b/node_modules/node-libcurl/lib/binding/node_libcurl.node differ

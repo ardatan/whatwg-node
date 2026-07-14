@@ -35,10 +35,7 @@ export function runTestsForEachFetchImpl(
       });
       return;
     }
-    // node-libcurl 5 keeps a process-wide Multi handle; Curl.globalCleanup() is a
-    // no-op, so Jest --detectLeaks cannot GC suites that exercised libcurl.
-    // Unit tests still cover libcurl; leak tests focus on node-http / native.
-    describeIf(libcurl && !process.env.LEAK_TEST)('libcurl', () => {
+    describeIf(libcurl)('libcurl', () => {
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('libcurl', {
         fetchAPI,
@@ -49,11 +46,12 @@ export function runTestsForEachFetchImpl(
           }),
       });
       afterAll(async () => {
-        // noop since node-libcurl 5, but keep for older versions / API stability
+        // Drain deferred Multi removeHandle/onEnd from node-libcurl 5+, then close the Multi.
+        // (Patched: upstream globalCleanup is a noop since v5.)
+        for (let i = 0; i < 10; i++) {
+          await new Promise<void>(resolve => setImmediate(resolve));
+        }
         libcurl.Curl.globalCleanup();
-        // Drain deferred Multi handle cleanup (setImmediate) from node-libcurl 5+
-        await new Promise<void>(resolve => setImmediate(resolve));
-        await new Promise<void>(resolve => setImmediate(resolve));
       });
     });
     describe('node-http', () => {

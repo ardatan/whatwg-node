@@ -16,11 +16,7 @@ try {
 }
 
 try {
-  // Keep node-libcurl out of leak-test workers: v5's shared Multi cannot be
-  // cleaned up (globalCleanup is a noop) and pins Jest VM contexts.
-  if (!process.env.LEAK_TEST) {
-    globals.libcurl = require('node-libcurl');
-  }
+  globals.libcurl = require('node-libcurl');
 } catch (err) {
   console.warn('Failed to load node-libcurl. Skipping tests that require it.', err);
 }
