@@ -73,7 +73,7 @@ export function runTestsForEachFetchImpl(
         for (let i = 0; i < 20; i++) {
           await new Promise<void>(resolve => setImmediate(resolve));
         }
-        await new Promise<void>(resolve => setTimeout(resolve, 50));
+        await setTimeout(50);
         globalThis.gc?.();
       });
     });

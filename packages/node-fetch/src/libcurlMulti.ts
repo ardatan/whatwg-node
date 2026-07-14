@@ -47,5 +47,7 @@ export async function disposeLibcurlMulti(): Promise<void> {
   for (let i = 0; i < 20; i++) {
     await new Promise<void>(resolve => setImmediate(resolve));
   }
-  await new Promise<void>(resolve => setTimeout(resolve, 50));
+  await new Promise<void>(resolve => {
+    globalThis.setTimeout(resolve, 50);
+  });
 }
