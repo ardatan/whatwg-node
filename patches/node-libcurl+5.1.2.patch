@@ -63,6 +63,3 @@ index 819dd15..dbe4cd4 100644
      };
  }
  exports.Curl = Curl;
-diff --git a/node_modules/node-libcurl/lib/binding/node_libcurl.node b/node_modules/node-libcurl/lib/binding/node_libcurl.node
-index c948fda..167a4e1 100755
-Binary files a/node_modules/node-libcurl/lib/binding/node_libcurl.node and b/node_modules/node-libcurl/lib/binding/node_libcurl.node differ
