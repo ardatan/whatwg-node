@@ -66,16 +66,14 @@ export function runTestsForEachFetchImpl(
           }),
       });
       afterAll(async () => {
-        // Drain deferred Multi removeHandle/onEnd from node-libcurl 5+, then dispose
-        // our app-owned Multi and the process-default Multi (if any).
-        for (let i = 0; i < 20; i++) {
-          await new Promise<void>(resolve => setImmediate(resolve));
-        }
-        disposeLibcurlMulti();
+        // Drain deferred Multi removeHandle/onEnd, wait for empty pool, then dispose
+        // app-owned Multi (+ process-default Multi if any) including CloseTimerAsync.
+        await disposeLibcurlMulti();
         libcurl.Curl.globalCleanup();
         for (let i = 0; i < 20; i++) {
           await new Promise<void>(resolve => setImmediate(resolve));
         }
+        await new Promise<void>(resolve => setTimeout(resolve, 50));
         globalThis.gc?.();
       });
     });

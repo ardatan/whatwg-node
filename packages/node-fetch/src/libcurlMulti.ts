@@ -1,5 +1,6 @@
 type LibcurlMulti = {
   close: () => void;
+  getCount: () => number;
 };
 
 let sharedMulti: LibcurlMulti | null = null;
@@ -16,9 +17,17 @@ export function getLibcurlMulti(): LibcurlMulti {
   return sharedMulti as LibcurlMulti;
 }
 
-export function disposeLibcurlMulti(): void {
+export async function disposeLibcurlMulti(): Promise<void> {
   if (!sharedMulti) {
     return;
+  }
+  // Easy handles are removed from Multi via setImmediate (libcurl 8.17+);
+  // wait until the pool is empty before curl_multi_cleanup.
+  for (let i = 0; i < 50; i++) {
+    if (sharedMulti.getCount() === 0) {
+      break;
+    }
+    await new Promise<void>(resolve => setImmediate(resolve));
   }
   const multi = sharedMulti;
   sharedMulti = null;
@@ -34,4 +43,9 @@ export function disposeLibcurlMulti(): void {
     }
   ).__whatwgNodeReleaseLibcurlMultiTimer;
   releaseTimer?.(multi);
+  // Let uv_close's Unref callback run before Jest's leak detector runs GC.
+  for (let i = 0; i < 20; i++) {
+    await new Promise<void>(resolve => setImmediate(resolve));
+  }
+  await new Promise<void>(resolve => setTimeout(resolve, 50));
 }
