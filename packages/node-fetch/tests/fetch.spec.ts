@@ -211,7 +211,7 @@ describe('Node Fetch Ponyfill', () => {
         const body = await response.json();
         expect(body.swagger).toBe('2.0');
       });
-      testIf(!process.env.LEAK_TEST, 'should handle object urls for PonyfillBlob', async () => {
+      it('should handle object urls for PonyfillBlob', async () => {
         const testJsonBlob = new PonyfillBlob([JSON.stringify({ test: 'test' })], {
           type: 'application/json',
         });
@@ -227,7 +227,7 @@ describe('Node Fetch Ponyfill', () => {
           PonyfillURL.revokeObjectURL(objectUrl);
         }
       });
-      testIf(!process.env.LEAK_TEST, 'should handle object urls for global Blob', async () => {
+      it('should handle object urls for global Blob', async () => {
         const testJsonBlob = new globalThis.Blob([JSON.stringify({ test: 'test' })], {
           type: 'application/json',
         });
@@ -243,7 +243,7 @@ describe('Node Fetch Ponyfill', () => {
           URL.revokeObjectURL(objectUrl);
         }
       });
-      testIf(!process.env.LEAK_TEST, 'should handle object urls for Node.js Blob', async () => {
+      it('should handle object urls for Node.js Blob', async () => {
         const testJsonBlob = new NodeBlob([JSON.stringify({ test: 'test' })], {
           type: 'application/json',
         });
