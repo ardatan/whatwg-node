@@ -33,7 +33,8 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
     pemPath = join(tmpdir(), 'test.pem');
     process.env.NODE_EXTRA_CA_CERTS = pemPath;
     // libcurl 8 (node-libcurl 5) rejects this self-signed cert even with CAINFO set.
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // CodeQL [js/disabling-certificate-validation] Test-only self-signed cert; not used in production.
+    // codeql[js/disabling-certificate-validation]: test-only self-signed cert; not used in production
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     await writeFile(pemPath, keys.certificate);
     // Create a secure HTTP/2 server
     server = createSecureServer(
