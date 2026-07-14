@@ -1,0 +1,12 @@
+{
+  "name": "libcurl-multi-fix",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "install": "node-gyp rebuild"
+  },
+  "dependencies": {
+    "node-addon-api": "*"
+  },
+  "gypfile": true
+}

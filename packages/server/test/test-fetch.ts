@@ -47,11 +47,15 @@ export function runTestsForEachFetchImpl(
       });
       afterAll(async () => {
         // Drain deferred Multi removeHandle/onEnd from node-libcurl 5+, then close the Multi.
-        // (Patched: upstream globalCleanup is a noop since v5.)
+        // Patched globalCleanup also calls CloseTimerAsync (via scripts/libcurl-multi-fix)
+        // so the uv timer / ObjectWrap Ref does not pin Jest --detectLeaks isolates.
         for (let i = 0; i < 10; i++) {
           await new Promise<void>(resolve => setImmediate(resolve));
         }
         libcurl.Curl.globalCleanup();
+        for (let i = 0; i < 10; i++) {
+          await new Promise<void>(resolve => setImmediate(resolve));
+        }
       });
     });
     describe('node-http', () => {

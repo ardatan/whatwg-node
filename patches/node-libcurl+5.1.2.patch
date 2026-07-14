@@ -1,5 +1,5 @@
 diff --git a/node_modules/node-libcurl/dist/Curl.js b/node_modules/node-libcurl/dist/Curl.js
-index 819dd15..dbe4cd4 100644
+index 819dd15..c2bff3d 100644
 --- a/node_modules/node-libcurl/dist/Curl.js
 +++ b/node_modules/node-libcurl/dist/Curl.js
 @@ -26,7 +26,15 @@ const bindings = require('../lib/binding/node_libcurl.node');
@@ -24,7 +24,7 @@ index 819dd15..dbe4cd4 100644
       * Returns the number of handles currently open in the internal {@link Multi | `Multi`} handle being used.
       */
 -    static getCount = multiHandle.getCount;
-+    static getCount = () => getDefaultMulti().getCount();
++    static getCount = () => (multiHandle ? multiHandle.getCount() : 0);
      /**
       * Whether this instance is running or not ({@link perform | `perform()`} was called).
       *
@@ -37,29 +37,60 @@ index 819dd15..dbe4cd4 100644
          // On libcurl 8.17+ the multi handle uses the new CURLMOPT_NOTIFYFUNCTION API,
          // and our NotifyCallback resolves the perform() promise while still inside
          // curl_multi_socket_action. Microtask draining can then run the .then()
-@@ -715,7 +723,7 @@ class Curl extends events_1.EventEmitter {
+@@ -715,7 +723,11 @@ class Curl extends events_1.EventEmitter {
          }
          this.removeAllListeners();
          if (this.handle.isInsideMultiHandle) {
 -            multiHandle.removeHandle(this.handle);
-+            getDefaultMulti().removeHandle(this.handle);
++            // Do not call getDefaultMulti() — that would recreate Multi after globalCleanup().
++            const multi = this.multiInstance || multiHandle;
++            if (multi) {
++                multi.removeHandle(this.handle);
++            }
          }
          this.handle.setOpt(Curl.option.WRITEFUNCTION, null);
          this.handle.setOpt(Curl.option.HEADERFUNCTION, null);
-@@ -960,7 +968,15 @@ class Curl extends events_1.EventEmitter {
+@@ -960,7 +972,28 @@ class Curl extends events_1.EventEmitter {
       * is being unloaded.
       */
      static globalCleanup = () => {
 -        /* noop */
 +        if (multiHandle) {
++            const multi = multiHandle;
++            multiHandle = null;
 +            try {
-+                multiHandle.close();
++                multi.close();
 +            }
 +            catch {
 +                // already closed
 +            }
-+            multiHandle = null;
++            // Multi.close()/Dispose() does not uv_close the timeout handle or
++            // ObjectWrap::Unref(); CloseTimerAsync does. Call it via a tiny
++            // helper so Jest --detectLeaks can release the isolate.
++            try {
++                const path = require('path');
++                const fix = require(path.join(__dirname, '../../../scripts/libcurl-multi-fix'));
++                const bindingPath = path.join(__dirname, '../lib/binding/node_libcurl.node');
++                fix?.closeMultiTimer?.(multi, bindingPath);
++            }
++            catch {
++                // helper not built (optional); Multi curl handle is still disposed
++            }
 +        }
      };
  }
  exports.Curl = Curl;
+diff --git a/node_modules/node-libcurl/src/Multi.cc b/node_modules/node-libcurl/src/Multi.cc
+index b4027d4..1c4bfc6 100644
+--- a/node_modules/node-libcurl/src/Multi.cc
++++ b/node_modules/node-libcurl/src/Multi.cc
+@@ -483,6 +483,9 @@ Napi::Value Multi::Close(const Napi::CallbackInfo& info) {
+   NODE_LIBCURL_DEBUG_LOG(this, "Multi::Close", "");
+ 
+   this->Dispose();
++  // Dispose() stops the timer but leaves the uv handle + ObjectWrap Ref alive.
++  // Close the timer so consumers (e.g. Jest --detectLeaks) can release the isolate.
++  this->CloseTimerAsync();
+ 
+   return env.Undefined();
+ }

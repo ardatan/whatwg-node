@@ -36,6 +36,27 @@ try {
     stdio: 'inherit',
   });
   process.exitCode = result.status === null ? 1 : result.status;
+  if (process.exitCode !== 0) {
+    return;
+  }
+
+  // Build helper that calls Multi::CloseTimerAsync after Multi.close().
+  // (node-libcurl 5's close() leaks the uv timer / ObjectWrap Ref under Jest --detectLeaks.)
+  const libcurlDir = join(root, 'node_modules', 'node-libcurl');
+  const fixDir = join(root, 'scripts', 'libcurl-multi-fix');
+  if (existsSync(libcurlDir) && existsSync(join(fixDir, 'binding.gyp'))) {
+    console.log('Building libcurl Multi timer fix addon...');
+    const nodeGyp = require.resolve('node-gyp/bin/node-gyp.js');
+    const rebuild = spawnSync(process.execPath, [nodeGyp, 'rebuild'], {
+      cwd: fixDir,
+      stdio: 'inherit',
+    });
+    if (rebuild.status !== 0) {
+      console.warn(
+        'Warning: failed to build libcurl-multi-fix; Jest leak tests may fail with libcurl loaded.',
+      );
+    }
+  }
 } finally {
   for (const [patchFile, skipFile] of skipped) {
     renameSync(skipFile, patchFile);
