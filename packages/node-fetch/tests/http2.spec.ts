@@ -12,6 +12,7 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
   let server: Http2SecureServer;
   let pemPath: string;
   const oldEnvVar = process.env.NODE_EXTRA_CA_CERTS;
+  const oldRejectUnauthorizedEnvVar = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
   const sessions = new Set<ServerHttp2Session>();
   beforeAll(async () => {
     const { createCertificate } = await import('pem');
@@ -31,6 +32,8 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
     });
     pemPath = join(tmpdir(), 'test.pem');
     process.env.NODE_EXTRA_CA_CERTS = pemPath;
+    // libcurl 8 (node-libcurl 5) rejects this self-signed cert even with CAINFO set.
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // CodeQL [js/disabling-certificate-validation] Test-only self-signed cert; not used in production.
     await writeFile(pemPath, keys.certificate);
     // Create a secure HTTP/2 server
     server = createSecureServer(
@@ -59,6 +62,7 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
   afterAll(async () => {
     await unlink(pemPath);
     process.env.NODE_EXTRA_CA_CERTS = oldEnvVar;
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = oldRejectUnauthorizedEnvVar;
     for (const session of sessions) {
       session.destroy();
     }
