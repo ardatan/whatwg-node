@@ -11,9 +11,9 @@ let sharedMulti: LibcurlMulti | null = null;
 export function getLibcurlMulti(): LibcurlMulti {
   if (!sharedMulti) {
     const { Multi } = globalThis.libcurl;
-    sharedMulti = new Multi();
+    sharedMulti = new Multi() as LibcurlMulti;
   }
-  return sharedMulti;
+  return sharedMulti as LibcurlMulti;
 }
 
 export function disposeLibcurlMulti(): void {
