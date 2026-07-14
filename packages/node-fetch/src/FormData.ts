@@ -160,13 +160,20 @@ export function getStreamFromFormData(
   });
 }
 
-function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) {
-  Object.defineProperty(blob as PonyfillFile, 'name', {
+function getNormalizedFile(name: string, blob: Blob, fileName?: string) {
+  const normalizedBlob =
+    blob instanceof PonyfillBlob
+      ? blob
+      : new PonyfillBlob([blob], {
+          type: blob.type,
+          size: blob.size,
+        });
+  Object.defineProperty(normalizedBlob as PonyfillFile, 'name', {
     configurable: true,
     enumerable: true,
-    value: fileName || blob.name || name,
+    value: fileName || ('name' in blob ? blob.name : undefined) || name,
   });
-  return blob as PonyfillFile;
+  return normalizedBlob as PonyfillFile;
 }
 
 function isBlob(value: any): value is PonyfillBlob {
