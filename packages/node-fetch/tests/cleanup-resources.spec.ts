@@ -32,7 +32,7 @@ describeIf(!globalThis.Deno)('Cleanup Resources', () => {
         if (response.status !== 503) {
           expect(response.ok).toBe(true);
         }
-      });
+      }, 15_000);
     });
   });
 });

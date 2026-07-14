@@ -2,14 +2,23 @@ import { Buffer } from 'node:buffer';
 import { PassThrough, Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import { PonyfillAbortError } from './AbortError.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
 
+function isCurlAbortError(error: { message?: string }) {
+  return (
+    error.message === 'Operation was aborted by an application callback' ||
+    // node-libcurl >= 5
+    error.message === 'Request was aborted by a callback'
+  );
+}
+
 export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
 ): Promise<PonyfillResponse<TResponseJSON>> {
-  const { Curl, CurlFeature, CurlPause, CurlProgressFunc } = globalThis['libcurl'];
+  const { Curl, CurlFeature, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
 
@@ -86,13 +95,28 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   const deferredPromise = createDeferredPromise<PonyfillResponse<TResponseJSON>>();
   let streamResolved: Readable | undefined;
+  let curlResponseStream: Readable | undefined;
   function onAbort() {
-    if (curlHandle.isOpen) {
+    // node-libcurl 5 + libcurl 8: pausing alone does not tear down the TCP
+    // connection, so servers never see client disconnect. Destroy the response
+    // stream (or close the handle) to actually abort.
+    const abortError = new PonyfillAbortError(signal?.reason);
+    const outputStream = streamResolved;
+    const responseStream = curlResponseStream;
+    if (outputStream && !outputStream.closed && !outputStream.destroyed) {
+      outputStream.destroy(abortError);
+    }
+    if (responseStream && !responseStream.closed && !responseStream.destroyed) {
+      responseStream.destroy(abortError);
+    } else if (curlHandle.isOpen) {
       try {
-        curlHandle.pause(CurlPause.Recv);
+        curlHandle.close();
       } catch (e) {
         deferredPromise.reject(e);
       }
+    }
+    if (!outputStream) {
+      deferredPromise.reject(abortError);
     }
   }
 
@@ -106,12 +130,14 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     signal?.removeEventListener('abort', onAbort);
   });
   curlHandle.once('error', function errorListener(error: any) {
+    if (signal?.aborted) {
+      error = new PonyfillAbortError(signal.reason);
+    } else if (isCurlAbortError(error)) {
+      error.message = 'The operation was aborted.';
+    }
     if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
       streamResolved.destroy(error);
     } else {
-      if (error.message === 'Operation was aborted by an application callback') {
-        error.message = 'The operation was aborted.';
-      }
       deferredPromise.reject(error);
     }
     try {
@@ -123,6 +149,7 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.once(
     'stream',
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
+      curlResponseStream = stream;
       const outputStream = stream.pipe(new PassThrough(), {
         end: true,
       });
@@ -160,6 +187,12 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     },
   );
   setImmediate(() => {
+    if (!curlHandle.isOpen || signal?.aborted) {
+      if (signal?.aborted) {
+        deferredPromise.reject(new PonyfillAbortError(signal.reason));
+      }
+      return;
+    }
     curlHandle.perform();
   });
   return deferredPromise.promise;

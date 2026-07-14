@@ -45,13 +45,21 @@ export function runTestsForEachFetchImpl(
             ...opts,
           }),
       });
-      afterAll(() => {
+      afterAll(async () => {
+        // noop since node-libcurl 5, but keep for older versions / API stability
         libcurl.Curl.globalCleanup();
+        // Drain deferred Multi handle cleanup (setImmediate) from node-libcurl 5+
+        await new Promise<void>(resolve => setImmediate(resolve));
+        await new Promise<void>(resolve => setImmediate(resolve));
       });
     });
     describe('node-http', () => {
       beforeAll(() => {
         (globalThis.libcurl as any) = null;
+      });
+      afterEach(() => {
+        httpGlobalAgent.destroy();
+        httpsGlobalAgent.destroy();
       });
       afterAll(() => {
         httpGlobalAgent.destroy();

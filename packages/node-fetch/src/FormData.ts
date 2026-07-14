@@ -141,6 +141,7 @@ export function getStreamFromFormData(
       if (currentAsyncIterator) {
         return currentAsyncIterator.next().then(({ done, value }) => {
           if (done) {
+            currentAsyncIterator?.return?.();
             currentAsyncIterator = undefined;
           }
           if (value) {
