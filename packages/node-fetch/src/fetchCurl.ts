@@ -3,6 +3,7 @@ import { PassThrough, Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillAbortError } from './AbortError.js';
+import { getLibcurlMulti } from './libcurlMulti.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
@@ -21,6 +22,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   const { Curl, CurlFeature, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
+  // Keep requests off node-libcurl's process-default Multi so tests can dispose
+  // the uv timer / ObjectWrap Ref after the suite (see disposeLibcurlMulti).
+  curlHandle.setMulti(getLibcurlMulti());
 
   curlHandle.enable(CurlFeature.NoDataParsing);
 
