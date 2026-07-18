@@ -8,7 +8,7 @@
   },
   "types": "./src/index.ts",
   "dependencies": {
-    "@pulumi/pulumi": "3.251.0",
+    "@pulumi/pulumi": "3.253.0",
     "@types/node": "26.1.0"
   }
 }
