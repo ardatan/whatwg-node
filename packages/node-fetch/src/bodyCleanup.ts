@@ -97,16 +97,3 @@ export function retainBodyOwner(holder: object, stream: Readable): void {
   entry.refCount += 1;
   unusedBodyRegistry.register(holder, entry);
 }
-
-/**
- * Pull the response body in the background so keep-alive sockets are released
- * without waiting for GC. Identity PassThrough used to do this by buffering;
- * `PonyfillBody` coalesces concurrent reads onto the same `_chunks` promise, so
- * a later `json()` / `arrayBuffer()` still sees the drained bytes.
- */
-export function ensureBodyDraining(response: { arrayBuffer(): Promise<ArrayBuffer> }): void {
-  response.arrayBuffer().then(
-    () => undefined,
-    () => undefined,
-  );
-}

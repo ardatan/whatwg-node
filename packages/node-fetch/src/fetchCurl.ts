@@ -2,7 +2,7 @@ import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
-import { ensureBodyDraining, trackUnusedBody } from './bodyCleanup.js';
+import { trackUnusedBody } from './bodyCleanup.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
@@ -167,7 +167,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
         redirected: Number(curlHandle.getInfo(Curl.info.REDIRECT_COUNT)) > 0,
       });
       ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, stream);
-      ensureBodyDraining(ponyfillResponse);
       deferredPromise.resolve(ponyfillResponse);
       streamResolved = stream;
     },

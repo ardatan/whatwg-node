@@ -1,15 +1,14 @@
 import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
-import { Readable } from 'node:stream';
+import { PassThrough, Readable } from 'node:stream';
 import type { Transform } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { ensureBodyDraining, trackUnusedBody } from './bodyCleanup.js';
+import { trackUnusedBody } from './bodyCleanup.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import {
-  attachAbortSignal,
   DEFAULT_ACCEPT_ENCODING,
   endStream,
   getHeadersObj,
@@ -80,27 +79,27 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
       nodeRequest.once('response', nodeResponse => {
         nodeRequest.removeListener('error', onRequestError);
 
-        let decodeStream: Transform | undefined;
+        let outputStream: PassThrough | Transform | undefined;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
           case 'gzip':
-            decodeStream = zlib.createGunzip();
+            outputStream = zlib.createGunzip();
             break;
           case 'x-deflate':
           case 'deflate':
-            decodeStream = zlib.createInflate();
+            outputStream = zlib.createInflate();
             break;
           case 'x-deflate-raw':
           case 'deflate-raw':
-            decodeStream = zlib.createInflateRaw();
+            outputStream = zlib.createInflateRaw();
             break;
           case 'br':
-            decodeStream = zlib.createBrotliDecompress();
+            outputStream = zlib.createBrotliDecompress();
             break;
           case 'zstd':
             if (zlib.createZstdDecompress != null) {
-              decodeStream = zlib.createZstdDecompress();
+              outputStream = zlib.createZstdDecompress();
             }
             break;
         }
@@ -130,45 +129,40 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        let bodyStream: Readable = nodeResponse;
-        if (decodeStream) {
-          pipeThrough({
-            src: nodeResponse,
-            dest: decodeStream,
-            signal,
-            onError: e => {
-              if (!nodeResponse.destroyed) {
-                nodeResponse.destroy(e);
-              }
-              if (!decodeStream!.destroyed) {
-                decodeStream!.destroy(e);
-              }
-              reject(e);
-            },
-          });
-          bodyStream = decodeStream;
-        } else {
-          attachAbortSignal(nodeResponse, signal);
-        }
+        // Identity PassThrough (or zlib decode) pulls from IncomingMessage so
+        // keep-alive sockets are not pinned when the body is never read. Do not
+        // replace this with eager arrayBuffer() — that breaks abort/stream tests.
+        outputStream ||= new PassThrough();
+
+        pipeThrough({
+          src: nodeResponse,
+          dest: outputStream,
+          signal,
+          onError: e => {
+            if (!nodeResponse.destroyed) {
+              nodeResponse.destroy(e);
+            }
+            if (!outputStream!.destroyed) {
+              outputStream!.destroy(e);
+            }
+            reject(e);
+          },
+        });
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(bodyStream, {
+        const ponyfillResponse = new PonyfillResponse(outputStream, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
           signal,
         });
-        // Release the socket if the Response is GC'd without reading the body.
-        // Also start draining immediately — keep-alive agents pin sockets while
-        // IncomingMessage stays paused, and FinalizationRegistry alone is too
-        // late under load (identity PassThrough used to buffer for this case).
-        ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, bodyStream);
-        ensureBodyDraining(ponyfillResponse);
+        // Fallback if the Response is GC'd while the PassThrough still holds data.
+        ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, outputStream);
         resolve(ponyfillResponse);
       });
 
