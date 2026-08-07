@@ -323,25 +323,15 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    // Inline normalize/handle for the common empty-ctx path and use hoisted error
-    // handlers to avoid per-request rest-arg / closure allocations.
     const serverContext: any =
       ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
     // completeAssign can overwrite waitUntil with undefined/null from ctx parts
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    // Use handleMaybePromise so the synchronous fast-path in promise-helpers applies:
-    // when handleRequest / sendNodeResponse complete sync (or return fakePromise values),
-    // we avoid allocating Promise/fakePromise wrappers and skip microtask hops.
-    //
-    // Error handling mirrors the previous fakePromise().then().catch().then().catch() chain:
-    //   1. Errors from normalizeNodeRequest / handleRequest → error Response via
-    //      `requestHandlerErrorFn` (inner outputErrorFactory).
-    //   2. Errors from sendNodeResponse → `logUnexpectedRequestError`. sendNodeResponse is
-    //      wrapped in its own handleMaybePromise so the logger acts like a trailing `.catch(...)`
-    //      — the outer outputErrorFactory only catches inputFactory failures
-    //      (Promise.then(onFulfilled, onRejected) semantics).
+    // handleMaybePromise keeps sync send completions off the fakePromise chain;
+    // sendNodeResponse errors are handled in an inner call (outer onRejected only
+    // covers the inputFactory, like Promise.then(onFulfilled, onRejected)).
     return handleMaybePromise(
       () =>
         handleMaybePromise(

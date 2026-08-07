@@ -1,10 +1,8 @@
 import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
-import type { Transform } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { trackUnusedBody } from './bodyCleanup.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -71,15 +69,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         });
       }
 
-      // Drop this listener once headers arrive. Leaving `reject` attached to the
-      // ClientRequest retains the Promise (and thus the Response) until the
-      // request socket is released — which never happens if the body is unread.
-      const onRequestError = (err: Error) => reject(err);
-      nodeRequest.once('error', onRequestError);
+      nodeRequest.once('error', reject);
       nodeRequest.once('response', nodeResponse => {
-        nodeRequest.removeListener('error', onRequestError);
-
-        let outputStream: PassThrough | Transform | undefined;
+        let outputStream: PassThrough | undefined;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
@@ -129,9 +121,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        // Identity PassThrough (or zlib decode) pulls from IncomingMessage so
-        // keep-alive sockets are not pinned when the body is never read. Do not
-        // replace this with eager arrayBuffer() — that breaks abort/stream tests.
         outputStream ||= new PassThrough();
 
         pipeThrough({
@@ -142,8 +131,8 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             if (!nodeResponse.destroyed) {
               nodeResponse.destroy(e);
             }
-            if (!outputStream!.destroyed) {
-              outputStream!.destroy(e);
+            if (!outputStream.destroyed) {
+              outputStream.destroy(e);
             }
             reject(e);
           },
@@ -154,15 +143,13 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream, {
+        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
           signal,
         });
-        // Fallback if the Response is GC'd while the PassThrough still holds data.
-        ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, outputStream);
         resolve(ponyfillResponse);
       });
 

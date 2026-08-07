@@ -4,7 +4,6 @@ import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
-import { retainBodyOwner } from './bodyCleanup.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
@@ -71,44 +70,13 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _bodyFactory: () => PonyfillReadableStream<Uint8Array> | null = () => null;
   private _generatedBody: PonyfillReadableStream<Uint8Array> | null = null;
   private _buffer?: Buffer<ArrayBuffer> | undefined;
-  private _cachedBodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
-  private _cachedBodyReadableRef: Readable | null = null;
   _signal?: AbortSignal | undefined;
-  /** Set by fetch implementations via {@link trackUnusedBody}; cleared on consume. */
-  _untrackBody?: (() => void) | undefined;
-
-  /** Mark the body as consumed so unused-body GC cleanup will not destroy the stream. */
-  _markBodyConsumed() {
-    if (this.bodyUsed && !this._untrackBody) {
-      return;
-    }
-    this.bodyUsed = true;
-    this._untrackBody?.();
-    this._untrackBody = undefined;
-  }
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
-    if (this._generatedBody && !this._generatedBody.readable?.destroyed) {
-      return this._generatedBody;
+    if (this._generatedBody?.readable?.destroyed && this._buffer) {
+      this._generatedBody.readable = Readable.from(this._buffer);
     }
-    // Prefer drained bytes when fetch kicked off background buffering (or the
-    // user already collected). Avoid re-wrapping a spent IncomingMessage.
-    if (this._buffer) {
-      this._generatedBody = new PonyfillReadableStream(Readable.from(this._buffer));
-      return this._generatedBody;
-    }
-    if (this._chunks != null) {
-      const chunksSource = this._chunks;
-      this._generatedBody = new PonyfillReadableStream(
-        Readable.from(
-          (async function* (body: PonyfillBody) {
-            const chunks = await chunksSource;
-            const buf = chunks.length === 1 ? (chunks[0] as Buffer) : Buffer.concat(chunks);
-            body._buffer = buf as Buffer<ArrayBuffer>;
-            yield buf;
-          })(this),
-        ),
-      );
+    if (this._generatedBody) {
       return this._generatedBody;
     }
     const body = this._bodyFactory();
@@ -147,66 +115,26 @@ export class PonyfillBody<TJSON = any> implements Body {
   public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
     const _body = this.generateBody();
     if (_body != null) {
+      const ponyfillReadableStream = _body;
       const readable = _body.readable;
-      // Reuse the cached proxy unless the underlying readable has been regenerated
-      // (which happens when a destroyed stream is rebuilt from the buffer)
-      if (this._cachedBodyProxy === null || this._cachedBodyReadableRef !== readable) {
-        const ponyfillReadableStream = _body;
-        this._cachedBodyReadableRef = readable;
-        // Cache bound methods so repeated property reads don't allocate a fresh
-        // bound function per access (Proxy get → Function.prototype.bind).
-        const boundCache = new Map<PropertyKey, unknown>();
-        const bodyProxy = new Proxy(readable as any, {
-          get(_, prop) {
-            const cached = boundCache.get(prop);
-            if (cached !== undefined) {
-              return cached;
+      return new Proxy(_body.readable as any, {
+        get(_, prop) {
+          if (prop in ponyfillReadableStream) {
+            const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
+            if (typeof ponyfillReadableStreamProp === 'function') {
+              return ponyfillReadableStreamProp.bind(ponyfillReadableStream);
             }
-            if (
-              prop === 'getReader' &&
-              typeof (ponyfillReadableStream as any).getReader === 'function'
-            ) {
-              const getReader = (ponyfillReadableStream as any).getReader.bind(
-                ponyfillReadableStream,
-              );
-              const wrapped = (...args: any[]) => {
-                const reader = getReader(...args);
-                if (reader != null && typeof reader === 'object') {
-                  // Escaped readers must keep the unused-body finalizer from
-                  // resuming/discarding the stream while they still exist.
-                  retainBodyOwner(reader, readable);
-                }
-                return reader;
-              };
-              boundCache.set(prop, wrapped);
-              return wrapped;
+            return ponyfillReadableStreamProp;
+          }
+          if (prop in readable) {
+            const readableProp: any = (readable as any)[prop];
+            if (typeof readableProp === 'function') {
+              return readableProp.bind(readable);
             }
-            if (prop in ponyfillReadableStream) {
-              const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
-              if (typeof ponyfillReadableStreamProp === 'function') {
-                const bound = ponyfillReadableStreamProp.bind(ponyfillReadableStream);
-                boundCache.set(prop, bound);
-                return bound;
-              }
-              return ponyfillReadableStreamProp;
-            }
-            if (prop in readable) {
-              const readableProp: any = (readable as any)[prop];
-              if (typeof readableProp === 'function') {
-                const bound = readableProp.bind(readable);
-                boundCache.set(prop, bound);
-                return bound;
-              }
-              return readableProp;
-            }
-          },
-        });
-        this._cachedBodyProxy = bodyProxy;
-        // If user keeps `const b = res.body` and drops `res`, the proxy must own
-        // the stream so FinalizationRegistry does not resume it early.
-        retainBodyOwner(bodyProxy, readable);
-      }
-      return this._cachedBodyProxy;
+            return readableProp;
+          }
+        },
+      });
     }
     return null;
   }
@@ -214,7 +142,6 @@ export class PonyfillBody<TJSON = any> implements Body {
   _chunks: MaybePromise<Uint8Array<ArrayBuffer>[]> | null = null;
 
   _doCollectChunksFromReadableJob() {
-    this._markBodyConsumed();
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
         return handleMaybePromise(
@@ -245,9 +172,8 @@ export class PonyfillBody<TJSON = any> implements Body {
         );
       return collectValue();
     }
-    // Hot path for Node IncomingMessage / other Readables: collect directly from
-    // bodyInit without allocating a PonyfillReadableStream wrapper first.
-    // Skip if `.body` was already accessed (generateBody may have consumers).
+    // Common server path: Node IncomingMessage as bodyInit — collect without
+    // allocating a PonyfillReadableStream when `.body` was never accessed.
     if (this.bodyType === BodyInitType.Readable && !this._generatedBody) {
       const readable = this.bodyInit as Readable;
       if (readable.destroyed) {
@@ -345,7 +271,6 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (_body == null) {
       return fakePromise(this._formData);
     }
-    this._markBodyConsumed();
     const formDataLimits = {
       ...this.options.formDataLimits,
       ...opts?.formDataLimits,
