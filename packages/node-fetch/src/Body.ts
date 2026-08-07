@@ -88,10 +88,27 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
-    if (this._generatedBody?.readable?.destroyed && this._buffer) {
-      this._generatedBody.readable = Readable.from(this._buffer);
+    if (this._generatedBody && !this._generatedBody.readable?.destroyed) {
+      return this._generatedBody;
     }
-    if (this._generatedBody) {
+    // Prefer drained bytes when fetch kicked off background buffering (or the
+    // user already collected). Avoid re-wrapping a spent IncomingMessage.
+    if (this._buffer) {
+      this._generatedBody = new PonyfillReadableStream(Readable.from(this._buffer));
+      return this._generatedBody;
+    }
+    if (this._chunks != null) {
+      const chunksSource = this._chunks;
+      this._generatedBody = new PonyfillReadableStream(
+        Readable.from(
+          (async function* (body: PonyfillBody) {
+            const chunks = await chunksSource;
+            const buf = chunks.length === 1 ? (chunks[0] as Buffer) : Buffer.concat(chunks);
+            body._buffer = buf as Buffer<ArrayBuffer>;
+            yield buf;
+          })(this),
+        ),
+      );
       return this._generatedBody;
     }
     const body = this._bodyFactory();

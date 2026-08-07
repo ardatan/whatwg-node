@@ -4,7 +4,7 @@ import { Readable } from 'node:stream';
 import type { Transform } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { trackUnusedBody } from './bodyCleanup.js';
+import { ensureBodyDraining, trackUnusedBody } from './bodyCleanup.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -163,9 +163,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           url: fetchRequest.url,
           signal,
         });
-        // Release the socket if the Response is GC'd without reading the body
-        // (identity PassThrough used to eagerly pull bytes for this case).
+        // Release the socket if the Response is GC'd without reading the body.
+        // Also start draining immediately — keep-alive agents pin sockets while
+        // IncomingMessage stays paused, and FinalizationRegistry alone is too
+        // late under load (identity PassThrough used to buffer for this case).
         ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, bodyStream);
+        ensureBodyDraining(ponyfillResponse);
         resolve(ponyfillResponse);
       });
 
