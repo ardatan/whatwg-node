@@ -3,19 +3,26 @@ import { Readable } from 'node:stream';
 type CleanupEntry = {
   stream: Readable;
   consumed: boolean;
+  /** Live FinalizationRegistry owners (Response, body proxy, readers, …). */
+  refCount: number;
+  onNewListener: (event: string | symbol) => void;
+  markConsumed: () => void;
 };
+
+const entriesByStream = new WeakMap<Readable, CleanupEntry>();
 
 /**
  * When a fetch Response is dropped without reading the body, Node's
  * IncomingMessage (or curl stream) stays paused and holds the socket.
  * Identity PassThrough used to eagerly pull bytes; without it we release the
- * underlying readable once the Response is garbage-collected.
+ * underlying readable once every tracked owner is garbage-collected.
  */
 const unusedBodyRegistry = new FinalizationRegistry<CleanupEntry>(entry => {
-  if (entry.consumed) {
+  entry.refCount -= 1;
+  if (entry.refCount > 0 || entry.consumed) {
     return;
   }
-  entry.consumed = true;
+  entry.markConsumed();
   const { stream } = entry;
   if (!stream.destroyed) {
     // resume() discards unread data and lets IncomingMessage end so the
@@ -25,38 +32,68 @@ const unusedBodyRegistry = new FinalizationRegistry<CleanupEntry>(entry => {
   }
 });
 
-/**
- * Track `stream` as the unused-body resource owned by `holder` (typically the
- * Response). Returns a function that marks the body consumed so GC cleanup is
- * skipped (call when the body is actually read).
- *
- * Important: do not attach a 'data' listener here — that would switch the
- * IncomingMessage into flowing mode and discard bytes before the consumer reads.
- */
-export function trackUnusedBody(holder: object, stream: Readable): () => void {
-  const entry: CleanupEntry = { stream, consumed: false };
+function getOrCreateEntry(stream: Readable): CleanupEntry {
+  const existing = entriesByStream.get(stream);
+  if (existing) {
+    return existing;
+  }
 
-  const markConsumed = () => {
+  const entry: CleanupEntry = {
+    stream,
+    consumed: false,
+    refCount: 0,
+    onNewListener: () => {},
+    markConsumed: () => {},
+  };
+
+  entry.markConsumed = () => {
     if (entry.consumed) {
       return;
     }
     entry.consumed = true;
-    unusedBodyRegistry.unregister(entry);
-    stream.removeListener('newListener', onNewListener);
-    stream.removeListener('end', markConsumed);
+    stream.removeListener('newListener', entry.onNewListener);
+    stream.removeListener('end', entry.markConsumed);
+    entriesByStream.delete(stream);
   };
 
-  function onNewListener(event: string | symbol) {
-    // Consumer (or Body.collect) is about to read — untrack before flowing starts.
+  entry.onNewListener = (event: string | symbol) => {
+    // Consumer (or Body.collect) is about to read — stop GC resume.
+    // Do not attach a 'data' listener ourselves; that would discard bytes.
     if (event === 'data') {
-      markConsumed();
+      entry.markConsumed();
     }
+  };
+
+  entriesByStream.set(stream, entry);
+  stream.on('newListener', entry.onNewListener);
+  stream.once('end', entry.markConsumed);
+  return entry;
+}
+
+/**
+ * Track `stream` as owned by `holder` (Response, body proxy, reader, …).
+ * The underlying readable is resumed only after the last owner is collected
+ * and the body was never consumed.
+ *
+ * Returns a function that marks the body consumed so GC cleanup is skipped.
+ */
+export function trackUnusedBody(holder: object, stream: Readable): () => void {
+  const entry = getOrCreateEntry(stream);
+  entry.refCount += 1;
+  unusedBodyRegistry.register(holder, entry);
+  return entry.markConsumed;
+}
+
+/**
+ * Add another live owner for an already-tracked stream (e.g. cached body proxy
+ * or a ReadableStreamDefaultReader). No-op if the body is already consumed or
+ * was never tracked.
+ */
+export function retainBodyOwner(holder: object, stream: Readable): void {
+  const entry = entriesByStream.get(stream);
+  if (!entry || entry.consumed) {
+    return;
   }
-
-  stream.on('newListener', onNewListener);
-  // If the stream ends without a data listener (e.g. empty body), untrack.
-  stream.once('end', markConsumed);
-
-  unusedBodyRegistry.register(holder, entry, entry);
-  return markConsumed;
+  entry.refCount += 1;
+  unusedBodyRegistry.register(holder, entry);
 }

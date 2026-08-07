@@ -5,7 +5,7 @@
   "scripts": {
     "benchmark": "k6 run k6.js",
     "start:httpbin": "docker run --rm -p 50000:50000 -e PORT=50000 mccutchen/go-httpbin",
-    "start:server": "node --expose-gc --import tsx server.ts"
+    "start:server": "tsx server.ts"
   },
   "devDependencies": {
     "@types/k6": "^2.0.0",

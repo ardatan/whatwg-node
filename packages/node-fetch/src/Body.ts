@@ -4,6 +4,7 @@ import { addAbortSignal, Readable } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
 import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
+import { retainBodyOwner } from './bodyCleanup.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
@@ -144,6 +145,25 @@ export class PonyfillBody<TJSON = any> implements Body {
             if (cached !== undefined) {
               return cached;
             }
+            if (
+              prop === 'getReader' &&
+              typeof (ponyfillReadableStream as any).getReader === 'function'
+            ) {
+              const getReader = (ponyfillReadableStream as any).getReader.bind(
+                ponyfillReadableStream,
+              );
+              const wrapped = (...args: any[]) => {
+                const reader = getReader(...args);
+                if (reader != null && typeof reader === 'object') {
+                  // Escaped readers must keep the unused-body finalizer from
+                  // resuming/discarding the stream while they still exist.
+                  retainBodyOwner(reader, readable);
+                }
+                return reader;
+              };
+              boundCache.set(prop, wrapped);
+              return wrapped;
+            }
             if (prop in ponyfillReadableStream) {
               const ponyfillReadableStreamProp: any = (ponyfillReadableStream as any)[prop];
               if (typeof ponyfillReadableStreamProp === 'function') {
@@ -164,6 +184,9 @@ export class PonyfillBody<TJSON = any> implements Body {
             }
           },
         });
+        // If user keeps `const b = res.body` and drops `res`, the proxy must own
+        // the stream so FinalizationRegistry does not resume it early.
+        retainBodyOwner(this._cachedBodyProxy, readable);
       }
       return this._cachedBodyProxy;
     }
