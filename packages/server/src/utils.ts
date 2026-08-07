@@ -91,6 +91,15 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
+function isNonEmptyObject(obj: any): boolean {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   fetchAPI: FetchAPI,
@@ -120,19 +129,17 @@ export function normalizeNodeRequest(
     ? createCustomAbortControllerSignal()
     : new AbortController();
   if (nodeResponse?.once) {
-    const closeEventListener: EventListener = () => {
-      if (!controller.signal.aborted) {
-        Object.defineProperty(rawRequest, 'aborted', { value: true });
-        controller.abort(nodeResponse.errored ?? undefined);
+    // Shared 'error'/'close' listener. Skip abort after a successful write
+    // (`writableFinished`) instead of installing a third `finish` listener.
+    const onAbort: EventListener = () => {
+      if (nodeResponse.writableFinished || controller.signal.aborted) {
+        return;
       }
+      Object.defineProperty(rawRequest, 'aborted', { value: true });
+      controller.abort(nodeResponse.errored ?? undefined);
     };
-
-    nodeResponse.once('error', closeEventListener);
-    nodeResponse.once('close', closeEventListener);
-
-    nodeResponse.once('finish', () => {
-      nodeResponse.removeListener('close', closeEventListener);
-    });
+    nodeResponse.once('error', onAbort);
+    nodeResponse.once('close', onAbort);
   }
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
@@ -150,7 +157,7 @@ export function normalizeNodeRequest(
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
   const maybeParsedBody = nodeRequest.body;
-  if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
+  if (maybeParsedBody != null && isNonEmptyObject(maybeParsedBody)) {
     if (isRequestBody(maybeParsedBody)) {
       return new fetchAPI.Request(fullUrl, {
         method: nodeRequest.method || 'GET',
@@ -314,26 +321,23 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
+  // Hoist private-property reads so repeated string-keyed loads aren't needed.
+  const ponyfillHeaders = fetchResponse.headers as unknown as {
+    headersInit?: any;
+    _map?: Map<string, string>;
+    _setCookies?: string[];
+  };
+  const headersInit = ponyfillHeaders?.headersInit;
   if (
     __useSingleWriteHead &&
-    // @ts-expect-error - headersInit is a private property
-    fetchResponse.headers?.headersInit &&
-    // @ts-expect-error - headersInit is a private property
-    !Array.isArray(fetchResponse.headers.headersInit) &&
-    // @ts-expect-error - headersInit is a private property
-    !fetchResponse.headers.headersInit.get &&
-    // @ts-expect-error - map is a private property
-    !fetchResponse.headers._map &&
-    // @ts-expect-error - _setCookies is a private property
-    !fetchResponse.headers._setCookies?.length
+    headersInit &&
+    !Array.isArray(headersInit) &&
+    !headersInit.get &&
+    !ponyfillHeaders._map &&
+    !ponyfillHeaders._setCookies?.length
   ) {
     // @ts-expect-error - writeHead accepts headers object
-    serverResponse.writeHead(
-      fetchResponse.status,
-      fetchResponse.statusText,
-      // @ts-expect-error - headersInit is a private property
-      fetchResponse.headers.headersInit,
-    );
+    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, headersInit);
   } else {
     // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist
@@ -729,27 +733,53 @@ class CustomAbortControllerSignal extends EventTarget implements AbortSignal, Ab
   }
 }
 
+// Hoisted so each request does not allocate a fresh Proxy handler object.
+const customAbortControllerProxyHandler: ProxyHandler<CustomAbortControllerSignal> = {
+  get(target, prop: keyof CustomAbortControllerSignal, receiver) {
+    if (prop.toString().includes('kDependantSignals')) {
+      const nativeCtrl = target.ensureNativeCtrl();
+      return Reflect.get(nativeCtrl.signal, prop, nativeCtrl.signal);
+    }
+    return Reflect.get(target, prop, receiver);
+  },
+  set(target, prop: keyof CustomAbortControllerSignal, value, receiver) {
+    if (prop.toString().includes('kDependantSignals')) {
+      const nativeCtrl = target.ensureNativeCtrl();
+      return Reflect.set(nativeCtrl.signal, prop, value, nativeCtrl.signal);
+    }
+    return Reflect.set(target, prop, value, receiver);
+  },
+  getPrototypeOf() {
+    return AbortSignal.prototype;
+  },
+};
+
+function applyUnlimitedEventTargetListeners(signal: AbortSignal): boolean {
+  const nodeEvents: typeof import('node:events') | undefined =
+    globalThis.process?.getBuiltinModule?.('node:events');
+  // @ts-expect-error - kMaxEventTargetListeners is available in node:events
+  if (!nodeEvents?.kMaxEventTargetListeners) {
+    return false;
+  }
+  try {
+    // @ts-expect-error - See https://github.com/nodejs/node/pull/55816
+    signal[nodeEvents.kMaxEventTargetListeners] = 0;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function createCustomAbortControllerSignal() {
   if (globalThis.Bun || globalThis.Deno) {
     return new AbortController();
   }
-  return new Proxy(new CustomAbortControllerSignal(), {
-    get(target, prop: keyof CustomAbortControllerSignal, receiver) {
-      if (prop.toString().includes('kDependantSignals')) {
-        const nativeCtrl = target.ensureNativeCtrl();
-        return Reflect.get(nativeCtrl.signal, prop, nativeCtrl.signal);
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-    set(target, prop: keyof CustomAbortControllerSignal, value, receiver) {
-      if (prop.toString().includes('kDependantSignals')) {
-        const nativeCtrl = target.ensureNativeCtrl();
-        return Reflect.set(nativeCtrl.signal, prop, value, nativeCtrl.signal);
-      }
-      return Reflect.set(target, prop, value, receiver);
-    },
-    getPrototypeOf() {
-      return AbortSignal.prototype;
-    },
-  });
+  // Prefer native AbortController: same AbortSignal.any support, and we can set
+  // Node's max-listener sentinel to 0 (unlimited) like CustomAbortControllerSignal,
+  // without per-request EventTarget subclass + Proxy allocations.
+  const controller = new AbortController();
+  if (applyUnlimitedEventTargetListeners(controller.signal)) {
+    return controller;
+  }
+  return new Proxy(new CustomAbortControllerSignal(), customAbortControllerProxyHandler);
 }
