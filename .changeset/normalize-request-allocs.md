@@ -4,4 +4,9 @@
 
 Cut allocations in `normalizeNodeRequest`.
 
-Abort wiring shares one `error`/`close` listener with a `finish` flag instead of installing a third listener that calls `removeListener` (runs on every Node request with a response). Parsed-body detection uses a short-circuiting `for…in` check instead of `Object.keys(...).length`, and only runs after the GET/HEAD early return when `nodeRequest.body` is non-null.
+On Node, request abort controllers use the native `AbortController` with
+`kMaxEventTargetListeners = 0` (same unlimited-listener behavior as before) instead of a
+per-request `EventTarget` subclass wrapped in a `Proxy`. Abort wiring shares one
+`error`/`close` listener and skips abort when `writableFinished` is set, instead of
+installing a third `finish` listener. Parsed-body detection uses a short-circuiting
+`for…in` check instead of `Object.keys(...).length`.

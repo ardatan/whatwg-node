@@ -139,7 +139,7 @@ export class PonyfillBody<TJSON = any> implements Body {
         // Cache bound methods so repeated property reads don't allocate a fresh
         // bound function per access (Proxy get → Function.prototype.bind).
         const boundCache = new Map<PropertyKey, unknown>();
-        this._cachedBodyProxy = new Proxy(readable as any, {
+        const bodyProxy = new Proxy(readable as any, {
           get(_, prop) {
             const cached = boundCache.get(prop);
             if (cached !== undefined) {
@@ -184,9 +184,10 @@ export class PonyfillBody<TJSON = any> implements Body {
             }
           },
         });
+        this._cachedBodyProxy = bodyProxy;
         // If user keeps `const b = res.body` and drops `res`, the proxy must own
         // the stream so FinalizationRegistry does not resume it early.
-        retainBodyOwner(this._cachedBodyProxy, readable);
+        retainBodyOwner(bodyProxy, readable);
       }
       return this._cachedBodyProxy;
     }
@@ -226,6 +227,25 @@ export class PonyfillBody<TJSON = any> implements Body {
           },
         );
       return collectValue();
+    }
+    // Hot path for Node IncomingMessage / other Readables: collect directly from
+    // bodyInit without allocating a PonyfillReadableStream wrapper first.
+    // Skip if `.body` was already accessed (generateBody may have consumers).
+    if (this.bodyType === BodyInitType.Readable && !this._generatedBody) {
+      const readable = this.bodyInit as Readable;
+      if (readable.destroyed) {
+        return fakePromise((this._chunks = []));
+      }
+      const chunks: Uint8Array<ArrayBuffer>[] = [];
+      return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
+        readable.on('data', chunk => {
+          chunks.push(chunk);
+        });
+        readable.once('error', reject);
+        readable.once('end', () => {
+          resolve((this._chunks = chunks));
+        });
+      });
     }
     const _body = this.generateBody();
     if (!_body) {

@@ -129,10 +129,10 @@ export function normalizeNodeRequest(
     ? createCustomAbortControllerSignal()
     : new AbortController();
   if (nodeResponse?.once) {
-    // Shared 'error'/'close' listener + finish flag (avoids a third removeListener closure).
-    let finished = false;
+    // Shared 'error'/'close' listener. Skip abort after a successful write
+    // (`writableFinished`) instead of installing a third `finish` listener.
     const onAbort: EventListener = () => {
-      if (finished || controller.signal.aborted) {
+      if (nodeResponse.writableFinished || controller.signal.aborted) {
         return;
       }
       Object.defineProperty(rawRequest, 'aborted', { value: true });
@@ -140,9 +140,6 @@ export function normalizeNodeRequest(
     };
     nodeResponse.once('error', onAbort);
     nodeResponse.once('close', onAbort);
-    nodeResponse.once('finish', () => {
-      finished = true;
-    });
   }
 
   if (nodeRequest.method === 'GET' || nodeRequest.method === 'HEAD') {
@@ -736,27 +733,53 @@ class CustomAbortControllerSignal extends EventTarget implements AbortSignal, Ab
   }
 }
 
+// Hoisted so each request does not allocate a fresh Proxy handler object.
+const customAbortControllerProxyHandler: ProxyHandler<CustomAbortControllerSignal> = {
+  get(target, prop: keyof CustomAbortControllerSignal, receiver) {
+    if (prop.toString().includes('kDependantSignals')) {
+      const nativeCtrl = target.ensureNativeCtrl();
+      return Reflect.get(nativeCtrl.signal, prop, nativeCtrl.signal);
+    }
+    return Reflect.get(target, prop, receiver);
+  },
+  set(target, prop: keyof CustomAbortControllerSignal, value, receiver) {
+    if (prop.toString().includes('kDependantSignals')) {
+      const nativeCtrl = target.ensureNativeCtrl();
+      return Reflect.set(nativeCtrl.signal, prop, value, nativeCtrl.signal);
+    }
+    return Reflect.set(target, prop, value, receiver);
+  },
+  getPrototypeOf() {
+    return AbortSignal.prototype;
+  },
+};
+
+function applyUnlimitedEventTargetListeners(signal: AbortSignal): boolean {
+  const nodeEvents: typeof import('node:events') | undefined =
+    globalThis.process?.getBuiltinModule?.('node:events');
+  // @ts-expect-error - kMaxEventTargetListeners is available in node:events
+  if (!nodeEvents?.kMaxEventTargetListeners) {
+    return false;
+  }
+  try {
+    // @ts-expect-error - See https://github.com/nodejs/node/pull/55816
+    signal[nodeEvents.kMaxEventTargetListeners] = 0;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function createCustomAbortControllerSignal() {
   if (globalThis.Bun || globalThis.Deno) {
     return new AbortController();
   }
-  return new Proxy(new CustomAbortControllerSignal(), {
-    get(target, prop: keyof CustomAbortControllerSignal, receiver) {
-      if (prop.toString().includes('kDependantSignals')) {
-        const nativeCtrl = target.ensureNativeCtrl();
-        return Reflect.get(nativeCtrl.signal, prop, nativeCtrl.signal);
-      }
-      return Reflect.get(target, prop, receiver);
-    },
-    set(target, prop: keyof CustomAbortControllerSignal, value, receiver) {
-      if (prop.toString().includes('kDependantSignals')) {
-        const nativeCtrl = target.ensureNativeCtrl();
-        return Reflect.set(nativeCtrl.signal, prop, value, nativeCtrl.signal);
-      }
-      return Reflect.set(target, prop, value, receiver);
-    },
-    getPrototypeOf() {
-      return AbortSignal.prototype;
-    },
-  });
+  // Prefer native AbortController: same AbortSignal.any support, and we can set
+  // Node's max-listener sentinel to 0 (unlimited) like CustomAbortControllerSignal,
+  // without per-request EventTarget subclass + Proxy allocations.
+  const controller = new AbortController();
+  if (applyUnlimitedEventTargetListeners(controller.signal)) {
+    return controller;
+  }
+  return new Proxy(new CustomAbortControllerSignal(), customAbortControllerProxyHandler);
 }

@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -79,6 +79,14 @@ function logUnexpectedRequestError(err: any) {
   const message =
     err == null ? String(err) : typeof err === 'object' ? err.message || String(err) : String(err);
   console.error(`Unexpected error while handling request: ${message}`);
+}
+
+function responsePassthrough(response: Response): Response {
+  return response;
+}
+
+function undefinedPassthrough(): undefined {
+  return undefined;
 }
 
 function createServerAdapter<
@@ -323,20 +331,39 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    return unfakePromise(
-      fakePromise()
-        .then(() => {
-          const request = normalizeNodeRequest(
-            nodeRequest,
-            fetchAPI,
-            nodeResponse,
-            useCustomAbortCtrl,
-          );
-          return handleRequest(request, serverContext);
-        })
-        .catch(requestHandlerErrorFn)
-        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
-        .catch(logUnexpectedRequestError),
+    // Use handleMaybePromise so the synchronous fast-path in promise-helpers applies:
+    // when handleRequest / sendNodeResponse complete sync (or return fakePromise values),
+    // we avoid allocating Promise/fakePromise wrappers and skip microtask hops.
+    //
+    // Error handling mirrors the previous fakePromise().then().catch().then().catch() chain:
+    //   1. Errors from normalizeNodeRequest / handleRequest → error Response via
+    //      `requestHandlerErrorFn` (inner outputErrorFactory).
+    //   2. Errors from sendNodeResponse → `logUnexpectedRequestError`. sendNodeResponse is
+    //      wrapped in its own handleMaybePromise so the logger acts like a trailing `.catch(...)`
+    //      — the outer outputErrorFactory only catches inputFactory failures
+    //      (Promise.then(onFulfilled, onRejected) semantics).
+    return handleMaybePromise(
+      () =>
+        handleMaybePromise(
+          () => {
+            const request = normalizeNodeRequest(
+              nodeRequest,
+              fetchAPI,
+              nodeResponse,
+              useCustomAbortCtrl,
+            );
+            return handleRequest(request, serverContext);
+          },
+          responsePassthrough,
+          requestHandlerErrorFn,
+        ),
+      response =>
+        handleMaybePromise(
+          () => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
+          undefinedPassthrough,
+          logUnexpectedRequestError,
+        ),
+      logUnexpectedRequestError,
     );
   }
 
