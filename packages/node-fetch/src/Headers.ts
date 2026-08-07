@@ -32,14 +32,16 @@ export class PonyfillHeaders implements Headers {
     }
 
     if (Array.isArray(this.headersInit)) {
-      // Single pass — avoid filter()/map() intermediate arrays on the hot path
-      let result: string | null = null;
-      for (const [headerKey, value] of this.headersInit) {
-        if (headerKey.toLowerCase() === normalized) {
-          result = result === null ? value : `${result}, ${value}`;
-        }
+      const found = this.headersInit.filter(
+        ([headerKey]) => headerKey.toLowerCase() === normalized,
+      );
+      if (found.length === 0) {
+        return null;
       }
-      return result;
+      if (found.length === 1) {
+        return found[0][1];
+      }
+      return found.map(([, value]) => value).join(', ');
     } else if (isHeadersLike(this.headersInit)) {
       return this.headersInit.get(normalized);
     } else {
@@ -49,12 +51,11 @@ export class PonyfillHeaders implements Headers {
         return initValue;
       }
 
-      // Parallel arrays + indexOf stay faster than Map for typical small header sets
       if (!this.objectNormalizedKeysOfHeadersInit.length) {
-        for (const k in this.headersInit) {
+        Object.keys(this.headersInit).forEach(k => {
           this.objectOriginalKeysOfHeadersInit.push(k);
           this.objectNormalizedKeysOfHeadersInit.push(k.toLowerCase());
-        }
+        });
       }
       const index = this.objectNormalizedKeysOfHeadersInit.indexOf(normalized);
       if (index === -1) {
@@ -227,9 +228,7 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
-          for (const [key] of this.headersInit) {
-            yield key;
-          }
+          yield* this.headersInit.map(([key]) => key)[Symbol.iterator]();
           return;
         }
         if (isHeadersLike(this.headersInit)) {
@@ -254,9 +253,7 @@ export class PonyfillHeaders implements Headers {
     if (!this._map) {
       if (this.headersInit) {
         if (Array.isArray(this.headersInit)) {
-          for (const [, value] of this.headersInit) {
-            yield value;
-          }
+          yield* this.headersInit.map(([, value]) => value)[Symbol.iterator]();
           return;
         }
         if (isHeadersLike(this.headersInit)) {
@@ -276,9 +273,7 @@ export class PonyfillHeaders implements Headers {
 
   *_entries(): IterableIterator<[string, string]> {
     if (this._setCookies?.length) {
-      for (const cookie of this._setCookies) {
-        yield ['set-cookie', cookie] as [string, string];
-      }
+      yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
     }
     if (!this._map) {
       if (this.headersInit) {
