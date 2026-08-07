@@ -1,12 +1,15 @@
 import { request as httpRequest, STATUS_CODES } from 'node:http';
 import { request as httpsRequest } from 'node:https';
-import { PassThrough, Readable } from 'node:stream';
+import { Readable } from 'node:stream';
+import type { Transform } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { trackUnusedBody } from './bodyCleanup.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import {
+  attachAbortSignal,
   DEFAULT_ACCEPT_ENCODING,
   endStream,
   getHeadersObj,
@@ -69,29 +72,35 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         });
       }
 
-      nodeRequest.once('error', reject);
+      // Drop this listener once headers arrive. Leaving `reject` attached to the
+      // ClientRequest retains the Promise (and thus the Response) until the
+      // request socket is released — which never happens if the body is unread.
+      const onRequestError = (err: Error) => reject(err);
+      nodeRequest.once('error', onRequestError);
       nodeRequest.once('response', nodeResponse => {
-        let outputStream: PassThrough | undefined;
+        nodeRequest.removeListener('error', onRequestError);
+
+        let decodeStream: Transform | undefined;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
           case 'x-gzip':
           case 'gzip':
-            outputStream = zlib.createGunzip();
+            decodeStream = zlib.createGunzip();
             break;
           case 'x-deflate':
           case 'deflate':
-            outputStream = zlib.createInflate();
+            decodeStream = zlib.createInflate();
             break;
           case 'x-deflate-raw':
           case 'deflate-raw':
-            outputStream = zlib.createInflateRaw();
+            decodeStream = zlib.createInflateRaw();
             break;
           case 'br':
-            outputStream = zlib.createBrotliDecompress();
+            decodeStream = zlib.createBrotliDecompress();
             break;
           case 'zstd':
             if (zlib.createZstdDecompress != null) {
-              outputStream = zlib.createZstdDecompress();
+              decodeStream = zlib.createZstdDecompress();
             }
             break;
         }
@@ -121,35 +130,42 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
-        outputStream ||= new PassThrough();
-
-        pipeThrough({
-          src: nodeResponse,
-          dest: outputStream,
-          signal,
-          onError: e => {
-            if (!nodeResponse.destroyed) {
-              nodeResponse.destroy(e);
-            }
-            if (!outputStream.destroyed) {
-              outputStream.destroy(e);
-            }
-            reject(e);
-          },
-        });
+        let bodyStream: Readable = nodeResponse;
+        if (decodeStream) {
+          pipeThrough({
+            src: nodeResponse,
+            dest: decodeStream,
+            signal,
+            onError: e => {
+              if (!nodeResponse.destroyed) {
+                nodeResponse.destroy(e);
+              }
+              if (!decodeStream!.destroyed) {
+                decodeStream!.destroy(e);
+              }
+              reject(e);
+            },
+          });
+          bodyStream = decodeStream;
+        } else {
+          attachAbortSignal(nodeResponse, signal);
+        }
 
         const statusCode = nodeResponse.statusCode || 200;
         let statusText = nodeResponse.statusMessage || STATUS_CODES[statusCode];
         if (statusText == null) {
           statusText = '';
         }
-        const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
+        const ponyfillResponse = new PonyfillResponse(bodyStream, {
           status: statusCode,
           statusText,
           headers: nodeResponse.headers as Record<string, string>,
           url: fetchRequest.url,
           signal,
         });
+        // Release the socket if the Response is GC'd without reading the body
+        // (identity PassThrough used to eagerly pull bytes for this case).
+        ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, bodyStream);
         resolve(ponyfillResponse);
       });
 

@@ -1,7 +1,8 @@
 import { Buffer } from 'node:buffer';
-import { PassThrough, Readable } from 'node:stream';
+import { Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
+import { trackUnusedBody } from './bodyCleanup.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
@@ -100,12 +101,12 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   curlHandle.once('end', function endListener() {
     try {
       curlHandle.close();
-    } catch (e) {
-      deferredPromise.reject(e);
+    } catch {
+      // ignore close races after the handle is already gone
     }
     signal?.removeEventListener('abort', onAbort);
   });
-  curlHandle.once('error', function errorListener(error: any) {
+  function onCurlError(error: any) {
     if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
       streamResolved.destroy(error);
     } else {
@@ -116,16 +117,27 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     }
     try {
       curlHandle.close();
-    } catch (e) {
-      deferredPromise.reject(e);
+    } catch {
+      // ignore
     }
-  });
+  }
+  curlHandle.once('error', onCurlError);
   curlHandle.once(
     'stream',
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      const outputStream = stream.pipe(new PassThrough(), {
-        end: true,
+      // Stop retaining the Promise via onCurlError → reject after headers/body exist.
+      curlHandle.removeListener('error', onCurlError);
+      curlHandle.once('error', (error: any) => {
+        if (!stream.destroyed) {
+          stream.destroy(error);
+        }
+        try {
+          curlHandle.close();
+        } catch {
+          // ignore
+        }
       });
+
       const headersFlat = headersBuf
         .toString('utf8')
         .split(/\r?\n|\r/g)
@@ -139,7 +151,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
               if (!stream.destroyed) {
                 stream.resume();
               }
-              outputStream.destroy();
               deferredPromise.reject(new Error('redirect is not allowed'));
             }
             return true;
@@ -149,14 +160,15 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
       const headersInit = headersFlat.map(
         headerFlat => headerFlat.split(/:\s(.+)/).slice(0, 2) as [string, string],
       );
-      const ponyfillResponse = new PonyfillResponse(outputStream, {
+      const ponyfillResponse = new PonyfillResponse(stream, {
         status,
         headers: headersInit,
         url: curlHandle.getInfo(Curl.info.REDIRECT_URL)?.toString() || fetchRequest.url,
         redirected: Number(curlHandle.getInfo(Curl.info.REDIRECT_COUNT)) > 0,
       });
+      ponyfillResponse._untrackBody = trackUnusedBody(ponyfillResponse, stream);
       deferredPromise.resolve(ponyfillResponse);
-      streamResolved = outputStream;
+      streamResolved = stream;
     },
   );
   setImmediate(() => {

@@ -51,6 +51,31 @@ export function shouldRedirect(status?: number): boolean {
   return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
 }
 
+/** Attach AbortSignal → destroy(readable) without retaining strong cycles. */
+export function attachAbortSignal(src: Readable, signal?: AbortSignal | undefined) {
+  if (!signal) {
+    return;
+  }
+  // this is faster than `import('node:signal').addAbortSignal(signal, src)`
+  const srcRef = new WeakRef(src);
+  const signalRef = new WeakRef(signal);
+  function cleanup() {
+    signalRef.deref()?.removeEventListener('abort', onAbort);
+    srcRef.deref()?.removeListener('end', cleanup);
+    srcRef.deref()?.removeListener('error', cleanup);
+    srcRef.deref()?.removeListener('close', cleanup);
+  }
+  function onAbort() {
+    srcRef.deref()?.destroy(new AbortError());
+    cleanup();
+  }
+  signal.addEventListener('abort', onAbort, { once: true });
+  // this is faster than `import('node:signal').finished(src, cleanup)`
+  src.once('end', cleanup);
+  src.once('error', cleanup);
+  src.once('close', cleanup);
+}
+
 export function pipeThrough({
   src,
   dest,
@@ -85,26 +110,7 @@ export function pipeThrough({
     }
   });
 
-  if (signal) {
-    // this is faster than `import('node:signal').addAbortSignal(signal, src)`
-    const srcRef = new WeakRef(src);
-    const signalRef = new WeakRef(signal);
-    function cleanup() {
-      signalRef.deref()?.removeEventListener('abort', onAbort);
-      srcRef.deref()?.removeListener('end', cleanup);
-      srcRef.deref()?.removeListener('error', cleanup);
-      srcRef.deref()?.removeListener('close', cleanup);
-    }
-    function onAbort() {
-      srcRef.deref()?.destroy(new AbortError());
-      cleanup();
-    }
-    signal.addEventListener('abort', onAbort, { once: true });
-    // this is faster than `import('node:signal').finished(src, cleanup)`
-    src.once('end', cleanup);
-    src.once('error', cleanup);
-    src.once('close', cleanup);
-  }
+  attachAbortSignal(src, signal);
 
   src.pipe(dest, { end: true /* already default */ });
 }

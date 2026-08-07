@@ -20,6 +20,9 @@ const server = createServer(async (req, res) => {
       const scenario = req.url.split('/').pop();
       if (isScenario(scenario)) {
         await scenarios[scenario](httpbinUrl);
+        // Unused bodies are released via FinalizationRegistry; nudge GC so
+        // active_handles stays bounded under the k6 noConsumeBody scenario.
+        (globalThis as typeof globalThis & { gc?: () => void }).gc?.();
         return res.writeHead(200).end();
       }
     }

@@ -73,6 +73,18 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _cachedBodyProxy: PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null = null;
   private _cachedBodyReadableRef: Readable | null = null;
   _signal?: AbortSignal | undefined;
+  /** Set by fetch implementations via {@link trackUnusedBody}; cleared on consume. */
+  _untrackBody?: (() => void) | undefined;
+
+  /** Mark the body as consumed so unused-body GC cleanup will not destroy the stream. */
+  _markBodyConsumed() {
+    if (this.bodyUsed && !this._untrackBody) {
+      return;
+    }
+    this.bodyUsed = true;
+    this._untrackBody?.();
+    this._untrackBody = undefined;
+  }
 
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody?.readable?.destroyed && this._buffer) {
@@ -161,6 +173,7 @@ export class PonyfillBody<TJSON = any> implements Body {
   _chunks: MaybePromise<Uint8Array<ArrayBuffer>[]> | null = null;
 
   _doCollectChunksFromReadableJob() {
+    this._markBodyConsumed();
     if (this.bodyType === BodyInitType.AsyncIterable) {
       if (Array.fromAsync) {
         return handleMaybePromise(
@@ -272,6 +285,7 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (_body == null) {
       return fakePromise(this._formData);
     }
+    this._markBodyConsumed();
     const formDataLimits = {
       ...this.options.formDataLimits,
       ...opts?.formDataLimits,
