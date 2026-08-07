@@ -76,7 +76,9 @@ const EMPTY_OBJECT = {};
 
 // Hoisted to avoid per-request closure allocations in the requestListener hot path
 function logUnexpectedRequestError(err: any) {
-  console.error(`Unexpected error while handling request: ${err.message || err}`);
+  const message =
+    err == null ? String(err) : typeof err === 'object' ? err.message || String(err) : String(err);
+  console.error(`Unexpected error while handling request: ${message}`);
 }
 
 function createServerAdapter<
@@ -317,6 +319,10 @@ function createServerAdapter<
     // handlers to avoid per-request rest-arg / closure allocations.
     const serverContext: any =
       ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
+    // completeAssign can overwrite waitUntil with undefined/null from ctx parts
+    if (!serverContext.waitUntil) {
+      serverContext.waitUntil = waitUntil;
+    }
     return unfakePromise(
       fakePromise()
         .then(() => {
