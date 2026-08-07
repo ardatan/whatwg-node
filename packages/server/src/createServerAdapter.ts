@@ -74,6 +74,11 @@ export interface ServerAdapterOptions<TServerContext> {
 
 const EMPTY_OBJECT = {};
 
+// Hoisted to avoid per-request closure allocations in the requestListener hot path
+function logUnexpectedRequestError(err: any) {
+  console.error(`Unexpected error while handling request: ${err.message || err}`);
+}
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
@@ -113,6 +118,9 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
+
+  // Defined once per adapter instance to avoid per-request closure allocations
+  const requestHandlerErrorFn = (err: any) => handleErrorFromRequestHandler(err, fetchAPI.Response);
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
@@ -305,21 +313,24 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
+    // Inline normalize/handle for the common empty-ctx path and use hoisted error
+    // handlers to avoid per-request rest-arg / closure allocations.
+    const serverContext: any =
+      ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
     return unfakePromise(
       fakePromise()
-        .then(() =>
-          handleNodeRequestAndResponse(
+        .then(() => {
+          const request = normalizeNodeRequest(
             nodeRequest,
+            fetchAPI,
             nodeResponse,
-            defaultServerContext as any,
-            ...ctx,
-          ),
-        )
-        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
+            useCustomAbortCtrl,
+          );
+          return handleRequest(request, serverContext);
+        })
+        .catch(requestHandlerErrorFn)
         .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
-        .catch(err =>
-          console.error(`Unexpected error while handling request: ${err.message || err}`),
-        ),
+        .catch(logUnexpectedRequestError),
     );
   }
 

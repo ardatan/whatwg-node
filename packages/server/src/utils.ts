@@ -91,6 +91,15 @@ function isRequestBody(body: any): body is BodyInit {
   return false;
 }
 
+function isNonEmptyObject(obj: any): boolean {
+  for (const key in obj) {
+    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
   fetchAPI: FetchAPI,
@@ -120,18 +129,19 @@ export function normalizeNodeRequest(
     ? createCustomAbortControllerSignal()
     : new AbortController();
   if (nodeResponse?.once) {
-    const closeEventListener: EventListener = () => {
-      if (!controller.signal.aborted) {
-        Object.defineProperty(rawRequest, 'aborted', { value: true });
-        controller.abort(nodeResponse.errored ?? undefined);
+    // Shared 'error'/'close' listener + finish flag (avoids a third removeListener closure).
+    let finished = false;
+    const onAbort: EventListener = () => {
+      if (finished || controller.signal.aborted) {
+        return;
       }
+      Object.defineProperty(rawRequest, 'aborted', { value: true });
+      controller.abort(nodeResponse.errored ?? undefined);
     };
-
-    nodeResponse.once('error', closeEventListener);
-    nodeResponse.once('close', closeEventListener);
-
+    nodeResponse.once('error', onAbort);
+    nodeResponse.once('close', onAbort);
     nodeResponse.once('finish', () => {
-      nodeResponse.removeListener('close', closeEventListener);
+      finished = true;
     });
   }
 
@@ -150,7 +160,7 @@ export function normalizeNodeRequest(
    * rawRequest cannot be used as BodyInit/ReadableStream by Fetch API in this case.
    */
   const maybeParsedBody = nodeRequest.body;
-  if (maybeParsedBody != null && Object.keys(maybeParsedBody).length > 0) {
+  if (maybeParsedBody != null && isNonEmptyObject(maybeParsedBody)) {
     if (isRequestBody(maybeParsedBody)) {
       return new fetchAPI.Request(fullUrl, {
         method: nodeRequest.method || 'GET',
@@ -314,26 +324,23 @@ export function sendNodeResponse(
     endResponse(serverResponse);
     return;
   }
+  // Hoist private-property reads so repeated string-keyed loads aren't needed.
+  const ponyfillHeaders = fetchResponse.headers as unknown as {
+    headersInit?: any;
+    _map?: Map<string, string>;
+    _setCookies?: string[];
+  };
+  const headersInit = ponyfillHeaders?.headersInit;
   if (
     __useSingleWriteHead &&
-    // @ts-expect-error - headersInit is a private property
-    fetchResponse.headers?.headersInit &&
-    // @ts-expect-error - headersInit is a private property
-    !Array.isArray(fetchResponse.headers.headersInit) &&
-    // @ts-expect-error - headersInit is a private property
-    !fetchResponse.headers.headersInit.get &&
-    // @ts-expect-error - map is a private property
-    !fetchResponse.headers._map &&
-    // @ts-expect-error - _setCookies is a private property
-    !fetchResponse.headers._setCookies?.length
+    headersInit &&
+    !Array.isArray(headersInit) &&
+    !headersInit.get &&
+    !ponyfillHeaders._map &&
+    !ponyfillHeaders._setCookies?.length
   ) {
     // @ts-expect-error - writeHead accepts headers object
-    serverResponse.writeHead(
-      fetchResponse.status,
-      fetchResponse.statusText,
-      // @ts-expect-error - headersInit is a private property
-      fetchResponse.headers.headersInit,
-    );
+    serverResponse.writeHead(fetchResponse.status, fetchResponse.statusText, headersInit);
   } else {
     // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist
