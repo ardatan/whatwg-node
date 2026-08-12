@@ -16,24 +16,8 @@ export interface EphemeralTlsCerts {
 }
 
 /**
- * Extra CA PEMs currently installed by HTTPS test servers.
- * Deno's native `fetch` ignores `tls.setDefaultCACertificates`, so test-fetch
- * reads this list and passes it to `Deno.createHttpClient({ caCerts })`.
- */
-let activeExtraCaCerts: string[] = [];
-
-export function getActiveExtraCaCerts(): readonly string[] {
-  return activeExtraCaCerts;
-}
-
-export function setActiveExtraCaCerts(certs: readonly string[]): void {
-  activeExtraCaCerts = [...certs];
-}
-
-/**
  * Create an ephemeral test CA + localhost leaf via OpenSSL.
- * Avoids the `pem` package (broken under Deno) and produces a CA:FALSE leaf so
- * Deno/rustls does not reject the server cert as `CaUsedAsEndEntity`.
+ * Avoids the `pem` package and produces a proper CA:FALSE leaf with SAN.
  */
 export async function createEphemeralTlsCerts(
   commonName = 'localhost',

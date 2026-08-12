@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import http from 'node:http';
+import https from 'node:https';
 import { setTimeout } from 'node:timers/promises';
 import NodeFormData from 'form-data';
 import { describe, expect, it } from '@jest/globals';
@@ -8,6 +9,15 @@ import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
 const skipIf = (condition: boolean) => (condition ? it.skip : it);
+
+function requestForUrl(url: URL, options: http.RequestOptions) {
+  const request = url.protocol === 'https:' ? https.request : http.request;
+  return request({
+    ...options,
+    hostname: url.hostname,
+    port: url.port,
+  });
+}
 
 describe('FormData', () => {
   runTestsForEachServerImpl(testServer => {
@@ -83,10 +93,8 @@ describe('FormData', () => {
 
           const url = new URL(testServer.url);
 
-          const req = http.request({
+          const req = requestForUrl(url, {
             method: 'post',
-            hostname: url.hostname,
-            port: url.port,
             headers: {
               ...formData.getHeaders(),
               'content-length': 10,
@@ -136,10 +144,8 @@ describe('FormData', () => {
 
             const url = new URL(testServer.url);
 
-            const req = http.request({
+            const req = requestForUrl(url, {
               method: 'post',
-              hostname: url.hostname,
-              port: url.port,
               headers: {
                 ...formData.getHeaders(),
                 'content-length': 1000,

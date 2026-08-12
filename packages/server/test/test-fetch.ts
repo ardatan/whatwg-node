@@ -8,31 +8,10 @@ import { patchSymbols } from '@whatwg-node/disposablestack';
 import { createFetch } from '@whatwg-node/fetch';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
-import { getActiveExtraCaCerts } from './test-tls-certs';
 
 patchSymbols();
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 const libcurl = globalThis.libcurl;
-
-function wrapFetchForDenoTestCerts(baseFetch: typeof fetch): typeof fetch {
-  if (!globalThis.Deno) {
-    return baseFetch;
-  }
-  return (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const caCerts = getActiveExtraCaCerts();
-    if (!caCerts.length) {
-      return baseFetch(input, init);
-    }
-    // Deno native fetch ignores tls.setDefaultCACertificates; pass test CAs explicitly.
-    const client = Deno.createHttpClient({ caCerts: [...caCerts] });
-    try {
-      return await baseFetch(input, { ...init, client } as RequestInit);
-    } finally {
-      client.close();
-    }
-  }) as typeof fetch;
-}
-
 export function runTestsForEachFetchImpl(
   callback: (
     implementationName: string,
@@ -99,10 +78,7 @@ export function runTestsForEachFetchImpl(
     noNative = true;
   }
   describeIf(!noNative || globalThis.Bun || globalThis.Deno)('Native', () => {
-    const baseFetchAPI = createFetch({ skipPonyfill: true });
-    const fetchAPI: FetchAPI = globalThis.Deno
-      ? { ...baseFetchAPI, fetch: wrapFetchForDenoTestCerts(baseFetchAPI.fetch) }
-      : baseFetchAPI;
+    const fetchAPI = createFetch({ skipPonyfill: true });
     callback('native', {
       fetchAPI,
       createServerAdapter: (baseObj: any, opts?: any) =>

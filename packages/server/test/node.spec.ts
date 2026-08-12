@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { request as httpRequest, IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
+import { request as httpsRequest } from 'node:https';
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
 import { renderToReadableStream } from 'react-dom/server.edge';
@@ -12,6 +13,15 @@ import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
 const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 10);
+
+function requestForUrl(
+  url: URL,
+  options: Parameters<typeof httpRequest>[0],
+  cb?: Parameters<typeof httpRequest>[1],
+) {
+  const request = url.protocol === 'https:' ? httpsRequest : httpRequest;
+  return request(options, cb);
+}
 
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
@@ -597,7 +607,8 @@ describe('Node Specific Cases', () => {
 
             const url = new URL(testServer.url);
             const rawHeaders = await new Promise<string[]>((resolve, reject) => {
-              const req = httpRequest(
+              const req = requestForUrl(
+                url,
                 {
                   hostname: url.hostname,
                   port: Number(url.port),

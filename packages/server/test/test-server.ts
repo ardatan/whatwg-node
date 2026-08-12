@@ -10,7 +10,7 @@ import Hapi from '@hapi/hapi';
 import { afterAll, beforeAll, describe } from '@jest/globals';
 import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
 import { ServerAdapter, ServerAdapterBaseObject } from '@whatwg-node/server';
-import { createEphemeralTlsCerts, setActiveExtraCaCerts } from './test-tls-certs';
+import { createEphemeralTlsCerts } from './test-tls-certs';
 
 export interface TestServer extends AsyncDisposable {
   name: string;
@@ -129,17 +129,16 @@ if ((globalThis as any)['createUWS']) {
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
 
-// Register when tls.setDefaultCACertificates exists (Node 22.19+/24.5+, Deno 2.7+,
-// and Bun when the runtime exposes it).
-if (typeof tls.setDefaultCACertificates === 'function') {
+// Keep `node:https` in the shared server matrix on Node (and Bun when the API exists).
+// Skip Deno: its `node:https` is incomplete for this suite matrix.
+if (!globalThis.Deno && typeof tls.setDefaultCACertificates === 'function') {
   serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
     let handler: any;
     const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
 
-    // Trust the ephemeral CA for Node TLS / libcurl (via getCACertificates) and Deno native fetch.
+    // Trust the ephemeral CA for Node TLS / libcurl (via getCACertificates('default')).
     const previousDefaultCaCerts = tls.getCACertificates('default');
     tls.setDefaultCACertificates([...previousDefaultCaCerts, caCert]);
-    setActiveExtraCaCerts([caCert]);
 
     const server = createHttpsServer(
       {
@@ -175,7 +174,6 @@ if (typeof tls.setDefaultCACertificates === 'function') {
           },
           async [DisposableSymbols.asyncDispose]() {
             tls.setDefaultCACertificates(previousDefaultCaCerts);
-            setActiveExtraCaCerts([]);
             connections.forEach(socket => {
               socket.destroy();
             });
