@@ -427,7 +427,10 @@ describe('Node Specific Cases', () => {
           expect(disposedThen).toHaveBeenCalled();
         });
 
-        skipIf(globalThis.Deno && serverImplName !== 'Deno')(
+        // node:https: Node 22.23+/24.17+ tls.checkServerIdentity breaks IPv6 IP-SAN
+        // matching (hostname becomes `::1.` via domainToASCII). Tracked upstream:
+        // https://github.com/nodejs/node/issues/64032
+        skipIf((globalThis.Deno && serverImplName !== 'Deno') || serverImplName === 'node:https')(
           'handles ipv6 addresses correctly',
           async () => {
             await using serverAdapter = createServerAdapter(() => {
@@ -435,8 +438,9 @@ describe('Node Specific Cases', () => {
             });
             await testServer.addOnceHandler(serverAdapter);
             const serverUrl = new URL(testServer.url);
-            const ipv6Url = new URL(serverUrl.href);
-            ipv6Url.hostname = '[::1]';
+            const ipv6Url = new URL(
+              `${serverUrl.protocol}//[::1]:${serverUrl.port}${serverUrl.pathname}`,
+            );
             const response = await fetch(ipv6Url);
             expect(response.status).toBe(200);
             await expect(response.text()).resolves.toBe('Hello world!');
