@@ -1,14 +1,9 @@
 import { Buffer, Blob as NodeBlob } from 'node:buffer';
-import { createServer as createHttpServer } from 'node:http';
-import { createServer as createHttpsServer } from 'node:https';
-import type { AddressInfo } from 'node:net';
 import { Readable } from 'node:stream';
 import { setTimeout } from 'node:timers/promises';
-import tls from 'node:tls';
 import { URL as NodeURL } from 'node:url';
 import { describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
-import { createEphemeralTlsCerts } from '../../server/test/test-tls-certs.js';
 
 function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);
@@ -252,53 +247,13 @@ describe('Node Fetch Ponyfill', () => {
         const resJson = await response.json();
         expect(resJson.test).toBe('test');
       });
-      // Local http→https redirect (no external network). Needs setDefaultCACertificates
-      // to trust the ephemeral HTTPS leaf (Node 22.19+ / 24.5+).
-      testIf(
-        !globalThis.Deno && typeof tls.setDefaultCACertificates === 'function',
-        'handles redirect from http to https',
-        async () => {
-          const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
-          const previousDefaultCaCerts = tls.getCACertificates('default');
-          tls.setDefaultCACertificates([...previousDefaultCaCerts, caCert]);
-
-          const httpsServer = createHttpsServer(
-            { key: serviceKey, cert: certificate },
-            (_req, res) => {
-              res.writeHead(200, { 'content-type': 'text/plain' });
-              res.end('secure');
-            },
-          );
-          await new Promise<void>(resolve => httpsServer.listen(0, '127.0.0.1', resolve));
-          const httpsPort = (httpsServer.address() as AddressInfo).port;
-          const httpsUrl = `https://127.0.0.1:${httpsPort}/`;
-
-          const httpServer = createHttpServer((_req, res) => {
-            res.writeHead(302, { Location: httpsUrl });
-            res.end();
-          });
-          await new Promise<void>(resolve => httpServer.listen(0, '127.0.0.1', resolve));
-          const httpPort = (httpServer.address() as AddressInfo).port;
-          const httpUrl = `http://127.0.0.1:${httpPort}/`;
-
-          try {
-            const response = await fetchPonyfill(httpUrl);
-            await expect(response.text()).resolves.toBe('secure');
-            expect(response.status).toBe(200);
-            expect(response.url === httpsUrl || response.redirected).toBeTruthy();
-          } finally {
-            await Promise.all([
-              new Promise<void>((resolve, reject) =>
-                httpServer.close(err => (err ? reject(err) : resolve())),
-              ),
-              new Promise<void>((resolve, reject) =>
-                httpsServer.close(err => (err ? reject(err) : resolve())),
-              ),
-            ]);
-            tls.setDefaultCACertificates(previousDefaultCaCerts);
-          }
-        },
-      );
+      // No need to test this on Deno
+      testIf(!globalThis.Deno, 'handles redirect from http to https', async () => {
+        const response = await fetchPonyfill('http://github.com');
+        await response.text();
+        expect(response.status).toBe(200);
+        expect(response.url === 'https://github.com' || response.redirected).toBeTruthy();
+      });
       it('does not leak when signal is not used', async () => {
         const res = await fetchPonyfill(baseUrl, { signal: new AbortController().signal });
         await res.text();
