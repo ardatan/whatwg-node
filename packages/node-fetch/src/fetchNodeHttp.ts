@@ -3,7 +3,7 @@ import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { checkServerIdentity } from './checkServerIdentity.js';
+import { httpsCheckServerIdentity } from './checkServerIdentity.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -70,10 +70,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         signal,
         agent: fetchRequest.agent,
       };
-      // Avoid Node.js IPv6 IP-SAN regression in tls.checkServerIdentity
-      // (https://github.com/nodejs/node/issues/64032) for the node-http ponyfill.
-      if (isHttpsRequest(requestTarget)) {
-        requestOptions.checkServerIdentity = checkServerIdentity;
+      // Only override when this Node build has the IPv6 IP-SAN regression
+      // (https://github.com/nodejs/node/issues/64032).
+      if (httpsCheckServerIdentity && isHttpsRequest(requestTarget)) {
+        requestOptions.checkServerIdentity = httpsCheckServerIdentity;
       }
 
       // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object

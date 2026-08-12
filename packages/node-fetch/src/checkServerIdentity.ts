@@ -32,11 +32,30 @@ function collectCertIpAddresses(cert: PeerCertificate): string[] {
 }
 
 /**
- * Like `tls.checkServerIdentity`, but correctly matches IPv6 literals against
- * `IP Address` SANs on Node.js versions affected by
- * https://github.com/nodejs/node/issues/64032 (domainToASCII breaks the IP path).
+ * Detect Node.js IPv6 IP-SAN regression in `tls.checkServerIdentity`
+ * (https://github.com/nodejs/node/issues/64032). Cached for process lifetime.
  */
-export function checkServerIdentity(hostname: string, cert: PeerCertificate): Error | undefined {
+export const needsIpv6SanWorkaround: boolean = (() => {
+  try {
+    return (
+      tls.checkServerIdentity('::1', {
+        subject: {},
+        subjectaltname: 'IP Address:::1',
+      } as PeerCertificate) != null
+    );
+  } catch {
+    // If the probe itself throws, prefer the workaround.
+    return true;
+  }
+})();
+
+/**
+ * Custom verifier that correctly matches IPv6 literals against `IP Address` SANs.
+ */
+export function checkServerIdentityIpv6San(
+  hostname: string,
+  cert: PeerCertificate,
+): Error | undefined {
   const bareHost = hostname.replace(/^\[|\]$/g, '').replace(/\.$/, '');
 
   if (isIP(bareHost)) {
@@ -60,3 +79,7 @@ export function checkServerIdentity(hostname: string, cert: PeerCertificate): Er
 
   return tls.checkServerIdentity(hostname, cert);
 }
+
+/** Only set on https requests when the running Node build needs the workaround. */
+export const httpsCheckServerIdentity: typeof checkServerIdentityIpv6San | undefined =
+  needsIpv6SanWorkaround ? checkServerIdentityIpv6San : undefined;
