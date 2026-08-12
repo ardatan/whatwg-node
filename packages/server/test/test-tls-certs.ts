@@ -37,7 +37,7 @@ export async function createEphemeralTlsCerts(
         'basicConstraints=critical,CA:FALSE',
         'keyUsage=critical,digitalSignature,keyEncipherment',
         'extendedKeyUsage=serverAuth',
-        `subjectAltName=DNS:${commonName},DNS:localhost,IP:127.0.0.1`,
+        `subjectAltName=DNS:${commonName},DNS:localhost,IP:127.0.0.1,IP:::1`,
       ].join('\n'),
     );
 
