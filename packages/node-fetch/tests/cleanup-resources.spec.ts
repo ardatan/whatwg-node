@@ -27,12 +27,15 @@ describeIf(!globalThis.Deno)('Cleanup Resources', () => {
           expect(response.ok).toBe(true);
         }
       });
-      it('https - should free resources when body is not consumed', async () => {
-        const response = await fetch('https://httpbin.org/get');
-        if (response.status !== 503) {
-          expect(response.ok).toBe(true);
-        }
-      });
+      (process.env.CI ? it.skip : it)(
+        'https - should free resources when body is not consumed',
+        async () => {
+          const response = await fetch('https://httpbin.org/get');
+          if (response.status !== 503) {
+            expect(response.ok).toBe(true);
+          }
+        },
+      );
     });
   });
 });
