@@ -21,12 +21,16 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.setOpt('SSL_VERIFYPEER', false);
   }
 
-  // Follow Node's current default CA store (includes setDefaultCACertificates updates).
-  const caCerts =
-    typeof tls.getCACertificates === 'function'
-      ? tls.getCACertificates('default')
-      : rootCertificates;
-  curlHandle.setOpt('CAINFO_BLOB', caCerts.join('\n'));
+  // Prefer Node's current default CA store (includes setDefaultCACertificates and
+  // NODE_EXTRA_CA_CERTS loaded at process start). Fall back to the previous
+  // NODE_EXTRA_CA_CERTS / bundled-roots behavior on older runtimes.
+  if (typeof tls.getCACertificates === 'function') {
+    curlHandle.setOpt('CAINFO_BLOB', tls.getCACertificates('default').join('\n'));
+  } else if (process.env.NODE_EXTRA_CA_CERTS) {
+    curlHandle.setOpt('CAINFO', process.env.NODE_EXTRA_CA_CERTS);
+  } else {
+    curlHandle.setOpt('CAINFO_BLOB', rootCertificates.join('\n'));
+  }
 
   curlHandle.enable(CurlFeature.StreamResponse);
 
