@@ -1,5 +1,11 @@
 import { Buffer } from 'node:buffer';
-import { request as httpRequest, IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
+import http, {
+  request as httpRequest,
+  IncomingMessage,
+  ServerResponse,
+  STATUS_CODES,
+} from 'node:http';
+import { request as httpsRequest } from 'node:https';
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
 import { renderToReadableStream } from 'react-dom/server.edge';
@@ -12,6 +18,15 @@ import { runTestsForEachFetchImpl } from './test-fetch.js';
 import { runTestsForEachServerImpl } from './test-server.js';
 
 const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 10);
+
+function requestForUrl(
+  url: URL,
+  options: http.RequestOptions,
+  cb?: (res: IncomingMessage) => void,
+) {
+  const request = url.protocol === 'https:' ? httpsRequest : httpRequest;
+  return request(options, cb);
+}
 
 describe('Node Specific Cases', () => {
   runTestsForEachFetchImpl(
@@ -412,20 +427,25 @@ describe('Node Specific Cases', () => {
           expect(disposedThen).toHaveBeenCalled();
         });
 
-        skipIf(globalThis.Deno && serverImplName !== 'Deno')(
-          'handles ipv6 addresses correctly',
-          async () => {
-            await using serverAdapter = createServerAdapter(() => {
-              return new Response('Hello world!', { status: 200 });
-            });
-            await testServer.addOnceHandler(serverAdapter);
-            const port = new URL(testServer.url).port;
-            const ipv6Url = new URL(`http://[::1]:${port}/`);
-            const response = await fetch(ipv6Url);
-            expect(response.status).toBe(200);
-            await expect(response.text()).resolves.toBe('Hello world!');
-          },
-        );
+        // Native fetch/undici still hits Node's broken IPv6 IP-SAN check
+        // (https://github.com/nodejs/node/issues/64032). node-http ponyfill uses
+        // our checkServerIdentity workaround.
+        skipIf(
+          (globalThis.Deno && serverImplName !== 'Deno') ||
+            (serverImplName === 'node:https' && fetchImplName === 'native'),
+        )('handles ipv6 addresses correctly', async () => {
+          await using serverAdapter = createServerAdapter(() => {
+            return new Response('Hello world!', { status: 200 });
+          });
+          await testServer.addOnceHandler(serverAdapter);
+          const serverUrl = new URL(testServer.url);
+          const ipv6Url = new URL(
+            `${serverUrl.protocol}//[::1]:${serverUrl.port}${serverUrl.pathname}`,
+          );
+          const response = await fetch(ipv6Url);
+          expect(response.status).toBe(200);
+          await expect(response.text()).resolves.toBe('Hello world!');
+        });
 
         describe('handles status codes correctly', () => {
           for (const statusCodeStr in STATUS_CODES) {
@@ -596,7 +616,8 @@ describe('Node Specific Cases', () => {
 
             const url = new URL(testServer.url);
             const rawHeaders = await new Promise<string[]>((resolve, reject) => {
-              const req = httpRequest(
+              const req = requestForUrl(
+                url,
                 {
                   hostname: url.hostname,
                   port: Number(url.port),

@@ -1,6 +1,8 @@
 import { createServer, globalAgent, Server, ServerResponse } from 'node:http';
+import { createServer as createHttpsServer } from 'node:https';
 import { AddressInfo, Socket } from 'node:net';
 import { Readable } from 'node:stream';
+import tls from 'node:tls';
 import express from 'express';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import Koa, { Context } from 'koa';
@@ -8,6 +10,7 @@ import Hapi from '@hapi/hapi';
 import { afterAll, beforeAll, describe } from '@jest/globals';
 import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
 import { ServerAdapter, ServerAdapterBaseObject } from '@whatwg-node/server';
+import { createEphemeralTlsCerts } from './test-tls-certs';
 
 export interface TestServer extends AsyncDisposable {
   name: string;
@@ -125,6 +128,73 @@ if ((globalThis as any)['createUWS']) {
 }
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
+
+// Keep `node:https` in the shared server matrix on Node (and Bun when the API exists).
+// Skip Deno: its `node:https` is incomplete for this suite matrix.
+if (!globalThis.Deno && typeof tls.setDefaultCACertificates === 'function') {
+  serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
+    let handler: any;
+    const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
+
+    // Trust the ephemeral CA for Node TLS / libcurl (via getCACertificates('default')).
+    const previousDefaultCaCerts = tls.getCACertificates('default');
+    tls.setDefaultCACertificates([...previousDefaultCaCerts, caCert]);
+
+    const server = createHttpsServer(
+      {
+        key: serviceKey,
+        cert: certificate,
+      },
+      function handlerWrapper(req, res) {
+        return handler(req, res);
+      },
+    );
+    const connections = new Set<Socket>();
+    server.on('connection', socket => {
+      connections.add(socket);
+      socket.once('close', () => {
+        connections.delete(socket);
+      });
+    });
+    return new Promise(resolve => {
+      server.listen(0, () => {
+        const addressInfo = server.address() as AddressInfo;
+        const url = `https://localhost:${addressInfo.port}/`;
+        resolve({
+          name: 'Node.js https',
+          url,
+          async addOnceHandler(newHandler, ...ctxParts) {
+            await handler?.[DisposableSymbols.asyncDispose]?.();
+            handler = newHandler;
+            if (ctxParts.length) {
+              handler = function (...args: any[]) {
+                return newHandler(...args, ...ctxParts);
+              };
+            }
+          },
+          async [DisposableSymbols.asyncDispose]() {
+            tls.setDefaultCACertificates(previousDefaultCaCerts);
+            connections.forEach(socket => {
+              socket.destroy();
+            });
+            if (!globalThis.Bun) {
+              server.closeAllConnections();
+            }
+            await new Promise<void>((resolve, reject) => {
+              server.close(err => {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+              });
+            });
+          },
+        });
+      });
+    });
+  };
+}
 
 serverImplMap['express'] = async function createExpressTestServer() {
   let handler: any;

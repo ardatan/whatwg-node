@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { PassThrough, Readable } from 'node:stream';
-import { rootCertificates } from 'node:tls';
+import tls, { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -21,7 +21,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.setOpt('SSL_VERIFYPEER', false);
   }
 
-  if (process.env.NODE_EXTRA_CA_CERTS) {
+  // Prefer Node's current default CA store (includes setDefaultCACertificates and
+  // NODE_EXTRA_CA_CERTS loaded at process start).
+  // tls.getCACertificates() exists since Node.js 22.15 / 23.10. Until engines bump
+  // past that (currently >=18), keep the NODE_EXTRA_CA_CERTS / rootCertificates fallback.
+  if (typeof tls.getCACertificates === 'function') {
+    curlHandle.setOpt('CAINFO_BLOB', tls.getCACertificates('default').join('\n'));
+  } else if (process.env.NODE_EXTRA_CA_CERTS) {
     curlHandle.setOpt('CAINFO', process.env.NODE_EXTRA_CA_CERTS);
   } else {
     curlHandle.setOpt('CAINFO_BLOB', rootCertificates.join('\n'));
