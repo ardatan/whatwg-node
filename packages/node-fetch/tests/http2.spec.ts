@@ -1,17 +1,19 @@
-import { unlink, writeFile } from 'node:fs/promises';
 import { createSecureServer, ServerHttp2Session, type Http2SecureServer } from 'node:http2';
 import { AddressInfo } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import tls from 'node:tls';
 import type { CertificateCreationResult } from 'pem';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { fetchPonyfill } from '../src/fetch';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
-describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('http2', () => {
+describeIf(
+  globalThis.libcurl &&
+    !process.env.LEAK_TEST &&
+    !globalThis.Deno &&
+    typeof tls.setDefaultCACertificates === 'function',
+)('http2', () => {
   let server: Http2SecureServer;
-  let pemPath: string;
-  const oldEnvVar = process.env.NODE_EXTRA_CA_CERTS;
+  let previousDefaultCaCerts: string[];
   const sessions = new Set<ServerHttp2Session>();
   beforeAll(async () => {
     const { createCertificate } = await import('pem');
@@ -20,6 +22,7 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
         {
           selfSigned: true,
           days: 1,
+          commonName: 'localhost',
         },
         (err, result) => {
           if (err) {
@@ -29,9 +32,8 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
         },
       );
     });
-    pemPath = join(tmpdir(), 'test.pem');
-    process.env.NODE_EXTRA_CA_CERTS = pemPath;
-    await writeFile(pemPath, keys.certificate);
+    previousDefaultCaCerts = tls.getCACertificates('default');
+    tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
     // Create a secure HTTP/2 server
     server = createSecureServer(
       {
@@ -57,8 +59,7 @@ describeIf(globalThis.libcurl && !process.env.LEAK_TEST && !globalThis.Deno)('ht
     await new Promise<void>(resolve => server.listen(0, resolve));
   });
   afterAll(async () => {
-    await unlink(pemPath);
-    process.env.NODE_EXTRA_CA_CERTS = oldEnvVar;
+    tls.setDefaultCACertificates(previousDefaultCaCerts);
     for (const session of sessions) {
       session.destroy();
     }

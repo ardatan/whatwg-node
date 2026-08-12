@@ -1,9 +1,6 @@
-import { unlink, writeFile } from 'node:fs/promises';
 import { createServer, globalAgent, Server, ServerResponse } from 'node:http';
 import { createServer as createHttpsServer } from 'node:https';
 import { AddressInfo, Socket } from 'node:net';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { Readable } from 'node:stream';
 import tls from 'node:tls';
 import express from 'express';
@@ -162,11 +159,7 @@ if (typeof tls.setDefaultCACertificates === 'function' && !globalThis.Deno) {
       );
     });
 
-    // Trust only this ephemeral cert via NODE_EXTRA_CA_CERTS + setDefaultCACertificates.
-    const pemPath = join(tmpdir(), `whatwg-node-test-ca-${process.pid}.pem`);
-    await writeFile(pemPath, keys.certificate);
-    const previousExtraCaCerts = process.env.NODE_EXTRA_CA_CERTS;
-    process.env.NODE_EXTRA_CA_CERTS = pemPath;
+    // Trust only this ephemeral cert for Node TLS and fetchCurl (via getCACertificates).
     const previousDefaultCaCerts = tls.getCACertificates('default');
     tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
 
@@ -203,13 +196,7 @@ if (typeof tls.setDefaultCACertificates === 'function' && !globalThis.Deno) {
             }
           },
           async [DisposableSymbols.asyncDispose]() {
-            if (previousExtraCaCerts == null) {
-              delete process.env.NODE_EXTRA_CA_CERTS;
-            } else {
-              process.env.NODE_EXTRA_CA_CERTS = previousExtraCaCerts;
-            }
             tls.setDefaultCACertificates(previousDefaultCaCerts);
-            await unlink(pemPath).catch(() => undefined);
             connections.forEach(socket => {
               socket.destroy();
             });
