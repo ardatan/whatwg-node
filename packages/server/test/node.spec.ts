@@ -1,5 +1,10 @@
 import { Buffer } from 'node:buffer';
-import { request as httpRequest, IncomingMessage, ServerResponse, STATUS_CODES } from 'node:http';
+import http, {
+  request as httpRequest,
+  IncomingMessage,
+  ServerResponse,
+  STATUS_CODES,
+} from 'node:http';
 import { request as httpsRequest } from 'node:https';
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
@@ -16,8 +21,8 @@ const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 
 
 function requestForUrl(
   url: URL,
-  options: Parameters<typeof httpRequest>[0],
-  cb?: Parameters<typeof httpRequest>[1],
+  options: http.RequestOptions,
+  cb?: (res: IncomingMessage) => void,
 ) {
   const request = url.protocol === 'https:' ? httpsRequest : httpRequest;
   return request(options, cb);
