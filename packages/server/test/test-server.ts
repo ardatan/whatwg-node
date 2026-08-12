@@ -129,8 +129,9 @@ if ((globalThis as any)['createUWS']) {
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
 
-// Only where we can trust an ephemeral CA without disabling TLS verification.
-// Node <22.19 and Bun lack tls.setDefaultCACertificates; Deno cannot load `pem`.
+// Register when tls.setDefaultCACertificates exists (Node 22.19+/24.5+, and Bun when
+// the runtime exposes it — see https://bun.com/reference/node/tls/setDefaultCACertificates).
+// Deno is excluded because `pem` is not usable there.
 if (typeof tls.setDefaultCACertificates === 'function' && !globalThis.Deno) {
   serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
     let handler: any;
