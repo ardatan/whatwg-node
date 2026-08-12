@@ -9,6 +9,44 @@ function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);
 }
 
+function isExternalConnectivityError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  if (
+    error.name === 'AbortError' ||
+    error.name === 'TimeoutError' ||
+    error.name === 'FetchError' ||
+    error.name === 'ConnectTimeoutError' ||
+    error.name === 'HeadersTimeoutError' ||
+    error.name === 'BodyTimeoutError' ||
+    error.name === 'SocketError'
+  ) {
+    return true;
+  }
+  if (/socket hang up|other side closed|ECONNRESET|ETIMEDOUT/i.test(error.message)) {
+    return true;
+  }
+  const code = (error as NodeJS.ErrnoException).code;
+  if (
+    code === 'ENOTFOUND' ||
+    code === 'EAI_AGAIN' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ECONNRESET' ||
+    code === 'ECONNABORTED' ||
+    code === 'ETIMEDOUT' ||
+    code === 'EHOSTUNREACH' ||
+    code === 'ENETUNREACH' ||
+    code === 'UND_ERR_CONNECT_TIMEOUT' ||
+    code === 'UND_ERR_HEADERS_TIMEOUT' ||
+    code === 'UND_ERR_BODY_TIMEOUT' ||
+    code === 'UND_ERR_SOCKET'
+  ) {
+    return true;
+  }
+  return isExternalConnectivityError((error as Error & { cause?: unknown }).cause);
+}
+
 describe('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(
     (
@@ -247,12 +285,22 @@ describe('Node Fetch Ponyfill', () => {
         const resJson = await response.json();
         expect(resJson.test).toBe('test');
       });
-      // No need to test this on Deno
+      // No need to test this on Deno; soft-skip when GitHub is unreachable in CI.
       testIf(!globalThis.Deno, 'handles redirect from http to https', async () => {
-        const response = await fetchPonyfill('http://github.com');
-        await response.text();
-        expect(response.status).toBe(200);
-        expect(response.url === 'https://github.com' || response.redirected).toBeTruthy();
+        try {
+          const response = await fetchPonyfill('http://github.com', {
+            signal: AbortSignal.timeout(5000),
+          });
+          await response.text();
+          expect(response.status).toBe(200);
+          expect(response.url === 'https://github.com' || response.redirected).toBeTruthy();
+        } catch (error) {
+          if (isExternalConnectivityError(error)) {
+            console.warn('External http→https redirect unavailable, skipping test:', error);
+            return;
+          }
+          throw error;
+        }
       });
       it('does not leak when signal is not used', async () => {
         const res = await fetchPonyfill(baseUrl, { signal: new AbortController().signal });
