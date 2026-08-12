@@ -1,9 +1,15 @@
+import { unlink, writeFile } from 'node:fs/promises';
 import { createServer, globalAgent, Server, ServerResponse } from 'node:http';
+import { createServer as createHttpsServer } from 'node:https';
 import { AddressInfo, Socket } from 'node:net';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Readable } from 'node:stream';
+import tls from 'node:tls';
 import express from 'express';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import Koa, { Context } from 'koa';
+import type { CertificateCreationResult } from 'pem';
 import Hapi from '@hapi/hapi';
 import { afterAll, beforeAll, describe } from '@jest/globals';
 import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
@@ -125,6 +131,115 @@ if ((globalThis as any)['createUWS']) {
 }
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
+
+serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
+  let handler: any;
+  const { createCertificate } = await import('pem');
+  const keys = await new Promise<CertificateCreationResult>((resolve, reject) => {
+    createCertificate(
+      {
+        selfSigned: true,
+        days: 1,
+        commonName: 'localhost',
+      },
+      (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(result);
+        }
+      },
+    );
+  });
+
+  // Trust only this ephemeral cert (not blanket reject on Node).
+  // - NODE_EXTRA_CA_CERTS: libcurl ponyfill (reads env per request)
+  // - setDefaultCACertificates: Node built-in TLS after process start
+  // - NODE_TLS_REJECT_UNAUTHORIZED: Bun fallback (no setDefaultCACertificates API)
+  const pemPath = join(tmpdir(), `whatwg-node-test-ca-${process.pid}.pem`);
+  await writeFile(pemPath, keys.certificate);
+  const previousExtraCaCerts = process.env.NODE_EXTRA_CA_CERTS;
+  process.env.NODE_EXTRA_CA_CERTS = pemPath;
+  const previousDefaultCaCerts =
+    typeof tls.getCACertificates === 'function' ? tls.getCACertificates('default') : undefined;
+  const canSetDefaultCa = typeof tls.setDefaultCACertificates === 'function';
+  if (canSetDefaultCa && previousDefaultCaCerts) {
+    tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
+  }
+  const previousRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+  if (!canSetDefaultCa) {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+  }
+
+  const server = createHttpsServer(
+    {
+      key: keys.serviceKey,
+      cert: keys.certificate,
+    },
+    function handlerWrapper(req, res) {
+      return handler(req, res);
+    },
+  );
+  const connections = new Set<Socket>();
+  server.on('connection', socket => {
+    connections.add(socket);
+    socket.once('close', () => {
+      connections.delete(socket);
+    });
+  });
+  return new Promise(resolve => {
+    server.listen(0, () => {
+      const addressInfo = server.address() as AddressInfo;
+      const url = `https://localhost:${addressInfo.port}/`;
+      resolve({
+        name: 'Node.js https',
+        url,
+        async addOnceHandler(newHandler, ...ctxParts) {
+          await handler?.[DisposableSymbols.asyncDispose]?.();
+          handler = newHandler;
+          if (ctxParts.length) {
+            handler = function (...args: any[]) {
+              return newHandler(...args, ...ctxParts);
+            };
+          }
+        },
+        async [DisposableSymbols.asyncDispose]() {
+          if (previousExtraCaCerts == null) {
+            delete process.env.NODE_EXTRA_CA_CERTS;
+          } else {
+            process.env.NODE_EXTRA_CA_CERTS = previousExtraCaCerts;
+          }
+          if (canSetDefaultCa && previousDefaultCaCerts) {
+            tls.setDefaultCACertificates(previousDefaultCaCerts);
+          }
+          if (!canSetDefaultCa) {
+            if (previousRejectUnauthorized == null) {
+              delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+            } else {
+              process.env.NODE_TLS_REJECT_UNAUTHORIZED = previousRejectUnauthorized;
+            }
+          }
+          await unlink(pemPath).catch(() => undefined);
+          connections.forEach(socket => {
+            socket.destroy();
+          });
+          if (!globalThis.Bun) {
+            server.closeAllConnections();
+          }
+          await new Promise<void>((resolve, reject) => {
+            server.close(err => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve();
+              }
+            });
+          });
+        },
+      });
+    });
+  });
+};
 
 serverImplMap['express'] = async function createExpressTestServer() {
   let handler: any;

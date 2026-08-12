@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import { readFileSync } from 'node:fs';
 import { PassThrough, Readable } from 'node:stream';
 import { rootCertificates } from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
@@ -21,11 +22,13 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.setOpt('SSL_VERIFYPEER', false);
   }
 
+  // Prefer CAINFO_BLOB: some libcurl/openssl builds fail to trust ephemeral
+  // certs via CAINFO file path even when the PEM verifies with OpenSSL CLI.
+  let caBlob = rootCertificates.join('\n');
   if (process.env.NODE_EXTRA_CA_CERTS) {
-    curlHandle.setOpt('CAINFO', process.env.NODE_EXTRA_CA_CERTS);
-  } else {
-    curlHandle.setOpt('CAINFO_BLOB', rootCertificates.join('\n'));
+    caBlob += `\n${readFileSync(process.env.NODE_EXTRA_CA_CERTS, 'utf8')}`;
   }
+  curlHandle.setOpt('CAINFO_BLOB', caBlob);
 
   curlHandle.enable(CurlFeature.StreamResponse);
 
