@@ -3,7 +3,7 @@ import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
-import { httpsCheckServerIdentity } from './checkServerIdentity.js';
+import { getHttpsCheckServerIdentity } from './checkServerIdentity.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -70,9 +70,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         signal,
         agent: fetchRequest.agent,
       };
-      // Only override when this Node build has the IPv6 IP-SAN regression
+      // Probe once on first https use; override only if this Node build is affected
       // (https://github.com/nodejs/node/issues/64032).
-      if (httpsCheckServerIdentity && isHttpsRequest(requestTarget)) {
+      const httpsCheckServerIdentity = isHttpsRequest(requestTarget)
+        ? getHttpsCheckServerIdentity()
+        : undefined;
+      if (httpsCheckServerIdentity) {
         requestOptions.checkServerIdentity = httpsCheckServerIdentity;
       }
 

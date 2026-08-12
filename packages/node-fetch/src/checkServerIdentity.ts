@@ -31,23 +31,29 @@ function collectCertIpAddresses(cert: PeerCertificate): string[] {
   return ips;
 }
 
+let probedIpv6SanWorkaround = false;
+let needsIpv6SanWorkaroundValue = false;
+
 /**
  * Detect Node.js IPv6 IP-SAN regression in `tls.checkServerIdentity`
- * (https://github.com/nodejs/node/issues/64032). Cached for process lifetime.
+ * (https://github.com/nodejs/node/issues/64032). Probes once, on first use.
  */
-export const needsIpv6SanWorkaround: boolean = (() => {
-  try {
-    return (
-      tls.checkServerIdentity('::1', {
-        subject: {},
-        subjectaltname: 'IP Address:::1',
-      } as PeerCertificate) != null
-    );
-  } catch {
-    // If the probe itself throws, prefer the workaround.
-    return true;
+export function needsIpv6SanWorkaround(): boolean {
+  if (!probedIpv6SanWorkaround) {
+    probedIpv6SanWorkaround = true;
+    try {
+      needsIpv6SanWorkaroundValue =
+        tls.checkServerIdentity('::1', {
+          subject: {},
+          subjectaltname: 'IP Address:::1',
+        } as PeerCertificate) != null;
+    } catch {
+      // If the probe itself throws, prefer the workaround.
+      needsIpv6SanWorkaroundValue = true;
+    }
   }
-})();
+  return needsIpv6SanWorkaroundValue;
+}
 
 /**
  * Custom verifier that correctly matches IPv6 literals against `IP Address` SANs.
@@ -80,6 +86,7 @@ export function checkServerIdentityIpv6San(
   return tls.checkServerIdentity(hostname, cert);
 }
 
-/** Only set on https requests when the running Node build needs the workaround. */
-export const httpsCheckServerIdentity: typeof checkServerIdentityIpv6San | undefined =
-  needsIpv6SanWorkaround ? checkServerIdentityIpv6San : undefined;
+/** Lazy: only set when the first https request probes an affected Node build. */
+export function getHttpsCheckServerIdentity(): typeof checkServerIdentityIpv6San | undefined {
+  return needsIpv6SanWorkaround() ? checkServerIdentityIpv6San : undefined;
+}

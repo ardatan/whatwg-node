@@ -2,7 +2,7 @@ import type { PeerCertificate } from 'node:tls';
 import { describe, expect, it } from '@jest/globals';
 import {
   checkServerIdentityIpv6San,
-  httpsCheckServerIdentity,
+  getHttpsCheckServerIdentity,
   needsIpv6SanWorkaround,
   normalizeIpAddress,
 } from '../src/checkServerIdentity';
@@ -14,10 +14,10 @@ describe('checkServerIdentity', () => {
   });
 
   it('exposes the https override only when the Node probe detects the bug', () => {
-    if (needsIpv6SanWorkaround) {
-      expect(httpsCheckServerIdentity).toBe(checkServerIdentityIpv6San);
+    if (needsIpv6SanWorkaround()) {
+      expect(getHttpsCheckServerIdentity()).toBe(checkServerIdentityIpv6San);
     } else {
-      expect(httpsCheckServerIdentity).toBeUndefined();
+      expect(getHttpsCheckServerIdentity()).toBeUndefined();
     }
   });
 
