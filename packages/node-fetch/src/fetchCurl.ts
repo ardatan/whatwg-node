@@ -22,8 +22,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   }
 
   // Prefer Node's current default CA store (includes setDefaultCACertificates and
-  // NODE_EXTRA_CA_CERTS loaded at process start). Fall back to the previous
-  // NODE_EXTRA_CA_CERTS / bundled-roots behavior on older runtimes.
+  // NODE_EXTRA_CA_CERTS loaded at process start).
+  // tls.getCACertificates() exists since Node.js 22.15 / 23.10. Until engines bump
+  // past that (currently >=18), keep the NODE_EXTRA_CA_CERTS / rootCertificates fallback.
   if (typeof tls.getCACertificates === 'function') {
     curlHandle.setOpt('CAINFO_BLOB', tls.getCACertificates('default').join('\n'));
   } else if (process.env.NODE_EXTRA_CA_CERTS) {
