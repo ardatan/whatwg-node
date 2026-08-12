@@ -4,6 +4,37 @@ import { runTestsForEachServerImpl } from '../../server/test/test-server';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 
+function isExternalConnectivityError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  if (
+    error.name === 'AbortError' ||
+    error.name === 'TimeoutError' ||
+    error.name === 'FetchError' ||
+    error.name === 'ConnectTimeoutError' ||
+    error.name === 'HeadersTimeoutError' ||
+    error.name === 'BodyTimeoutError'
+  ) {
+    return true;
+  }
+  const code = (error as NodeJS.ErrnoException).code;
+  return (
+    code === 'ENOTFOUND' ||
+    code === 'EAI_AGAIN' ||
+    code === 'ECONNREFUSED' ||
+    code === 'ECONNRESET' ||
+    code === 'ECONNABORTED' ||
+    code === 'ETIMEDOUT' ||
+    code === 'EHOSTUNREACH' ||
+    code === 'ENETUNREACH' ||
+    code === 'UND_ERR_CONNECT_TIMEOUT' ||
+    code === 'UND_ERR_HEADERS_TIMEOUT' ||
+    code === 'UND_ERR_BODY_TIMEOUT' ||
+    code === 'UND_ERR_SOCKET'
+  );
+}
+
 describeIf(!globalThis.Deno)('Cleanup Resources', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI: { Response, fetch } }) => {
     describe('internal calls', () => {
@@ -36,12 +67,9 @@ describeIf(!globalThis.Deno)('Cleanup Resources', () => {
             expect(response.ok).toBe(true);
           }
         } catch (error) {
-          // AbortSignal.timeout() rejects with TimeoutError (name); some runtimes use AbortError.
-          if (
-            error instanceof Error &&
-            (error.name === 'AbortError' || error.name === 'TimeoutError')
-          ) {
-            console.warn('Request timed out, skipping test');
+          // Soft-skip timeouts and common connectivity failures (DNS / refuse / reset / undici).
+          if (isExternalConnectivityError(error)) {
+            console.warn('External HTTPS unavailable, skipping test:', error);
           } else {
             throw error;
           }
