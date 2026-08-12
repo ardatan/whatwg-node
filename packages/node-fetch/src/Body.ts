@@ -172,6 +172,24 @@ export class PonyfillBody<TJSON = any> implements Body {
         );
       return collectValue();
     }
+    // Common server path: Node IncomingMessage as bodyInit — collect without
+    // allocating a PonyfillReadableStream when `.body` was never accessed.
+    if (this.bodyType === BodyInitType.Readable && !this._generatedBody) {
+      const readable = this.bodyInit as Readable;
+      if (readable.destroyed) {
+        return fakePromise((this._chunks = []));
+      }
+      const chunks: Uint8Array<ArrayBuffer>[] = [];
+      return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
+        readable.on('data', chunk => {
+          chunks.push(chunk);
+        });
+        readable.once('error', reject);
+        readable.once('end', () => {
+          resolve((this._chunks = chunks));
+        });
+      });
+    }
     const _body = this.generateBody();
     if (!_body) {
       this._chunks = [];

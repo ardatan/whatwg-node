@@ -1,7 +1,7 @@
 import { chain, getInstrumented } from '@envelop/instrumentation';
 import { AsyncDisposableStack, DisposableSymbols } from '@whatwg-node/disposablestack';
 import * as DefaultFetchAPI from '@whatwg-node/fetch';
-import { handleMaybePromise, MaybePromise, unfakePromise } from '@whatwg-node/promise-helpers';
+import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import {
   Instrumentation,
   OnRequestHook,
@@ -74,6 +74,21 @@ export interface ServerAdapterOptions<TServerContext> {
 
 const EMPTY_OBJECT = {};
 
+// Hoisted to avoid per-request closure allocations in the requestListener hot path
+function logUnexpectedRequestError(err: any) {
+  const message =
+    err == null ? String(err) : typeof err === 'object' ? err.message || String(err) : String(err);
+  console.error(`Unexpected error while handling request: ${message}`);
+}
+
+function responsePassthrough(response: Response): Response {
+  return response;
+}
+
+function undefinedPassthrough(): undefined {
+  return undefined;
+}
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
@@ -113,6 +128,9 @@ function createServerAdapter<
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
       : serverAdapterBaseObject.handle;
+
+  // Defined once per adapter instance to avoid per-request closure allocations
+  const requestHandlerErrorFn = (err: any) => handleErrorFromRequestHandler(err, fetchAPI.Response);
 
   const onRequestHooks: OnRequestHook<TServerContext & ServerAdapterInitialContext>[] = [];
   const onResponseHooks: OnResponseHook<TServerContext & ServerAdapterInitialContext>[] = [];
@@ -305,21 +323,37 @@ function createServerAdapter<
       res: nodeResponse,
       waitUntil,
     };
-    return unfakePromise(
-      fakePromise()
-        .then(() =>
-          handleNodeRequestAndResponse(
-            nodeRequest,
-            nodeResponse,
-            defaultServerContext as any,
-            ...ctx,
-          ),
-        )
-        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
-        .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
-        .catch(err =>
-          console.error(`Unexpected error while handling request: ${err.message || err}`),
+    const serverContext: any =
+      ctx.length > 0 ? completeAssign(defaultServerContext as any, ...ctx) : defaultServerContext;
+    // completeAssign can overwrite waitUntil with undefined/null from ctx parts
+    if (!serverContext.waitUntil) {
+      serverContext.waitUntil = waitUntil;
+    }
+    // handleMaybePromise keeps sync send completions off the fakePromise chain;
+    // sendNodeResponse errors are handled in an inner call (outer onRejected only
+    // covers the inputFactory, like Promise.then(onFulfilled, onRejected)).
+    return handleMaybePromise(
+      () =>
+        handleMaybePromise(
+          () => {
+            const request = normalizeNodeRequest(
+              nodeRequest,
+              fetchAPI,
+              nodeResponse,
+              useCustomAbortCtrl,
+            );
+            return handleRequest(request, serverContext);
+          },
+          responsePassthrough,
+          requestHandlerErrorFn,
         ),
+      response =>
+        handleMaybePromise(
+          () => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead),
+          undefinedPassthrough,
+          logUnexpectedRequestError,
+        ),
+      logUnexpectedRequestError,
     );
   }
 
