@@ -591,7 +591,7 @@ export function handleResponseDecompression(response: Response, fetchAPI: FetchA
   let decompressedResponse = decompressedResponseMap.get(response);
   if (!decompressedResponse || decompressedResponse.bodyUsed) {
     let decompressedBody = response.body;
-    const contentEncodings = contentEncodingHeader.split(',');
+    const contentEncodings = contentEncodingHeader.split(',').map(encoding => encoding.trim());
     if (
       !contentEncodings.every(encoding =>
         getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),
