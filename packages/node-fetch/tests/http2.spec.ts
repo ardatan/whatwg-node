@@ -1,8 +1,8 @@
 import { createSecureServer, ServerHttp2Session, type Http2SecureServer } from 'node:http2';
 import { AddressInfo } from 'node:net';
 import tls from 'node:tls';
-import type { CertificateCreationResult } from 'pem';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
+import { createEphemeralTlsCerts } from '../../server/test/test-tls-certs';
 import { fetchPonyfill } from '../src/fetch';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
@@ -16,30 +16,15 @@ describeIf(
   let previousDefaultCaCerts: string[];
   const sessions = new Set<ServerHttp2Session>();
   beforeAll(async () => {
-    const { createCertificate } = await import('pem');
-    const keys = await new Promise<CertificateCreationResult>((resolve, reject) => {
-      createCertificate(
-        {
-          selfSigned: true,
-          days: 1,
-          commonName: 'localhost',
-        },
-        (err, result) => {
-          if (err) {
-            reject(err);
-          }
-          resolve(result);
-        },
-      );
-    });
+    const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
     previousDefaultCaCerts = tls.getCACertificates('default');
-    tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
+    tls.setDefaultCACertificates([...previousDefaultCaCerts, caCert]);
     // Create a secure HTTP/2 server
     server = createSecureServer(
       {
         allowHTTP1: false,
-        key: keys.serviceKey,
-        cert: keys.certificate,
+        key: serviceKey,
+        cert: certificate,
       },
       (request, response) => {
         response.writeHead(200, {

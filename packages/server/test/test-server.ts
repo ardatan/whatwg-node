@@ -6,11 +6,11 @@ import tls from 'node:tls';
 import express from 'express';
 import fastify, { FastifyReply, FastifyRequest } from 'fastify';
 import Koa, { Context } from 'koa';
-import type { CertificateCreationResult } from 'pem';
 import Hapi from '@hapi/hapi';
 import { afterAll, beforeAll, describe } from '@jest/globals';
 import { DisposableSymbols, patchSymbols } from '@whatwg-node/disposablestack';
 import { ServerAdapter, ServerAdapterBaseObject } from '@whatwg-node/server';
+import { createEphemeralTlsCerts, setActiveExtraCaCerts } from './test-tls-certs';
 
 export interface TestServer extends AsyncDisposable {
   name: string;
@@ -129,45 +129,22 @@ if ((globalThis as any)['createUWS']) {
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
 
-// Register when tls.setDefaultCACertificates exists (Node 22.19+/24.5+, and Bun when
-// the runtime exposes it — see https://bun.com/reference/node/tls/setDefaultCACertificates).
-// Deno is excluded because `pem` is not usable there.
-if (typeof tls.setDefaultCACertificates === 'function' && !globalThis.Deno) {
+// Register when tls.setDefaultCACertificates exists (Node 22.19+/24.5+, Deno 2.7+,
+// and Bun when the runtime exposes it).
+if (typeof tls.setDefaultCACertificates === 'function') {
   serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
     let handler: any;
-    const pemModule = await import('pem');
-    const createCertificate =
-      pemModule.createCertificate ??
-      (pemModule as { default?: { createCertificate?: typeof pemModule.createCertificate } })
-        .default?.createCertificate;
-    if (typeof createCertificate !== 'function') {
-      throw new Error('pem.createCertificate is unavailable in this runtime');
-    }
-    const keys = await new Promise<CertificateCreationResult>((resolve, reject) => {
-      createCertificate(
-        {
-          selfSigned: true,
-          days: 1,
-          commonName: 'localhost',
-        },
-        (err, result) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(result);
-          }
-        },
-      );
-    });
+    const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
 
-    // Trust only this ephemeral cert for Node TLS and fetchCurl (via getCACertificates).
+    // Trust the ephemeral CA for Node TLS / libcurl (via getCACertificates) and Deno native fetch.
     const previousDefaultCaCerts = tls.getCACertificates('default');
-    tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
+    tls.setDefaultCACertificates([...previousDefaultCaCerts, caCert]);
+    setActiveExtraCaCerts([caCert]);
 
     const server = createHttpsServer(
       {
-        key: keys.serviceKey,
-        cert: keys.certificate,
+        key: serviceKey,
+        cert: certificate,
       },
       function handlerWrapper(req, res) {
         return handler(req, res);
@@ -198,6 +175,7 @@ if (typeof tls.setDefaultCACertificates === 'function' && !globalThis.Deno) {
           },
           async [DisposableSymbols.asyncDispose]() {
             tls.setDefaultCACertificates(previousDefaultCaCerts);
+            setActiveExtraCaCerts([]);
             connections.forEach(socket => {
               socket.destroy();
             });
