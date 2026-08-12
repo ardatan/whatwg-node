@@ -419,8 +419,9 @@ describe('Node Specific Cases', () => {
               return new Response('Hello world!', { status: 200 });
             });
             await testServer.addOnceHandler(serverAdapter);
-            const port = new URL(testServer.url).port;
-            const ipv6Url = new URL(`http://[::1]:${port}/`);
+            const serverUrl = new URL(testServer.url);
+            const ipv6Url = new URL(serverUrl.href);
+            ipv6Url.hostname = '[::1]';
             const response = await fetch(ipv6Url);
             expect(response.status).toBe(200);
             await expect(response.text()).resolves.toBe('Hello world!');

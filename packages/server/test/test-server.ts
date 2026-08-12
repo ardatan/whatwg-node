@@ -132,114 +132,105 @@ if ((globalThis as any)['createUWS']) {
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
 
-serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
-  let handler: any;
-  const { createCertificate } = await import('pem');
-  const keys = await new Promise<CertificateCreationResult>((resolve, reject) => {
-    createCertificate(
+// Only where we can trust an ephemeral CA without disabling TLS verification.
+// Node <22.19 and Bun lack tls.setDefaultCACertificates; Deno cannot load `pem`.
+if (typeof tls.setDefaultCACertificates === 'function' && !globalThis.Deno) {
+  serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
+    let handler: any;
+    const pemModule = await import('pem');
+    const createCertificate =
+      pemModule.createCertificate ??
+      (pemModule as { default?: { createCertificate?: typeof pemModule.createCertificate } })
+        .default?.createCertificate;
+    if (typeof createCertificate !== 'function') {
+      throw new Error('pem.createCertificate is unavailable in this runtime');
+    }
+    const keys = await new Promise<CertificateCreationResult>((resolve, reject) => {
+      createCertificate(
+        {
+          selfSigned: true,
+          days: 1,
+          commonName: 'localhost',
+        },
+        (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        },
+      );
+    });
+
+    // Trust only this ephemeral cert via NODE_EXTRA_CA_CERTS + setDefaultCACertificates.
+    const pemPath = join(tmpdir(), `whatwg-node-test-ca-${process.pid}.pem`);
+    await writeFile(pemPath, keys.certificate);
+    const previousExtraCaCerts = process.env.NODE_EXTRA_CA_CERTS;
+    process.env.NODE_EXTRA_CA_CERTS = pemPath;
+    const previousDefaultCaCerts = tls.getCACertificates('default');
+    tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
+
+    const server = createHttpsServer(
       {
-        selfSigned: true,
-        days: 1,
-        commonName: 'localhost',
+        key: keys.serviceKey,
+        cert: keys.certificate,
       },
-      (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(result);
-        }
+      function handlerWrapper(req, res) {
+        return handler(req, res);
       },
     );
-  });
-
-  // Trust only this ephemeral cert (not blanket reject on Node).
-  // - NODE_EXTRA_CA_CERTS: libcurl ponyfill (reads env per request)
-  // - setDefaultCACertificates: Node built-in TLS after process start
-  // - NODE_TLS_REJECT_UNAUTHORIZED: Bun fallback (no setDefaultCACertificates API)
-  const pemPath = join(tmpdir(), `whatwg-node-test-ca-${process.pid}.pem`);
-  await writeFile(pemPath, keys.certificate);
-  const previousExtraCaCerts = process.env.NODE_EXTRA_CA_CERTS;
-  process.env.NODE_EXTRA_CA_CERTS = pemPath;
-  const previousDefaultCaCerts =
-    typeof tls.getCACertificates === 'function' ? tls.getCACertificates('default') : undefined;
-  const canSetDefaultCa = typeof tls.setDefaultCACertificates === 'function';
-  if (canSetDefaultCa && previousDefaultCaCerts) {
-    tls.setDefaultCACertificates([...previousDefaultCaCerts, keys.certificate]);
-  }
-  const previousRejectUnauthorized = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-  if (!canSetDefaultCa) {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-  }
-
-  const server = createHttpsServer(
-    {
-      key: keys.serviceKey,
-      cert: keys.certificate,
-    },
-    function handlerWrapper(req, res) {
-      return handler(req, res);
-    },
-  );
-  const connections = new Set<Socket>();
-  server.on('connection', socket => {
-    connections.add(socket);
-    socket.once('close', () => {
-      connections.delete(socket);
-    });
-  });
-  return new Promise(resolve => {
-    server.listen(0, () => {
-      const addressInfo = server.address() as AddressInfo;
-      const url = `https://localhost:${addressInfo.port}/`;
-      resolve({
-        name: 'Node.js https',
-        url,
-        async addOnceHandler(newHandler, ...ctxParts) {
-          await handler?.[DisposableSymbols.asyncDispose]?.();
-          handler = newHandler;
-          if (ctxParts.length) {
-            handler = function (...args: any[]) {
-              return newHandler(...args, ...ctxParts);
-            };
-          }
-        },
-        async [DisposableSymbols.asyncDispose]() {
-          if (previousExtraCaCerts == null) {
-            delete process.env.NODE_EXTRA_CA_CERTS;
-          } else {
-            process.env.NODE_EXTRA_CA_CERTS = previousExtraCaCerts;
-          }
-          if (canSetDefaultCa && previousDefaultCaCerts) {
-            tls.setDefaultCACertificates(previousDefaultCaCerts);
-          }
-          if (!canSetDefaultCa) {
-            if (previousRejectUnauthorized == null) {
-              delete process.env.NODE_TLS_REJECT_UNAUTHORIZED;
-            } else {
-              process.env.NODE_TLS_REJECT_UNAUTHORIZED = previousRejectUnauthorized;
-            }
-          }
-          await unlink(pemPath).catch(() => undefined);
-          connections.forEach(socket => {
-            socket.destroy();
-          });
-          if (!globalThis.Bun) {
-            server.closeAllConnections();
-          }
-          await new Promise<void>((resolve, reject) => {
-            server.close(err => {
-              if (err) {
-                reject(err);
-              } else {
-                resolve();
-              }
-            });
-          });
-        },
+    const connections = new Set<Socket>();
+    server.on('connection', socket => {
+      connections.add(socket);
+      socket.once('close', () => {
+        connections.delete(socket);
       });
     });
-  });
-};
+    return new Promise(resolve => {
+      server.listen(0, () => {
+        const addressInfo = server.address() as AddressInfo;
+        const url = `https://localhost:${addressInfo.port}/`;
+        resolve({
+          name: 'Node.js https',
+          url,
+          async addOnceHandler(newHandler, ...ctxParts) {
+            await handler?.[DisposableSymbols.asyncDispose]?.();
+            handler = newHandler;
+            if (ctxParts.length) {
+              handler = function (...args: any[]) {
+                return newHandler(...args, ...ctxParts);
+              };
+            }
+          },
+          async [DisposableSymbols.asyncDispose]() {
+            if (previousExtraCaCerts == null) {
+              delete process.env.NODE_EXTRA_CA_CERTS;
+            } else {
+              process.env.NODE_EXTRA_CA_CERTS = previousExtraCaCerts;
+            }
+            tls.setDefaultCACertificates(previousDefaultCaCerts);
+            await unlink(pemPath).catch(() => undefined);
+            connections.forEach(socket => {
+              socket.destroy();
+            });
+            if (!globalThis.Bun) {
+              server.closeAllConnections();
+            }
+            await new Promise<void>((resolve, reject) => {
+              server.close(err => {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve();
+                }
+              });
+            });
+          },
+        });
+      });
+    });
+  };
+}
 
 serverImplMap['express'] = async function createExpressTestServer() {
   let handler: any;
