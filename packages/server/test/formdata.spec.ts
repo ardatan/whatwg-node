@@ -98,6 +98,11 @@ describe('FormData', () => {
             headers: {
               ...formData.getHeaders(),
               'content-length': 10,
+              // Ensure the server closes the connection after responding, so that
+              // the extra piped bytes (beyond content-length) are not left in the
+              // socket buffer and misinterpreted as a new HTTP request (which can
+              // corrupt server state on Bun's node:http compatibility layer).
+              connection: 'close',
             },
           });
 
