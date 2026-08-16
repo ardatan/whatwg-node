@@ -562,12 +562,12 @@ afterAll(async () => {
 });
 
 export function runTestsForEachServerImpl(
-  callback: (server: TestServer, serverImplName: string) => void,
+  defineTests: (server: TestServer, serverImplName: string) => void,
 ) {
   for (const serverImplName in serverImplMap) {
     describe(serverImplName, () => {
       beforeAll(() => ensureTestImpl(serverImplName));
-      callback(
+      defineTests(
         {
           get name() {
             return serverImplName;

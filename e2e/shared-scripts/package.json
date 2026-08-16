@@ -9,6 +9,6 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@pulumi/pulumi": "3.256.0",
-    "@types/node": "26.1.0"
+    "@types/node": "26.2.0"
   }
 }
