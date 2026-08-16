@@ -11,6 +11,11 @@
   },
   "packageRules": [
     {
+      "matchPackageNames": ["@changesets/*"],
+      "groupName": "changesets dependencies",
+      "groupSlug": "changesets"
+    },
+    {
       "excludePackagePatterns": [
         "@changesets/*",
         "bun",
