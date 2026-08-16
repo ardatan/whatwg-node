@@ -40,7 +40,7 @@
     "@babel/plugin-proposal-explicit-resource-management": "7.27.4",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-typescript": "7.29.7",
-    "@changesets/changelog-github": "0.7.0",
+    "@changesets/changelog-github": "1.0.0",
     "@changesets/cli": "3.0.0",
     "@eslint/eslintrc": "3.3.6",
     "@eslint/js": "10.0.1",
