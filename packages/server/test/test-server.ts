@@ -129,9 +129,11 @@ if ((globalThis as any)['createUWS']) {
 
 serverImplMap['node:http'] = createNodeHttpTestServer;
 
-// Keep `node:https` in the shared server matrix on Node (and Bun when the API exists).
+// Keep `node:https` in the shared server matrix on Node only.
 // Skip Deno: its `node:https` is incomplete for this suite matrix.
-if (!globalThis.Deno && typeof tls.setDefaultCACertificates === 'function') {
+// Skip Bun: its native fetch does not honour tls.setDefaultCACertificates, so the
+// ephemeral self-signed certificate cannot be trusted from the client side.
+if (!globalThis.Deno && !globalThis.Bun && typeof tls.setDefaultCACertificates === 'function') {
   serverImplMap['node:https'] = async function createNodeHttpsTestServer() {
     let handler: any;
     const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
