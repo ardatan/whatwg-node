@@ -25,7 +25,10 @@ export function createDefaultAbortError(name = 'AbortError'): Error {
 }
 
 export function getAbortRejection(signal: AbortSignal): unknown {
-  return signal.reason ?? createDefaultAbortError();
+  if (signal.reason === undefined) {
+    return createDefaultAbortError();
+  }
+  return signal.reason;
 }
 
 export function getAbortError(signal: AbortSignal): Error {
