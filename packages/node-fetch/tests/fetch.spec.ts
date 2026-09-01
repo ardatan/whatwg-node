@@ -152,6 +152,49 @@ describe('Node Fetch Ponyfill', () => {
           }),
         ).rejects.toThrow();
       });
+      testIf(
+        implName === 'node-http' || implName === 'native',
+        'should reject AbortSignal.timeout with TimeoutError',
+        async () => {
+          await expect(
+            fetchPonyfill(baseUrl + '/delay/3', {
+              signal: AbortSignal.timeout(50),
+            }),
+          ).rejects.toMatchObject({
+            name: 'TimeoutError',
+          });
+        },
+      );
+      testIf(
+        implName === 'node-http' || implName === 'native',
+        'should reject manual abort with AbortError',
+        async () => {
+          const controller = new AbortController();
+          const fetchPromise = fetchPonyfill(baseUrl + '/delay/3', {
+            signal: controller.signal,
+          });
+          controller.abort();
+          try {
+            await fetchPromise;
+            throw new Error('Expected fetch to reject');
+          } catch (error) {
+            expect(error).toMatchObject({ name: 'AbortError' });
+          }
+        },
+      );
+      testIf(
+        implName === 'node-http',
+        'should not leak when aborting before response',
+        async () => {
+          await expect(
+            fetchPonyfill(baseUrl + '/delay/3', {
+              signal: AbortSignal.timeout(50),
+            }),
+          ).rejects.toMatchObject({
+            name: 'TimeoutError',
+          });
+        },
+      );
       it('should respect AbortSignal on a streamed response', async () => {
         expect.assertions(2);
         const controller = new AbortController();

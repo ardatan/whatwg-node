@@ -1,6 +1,7 @@
 import { once } from 'node:events';
 import { Readable, Writable } from 'node:stream';
 import zlib from 'node:zlib';
+import { getAbortRejection } from './AbortError.js';
 import { PonyfillCompressionFormat } from './CompressionStream';
 
 function isHeadersInstance(obj: any): obj is Headers {
@@ -96,7 +97,11 @@ export function pipeThrough({
       srcRef.deref()?.removeListener('close', cleanup);
     }
     function onAbort() {
-      srcRef.deref()?.destroy(new AbortError());
+      const currentSignal = signalRef.deref();
+      const abortError = currentSignal
+        ? getAbortRejection(currentSignal)
+        : new DOMException('The operation was aborted', 'AbortError');
+      srcRef.deref()?.destroy(abortError);
       cleanup();
     }
     signal.addEventListener('abort', onAbort, { once: true });
@@ -121,14 +126,6 @@ export function safeWrite<TWritable extends Writable>(
   const result = stream.write(chunk);
   if (!result) {
     return once(stream, 'drain');
-  }
-}
-
-// https://github.com/nodejs/node/blob/f692878dec6354c0a82241f224906981861bc840/lib/internal/errors.js#L961-L973
-class AbortError extends Error {
-  constructor(message = 'The operation was aborted', options = undefined) {
-    super(message, options);
-    this.name = 'AbortError';
   }
 }
 

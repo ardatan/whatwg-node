@@ -3,6 +3,7 @@ import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { getAbortRejection, getFetchAbortRejection } from './AbortError.js';
 import { getHttpsCheckServerIdentity } from './checkServerIdentity.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -53,15 +54,19 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         nodeHeaders['user-agent'] = 'node';
       }
 
-      let signal: AbortSignal | undefined;
+      const signal = fetchRequest._signal ?? undefined;
 
-      if (fetchRequest._signal == null) {
-        signal = undefined;
-      } else if (fetchRequest._signal) {
-        signal = fetchRequest._signal;
+      if (signal?.aborted) {
+        reject(getAbortRejection(signal));
+        return;
       }
 
       let nodeRequest: ReturnType<typeof requestFn>;
+      let requestBody: Readable | null = null;
+      let settled = false;
+      let responseReceived = false;
+      let onAbortBeforeResponse: (() => void) | undefined;
+      let rejectRequest: (error: unknown) => void = reject;
 
       const requestTarget = fetchRequest.parsedUrl || fetchRequest.url;
       const requestOptions: Parameters<typeof httpsRequest>[1] = {
@@ -79,6 +84,42 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         requestOptions.checkServerIdentity = httpsCheckServerIdentity;
       }
 
+      if (signal) {
+        function cleanupRequest() {
+          if (requestBody && !requestBody.destroyed) {
+            requestBody.unpipe(nodeRequest);
+            requestBody.destroy();
+          }
+          if (!nodeRequest.destroyed) {
+            nodeRequest.destroy();
+          }
+        }
+
+        function removeAbortListener() {
+          if (onAbortBeforeResponse) {
+            signal!.removeEventListener('abort', onAbortBeforeResponse);
+          }
+        }
+
+        rejectRequest = (error: unknown) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          removeAbortListener();
+          cleanupRequest();
+          reject(getFetchAbortRejection(signal, error));
+        };
+
+        onAbortBeforeResponse = () => {
+          if (responseReceived || settled) {
+            return;
+          }
+          rejectRequest(getAbortRejection(signal));
+        };
+        signal.addEventListener('abort', onAbortBeforeResponse, { once: true });
+      }
+
       // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
       if (fetchRequest.parsedUrl) {
         nodeRequest = requestFn(fetchRequest.parsedUrl, requestOptions);
@@ -86,8 +127,15 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         nodeRequest = requestFn(fetchRequest.url, requestOptions);
       }
 
-      nodeRequest.once('error', reject);
+      nodeRequest.once('error', rejectRequest);
       nodeRequest.once('response', nodeResponse => {
+        if (signal) {
+          responseReceived = true;
+          if (onAbortBeforeResponse) {
+            signal.removeEventListener('abort', onAbortBeforeResponse);
+          }
+        }
+
         let outputStream: PassThrough | undefined;
         const contentEncoding = nodeResponse.headers['content-encoding'];
         switch (contentEncoding) {
@@ -115,7 +163,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
           if (fetchRequest.redirect === 'error') {
             const redirectError = new Error('Redirects are not allowed');
-            reject(redirectError);
+            rejectRequest(redirectError);
             nodeResponse.resume();
             return;
           }
@@ -127,6 +175,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             const redirectResponse$ = fetchNodeHttp(
               new PonyfillRequest(redirectedUrl, fetchRequest),
             );
+            if (signal) {
+              settled = true;
+            }
             resolve(
               redirectResponse$.then(redirectResponse => {
                 redirectResponse.redirected = true;
@@ -151,7 +202,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             if (!outputStream.destroyed) {
               outputStream.destroy(e);
             }
-            reject(e);
+            rejectRequest(e);
           },
         });
 
@@ -167,6 +218,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           url: fetchRequest.url,
           signal,
         });
+        if (signal) {
+          if (settled) {
+            return;
+          }
+          settled = true;
+        }
         resolve(ponyfillResponse);
       });
 
@@ -174,13 +231,13 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         handleMaybePromise(
           () => safeWrite(fetchRequest['_buffer'], nodeRequest),
           () => endStream(nodeRequest),
-          reject,
+          rejectRequest,
         );
       } else if (fetchRequest['bodyType'] === 'String') {
         handleMaybePromise(
           () => safeWrite(fetchRequest['bodyInit'] as string, nodeRequest),
           () => endStream(nodeRequest),
-          reject,
+          rejectRequest,
         );
       } else {
         const nodeReadable = (
@@ -191,6 +248,9 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             : null
         ) as Readable | null;
         if (nodeReadable) {
+          if (signal) {
+            requestBody = nodeReadable;
+          }
           nodeReadable.pipe(nodeRequest);
         } else {
           endStream(nodeRequest);

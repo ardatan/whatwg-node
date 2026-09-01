@@ -14,3 +14,20 @@ export class PonyfillAbortError extends Error {
     return this.cause;
   }
 }
+
+export function getAbortRejection(signal: AbortSignal): unknown {
+  return signal.reason ?? new DOMException('The operation was aborted', 'AbortError');
+}
+
+export function getFetchAbortRejection(signal: AbortSignal | undefined, error?: unknown): unknown {
+  if (signal?.aborted) {
+    return getAbortRejection(signal);
+  }
+  if (error instanceof Error) {
+    return error;
+  }
+  if (error != null) {
+    return new Error(String(error));
+  }
+  return new DOMException('The operation was aborted', 'AbortError');
+}
