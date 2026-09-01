@@ -28,6 +28,23 @@ export function getAbortRejection(signal: AbortSignal): unknown {
   return signal.reason ?? createDefaultAbortError();
 }
 
+export function getAbortError(signal: AbortSignal): Error {
+  const { reason } = signal;
+  if (reason instanceof Error) {
+    return reason;
+  }
+  if (reason != null) {
+    const name =
+      typeof reason === 'object' &&
+      'name' in reason &&
+      typeof (reason as { name: unknown }).name === 'string'
+        ? (reason as { name: string }).name
+        : 'AbortError';
+    return createDefaultAbortError(name);
+  }
+  return createDefaultAbortError();
+}
+
 export function getFetchAbortRejection(signal: AbortSignal | undefined, error?: unknown): unknown {
   if (signal?.aborted) {
     return getAbortRejection(signal);
