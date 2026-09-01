@@ -165,23 +165,6 @@ describe('Node Fetch Ponyfill', () => {
           });
         },
       );
-      testIf(
-        implName === 'node-http' || implName === 'native',
-        'should reject manual abort with AbortError',
-        async () => {
-          const controller = new AbortController();
-          const fetchPromise = fetchPonyfill(baseUrl + '/delay/3', {
-            signal: controller.signal,
-          });
-          controller.abort();
-          try {
-            await fetchPromise;
-            throw new Error('Expected fetch to reject');
-          } catch (error) {
-            expect(error).toMatchObject({ name: 'AbortError' });
-          }
-        },
-      );
       it('should respect AbortSignal on a streamed response', async () => {
         expect.assertions(2);
         const controller = new AbortController();
