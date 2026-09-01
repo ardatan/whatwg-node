@@ -15,8 +15,17 @@ export class PonyfillAbortError extends Error {
   }
 }
 
+export function createDefaultAbortError(name = 'AbortError'): Error {
+  if (typeof DOMException !== 'undefined') {
+    return new DOMException('The operation was aborted', name);
+  }
+  const error = new Error('The operation was aborted');
+  error.name = name;
+  return error;
+}
+
 export function getAbortRejection(signal: AbortSignal): unknown {
-  return signal.reason ?? new DOMException('The operation was aborted', 'AbortError');
+  return signal.reason ?? createDefaultAbortError();
 }
 
 export function getFetchAbortRejection(signal: AbortSignal | undefined, error?: unknown): unknown {
@@ -29,5 +38,5 @@ export function getFetchAbortRejection(signal: AbortSignal | undefined, error?: 
   if (error != null) {
     return new Error(String(error));
   }
-  return new DOMException('The operation was aborted', 'AbortError');
+  return createDefaultAbortError();
 }

@@ -61,7 +61,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         return;
       }
 
-      let nodeRequest: ReturnType<typeof requestFn>;
+      let nodeRequest: ReturnType<typeof requestFn> | undefined;
       let requestBody: Readable | null = null;
       let settled = false;
       let responseReceived = false;
@@ -84,13 +84,20 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         requestOptions.checkServerIdentity = httpsCheckServerIdentity;
       }
 
+      // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
+      if (fetchRequest.parsedUrl) {
+        nodeRequest = requestFn(fetchRequest.parsedUrl, requestOptions);
+      } else {
+        nodeRequest = requestFn(fetchRequest.url, requestOptions);
+      }
+
       if (signal) {
         function cleanupRequest() {
-          if (requestBody && !requestBody.destroyed) {
+          if (requestBody && nodeRequest && !requestBody.destroyed) {
             requestBody.unpipe(nodeRequest);
             requestBody.destroy();
           }
-          if (!nodeRequest.destroyed) {
+          if (nodeRequest && !nodeRequest.destroyed) {
             nodeRequest.destroy();
           }
         }
@@ -118,13 +125,6 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           rejectRequest(getAbortRejection(signal));
         };
         signal.addEventListener('abort', onAbortBeforeResponse, { once: true });
-      }
-
-      // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
-      if (fetchRequest.parsedUrl) {
-        nodeRequest = requestFn(fetchRequest.parsedUrl, requestOptions);
-      } else {
-        nodeRequest = requestFn(fetchRequest.url, requestOptions);
       }
 
       nodeRequest.once('error', rejectRequest);

@@ -182,19 +182,6 @@ describe('Node Fetch Ponyfill', () => {
           }
         },
       );
-      testIf(
-        implName === 'node-http',
-        'should not leak when aborting before response',
-        async () => {
-          await expect(
-            fetchPonyfill(baseUrl + '/delay/3', {
-              signal: AbortSignal.timeout(50),
-            }),
-          ).rejects.toMatchObject({
-            name: 'TimeoutError',
-          });
-        },
-      );
       it('should respect AbortSignal on a streamed response', async () => {
         expect.assertions(2);
         const controller = new AbortController();

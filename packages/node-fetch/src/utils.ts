@@ -1,7 +1,7 @@
 import { once } from 'node:events';
 import { Readable, Writable } from 'node:stream';
 import zlib from 'node:zlib';
-import { getAbortRejection } from './AbortError.js';
+import { createDefaultAbortError, getAbortRejection } from './AbortError.js';
 import { PonyfillCompressionFormat } from './CompressionStream';
 
 function isHeadersInstance(obj: any): obj is Headers {
@@ -100,7 +100,7 @@ export function pipeThrough({
       const currentSignal = signalRef.deref();
       const abortError = currentSignal
         ? getAbortRejection(currentSignal)
-        : new DOMException('The operation was aborted', 'AbortError');
+        : createDefaultAbortError();
       srcRef.deref()?.destroy(abortError);
       cleanup();
     }
