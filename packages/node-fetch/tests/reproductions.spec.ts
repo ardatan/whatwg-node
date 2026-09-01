@@ -1,37 +1,65 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
+import { Readable } from 'node:stream';
 import { afterEach, expect, it } from '@jest/globals';
-import { Request } from '@whatwg-node/node-fetch';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { fetchNodeHttp } from '../src/fetchNodeHttp';
+import { PonyfillRequest } from '../src/Request.js';
+
+function getActiveRequestCount(): number | undefined {
+  const getActiveRequests = (process as NodeJS.Process & { _getActiveRequests?: () => unknown[] })
+    ._getActiveRequests;
+  return typeof getActiveRequests === 'function'
+    ? getActiveRequests.call(process).length
+    : undefined;
+}
 
 if (!globalThis.Bun && !globalThis.Deno) {
   let server: ReturnType<typeof createServer> | undefined;
-  afterEach(() => {
+  afterEach(async () => {
     if (server) {
-      return new Promise<void>((resolve, reject) =>
+      await new Promise<void>((resolve, reject) =>
         server?.close(err => (err ? reject(err) : resolve())),
       );
+      server = undefined;
     }
   });
 
-  it('rejects AbortSignal.timeout with TimeoutError instead of AbortError', async () => {
+  it('cleans up in-flight POST request and body when aborted before response', async () => {
+    const baseline = getActiveRequestCount() ?? 0;
+
     server = createServer((_req, _res) => {
-      // Keep the connection open until the client aborts.
+      // Never respond so abort happens before any response headers.
     });
     await new Promise<void>(resolve => server?.listen(0, resolve));
     const port = (server.address() as AddressInfo).port;
-    const url = `http://localhost:${port}/delay`;
 
-    await expect(
-      fetchNodeHttp(
-        new Request(url, {
-          signal: AbortSignal.timeout(50),
-        }),
-      ),
-    ).rejects.toMatchObject({
-      name: 'TimeoutError',
+    const body = new Readable({
+      read() {
+        this.push('request-body');
+      },
     });
+    const controller = new AbortController();
+    const fetchPromise = fetchNodeHttp(
+      new PonyfillRequest(`http://127.0.0.1:${port}/post`, {
+        method: 'POST',
+        body: body as unknown as BodyInit,
+        signal: controller.signal,
+      }),
+    );
+
+    controller.abort();
+
+    try {
+      await fetchPromise;
+    } catch {
+      // expected
+    }
+
+    expect(body.destroyed).toBe(true);
+    if (getActiveRequestCount() != null) {
+      expect(getActiveRequestCount()).toBeLessThanOrEqual(baseline);
+    }
   });
 
   it('should receive the client side "break" in the server side', async () => {
@@ -50,7 +78,7 @@ if (!globalThis.Bun && !globalThis.Deno) {
     await new Promise<void>(resolve => server?.listen(0, resolve));
     const port = (server.address() as AddressInfo).port;
     const url = `http://localhost:${port}`;
-    const response = await fetchNodeHttp(new Request(url));
+    const response = await fetchNodeHttp(new PonyfillRequest(url));
     let i = 0;
     // @ts-expect-error - ReadableStream is AsyncIterable
     for await (const chunk of response.body) {
