@@ -1,6 +1,6 @@
 import { createServer } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { afterEach, it } from '@jest/globals';
+import { afterEach, expect, it } from '@jest/globals';
 import { Request } from '@whatwg-node/node-fetch';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { fetchNodeHttp } from '../src/fetchNodeHttp';
@@ -14,6 +14,26 @@ if (!globalThis.Bun && !globalThis.Deno) {
       );
     }
   });
+
+  it('rejects AbortSignal.timeout with TimeoutError instead of AbortError', async () => {
+    server = createServer((_req, _res) => {
+      // Keep the connection open until the client aborts.
+    });
+    await new Promise<void>(resolve => server?.listen(0, resolve));
+    const port = (server.address() as AddressInfo).port;
+    const url = `http://localhost:${port}/delay`;
+
+    await expect(
+      fetchNodeHttp(
+        new Request(url, {
+          signal: AbortSignal.timeout(50),
+        }),
+      ),
+    ).rejects.toMatchObject({
+      name: 'TimeoutError',
+    });
+  });
+
   it('should receive the client side "break" in the server side', async () => {
     const onCancel$ = createDeferredPromise<void>();
     server = createServer((_req, res) => {
