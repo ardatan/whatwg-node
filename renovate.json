@@ -16,6 +16,16 @@
       "groupSlug": "changesets"
     },
     {
+      "matchPackageNames": ["@jest/*", "jest", "babel-jest"],
+      "groupName": "jest dependencies",
+      "groupSlug": "jest"
+    },
+    {
+      "matchPackageNames": ["@pulumi/*"],
+      "groupName": "pulumi dependencies",
+      "groupSlug": "pulumi"
+    },
+    {
       "excludePackagePatterns": [
         "@changesets/*",
         "bun",
@@ -27,7 +37,10 @@
         "react",
         "react-dom",
         "@pulumi/*",
-        "husky"
+        "husky",
+        "@jest/*",
+        "jest",
+        "babel-jest"
       ],
       "matchUpdateTypes": ["minor", "patch"],
       "groupName": "all non-major dependencies",
