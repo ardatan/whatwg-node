@@ -27,10 +27,8 @@ updates:
       interval: 'daily'
     cooldown:
       default-days: 3
-      exclude:
-        - '@envelop/*'
     groups:
-      actions-deps:
+      all-minor-patch:
         patterns:
           - '*'
         exclude-patterns:
@@ -41,6 +39,21 @@ updates:
           - 'next'
           - 'tailwindcss'
           - 'husky'
+          - '@pulumi/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      jest:
+        patterns:
+          - '@jest/*'
+          - 'jest'
+          - 'ts-jest'
+          - 'babel-jest'
+        update-types:
+          - 'minor'
+          - 'patch'
+      pulumi:
+        patterns:
           - '@pulumi/*'
         update-types:
           - 'minor'
