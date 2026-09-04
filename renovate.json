@@ -5,6 +5,8 @@
   "major": {
     "automerge": false
   },
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
   "lockFileMaintenance": {
     "enabled": true,
     "automerge": true
