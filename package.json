@@ -36,8 +36,8 @@
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
-    "@babel/plugin-proposal-class-properties": "7.18.6",
-    "@babel/plugin-proposal-explicit-resource-management": "7.27.4",
+    "@babel/plugin-transform-class-properties": "7.29.7",
+    "@babel/plugin-transform-explicit-resource-management": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-typescript": "7.29.7",
     "@changesets/changelog-github": "1.0.0",
@@ -64,7 +64,6 @@
     "eslint-plugin-import": "2.32.0",
     "eslint-plugin-n": "18.3.0",
     "eslint-plugin-promise": "7.3.0",
-    "eslint-plugin-standard": "5.0.0",
     "globals": "17.12.0",
     "husky": "9.1.7",
     "jest": "30.4.2",
@@ -98,6 +97,15 @@
     "tmp": "0.2.7",
     "undici": "8.10.1",
     "vite": "8.2.2"
+  },
+  "allowScripts": {
+    "bun@1.4.0": true,
+    "deno@2.9.6": true,
+    "esbuild@0.28.1": true,
+    "esbuild@0.28.2": true,
+    "workerd@1.20260903.1": true,
+    "protobufjs@7.6.6": true,
+    "unrs-resolver@1.12.2": true
   },
   "devEngines": {
     "packageManager": {

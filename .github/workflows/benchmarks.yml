@@ -30,6 +30,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
+          install-command: corepack npm install
           node-version-file: .node-version
       - name: Build Packages
         run: npm run build
@@ -71,6 +72,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
+          install-command: corepack npm install
           node-version-file: .node-version
       - name: Setup K6
         run: |
