@@ -27,7 +27,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
       - name: Prettier Check
         run: npm run prettier:check
@@ -40,7 +40,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
       - name: ESLint
         run: npm run lint
@@ -54,7 +54,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
       - name: Type Check
         run: npm run ts:check
@@ -79,7 +79,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version: ${{ matrix.node-version }}
       - name: Cache npm and Jest
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -120,7 +120,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
       - name: Test
         run: npm run test:bun
@@ -139,7 +139,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
       - name: Test
         uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
@@ -157,7 +157,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
       - name: Build Packages
         run: npm run build
@@ -201,7 +201,7 @@ jobs:
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1
         with:
-          install-command: corepack npm install
+          install-command: bash scripts/ci-npm-install.sh
           node-version-file: .node-version
 
       - name: Build Packages
