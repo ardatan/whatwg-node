@@ -47,7 +47,7 @@
     "@jest/globals": "30.4.1",
     "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.7.0",
-    "@types/node": "26.4.1",
+    "@types/node": "26.4.0",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "@typescript-eslint/eslint-plugin": "8.68.0",
@@ -97,7 +97,7 @@
     "tar": "7.5.22",
     "tmp": "0.2.7",
     "undici": "8.10.1",
-    "vite": "8.2.2"
+    "vite": "8.2.1"
   },
   "devEngines": {
     "packageManager": {
