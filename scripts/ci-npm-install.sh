@@ -23,9 +23,9 @@ if [[ "$use_corepack_npm" -eq 1 ]]; then
   package_manager="$(node -p "require('./package.json').packageManager")"
   echo "Activating ${package_manager} via corepack (Node ${node_major}.${node_minor}.${node_patch})"
   # shared-config runs `corepack enable` before setup-node; setup-node then
-  # reinstalls Node's bundled npm. Re-enable/activate so later `npm run …`
-  # steps also use packageManager and stop emitting EBADDEVENGINES.
-  corepack enable
+  # reinstalls Node's bundled npm. Re-enable the npm shim and activate
+  # packageManager so later bare `npm run …` steps use that version.
+  corepack enable npm
   corepack prepare "${package_manager}" --activate
   hash -r
   echo "npm $(npm --version)"
