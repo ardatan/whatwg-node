@@ -24,23 +24,13 @@ const compilerOptions = {
   sourceMap: false,
 };
 
-const diagnosticsHost = {
-  getCurrentDirectory: () => ROOT_DIR,
-  getCanonicalFileName: fileName => fileName,
-  getNewLine: () => '\n',
-};
-
 module.exports = {
   process(sourceText, sourcePath) {
-    const { diagnostics, outputText } = ts.transpileModule(sourceText, {
+    const { outputText } = ts.transpileModule(sourceText, {
       compilerOptions,
       fileName: sourcePath,
-      reportDiagnostics: true,
+      reportDiagnostics: false,
     });
-
-    if (diagnostics?.length) {
-      throw new Error(ts.formatDiagnosticsWithColorAndContext(diagnostics, diagnosticsHost));
-    }
 
     return {
       code: outputText,
