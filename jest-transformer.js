@@ -1,4 +1,5 @@
-const { normalize, resolve, sep } = require('path');
+const { existsSync, readFileSync } = require('fs');
+const { dirname, join, normalize, resolve } = require('path');
 const ts = require('typescript');
 
 const ROOT_DIR = __dirname;
@@ -15,7 +16,6 @@ const baseCompilerOptions = {
   allowJs: true,
   declaration: false,
   declarationMap: false,
-  ignoreDeprecations: '6.0',
   inlineSourceMap: true,
   inlineSources: true,
   noEmit: false,
@@ -25,7 +25,6 @@ const baseCompilerOptions = {
 const commonJsCompilerOptions = {
   ...baseCompilerOptions,
   module: ts.ModuleKind.CommonJS,
-  moduleResolution: ts.ModuleResolutionKind.Node10 ?? ts.ModuleResolutionKind.NodeJs,
 };
 
 const esmCompilerOptions = {
@@ -34,14 +33,45 @@ const esmCompilerOptions = {
   moduleResolution: ts.ModuleResolutionKind.Bundler,
 };
 
+const packageTypeByDir = new Map();
+
+function getPackageType(sourcePath) {
+  let currentDir = dirname(sourcePath);
+
+  while (true) {
+    const cachedPackageType = packageTypeByDir.get(currentDir);
+    if (cachedPackageType) {
+      return cachedPackageType;
+    }
+
+    const packageJsonPath = join(currentDir, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      const packageType =
+        JSON.parse(readFileSync(packageJsonPath, 'utf8')).type === 'module' ? 'module' : 'commonjs';
+      packageTypeByDir.set(currentDir, packageType);
+      return packageType;
+    }
+
+    const parentDir = dirname(currentDir);
+    if (parentDir === currentDir) {
+      return 'commonjs';
+    }
+    currentDir = parentDir;
+  }
+}
+
 function getCompilerOptions(sourcePath) {
   const normalizedSourcePath = normalize(sourcePath);
 
-  if (sourcePath.endsWith('.cjs')) {
+  if (normalizedSourcePath.endsWith('.cjs')) {
     return commonJsCompilerOptions;
   }
 
-  if (sourcePath.endsWith('.mjs') || normalizedSourcePath.includes(`${sep}node_modules${sep}`)) {
+  if (normalizedSourcePath.endsWith('.mjs')) {
+    return esmCompilerOptions;
+  }
+
+  if (normalizedSourcePath.endsWith('.js') && getPackageType(normalizedSourcePath) === 'module') {
     return esmCompilerOptions;
   }
 
