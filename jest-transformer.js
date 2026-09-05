@@ -1,5 +1,5 @@
 const { resolve } = require('path');
-const ts = require('@typescript/old');
+const ts = require('typescript');
 
 const ROOT_DIR = __dirname;
 const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
@@ -10,7 +10,7 @@ const { options: parsedCompilerOptions } = ts.parseJsonConfigFileContent(
   ROOT_DIR,
 );
 
-const compilerOptions = {
+const baseCompilerOptions = {
   ...parsedCompilerOptions,
   allowJs: true,
   declaration: false,
@@ -18,16 +18,37 @@ const compilerOptions = {
   ignoreDeprecations: '6.0',
   inlineSourceMap: true,
   inlineSources: true,
-  module: ts.ModuleKind.CommonJS,
-  moduleResolution: ts.ModuleResolutionKind.Node10 ?? ts.ModuleResolutionKind.NodeJs,
   noEmit: false,
   sourceMap: false,
 };
 
+const commonJsCompilerOptions = {
+  ...baseCompilerOptions,
+  module: ts.ModuleKind.CommonJS,
+  moduleResolution: ts.ModuleResolutionKind.Node10 ?? ts.ModuleResolutionKind.NodeJs,
+};
+
+const esmCompilerOptions = {
+  ...baseCompilerOptions,
+  module: ts.ModuleKind.ESNext,
+};
+
+function getCompilerOptions(sourcePath) {
+  if (sourcePath.endsWith('.cjs')) {
+    return commonJsCompilerOptions;
+  }
+
+  if (sourcePath.endsWith('.mjs') || sourcePath.includes('/node_modules/')) {
+    return esmCompilerOptions;
+  }
+
+  return commonJsCompilerOptions;
+}
+
 module.exports = {
   process(sourceText, sourcePath) {
     const { outputText } = ts.transpileModule(sourceText, {
-      compilerOptions,
+      compilerOptions: getCompilerOptions(sourcePath),
       fileName: sourcePath,
       reportDiagnostics: false,
     });
