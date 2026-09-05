@@ -1,4 +1,4 @@
-const { resolve } = require('path');
+const { normalize, resolve, sep } = require('path');
 const ts = require('typescript');
 
 const ROOT_DIR = __dirname;
@@ -31,14 +31,17 @@ const commonJsCompilerOptions = {
 const esmCompilerOptions = {
   ...baseCompilerOptions,
   module: ts.ModuleKind.ESNext,
+  moduleResolution: ts.ModuleResolutionKind.Bundler,
 };
 
 function getCompilerOptions(sourcePath) {
+  const normalizedSourcePath = normalize(sourcePath);
+
   if (sourcePath.endsWith('.cjs')) {
     return commonJsCompilerOptions;
   }
 
-  if (sourcePath.endsWith('.mjs') || sourcePath.includes('/node_modules/')) {
+  if (sourcePath.endsWith('.mjs') || normalizedSourcePath.includes(`${sep}node_modules${sep}`)) {
     return esmCompilerOptions;
   }
 
