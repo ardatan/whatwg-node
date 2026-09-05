@@ -28,7 +28,13 @@
       "groupSlug": "pulumi"
     },
     {
+      "matchPackageNames": ["@babel/*"],
+      "groupName": "babel dependencies",
+      "groupSlug": "babel"
+    },
+    {
       "excludePackagePatterns": [
+        "@babel/*",
         "@changesets/*",
         "bun",
         "typescript",
