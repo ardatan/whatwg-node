@@ -9,7 +9,7 @@ import { request as httpsRequest } from 'node:https';
 import { setTimeout } from 'node:timers/promises';
 import React from 'react';
 import { renderToReadableStream } from 'react-dom/server.edge';
-import { HttpResponse } from 'uWebSockets.js';
+import type { HttpResponse } from 'uWebSockets.js';
 import Hapi from '@hapi/hapi';
 import { describe, expect, it, jest } from '@jest/globals';
 import { DisposableSymbols } from '@whatwg-node/disposablestack';
