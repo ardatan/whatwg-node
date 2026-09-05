@@ -6,6 +6,7 @@ const ROOT_DIR = __dirname;
 const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = ['cookie'];
+const transformer = resolve(ROOT_DIR, 'jest-transformer.js');
 
 let globals = {};
 
@@ -33,9 +34,7 @@ module.exports = {
   }),
   transformIgnorePatterns: [`node_modules/(?!(${ESM_PACKAGES.join('|')})/)`],
   transform: {
-    '^.+\\.mjs?$': 'babel-jest',
-    '^.+\\.ts?$': 'babel-jest',
-    '^.+\\.js$': 'babel-jest',
+    '^.+\\.[cm]?[jt]s$': transformer,
   },
   collectCoverage: false,
   globals,
