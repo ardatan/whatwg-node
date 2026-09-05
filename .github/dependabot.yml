@@ -50,6 +50,12 @@ updates:
           - 'tailwindcss'
           - 'husky'
           - '@pulumi/*'
+          - '@jest/*'
+          - 'jest'
+          - 'ts-jest'
+          - 'babel-jest'
+          - '@pulumi/*'
+          - '@babel/*'
         update-types:
           - 'minor'
           - 'patch'
