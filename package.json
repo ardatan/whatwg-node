@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@babel/core": "7.29.7",
-    "@babel/plugin-transform-class-properties": "7.29.7",
+    "@babel/plugin-transform-class-properties": "8.0.1",
     "@babel/plugin-transform-explicit-resource-management": "7.29.7",
     "@babel/preset-env": "7.29.7",
     "@babel/preset-typescript": "7.29.7",
