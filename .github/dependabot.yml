@@ -60,11 +60,20 @@ updates:
           - 'ts-jest'
           - 'babel-jest'
         update-types:
+          - 'major'
           - 'minor'
           - 'patch'
       pulumi:
         patterns:
           - '@pulumi/*'
         update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      babel:
+        patterns:
+          - '@babel/*'
+        update-types:
+          - 'major'
           - 'minor'
           - 'patch'
