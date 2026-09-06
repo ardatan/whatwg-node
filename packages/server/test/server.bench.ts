@@ -1,6 +1,6 @@
 import { createServer, RequestListener } from 'node:http';
 import { AddressInfo } from 'node:net';
-import { bench, BenchOptions, describe } from 'vitest';
+import { Bench, BenchRunOptions, describe, test } from 'vitest';
 import { fetch } from '@whatwg-node/fetch';
 import { createServerAdapter, Response } from '@whatwg-node/server';
 
@@ -17,17 +17,19 @@ function useNumberEnv(envName: string, defaultValue: number): number {
 const duration = useNumberEnv('BENCH_DURATION', isCI ? 60000 : 15000);
 const warmupTime = useNumberEnv('BENCH_WARMUP_TIME', isCI ? 10000 : 5000);
 const warmupIterations = useNumberEnv('BENCH_WARMUP_ITERATIONS', isCI ? 30 : 10);
-const benchConfig: BenchOptions = {
+const benchConfig: BenchRunOptions = {
   time: duration,
   warmupTime,
   warmupIterations,
   throws: true,
 };
 
-function benchForAdapter(name: string, adapter: RequestListener) {
+function benchForAdapter(bench: Bench, name: string, adapter: RequestListener) {
   const server = (createServer(adapter).listen(0).address() as AddressInfo).port;
 
-  bench(name, () => fetch(`http://localhost:${server}`).then(res => res.json()), benchConfig);
+  return bench(name, () => fetch(`http://localhost:${server}`).then(res => res.json())).run(
+    benchConfig,
+  );
 }
 
 const adapters = {
@@ -75,6 +77,6 @@ function shuffleArray<T>(array: T[]): T[] {
 describe('Simple JSON Response', () => {
   const adapterEntries = shuffleArray([...Object.entries(adapters)]);
   for (const [benchName, adapter] of adapterEntries) {
-    benchForAdapter(benchName, adapter);
+    test(benchName, ({ bench }) => benchForAdapter(bench, benchName, adapter));
   }
 });
