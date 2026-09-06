@@ -78,7 +78,7 @@
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "undici": "8.10.1",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "4.1.11"
+    "vitest": "5.0.0"
   },
   "overrides": {
     "@pulumi/pulumi": "3.261.0",
