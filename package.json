@@ -58,7 +58,7 @@
     "bun": "1.4.1",
     "cookie": "2.0.1",
     "deno": "2.9.6",
-    "eslint": "10.9.1",
+    "eslint": "10.10.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.32.0",
@@ -76,7 +76,7 @@
     "tar": "7.5.22",
     "ts-jest": "29.4.12",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "undici": "8.10.1",
+    "undici": "8.10.2",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "5.0.0"
   },
@@ -87,7 +87,7 @@
     "glob": "13.0.6",
     "lodash": "4.18.1",
     "miniflare": {
-      "undici": "8.10.1"
+      "undici": "8.10.2"
     },
     "next": {
       "postcss": "8.5.28"
@@ -95,7 +95,7 @@
     "qs": "6.16.0",
     "tar": "7.5.22",
     "tmp": "0.2.7",
-    "undici": "8.10.1",
+    "undici": "8.10.2",
     "vite": "8.2.2"
   },
   "allowScripts": {
