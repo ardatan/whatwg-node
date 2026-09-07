@@ -21,8 +21,9 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.setOpt('SSL_VERIFYPEER', false);
   }
 
-  // Prefer Node's current default CA store (includes setDefaultCACertificates and
-  // NODE_EXTRA_CA_CERTS loaded at process start).
+  // Prefer Node's current default CA store (NODE_EXTRA_CA_CERTS loaded at process
+  // start, and any CAs installed via tls.setDefaultCACertificates on Node.js
+  // 22.19+ / 24.5+ where that API exists).
   curlHandle.setOpt('CAINFO_BLOB', tls.getCACertificates('default').join('\n'));
 
   curlHandle.enable(CurlFeature.StreamResponse);
