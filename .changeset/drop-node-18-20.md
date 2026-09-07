@@ -4,10 +4,10 @@
 '@whatwg-node/node-fetch': minor
 '@whatwg-node/events': minor
 '@whatwg-node/cookie-store': minor
-'@whatwg-node/server-plugin-cookies': minor
+'@whatwg-node/server-plugin-cookies': major
 '@whatwg-node/disposablestack': minor
 'fetchache': minor
-'@whatwg-node/promise-helpers': minor
+'@whatwg-node/promise-helpers': major
 ---
 
 Drop support for Node.js 18 and 20. The minimum supported Node.js version is now **22.15**.
@@ -17,6 +17,11 @@ Drop support for Node.js 18 and 20. The minimum supported Node.js version is now
 Node.js 18 and 20 are end-of-life and no longer receive security updates. Keeping them in our support matrix forced version-specific workarounds and slowed adoption of newer Node TLS APIs.
 
 The floor is set to **22.15** (not just 22.0) so we can rely on `tls.getCACertificates()`, which landed in Node.js 22.15 / 23.10. That matches the oldest currently supported LTS line (22 Maintenance) while dropping only EOL majors.
+
+### SemVer
+
+- **0.x packages**: minor bump (breaking changes are allowed in minors while major is 0).
+- **1.x packages** (`@whatwg-node/promise-helpers`, `@whatwg-node/server-plugin-cookies`): **major** bump, since dropping supported Node versions is a breaking engines change for SemVer `>=1.0.0` consumers.
 
 ### What changed
 
