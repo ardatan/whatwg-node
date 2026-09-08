@@ -1,7 +1,7 @@
 const Sequencer = require('@jest/test-sequencer').default;
 
 /**
- * Run the disposable warmup suite first so Babel 8's first-isolate retain
+ * Run the disposable warmup suite first so Babel 8's first-isolate retention
  * (Jest --detectLeaks false positive) does not fail a real package test.
  */
 class LeakTestSequencer extends Sequencer {

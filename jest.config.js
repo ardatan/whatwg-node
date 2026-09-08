@@ -28,6 +28,10 @@ module.exports = {
   restoreMocks: true,
   reporters: ['default'],
   modulePathIgnorePatterns: ['dist', 'test-assets', 'test-files', 'fixtures', 'bun'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    ...(!process.env.LEAK_TEST ? ['<rootDir>/scripts/leak-warmup\\.spec\\.ts$'] : []),
+  ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,
   }),

@@ -1,6 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 
-describe('leak-warmup', () => {
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+
+describeIf(Boolean(process.env.LEAK_TEST))('leak-warmup', () => {
   it('warms the first Jest isolate', () => {
     expect(true).toBe(true);
   });
