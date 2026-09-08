@@ -1,11 +1,31 @@
 const { resolve } = require('path');
-const { pathsToModuleNameMapper } = require('ts-jest');
 const CI = !!process.env.CI;
 
 const ROOT_DIR = __dirname;
 const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = ['cookie'];
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function pathsToModuleNameMapper(paths, { prefix = '' } = {}) {
+  /** @type {Record<string, string>} */
+  const mapper = {};
+  for (const [alias, targets] of Object.entries(paths)) {
+    const target = targets[0];
+    // Escape regex metacharacters first, then turn escaped \* into a capture group
+    // (same approach as ts-jest's pathsToModuleNameMapper).
+    if (alias.includes('*')) {
+      mapper[`^${escapeRegex(alias).replace(/\\\*/g, '(.*)')}$`] =
+        `${prefix}${target.replace(/\*/g, '$1')}`;
+    } else {
+      mapper[`^${escapeRegex(alias)}$`] = `${prefix}${target}`;
+    }
+  }
+  return mapper;
+}
 
 let globals = {};
 
@@ -28,6 +48,10 @@ module.exports = {
   restoreMocks: true,
   reporters: ['default'],
   modulePathIgnorePatterns: ['dist', 'test-assets', 'test-files', 'fixtures', 'bun'],
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    ...(!process.env.LEAK_TEST ? ['<rootDir>/scripts/leak-warmup\\.spec\\.ts$'] : []),
+  ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,
   }),
@@ -39,6 +63,13 @@ module.exports = {
   },
   collectCoverage: false,
   globals,
+  // Babel 8 retains the first Jest isolate under --detectLeaks; absorb that false positive.
+  ...(process.env.LEAK_TEST
+    ? {
+        runner: '<rootDir>/scripts/jest-leak-runner.cjs',
+        testSequencer: '<rootDir>/scripts/jest-leak-sequencer.cjs',
+      }
+    : {}),
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
   resolver: 'bob-the-bundler/jest-resolver',
 };
