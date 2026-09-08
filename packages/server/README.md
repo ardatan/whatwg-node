@@ -626,16 +626,6 @@ Basic request listener that takes a `Request` and server context.
 const response = await adapter.handleRequest(request, serverContext)
 ```
 
-##### `handleNodeRequest(nodeRequest, ...context)` _(Deprecated)_
-
-Converts a Node.js `IncomingMessage` to a `Request` and returns a `Response`.
-
-```ts
-const response = await adapter.handleNodeRequest(req, { customContext: 'value' })
-```
-
-**Deprecated:** Use `handleNodeRequestAndResponse` instead.
-
 ##### `handleNodeRequestAndResponse(nodeRequest, nodeResponse, ...context)`
 
 Handles a Node.js request/response pair and returns a WHATWG `Response` object.

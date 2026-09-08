@@ -268,17 +268,6 @@ function createServerAdapter<
     };
   }
 
-  // TODO: Remove this on the next major version
-  function handleNodeRequest(nodeRequest: NodeRequest, ...ctx: Partial<TServerContext>[]) {
-    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    // Ensure `waitUntil` is available in the server context
-    if (!serverContext.waitUntil) {
-      serverContext.waitUntil = waitUntil;
-    }
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI, undefined, useCustomAbortCtrl);
-    return handleRequest(request, serverContext);
-  }
-
   function handleNodeRequestAndResponse(
     nodeRequest: NodeRequest,
     nodeResponseOrContainer: NodeResponse | { raw: NodeResponse },
@@ -472,7 +461,6 @@ function createServerAdapter<
   const adapterObj: ServerAdapterObject<TServerContext> = {
     handleRequest: handleRequestWithWaitUntil,
     fetch: fetchFn,
-    handleNodeRequest,
     handleNodeRequestAndResponse,
     requestListener,
     handleEvent,
