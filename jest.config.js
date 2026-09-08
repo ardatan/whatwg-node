@@ -28,11 +28,6 @@ module.exports = {
   restoreMocks: true,
   reporters: ['default'],
   modulePathIgnorePatterns: ['dist', 'test-assets', 'test-files', 'fixtures', 'bun'],
-  // describe.skip still loads the file; HTTP/2 + TLS imports retain the isolate under --detectLeaks.
-  testPathIgnorePatterns: [
-    '/node_modules/',
-    ...(process.env.LEAK_TEST ? ['<rootDir>/packages/node-fetch/tests/http2\\.spec\\.ts$'] : []),
-  ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,
   }),
@@ -44,6 +39,13 @@ module.exports = {
   },
   collectCoverage: false,
   globals,
+  // Babel 8 retains the first Jest isolate under --detectLeaks; absorb that false positive.
+  ...(process.env.LEAK_TEST
+    ? {
+        runner: '<rootDir>/scripts/jest-leak-runner.cjs',
+        testSequencer: '<rootDir>/scripts/jest-leak-sequencer.cjs',
+      }
+    : {}),
   cacheDirectory: resolve(ROOT_DIR, `${CI ? '' : 'node_modules/'}.cache/jest`),
   resolver: 'bob-the-bundler/jest-resolver',
 };
