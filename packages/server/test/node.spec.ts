@@ -470,14 +470,6 @@ describe('Node Specific Cases', () => {
               continue;
             }
             const withBody = status !== 204 && status !== 205 && status !== 304;
-            // With status code 205, Koa hangs without a body on Node 18
-            if (
-              process.versions.node.startsWith('18.') &&
-              serverImplName === 'koa' &&
-              status === 205
-            ) {
-              continue;
-            }
             it(
               status.toString(),
               async () => {

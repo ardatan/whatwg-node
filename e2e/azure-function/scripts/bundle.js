@@ -13,7 +13,7 @@ async function main() {
     minify: false,
     bundle: true,
     platform: 'node',
-    target: 'node20',
+    target: 'node22',
     external: ['@azure/functions-core'],
   });
 
