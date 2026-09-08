@@ -42,9 +42,6 @@ export function hasLibcurlMulti(): boolean {
 export async function disposeLibcurlMulti(): Promise<void> {
   const state = getState();
   if (!state.multi) {
-    if (process.env.LEAK_TEST) {
-      console.error('[disposeLibcurlMulti] sharedMulti was null');
-    }
     return;
   }
   // Easy handles are removed from Multi via setImmediate (libcurl 8.17+);
@@ -54,10 +51,6 @@ export async function disposeLibcurlMulti(): Promise<void> {
       break;
     }
     await new Promise<void>(resolve => setImmediate(resolve));
-  }
-  const pending = state.multi.getCount();
-  if (process.env.LEAK_TEST) {
-    console.error(`[disposeLibcurlMulti] disposing Multi with getCount=${pending}`);
   }
   const multi = state.multi;
   state.multi = null;
