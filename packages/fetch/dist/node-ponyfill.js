@@ -3,10 +3,7 @@ const createNodePonyfill = require('./create-node-ponyfill');
 const shouldSkipPonyfill = require('./shouldSkipPonyfill');
 const ponyfills = createNodePonyfill();
 
-// node-libcurl 5 installs a process-wide Multi that cannot be cleaned up
-// (globalCleanup is a noop). Loading it under LEAK_TEST makes Jest
-// --detectLeaks fail for any suite that imported this module.
-if (!shouldSkipPonyfill() && !process.env.LEAK_TEST) {
+if (!shouldSkipPonyfill()) {
   try {
     const nodelibcurlName = 'node-libcurl'
     globalThis.libcurl = globalThis.libcurl || require(nodelibcurlName);

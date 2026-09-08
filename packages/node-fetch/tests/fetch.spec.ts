@@ -216,36 +216,48 @@ describe('Node Fetch Ponyfill', () => {
           type: 'application/json',
         });
         const objectUrl = PonyfillURL.createObjectURL(testJsonBlob);
-        const response = await fetchPonyfill(objectUrl);
-        expect(response.status).toBe(200);
-        expect(response.headers.get('content-type')).toContain('application/json');
-        // expect(response.headers.get('content-length')).toBe('15');
-        const resJson = await response.json();
-        expect(resJson.test).toBe('test');
+        try {
+          const response = await fetchPonyfill(objectUrl);
+          expect(response.status).toBe(200);
+          expect(response.headers.get('content-type')).toContain('application/json');
+          // expect(response.headers.get('content-length')).toBe('15');
+          const resJson = await response.json();
+          expect(resJson.test).toBe('test');
+        } finally {
+          PonyfillURL.revokeObjectURL(objectUrl);
+        }
       });
       it('should handle object urls for global Blob', async () => {
         const testJsonBlob = new globalThis.Blob([JSON.stringify({ test: 'test' })], {
           type: 'application/json',
         });
         const objectUrl = URL.createObjectURL(testJsonBlob);
-        const response = await fetchPonyfill(objectUrl);
-        expect(response.status).toBe(200);
-        expect(response.headers.get('content-type')).toContain('application/json');
-        // expect(response.headers.get('content-length')).toBe('15');
-        const resJson = await response.json();
-        expect(resJson.test).toBe('test');
+        try {
+          const response = await fetchPonyfill(objectUrl);
+          expect(response.status).toBe(200);
+          expect(response.headers.get('content-type')).toContain('application/json');
+          // expect(response.headers.get('content-length')).toBe('15');
+          const resJson = await response.json();
+          expect(resJson.test).toBe('test');
+        } finally {
+          URL.revokeObjectURL(objectUrl);
+        }
       });
       it('should handle object urls for Node.js Blob', async () => {
         const testJsonBlob = new NodeBlob([JSON.stringify({ test: 'test' })], {
           type: 'application/json',
         });
         const objectUrl = NodeURL.createObjectURL(testJsonBlob);
-        const response = await fetchPonyfill(objectUrl);
-        expect(response.status).toBe(200);
-        expect(response.headers.get('content-type')).toContain('application/json');
-        // expect(response.headers.get('content-length')).toBe('15');
-        const resJson = await response.json();
-        expect(resJson.test).toBe('test');
+        try {
+          const response = await fetchPonyfill(objectUrl);
+          expect(response.status).toBe(200);
+          expect(response.headers.get('content-type')).toContain('application/json');
+          // expect(response.headers.get('content-length')).toBe('15');
+          const resJson = await response.json();
+          expect(resJson.test).toBe('test');
+        } finally {
+          NodeURL.revokeObjectURL(objectUrl);
+        }
       });
       // No need to test this on Deno
       testIf(!globalThis.Deno, 'handles redirect from http to https', async () => {

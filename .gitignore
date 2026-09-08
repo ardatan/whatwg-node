@@ -81,3 +81,4 @@ deno.lock
 .helix/config.toml
 .helix/languages.toml
 .mise.toml
+scripts/libcurl-multi-fix/build/

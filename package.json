@@ -15,7 +15,7 @@
     "esm:check": "bob check",
     "jest-with-gc": "node --expose-gc ./node_modules/.bin/jest",
     "lint": "eslint .",
-    "postinstall": "patch-package && husky",
+    "postinstall": "node ./scripts/apply-patches.cjs && husky",
     "prebuild": "npm run clean-dist",
     "prerelease": "npm run build",
     "prerelease-canary": "npm run build",
