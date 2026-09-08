@@ -28,6 +28,11 @@ module.exports = {
   restoreMocks: true,
   reporters: ['default'],
   modulePathIgnorePatterns: ['dist', 'test-assets', 'test-files', 'fixtures', 'bun'],
+  // describe.skip still loads the file; HTTP/2 + TLS imports retain the isolate under --detectLeaks.
+  testPathIgnorePatterns: [
+    '/node_modules/',
+    ...(process.env.LEAK_TEST ? ['<rootDir>/packages/node-fetch/tests/http2\\.spec\\.ts$'] : []),
+  ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,
   }),
