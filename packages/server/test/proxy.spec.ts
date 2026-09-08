@@ -66,7 +66,6 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
         afterEach(
           () =>
             new Promise<void>(resolve => {
-              proxyServer.closeAllConnections();
               proxyServer.close(() => resolve());
             }),
         );

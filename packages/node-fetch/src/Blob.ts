@@ -77,13 +77,12 @@ export class PonyfillBlob implements Blob {
     private blobParts: BlobPart[] = [],
     options?: BlobOptions,
   ) {
-    // Preserve the native blob's type when wrapping a single native blob
-    this.type =
-      options?.type ||
-      (blobParts.length === 1 && hasBlobSignature(blobParts[0]) ? blobParts[0].type : '') ||
-      'application/octet-stream';
+    this.type = options?.type || 'application/octet-stream';
     this.encoding = options?.encoding || 'utf8';
     this._size = options?.size || null;
+    if (blobParts.length === 1 && hasBlobSignature(blobParts[0])) {
+      return blobParts[0] as PonyfillBlob;
+    }
   }
 
   _buffer: Buffer<ArrayBuffer> | null = null;
@@ -257,38 +256,8 @@ export class PonyfillBlob implements Blob {
   stream(): any {
     if (this.blobParts.length === 1) {
       const blobPart = this.blobParts[0];
-      if (hasBufferMethod(blobPart)) {
-        return new PonyfillReadableStream({
-          pull: controller => {
-            return blobPart.buffer().then(buf => {
-              controller.enqueue(buf);
-              controller.close();
-            });
-          },
-        });
-      }
-      if (hasBytesMethod(blobPart)) {
-        return new PonyfillReadableStream({
-          pull: controller => {
-            return blobPart.bytes().then(bytes => {
-              controller.enqueue(Buffer.from(bytes));
-              controller.close();
-            });
-          },
-        });
-      }
-      if (hasArrayBufferMethod(blobPart)) {
-        return new PonyfillReadableStream({
-          pull: controller => {
-            return blobPart.arrayBuffer().then(arrayBuffer => {
-              controller.enqueue(Buffer.from(arrayBuffer, undefined, blobPart.size));
-              controller.close();
-            });
-          },
-        });
-      }
       if (hasStreamMethod(blobPart)) {
-        return new PonyfillReadableStream(blobPart.stream());
+        return blobPart.stream();
       }
       const buf = getBlobPartAsBuffer(blobPart);
       return new PonyfillReadableStream({

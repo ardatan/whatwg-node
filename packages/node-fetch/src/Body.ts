@@ -182,31 +182,13 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
     const chunks: Uint8Array<ArrayBuffer>[] = [];
     return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
-      const cleanup = () => {
-        _body.readable.off('data', onData);
-        _body.readable.off('error', onError);
-        _body.readable.off('end', onEnd);
-      };
-      const onData = (chunk: Uint8Array<ArrayBuffer>) => {
+      _body.readable.on('data', chunk => {
         chunks.push(chunk);
-      };
-      const onError = (err: Error) => {
-        cleanup();
-        if (!_body.readable.destroyed) {
-          _body.readable.destroy(err);
-        }
-        reject(err);
-      };
-      const onEnd = () => {
-        cleanup();
-        if (!_body.readable.destroyed) {
-          _body.readable.destroy();
-        }
+      });
+      _body.readable.once('error', reject);
+      _body.readable.once('end', () => {
         resolve((this._chunks = chunks));
-      };
-      _body.readable.on('data', onData);
-      _body.readable.once('error', onError);
-      _body.readable.once('end', onEnd);
+      });
     });
   }
 
@@ -538,17 +520,11 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (isBlob(bodyInit)) {
-    const blob =
-      bodyInit instanceof PonyfillBlob
-        ? bodyInit
-        : new PonyfillBlob([bodyInit], {
-            type: bodyInit.type,
-            size: bodyInit.size,
-          });
+    const blob = bodyInit as PonyfillBlob;
     return {
       bodyType: BodyInitType.Blob,
-      contentType: blob.type,
-      contentLength: blob.size,
+      contentType: bodyInit.type,
+      contentLength: bodyInit.size,
       bodyFactory() {
         return blob.stream();
       },
