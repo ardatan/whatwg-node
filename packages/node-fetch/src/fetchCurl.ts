@@ -99,24 +99,48 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
 
   const deferredPromise = createDeferredPromise<PonyfillResponse<TResponseJSON>>();
   let streamResolved: Readable | undefined;
-  let curlResponseStream: Readable | undefined;
+  function onCurlError(error: any) {
+    const aborted = signal?.aborted || isCurlAbortError(error);
+    if (aborted) {
+      error = new PonyfillAbortError(signal?.reason);
+    }
+    if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
+      streamResolved.on('error', () => {});
+      streamResolved.destroy(error);
+    } else if (!streamResolved) {
+      deferredPromise.reject(error);
+    }
+    try {
+      if (curlHandle.isOpen) {
+        curlHandle.close();
+      }
+    } catch (e) {
+      if (!streamResolved) {
+        deferredPromise.reject(e);
+      }
+    }
+  }
   function onAbort() {
-    // node-libcurl 5 + libcurl 8: pausing alone does not tear down the TCP
-    // connection. Destroying the response streams cancels the transfer via the
-    // progress callback (return 1). Avoid curlHandle.close() here — disposing
-    // the easy handle mid-flight asserts on the process-default Multi.
+    // node-libcurl 5 + libcurl 8: pausing / stream-destroy alone may not tear
+    // down the TCP connection (hanging responses never call progress). Closing
+    // via Curl.close() is wrong here: close() removeAllListeners() before
+    // removeHandle, so the Multi rejection is emitted with no listeners.
+    // Remove the easy handle from our app-owned Multi first; onCurlError then
+    // closes the handle with the listener still attached.
     const abortError = new PonyfillAbortError(signal?.reason);
     const outputStream = streamResolved;
-    const responseStream = curlResponseStream;
-    // destroy(err) emits 'error'; attach a no-op so aborted streams without a
-    // consumer do not become unhandled exceptions.
     if (outputStream && !outputStream.closed && !outputStream.destroyed) {
       outputStream.on('error', () => {});
       outputStream.destroy(abortError);
     }
-    if (responseStream && !responseStream.closed && !responseStream.destroyed) {
-      responseStream.on('error', () => {});
-      responseStream.destroy(abortError);
+    try {
+      const easy = (curlHandle as { handle?: { isOpen?: boolean; isInsideMultiHandle?: boolean } })
+        .handle;
+      if (easy?.isOpen && easy.isInsideMultiHandle) {
+        getLibcurlMulti().removeHandle(easy);
+      }
+    } catch {
+      // already removed / closed
     }
     if (!outputStream) {
       deferredPromise.reject(abortError);
@@ -132,27 +156,10 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     }
     signal?.removeEventListener('abort', onAbort);
   });
-  curlHandle.once('error', function errorListener(error: any) {
-    if (signal?.aborted) {
-      error = new PonyfillAbortError(signal.reason);
-    } else if (isCurlAbortError(error)) {
-      error.message = 'The operation was aborted.';
-    }
-    if (streamResolved && !streamResolved.closed && !streamResolved.destroyed) {
-      streamResolved.destroy(error);
-    } else {
-      deferredPromise.reject(error);
-    }
-    try {
-      curlHandle.close();
-    } catch (e) {
-      deferredPromise.reject(e);
-    }
-  });
+  curlHandle.once('error', onCurlError);
   curlHandle.once(
     'stream',
     function streamListener(stream: Readable, status: number, headersBuf: Buffer) {
-      curlResponseStream = stream;
       const outputStream = stream.pipe(new PassThrough(), {
         end: true,
       });

@@ -1,6 +1,7 @@
 type LibcurlMulti = {
   close: () => void;
   getCount: () => number;
+  removeHandle: (handle: unknown) => void;
 };
 
 const STATE_KEY = Symbol.for('@whatwg-node/node-fetch.libcurlMulti');
