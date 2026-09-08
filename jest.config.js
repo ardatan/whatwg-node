@@ -1,11 +1,24 @@
 const { resolve } = require('path');
-const { pathsToModuleNameMapper } = require('ts-jest');
 const CI = !!process.env.CI;
 
 const ROOT_DIR = __dirname;
 const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = ['cookie'];
+
+function pathsToModuleNameMapper(paths, { prefix = '' } = {}) {
+  /** @type {Record<string, string>} */
+  const mapper = {};
+  for (const [alias, targets] of Object.entries(paths)) {
+    const target = targets[0];
+    if (alias.includes('*')) {
+      mapper[`^${alias.replace(/\*/g, '(.*)')}$`] = `${prefix}${target.replace(/\*/g, '$1')}`;
+    } else {
+      mapper[`^${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`] = `${prefix}${target}`;
+    }
+  }
+  return mapper;
+}
 
 let globals = {};
 
