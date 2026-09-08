@@ -102,6 +102,7 @@
     "deno@2.9.6": true,
     "esbuild@0.28.1": true,
     "esbuild@0.28.2": true,
+    "node-libcurl@5.1.2": true,
     "workerd@1.20260903.1": true,
     "protobufjs@7.6.6": true,
     "unrs-resolver@1.12.2": true
