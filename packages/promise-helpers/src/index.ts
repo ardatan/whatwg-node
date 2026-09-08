@@ -202,27 +202,6 @@ export function fakeRejectPromise<T>(error: unknown): Promise<T> {
 }
 
 /**
- * @deprecated Use `handleMaybePromise` instead.
- */
-export function mapMaybePromise<TInput, TOutput>(
-  input: MaybePromise<TInput>,
-  onSuccess: (value: TInput) => MaybePromise<TOutput>,
-  onError?: (err: any) => MaybePromise<TOutput>,
-): MaybePromise<TOutput>;
-export function mapMaybePromise<TInput, TOutput>(
-  input: MaybePromiseLike<TInput>,
-  onSuccess: (value: TInput) => MaybePromiseLike<TOutput>,
-  onError?: (err: any) => MaybePromiseLike<TOutput>,
-): MaybePromiseLike<TOutput>;
-export function mapMaybePromise<TInput, TOutput>(
-  input: MaybePromiseLike<TInput>,
-  onSuccess: (value: TInput) => MaybePromiseLike<TOutput>,
-  onError?: (err: any) => MaybePromiseLike<TOutput>,
-): MaybePromiseLike<TOutput> {
-  return handleMaybePromise(() => input, onSuccess, onError);
-}
-
-/**
  * Given an AsyncIterable and a callback function, return an AsyncIterator
  * which produces values mapped via calling the callback function.
  */
