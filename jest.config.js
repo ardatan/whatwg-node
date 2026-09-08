@@ -36,7 +36,11 @@ try {
 }
 
 try {
-  globals.libcurl = require('node-libcurl');
+  // node-libcurl 5 keeps a process-wide Multi; Curl.globalCleanup() is a noop, so
+  // loading it under LEAK_TEST pins Jest isolates. Unit tests still cover libcurl.
+  if (!process.env.LEAK_TEST) {
+    globals.libcurl = require('node-libcurl');
+  }
 } catch (err) {
   console.warn('Failed to load node-libcurl. Skipping tests that require it.', err);
 }

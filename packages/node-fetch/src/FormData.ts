@@ -141,7 +141,6 @@ export function getStreamFromFormData(
       if (currentAsyncIterator) {
         return currentAsyncIterator.next().then(({ done, value }) => {
           if (done) {
-            currentAsyncIterator?.return?.();
             currentAsyncIterator = undefined;
           }
           if (value) {
@@ -160,20 +159,13 @@ export function getStreamFromFormData(
   });
 }
 
-function getNormalizedFile(name: string, blob: Blob, fileName?: string) {
-  const normalizedBlob =
-    blob instanceof PonyfillBlob
-      ? blob
-      : new PonyfillBlob([blob], {
-          type: blob.type,
-          size: blob.size,
-        });
-  Object.defineProperty(normalizedBlob as PonyfillFile, 'name', {
+function getNormalizedFile(name: string, blob: PonyfillBlob, fileName?: string) {
+  Object.defineProperty(blob as PonyfillFile, 'name', {
     configurable: true,
     enumerable: true,
-    value: fileName || ('name' in blob ? blob.name : undefined) || name,
+    value: fileName || blob.name || name,
   });
-  return normalizedBlob as PonyfillFile;
+  return blob as PonyfillFile;
 }
 
 function isBlob(value: any): value is PonyfillBlob {

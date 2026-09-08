@@ -1,5 +1,4 @@
 export { fetchPonyfill as fetch } from './fetch.js';
-export { disposeLibcurlMulti } from './libcurlMulti.js';
 export { PonyfillHeaders as Headers } from './Headers.js';
 export { PonyfillBody as Body } from './Body.js';
 export { PonyfillRequest as Request, type RequestPonyfillInit as RequestInit } from './Request.js';

@@ -3,7 +3,6 @@ import { PassThrough, Readable } from 'node:stream';
 import tls from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillAbortError } from './AbortError.js';
-import { getLibcurlMulti } from './libcurlMulti.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { defaultHeadersSerializer, isNodeReadable, shouldRedirect } from './utils.js';
@@ -22,9 +21,6 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   const { Curl, CurlFeature, CurlProgressFunc } = globalThis['libcurl'];
 
   const curlHandle = new Curl();
-  // Keep requests off node-libcurl's process-default Multi so tests can dispose
-  // the uv timer / ObjectWrap Ref after the suite (see disposeLibcurlMulti).
-  curlHandle.setMulti(getLibcurlMulti());
 
   curlHandle.enable(CurlFeature.NoDataParsing);
 
@@ -101,22 +97,21 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
   let curlResponseStream: Readable | undefined;
   function onAbort() {
     // node-libcurl 5 + libcurl 8: pausing alone does not tear down the TCP
-    // connection, so servers never see client disconnect. Destroy the response
-    // stream (or close the handle) to actually abort.
+    // connection. Destroying the response streams cancels the transfer via the
+    // progress callback (return 1). Avoid curlHandle.close() here — disposing
+    // the easy handle mid-flight asserts on the process-default Multi.
     const abortError = new PonyfillAbortError(signal?.reason);
     const outputStream = streamResolved;
     const responseStream = curlResponseStream;
+    // destroy(err) emits 'error'; attach a no-op so aborted streams without a
+    // consumer do not become unhandled exceptions.
     if (outputStream && !outputStream.closed && !outputStream.destroyed) {
+      outputStream.on('error', () => {});
       outputStream.destroy(abortError);
     }
     if (responseStream && !responseStream.closed && !responseStream.destroyed) {
+      responseStream.on('error', () => {});
       responseStream.destroy(abortError);
-    } else if (curlHandle.isOpen) {
-      try {
-        curlHandle.close();
-      } catch (e) {
-        deferredPromise.reject(e);
-      }
     }
     if (!outputStream) {
       deferredPromise.reject(abortError);
