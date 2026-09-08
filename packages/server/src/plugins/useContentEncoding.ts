@@ -15,6 +15,7 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
       ) {
         const contentEncodings = contentEncodingHeader
           .split(',')
+          .map(encoding => encoding.trim())
           .filter(encoding => !emptyEncodings.includes(encoding)) as CompressionFormat[];
         if (contentEncodings.length) {
           if (
@@ -57,7 +58,9 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
     onResponse({ request, response, setResponse, fetchAPI }) {
       const acceptEncoding = request.headers.get('accept-encoding');
       if (acceptEncoding) {
-        const encodings = acceptEncoding.split(',') as CompressionFormat[];
+        const encodings = acceptEncoding
+          .split(',')
+          .map(encoding => encoding.trim()) as CompressionFormat[];
         if (encodings.length && response.body) {
           const supportedEncoding = encodings.find(encoding =>
             getSupportedEncodings(fetchAPI).includes(encoding),

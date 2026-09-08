@@ -3,6 +3,7 @@ import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { getHttpsCheckServerIdentity } from './checkServerIdentity.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -23,6 +24,16 @@ function getRequestFnForProtocol(url: string) {
     return httpsRequest;
   }
   throw new Error(`Unsupported protocol: ${url.split(':')[0] || url}`);
+}
+
+function isHttpsRequest(url: string | URL | undefined): boolean {
+  if (!url) {
+    return false;
+  }
+  if (typeof url === 'string') {
+    return url.startsWith('https:');
+  }
+  return url.protocol === 'https:';
 }
 
 export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
@@ -52,21 +63,27 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
 
       let nodeRequest: ReturnType<typeof requestFn>;
 
+      const requestTarget = fetchRequest.parsedUrl || fetchRequest.url;
+      const requestOptions: Parameters<typeof httpsRequest>[1] = {
+        method: fetchRequest.method,
+        headers: nodeHeaders,
+        signal,
+        agent: fetchRequest.agent,
+      };
+      // Probe once on first https use; override only if this Node build is affected
+      // (https://github.com/nodejs/node/issues/64032).
+      const httpsCheckServerIdentity = isHttpsRequest(requestTarget)
+        ? getHttpsCheckServerIdentity()
+        : undefined;
+      if (httpsCheckServerIdentity) {
+        requestOptions.checkServerIdentity = httpsCheckServerIdentity;
+      }
+
       // If it is our ponyfilled Request, it should have `parsedUrl` which is a `URL` object
       if (fetchRequest.parsedUrl) {
-        nodeRequest = requestFn(fetchRequest.parsedUrl, {
-          method: fetchRequest.method,
-          headers: nodeHeaders,
-          signal,
-          agent: fetchRequest.agent,
-        });
+        nodeRequest = requestFn(fetchRequest.parsedUrl, requestOptions);
       } else {
-        nodeRequest = requestFn(fetchRequest.url, {
-          method: fetchRequest.method,
-          headers: nodeHeaders,
-          signal,
-          agent: fetchRequest.agent,
-        });
+        nodeRequest = requestFn(fetchRequest.url, requestOptions);
       }
 
       nodeRequest.once('error', reject);

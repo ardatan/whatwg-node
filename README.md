@@ -38,3 +38,13 @@ the server implementation, you can still use `fetch` method to handle requests.
 A fetch wrapper that allows you to respect HTTP caching strategies on non-browser environments with
 a key-value cache implementation. It follows the [HTTP Caching](https://tools.ietf.org/html/rfc7234)
 and [Conditional Requests](https://tools.ietf.org/html/rfc7232) standards.
+
+## Support the Project
+
+whatwg-node is maintained in the open and helps keep web-standard APIs consistent across Node.js,
+Bun, Deno, Cloudflare Workers, and other JavaScript runtimes. If this project saves you time or
+helps power your work, please consider
+[sponsoring its development](https://github.com/sponsors/ardatan).
+
+Your support helps fund ongoing maintenance, compatibility work, and improvements across the
+ecosystem. Every contribution, large or small, is genuinely appreciated.

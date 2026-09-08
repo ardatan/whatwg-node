@@ -11,11 +11,11 @@
     "@whatwg-node/fetch": "0.10.13"
   },
   "devDependencies": {
-    "@pulumi/aws": "7.36.0",
-    "@pulumi/pulumi": "3.251.0",
-    "@types/aws-lambda": "8.10.162",
-    "@types/node": "26.1.0",
-    "esbuild": "0.28.1",
+    "@pulumi/aws": "7.44.0",
+    "@pulumi/pulumi": "^3.261.0",
+    "@types/aws-lambda": "8.10.163",
+    "@types/node": "26.4.1",
+    "esbuild": "0.28.2",
     "ts-node": "10.9.2",
     "tsconfig-paths": "4.2.0",
     "typescript": "npm:@typescript/typescript6@6.0.2"

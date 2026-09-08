@@ -10,8 +10,6 @@ export default defineConfig({
           name: 'bench',
           benchmark: {
             include: ['**/*.bench.ts'],
-            reporters: ['verbose'],
-            outputJson: 'bench/results.json',
           },
         },
       },

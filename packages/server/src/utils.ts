@@ -298,8 +298,6 @@ function safeWrite<TWritable extends Writable>(
   }
 }
 
-const isNode1x = globalThis.process?.versions?.node?.startsWith('1');
-
 export function sendNodeResponse(
   fetchResponse: Response,
   serverResponse: NodeResponse,
@@ -335,9 +333,8 @@ export function sendNodeResponse(
       fetchResponse.headers.headersInit,
     );
   } else {
-    // Avoid using `setHeaders` on Node.js 18 as it is broken with multiple headers with the same name
     // @ts-expect-error - setHeaders exist
-    if (serverResponse.setHeaders && !isNode1x) {
+    if (serverResponse.setHeaders) {
       // @ts-expect-error - writeHead bad typings
       serverResponse.setHeaders(fetchResponse.headers);
     } else {
@@ -591,7 +588,7 @@ export function handleResponseDecompression(response: Response, fetchAPI: FetchA
   let decompressedResponse = decompressedResponseMap.get(response);
   if (!decompressedResponse || decompressedResponse.bodyUsed) {
     let decompressedBody = response.body;
-    const contentEncodings = contentEncodingHeader.split(',');
+    const contentEncodings = contentEncodingHeader.split(',').map(encoding => encoding.trim());
     if (
       !contentEncodings.every(encoding =>
         getSupportedEncodings(fetchAPI).includes(encoding as CompressionFormat),

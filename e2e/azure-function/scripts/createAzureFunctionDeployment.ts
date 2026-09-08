@@ -156,7 +156,7 @@ export function createAzureFunctionDeployment(): DeploymentConfiguration<{
             ],
             http20Enabled: true,
             httpLoggingEnabled: true,
-            linuxFxVersion: 'node|20',
+            linuxFxVersion: 'node|22',
           },
         },
         {

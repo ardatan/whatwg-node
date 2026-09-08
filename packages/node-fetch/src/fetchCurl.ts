@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { PassThrough, Readable } from 'node:stream';
-import { rootCertificates } from 'node:tls';
+import tls from 'node:tls';
 import { createDeferredPromise } from '@whatwg-node/promise-helpers';
 import { PonyfillAbortError } from './AbortError.js';
 import { getLibcurlMulti } from './libcurlMulti.js';
@@ -34,11 +34,10 @@ export function fetchCurl<TResponseJSON = any, TRequestJSON = any>(
     curlHandle.setOpt('SSL_VERIFYPEER', false);
   }
 
-  if (process.env.NODE_EXTRA_CA_CERTS) {
-    curlHandle.setOpt('CAINFO', process.env.NODE_EXTRA_CA_CERTS);
-  } else {
-    curlHandle.setOpt('CAINFO_BLOB', rootCertificates.join('\n'));
-  }
+  // Prefer Node's current default CA store (NODE_EXTRA_CA_CERTS loaded at process
+  // start, and any CAs installed via tls.setDefaultCACertificates on Node.js
+  // 22.19+ / 24.5+ where that API exists).
+  curlHandle.setOpt('CAINFO_BLOB', tls.getCACertificates('default').join('\n'));
 
   curlHandle.enable(CurlFeature.StreamResponse);
 

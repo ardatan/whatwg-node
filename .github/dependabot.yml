@@ -2,6 +2,9 @@
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
+#
+# Cooldown must match (or exceed) .npmrc min-release-age=3 so PRs are not opened
+# for versions that npm will reject during install/CI.
 
 version: 2
 updates:
@@ -9,6 +12,8 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
+    cooldown:
+      default-days: 3
     groups:
       actions-deps:
         patterns:
@@ -17,6 +22,8 @@ updates:
     directory: '/' # Location of package manifests
     schedule:
       interval: 'daily'
+    cooldown:
+      default-days: 3
     groups:
       actions-deps:
         patterns:
@@ -27,10 +34,11 @@ updates:
       interval: 'daily'
     cooldown:
       default-days: 3
-      exclude:
-        - '@envelop/*'
+      semver-major-days: 3
+      semver-minor-days: 3
+      semver-patch-days: 3
     groups:
-      actions-deps:
+      all-minor-patch:
         patterns:
           - '*'
         exclude-patterns:
@@ -42,6 +50,36 @@ updates:
           - 'tailwindcss'
           - 'husky'
           - '@pulumi/*'
+          - '@jest/*'
+          - 'jest'
+          - 'ts-jest'
+          - 'babel-jest'
+          - '@pulumi/*'
+          - '@babel/*'
         update-types:
+          - 'minor'
+          - 'patch'
+      jest:
+        patterns:
+          - '@jest/*'
+          - 'jest'
+          - 'ts-jest'
+          - 'babel-jest'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      pulumi:
+        patterns:
+          - '@pulumi/*'
+        update-types:
+          - 'major'
+          - 'minor'
+          - 'patch'
+      babel:
+        patterns:
+          - '@babel/*'
+        update-types:
+          - 'major'
           - 'minor'
           - 'patch'
