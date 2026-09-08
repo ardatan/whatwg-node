@@ -6,15 +6,22 @@ const TSCONFIG = resolve(ROOT_DIR, 'tsconfig.json');
 const tsconfig = require(TSCONFIG);
 const ESM_PACKAGES = ['cookie'];
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 function pathsToModuleNameMapper(paths, { prefix = '' } = {}) {
   /** @type {Record<string, string>} */
   const mapper = {};
   for (const [alias, targets] of Object.entries(paths)) {
     const target = targets[0];
+    // Escape regex metacharacters first, then turn escaped \* into a capture group
+    // (same approach as ts-jest's pathsToModuleNameMapper).
     if (alias.includes('*')) {
-      mapper[`^${alias.replace(/\*/g, '(.*)')}$`] = `${prefix}${target.replace(/\*/g, '$1')}`;
+      mapper[`^${escapeRegex(alias).replace(/\\\*/g, '(.*)')}$`] =
+        `${prefix}${target.replace(/\*/g, '$1')}`;
     } else {
-      mapper[`^${alias.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`] = `${prefix}${target}`;
+      mapper[`^${escapeRegex(alias)}$`] = `${prefix}${target}`;
     }
   }
   return mapper;
