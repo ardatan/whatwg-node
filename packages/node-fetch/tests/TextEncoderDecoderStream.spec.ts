@@ -51,18 +51,15 @@ describe('TextEncoderDecoderStream', () => {
       });
       it('piped cancellation works', async () => {
         const expectedError = new Error('test error');
-        const thrownError = await new Promise<void>(resolve =>
-          new fetchAPI.ReadableStream({
-            cancel: resolve,
-          })
-            .pipeThrough(new fetchAPI.TextEncoderStream())
-            .cancel(expectedError)
-            .then(
-              () => {},
-              () => {},
-            ),
-        );
-        expect(thrownError).toBe(expectedError);
+        let cancelledWith: unknown;
+        const source = new fetchAPI.ReadableStream({
+          start() {},
+          cancel(reason) {
+            cancelledWith = reason;
+          },
+        });
+        await source.pipeThrough(new fetchAPI.TextEncoderStream()).cancel(expectedError);
+        expect(cancelledWith).toBe(expectedError);
       });
     },
     { noLibCurl: true },

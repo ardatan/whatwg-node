@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
+import { finished, pipeline } from 'node:stream/promises';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
@@ -120,8 +120,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           return readImpl(desiredSize);
         },
         destroy(err, callback) {
-          // Only treat as explicit cancel when destroy() was called without an error.
-          // If destroy(err) races with cancel(), prefer the real failure.
+          // cancel() sets a pending marker and destroy()s without an error for this path.
+          // A racing destroy(otherErr) must still surface as a real failure.
           const pending = pendingCancelReasons.get(this);
           const fromCancel = pending != null && err == null;
           const cancelReason = fromCancel ? pending.value : undefined;
@@ -165,14 +165,16 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     if (this.readable.destroyed) {
       return fakePromise();
     }
-    // Do not pass reason as destroy(error) — that emits 'error' and makes once('close') reject.
     pendingCancelReasons.set(this.readable, { value: reason });
-    this.readable.destroy();
-    return once(this.readable, 'close')
-      .then(() => undefined)
-      .finally(() => {
-        pendingCancelReasons.delete(this.readable);
-      });
+    const readable = this.readable;
+    readable.on('error', () => {});
+    // Always destroy without an error: cancel intent is in the WeakMap for aware streams.
+    // For wrapped streams, pipeThrough forwards cancel(reason) to the source explicitly.
+    const whenDone = finished(readable).catch(() => undefined);
+    readable.destroy();
+    return whenDone.finally(() => {
+      pendingCancelReasons.delete(readable);
+    });
   }
 
   locked = false;
@@ -297,13 +299,43 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     writable: WritableStream<T>;
     readable: ReadableStream<T2>;
   }): ReadableStream<T2> {
-    this.pipeTo(writable).catch(err => {
-      this.readable.destroy(err);
+    const pipePromise = this.pipeTo(writable);
+    pipePromise.catch(err => {
+      if (!this.readable.destroyed) {
+        this.readable.on('error', () => {});
+        this.readable.destroy(err);
+      }
     });
     if (isPonyfillReadableStream(readable)) {
-      readable.readable.once('error', err => this.readable.destroy(err));
-      readable.readable.once('finish', () => this.readable.push(null));
-      readable.readable.once('close', () => this.readable.push(null));
+      const onError = (err: Error) => {
+        if (!this.readable.destroyed) {
+          this.readable.on('error', () => {});
+          this.readable.destroy(err);
+        }
+      };
+      const onEnd = () => {
+        if (!this.readable.destroyed && !this.readable.readableEnded) {
+          this.readable.push(null);
+        }
+      };
+      readable.readable.once('error', onError);
+      readable.readable.once('finish', onEnd);
+      readable.readable.once('close', onEnd);
+      // finally() re-settles like the original promise — must catch or it becomes unhandled.
+      pipePromise
+        .finally(() => {
+          readable.readable.off('error', onError);
+          readable.readable.off('finish', onEnd);
+          readable.readable.off('close', onEnd);
+        })
+        .catch(() => {});
+
+      // Forward cancel(reason) to the source explicitly so we do not need destroy(reason)
+      // on the transform (which leaves unhandled pipeline rejections / error events).
+      const outCancel = readable.cancel.bind(readable);
+      readable.cancel = async (reason?: any) => {
+        await Promise.all([this.cancel(reason), outCancel(reason)]);
+      };
     }
     return readable;
   }

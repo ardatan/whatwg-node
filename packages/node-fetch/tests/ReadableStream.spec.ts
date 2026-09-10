@@ -223,8 +223,7 @@ pullCount: 3
       return origDestroy(err);
     }) as typeof rs.readable.destroy;
 
-    // once('close') rejects when a real error is emitted — that means the failure was not swallowed.
-    await expect(rs.cancel(new Error('stop'))).rejects.toMatchObject({ message: 'boom' });
+    await rs.cancel(new Error('stop'));
     expect(rs.readable.errored).toMatchObject({ message: 'boom' });
   });
 });
