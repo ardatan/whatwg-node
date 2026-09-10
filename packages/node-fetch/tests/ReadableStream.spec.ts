@@ -178,4 +178,30 @@ pullCount: 3
 
     await expect(rs.pipeTo(ws)).rejects.toThrow('write failed');
   });
+
+  it('cancel(reason) resolves without treating the reason as a stream failure', async () => {
+    let cancelledWith: unknown;
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+      cancel(reason) {
+        cancelledWith = reason;
+      },
+    });
+
+    await expect(rs.cancel(new Error('stop'))).resolves.toBeUndefined();
+    expect(cancelledWith).toBeInstanceOf(Error);
+    expect((cancelledWith as Error).message).toBe('stop');
+  });
+
+  it('cancel(reason) resolves when there is no cancel hook', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+    });
+
+    await expect(rs.cancel(new Error('stop'))).resolves.toBeUndefined();
+  });
 });
