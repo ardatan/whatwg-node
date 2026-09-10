@@ -62,6 +62,15 @@ function isReadableStream(obj: any): obj is ReadableStream {
 const pendingCancelReasons = new WeakMap<Readable, { value: any }>();
 const noop = () => {};
 
+function isExpectedCancelError(err: unknown, reason: unknown) {
+  const code = (err as NodeJS.ErrnoException | undefined)?.code;
+  return (
+    Object.is(err, reason) ||
+    code === 'ERR_STREAM_PREMATURE_CLOSE' ||
+    (err as Error | undefined)?.message === 'Premature close'
+  );
+}
+
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readable: Readable;
   constructor(
@@ -182,12 +191,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         // Swallow intentional cancel artifacts: destroy(reason) on wrapped streams, and
         // ERR_STREAM_PREMATURE_CLOSE from destroy() before the readable is drained.
         // Still propagate cancel-hook failures and racing destroy(err) failures.
-        const code = (err as NodeJS.ErrnoException | undefined)?.code;
-        if (
-          Object.is(err, reason) ||
-          code === 'ERR_STREAM_PREMATURE_CLOSE' ||
-          (err as Error)?.message === 'Premature close'
-        ) {
+        if (isExpectedCancelError(err, reason)) {
           return undefined;
         }
         throw err;
@@ -195,6 +199,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     );
     readable.destroy();
     return whenDone.finally(() => {
+      readable.off('error', noop);
       pendingCancelReasons.delete(readable);
     });
   }
@@ -353,15 +358,9 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         try {
           await outCancel(reason);
         } catch (err) {
-          // Transform may already be closed by the pipeline after source cancel.
-          const code = (err as NodeJS.ErrnoException | undefined)?.code;
-          if (
-            code === 'ERR_STREAM_PREMATURE_CLOSE' ||
-            (err as Error)?.message === 'Premature close'
-          ) {
-            return;
+          if (!isExpectedCancelError(err, reason)) {
+            throw err;
           }
-          throw err;
         }
       };
     }

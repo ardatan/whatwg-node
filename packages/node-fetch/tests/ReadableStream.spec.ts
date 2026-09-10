@@ -295,4 +295,21 @@ pullCount: 3
     await piped.getReader().cancel(expectedError);
     expect(cancelledWith).toBe(expectedError);
   });
+
+  it('pipeThrough cancel preserves downstream cancel failures', async () => {
+    const source = new PonyfillReadableStream({
+      start() {},
+    });
+    const downstreamError = new Error('downstream cancel failed');
+    const piped = source.pipeThrough({
+      writable: new WritableStream(),
+      readable: new PonyfillReadableStream({
+        cancel() {
+          return Promise.reject(downstreamError);
+        },
+      }),
+    });
+
+    await expect(piped.cancel(new Error('reader cancel'))).rejects.toBe(downstreamError);
+  });
 });
