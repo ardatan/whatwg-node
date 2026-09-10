@@ -128,4 +128,54 @@ pullCount: 3
       'startCount: 5',
     ]);
   });
+
+  it('values({ preventCancel: true }) does not destroy the stream on break', async () => {
+    const makeStream = () => {
+      let i = 0;
+      return new PonyfillReadableStream({
+        async pull(controller) {
+          await Promise.resolve();
+          if (i < 3) {
+            controller.enqueue(Buffer.from(String(i++)));
+          } else {
+            controller.close();
+          }
+        },
+      });
+    };
+
+    const keptOpen = makeStream();
+    const keptIterator = keptOpen.values({ preventCancel: true });
+    await keptIterator.next();
+    await keptIterator.return?.();
+    expect(keptOpen.readable.destroyed).toBe(false);
+
+    const rest: string[] = [];
+    for await (const chunk of keptOpen.values()) {
+      rest.push(Buffer.from(chunk as Buffer).toString('utf-8'));
+    }
+    expect(rest.length).toBeGreaterThan(0);
+
+    const cancelled = makeStream();
+    const cancelledIterator = cancelled.values();
+    await cancelledIterator.next();
+    await cancelledIterator.return?.();
+    expect(cancelled.readable.destroyed).toBe(true);
+  });
+
+  it('pipeTo rejects when the destination write fails', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('hi'));
+        controller.close();
+      },
+    });
+    const ws = new WritableStream({
+      write() {
+        throw new Error('write failed');
+      },
+    });
+
+    await expect(rs.pipeTo(ws)).rejects.toThrow('write failed');
+  });
 });

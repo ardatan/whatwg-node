@@ -40,9 +40,9 @@ describe('Request Abort', () => {
         1000,
       );
 
-      // #3011: aborting/erroring the response body must destroy the Node response and
-      // close the socket (client sees RST / ECONNRESET). Exercise via raw node:http(s)
-      // so we assert the socket, not fetch-client stream quirks. Skip libcurl/uWS.
+      // #3011: error/abort on the response body must destroy the Node response and
+      // close the socket (client sees RST / ECONNRESET). Use raw node:http(s) so we
+      // assert the socket itself. Skip libcurl/uWS/Bun/Deno (different write paths).
       skipIf(
         implementationName === 'libcurl' ||
           serverImplName === 'uWebSockets' ||
@@ -60,21 +60,33 @@ describe('Request Abort', () => {
           };
 
           const abortCtrl = new AbortController();
-          const pipeToErrored$ = createDeferredPromise<void>();
+          const bodyErrored$ = createDeferredPromise<void>();
 
           try {
             const adapter = createServerAdapter(() => {
-              const readable = new fetchAPI.ReadableStream({
+              let streamController: ReadableStreamDefaultController<Uint8Array>;
+              const body = new fetchAPI.ReadableStream<Uint8Array>({
+                start(controller) {
+                  streamController = controller;
+                  abortCtrl.signal.addEventListener(
+                    'abort',
+                    () => {
+                      streamController.error(
+                        abortCtrl.signal.reason instanceof Error
+                          ? abortCtrl.signal.reason
+                          : new Error('response body aborted'),
+                      );
+                      bodyErrored$.resolve();
+                    },
+                    { once: true },
+                  );
+                },
                 async pull(controller) {
                   await new Promise(resolve => setTimeout(resolve, 50));
                   controller.enqueue(new Uint8Array([1, 2, 3, 4]));
                 },
               });
-              const transform = new fetchAPI.TransformStream();
-              readable.pipeTo(transform.writable, { signal: abortCtrl.signal }).catch(() => {
-                pipeToErrored$.resolve();
-              });
-              return new fetchAPI.Response(transform.readable);
+              return new fetchAPI.Response(body);
             });
 
             await server.addOnceHandler(adapter);
@@ -98,19 +110,25 @@ describe('Request Abort', () => {
                   hostname: url.hostname,
                   port: url.port,
                   path: url.pathname + url.search,
-                  // ephemeral test CA is already in tls default store for node:https
-                  rejectUnauthorized: url.protocol === 'https:' ? true : undefined,
                 },
                 res => {
                   res.once('data', () => {
-                    // Abort the *response body* stream after bytes have started flowing
+                    // Abort/error the response body after bytes have started flowing
                     abortCtrl.abort();
                   });
-                  // After destroy(), Node should RST / prematurely close the connection
+                  // After destroy(), Node should RST / prematurely close the connection.
+                  // Do not treat a normal completed response (end / complete close) as success.
                   res.on('aborted', settle);
                   res.on('error', settle);
-                  res.on('close', settle);
-                  res.on('end', settle);
+                  res.on('close', () => {
+                    if (!res.complete) {
+                      settle();
+                    }
+                  });
+                  res.on('end', () => {
+                    clearTimeout(timeout);
+                    reject(new Error('response ended cleanly; expected socket abort/reset'));
+                  });
                 },
               );
 
@@ -124,7 +142,7 @@ describe('Request Abort', () => {
               });
             });
 
-            await pipeToErrored$.promise;
+            await bodyErrored$.promise;
 
             expect(
               unexpectedLogs.some(log => log.includes('Unexpected error while handling request')),

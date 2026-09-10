@@ -403,6 +403,12 @@ export function sendNodeResponse(
     serverResponse.once('close', () => {
       fetchBody.destroy();
     });
+    // Node's pipe() does not destroy the destination when the source errors (#3011)
+    fetchBody.once('error', err => {
+      if (!serverResponse.destroyed) {
+        serverResponse.destroy(err instanceof Error ? err : undefined);
+      }
+    });
     fetchBody.pipe(serverResponse, {
       end: true,
     });
@@ -434,7 +440,7 @@ function sendReadableStream(
     err => {
       // Body aborted/errored: destroy Node response so the client socket closes (RST)
       if (!serverResponse.destroyed) {
-        serverResponse.destroy(err);
+        serverResponse.destroy(err instanceof Error ? err : undefined);
       }
     },
   );

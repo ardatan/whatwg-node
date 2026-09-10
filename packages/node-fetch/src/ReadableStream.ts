@@ -125,17 +125,20 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
                   () => {
                     callback(null);
                   },
-                  err => {
-                    callback(err);
+                  cancelErr => {
+                    callback(cancelErr);
                   },
                 );
               }
-            } catch (err: any) {
-              callback(err);
+            } catch (cancelErr: any) {
+              callback(cancelErr);
               return;
             }
+            callback(null);
+            return;
           }
-          callback(null);
+          // No cancel hook: propagate destroy(err) so piped destinations observe the failure (#3011)
+          callback(err ?? null);
         },
       });
     }
@@ -192,21 +195,27 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     };
   }
 
-  [Symbol.asyncIterator](_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
-    const iterator = this.readable[Symbol.asyncIterator]();
+  [Symbol.asyncIterator](options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
+    const preventCancel = options?.preventCancel === true;
+    // Node's default async iterator destroys on return; honor preventCancel via destroyOnReturn.
+    const iterator = (
+      typeof this.readable.iterator === 'function'
+        ? this.readable.iterator({ destroyOnReturn: !preventCancel })
+        : this.readable[Symbol.asyncIterator]()
+    ) as AsyncIterator<any>;
     const iterable = {
       [Symbol.asyncIterator]() {
         return this;
       },
       [Symbol.asyncDispose]: async () => {
         await iterator.return?.();
-        if (!this.readable.destroyed) {
+        if (!preventCancel && !this.readable.destroyed) {
           this.readable.destroy();
         }
       },
       next: () => iterator.next(),
       return: () => {
-        if (!this.readable.destroyed) {
+        if (!preventCancel && !this.readable.destroyed) {
           this.readable.destroy();
         }
         return iterator.return?.() || fakePromise({ done: true, value: undefined });
@@ -221,8 +230,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     return iterable as unknown as ReadableStreamAsyncIterator<T>;
   }
 
-  values(_options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
-    return this[Symbol.asyncIterator]();
+  values(options?: ReadableStreamIteratorOptions): ReadableStreamAsyncIterator<T> {
+    return this[Symbol.asyncIterator](options);
   }
 
   tee(): [ReadableStream<T>, ReadableStream<T>] {
@@ -236,7 +245,12 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       }
       await writer.close();
     } catch (err) {
-      await writer.abort(err);
+      try {
+        await writer.abort(err);
+      } catch {
+        // Ignore abort failures; still surface the original write/close error.
+      }
+      throw err;
     }
   }
 
