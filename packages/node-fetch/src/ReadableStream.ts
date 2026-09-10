@@ -330,11 +330,12 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         })
         .catch(() => {});
 
-      // Forward cancel(reason) to the source explicitly so we do not need destroy(reason)
-      // on the transform (which leaves unhandled pipeline rejections / error events).
+      // Forward cancel(reason) to the source first (sequential) so a racing pipeline
+      // destroy(err) cannot overwrite the cancel reason with ERR_STREAM_PREMATURE_CLOSE.
       const outCancel = readable.cancel.bind(readable);
       readable.cancel = async (reason?: any) => {
-        await Promise.all([this.cancel(reason), outCancel(reason)]);
+        await this.cancel(reason);
+        await outCancel(reason);
       };
     }
     return readable;
