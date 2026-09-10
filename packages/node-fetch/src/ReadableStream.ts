@@ -6,9 +6,6 @@ import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
-/** Marks an intentional ReadableStream.cancel() so destroy does not emit 'error'. */
-const kCancelReason = Symbol.for('whatwgNode.readableStreamCancelReason');
-
 function createController<T>(
   desiredSize: number,
   readable: Readable,
@@ -60,6 +57,9 @@ function isNodeReadable(obj: any): obj is Readable {
 function isReadableStream(obj: any): obj is ReadableStream {
   return obj?.getReader != null;
 }
+
+/** In-flight cancel(reason); keyed by underlying Readable (not stored on it). */
+const pendingCancelReasons = new WeakMap<Readable, { value: any }>();
 
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readable: Readable;
@@ -120,17 +120,18 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           return readImpl(desiredSize);
         },
         destroy(err, callback) {
-          const readable = this as Readable & { [kCancelReason]?: unknown };
-          const fromCancel = Object.prototype.hasOwnProperty.call(readable, kCancelReason);
-          const cancelReason = fromCancel ? readable[kCancelReason] : undefined;
+          // Only treat as explicit cancel when destroy() was called without an error.
+          // If destroy(err) races with cancel(), prefer the real failure.
+          const pending = pendingCancelReasons.get(this);
+          const fromCancel = pending != null && err == null;
+          const cancelReason = fromCancel ? pending.value : undefined;
           if (fromCancel) {
-            delete readable[kCancelReason];
+            pendingCancelReasons.delete(this);
           }
-          const reasonForSourceCancel = fromCancel ? cancelReason : err;
 
           if (underlyingSource?.cancel) {
             try {
-              const res$ = underlyingSource.cancel(reasonForSourceCancel);
+              const res$ = underlyingSource.cancel(fromCancel ? cancelReason : err);
               if (res$?.then) {
                 return res$.then(
                   () => {
@@ -161,10 +162,17 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   cancel(reason?: any): Promise<void> {
+    if (this.readable.destroyed) {
+      return fakePromise();
+    }
     // Do not pass reason as destroy(error) — that emits 'error' and makes once('close') reject.
-    (this.readable as Readable & { [kCancelReason]?: unknown })[kCancelReason] = reason;
+    pendingCancelReasons.set(this.readable, { value: reason });
     this.readable.destroy();
-    return once(this.readable, 'close').then(() => undefined);
+    return once(this.readable, 'close')
+      .then(() => undefined)
+      .finally(() => {
+        pendingCancelReasons.delete(this.readable);
+      });
   }
 
   locked = false;
