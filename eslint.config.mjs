@@ -91,6 +91,7 @@ export default [
             '**/*.test.ts',
             '**/*.spec.ts',
             '**/vitest.config.ts',
+            '**/vitest.browser.config.mts',
             '**/vitest.projects.ts',
           ],
         },

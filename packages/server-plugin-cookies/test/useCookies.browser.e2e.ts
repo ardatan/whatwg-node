@@ -40,7 +40,9 @@ describe('Cookies browser behavior', () => {
           await fetch(`${base}/set`, { credentials: 'same-origin' });
         }, origin);
 
-        const documentCookie = await tab.evaluate(() => document.cookie);
+        const documentCookie = await tab.evaluate(() => {
+          return (globalThis as unknown as { document: { cookie: string } }).document.cookie;
+        });
         expect(documentCookie).toContain('session=abc');
 
         const result = await tab.evaluate(async base => {
@@ -91,7 +93,9 @@ describe('Cookies browser behavior', () => {
           await fetch(`${base}/set`, { credentials: 'same-origin' });
         }, origin);
 
-        const documentCookie = await tab.evaluate(() => document.cookie);
+        const documentCookie = await tab.evaluate(() => {
+          return (globalThis as unknown as { document: { cookie: string } }).document.cookie;
+        });
         expect(documentCookie).not.toContain('token=');
 
         const result = await tab.evaluate(async base => {
