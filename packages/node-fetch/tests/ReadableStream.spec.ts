@@ -259,7 +259,12 @@ pullCount: 3
     });
     rs.readable.on('error', () => {});
     rs.readable.destroy(new Error('already failed'));
-    await expect(rs.cancel(new Error('stop'))).rejects.toMatchObject({ message: 'already failed' });
+    try {
+      await rs.cancel(new Error('stop'));
+      throw new Error('expected cancel to reject');
+    } catch (err) {
+      expect(err).toMatchObject({ message: 'already failed' });
+    }
   });
 
   it('cancel() rejects when underlyingSource.cancel fails', async () => {
