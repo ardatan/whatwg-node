@@ -2,7 +2,7 @@ import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { finished, pipeline } from 'node:stream/promises';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
@@ -166,7 +166,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     if (this.readable.destroyed) {
       const errored = this.readable.errored;
       if (errored != null) {
-        return Promise.reject(errored);
+        return fakeRejectPromise(errored);
       }
       return fakePromise();
     }
