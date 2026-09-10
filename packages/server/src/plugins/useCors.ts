@@ -54,8 +54,10 @@ export function getCORSHeadersByRequestAndOptions(
       // Vary by origin because there are multiple origins
       headers['Vary'] = 'Origin';
     } else {
-      // There is no origin found in the headers, so we should return null
-      headers['Access-Control-Allow-Origin'] = 'null';
+      // Origin is not allowed. Omit Access-Control-Allow-Origin entirely so the
+      // browser enforces the Same-Origin Policy. Do not send the string "null"
+      // (see https://w3c.github.io/webappsec-cors-for-developers/#avoid-returning-access-control-allow-origin-null).
+      return null;
     }
   }
 
