@@ -6,6 +6,9 @@ import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
+/** Marks an intentional ReadableStream.cancel() so destroy does not emit 'error'. */
+const kCancelReason = Symbol.for('whatwgNode.readableStreamCancelReason');
+
 function createController<T>(
   desiredSize: number,
   readable: Readable,
@@ -117,9 +120,17 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           return readImpl(desiredSize);
         },
         destroy(err, callback) {
+          const readable = this as Readable & { [kCancelReason]?: unknown };
+          const fromCancel = Object.prototype.hasOwnProperty.call(readable, kCancelReason);
+          const cancelReason = fromCancel ? readable[kCancelReason] : undefined;
+          if (fromCancel) {
+            delete readable[kCancelReason];
+          }
+          const reasonForSourceCancel = fromCancel ? cancelReason : err;
+
           if (underlyingSource?.cancel) {
             try {
-              const res$ = underlyingSource.cancel(err);
+              const res$ = underlyingSource.cancel(reasonForSourceCancel);
               if (res$?.then) {
                 return res$.then(
                   () => {
@@ -137,6 +148,11 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
             callback(null);
             return;
           }
+          // Explicit cancel must not surface as a stream failure (#3011 destroy(err) still propagates)
+          if (fromCancel) {
+            callback(null);
+            return;
+          }
           // No cancel hook: propagate destroy(err) so piped destinations observe the failure (#3011)
           callback(err ?? null);
         },
@@ -145,9 +161,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   cancel(reason?: any): Promise<void> {
-    this.readable.destroy(reason);
-    // @ts-expect-error - we know it is void
-    return once(this.readable, 'close');
+    // Do not pass reason as destroy(error) — that emits 'error' and makes once('close') reject.
+    (this.readable as Readable & { [kCancelReason]?: unknown })[kCancelReason] = reason;
+    this.readable.destroy();
+    return once(this.readable, 'close').then(() => undefined);
   }
 
   locked = false;
@@ -301,3 +318,4 @@ function isPonyfillReadableStream(obj: any): obj is PonyfillReadableStream<any> 
 function isPonyfillWritableStream(obj: any): obj is PonyfillWritableStream {
   return obj?.writable != null;
 }
+
