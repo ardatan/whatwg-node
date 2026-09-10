@@ -19,9 +19,13 @@ export async function listen(
 }
 
 export async function withBrowser<T>(run: (browser: Browser) => Promise<T>): Promise<T> {
+  const disableSandbox =
+    process.env.CI === 'true' ||
+    process.env.PUPPETEER_DISABLE_SANDBOX === '1' ||
+    process.env.PUPPETEER_DISABLE_SANDBOX === 'true';
   const browser = await puppeteer.launch({
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    args: disableSandbox ? ['--no-sandbox', '--disable-setuid-sandbox'] : [],
   });
   try {
     return await run(browser);
