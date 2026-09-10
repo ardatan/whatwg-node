@@ -75,7 +75,7 @@ describe('CORS', () => {
         const headers = getCORSHeadersByRequestAndOptions(request, corsOptionsWithMultipleOrigins);
         expect(headers?.['Access-Control-Allow-Origin']).toBe('http://localhost:4001');
       });
-      it('should return null if the sent origin does not match', () => {
+      it('should omit CORS headers if the sent origin does not match', () => {
         const request = new Request('http://localhost:4002/graphql', {
           method: 'POST',
           headers: {
@@ -84,7 +84,7 @@ describe('CORS', () => {
           },
         });
         const headers = getCORSHeadersByRequestAndOptions(request, corsOptionsWithMultipleOrigins);
-        expect(headers?.['Access-Control-Allow-Origin']).toBe('null');
+        expect(headers).toBeNull();
       });
     });
     describe('Disabled CORS', () => {
