@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
-import { pipeline } from 'node:stream/promises';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import { finished, pipeline } from 'node:stream/promises';
+import { fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
 
@@ -56,6 +56,19 @@ function isNodeReadable(obj: any): obj is Readable {
 
 function isReadableStream(obj: any): obj is ReadableStream {
   return obj?.getReader != null;
+}
+
+/** In-flight cancel(reason); keyed by underlying Readable (not stored on it). */
+const pendingCancelReasons = new WeakMap<Readable, { value: any }>();
+const noop = () => {};
+
+function isExpectedCancelError(err: unknown, reason: unknown) {
+  const code = (err as NodeJS.ErrnoException | undefined)?.code;
+  return (
+    Object.is(err, reason) ||
+    code === 'ERR_STREAM_PREMATURE_CLOSE' ||
+    (err as Error | undefined)?.message === 'Premature close'
+  );
 }
 
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
@@ -117,13 +130,23 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           return readImpl(desiredSize);
         },
         destroy(err, callback) {
+          // cancel() sets a pending marker and destroy()s without an error for this path.
+          // A racing destroy(otherErr) must still surface as a real failure.
+          const pending = pendingCancelReasons.get(this);
+          const fromCancel = pending != null && err == null;
+          const cancelReason = fromCancel ? pending.value : undefined;
+          if (fromCancel) {
+            pendingCancelReasons.delete(this);
+          }
+
           if (underlyingSource?.cancel) {
             try {
-              const res$ = underlyingSource.cancel(err);
+              const res$ = underlyingSource.cancel(fromCancel ? cancelReason : err);
               if (res$?.then) {
                 return res$.then(
                   () => {
-                    callback(null);
+                    // Preserve real destroy(err) after the cancel hook runs.
+                    callback(fromCancel ? null : (err ?? null));
                   },
                   cancelErr => {
                     callback(cancelErr);
@@ -134,6 +157,11 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
               callback(cancelErr);
               return;
             }
+            callback(fromCancel ? null : (err ?? null));
+            return;
+          }
+          // Explicit cancel must not surface as a stream failure
+          if (fromCancel) {
             callback(null);
             return;
           }
@@ -145,9 +173,35 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
   }
 
   cancel(reason?: any): Promise<void> {
-    this.readable.destroy(reason);
-    // @ts-expect-error - we know it is void
-    return once(this.readable, 'close');
+    if (this.readable.destroyed) {
+      const errored = this.readable.errored;
+      if (errored != null) {
+        return fakeRejectPromise(errored);
+      }
+      return fakePromise();
+    }
+    pendingCancelReasons.set(this.readable, { value: reason });
+    const readable = this.readable;
+    readable.once('error', noop);
+    // Always destroy without an error: cancel intent is in the WeakMap for aware streams.
+    // For wrapped streams, pipeThrough forwards cancel(reason) to the source explicitly.
+    const whenDone = finished(readable).then(
+      () => undefined,
+      err => {
+        // Swallow intentional cancel artifacts: destroy(reason) on wrapped streams, and
+        // ERR_STREAM_PREMATURE_CLOSE from destroy() before the readable is drained.
+        // Still propagate cancel-hook failures and racing destroy(err) failures.
+        if (isExpectedCancelError(err, reason)) {
+          return undefined;
+        }
+        throw err;
+      },
+    );
+    readable.destroy();
+    return whenDone.finally(() => {
+      readable.off('error', noop);
+      pendingCancelReasons.delete(readable);
+    });
   }
 
   locked = false;
@@ -174,17 +228,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         }
         this.locked = false;
       },
-      cancel: reason => {
-        if (iterator.return) {
-          const retResult$ = iterator.return(reason);
-          if (retResult$.then) {
-            return retResult$.then(() => {
-              this.locked = false;
-            });
-          }
-        }
+      cancel: (reason?: any) => {
         this.locked = false;
-        return fakePromise();
+        // Route through stream cancel so pipeThrough's cancel forwarding still runs.
+        return this.cancel(reason);
       },
       get closed() {
         return Promise.race([
@@ -272,13 +319,50 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     writable: WritableStream<T>;
     readable: ReadableStream<T2>;
   }): ReadableStream<T2> {
-    this.pipeTo(writable).catch(err => {
-      this.readable.destroy(err);
+    const pipePromise = this.pipeTo(writable);
+    pipePromise.catch(err => {
+      if (!this.readable.destroyed) {
+        this.readable.once('error', noop);
+        this.readable.destroy(err);
+      }
     });
     if (isPonyfillReadableStream(readable)) {
-      readable.readable.once('error', err => this.readable.destroy(err));
-      readable.readable.once('finish', () => this.readable.push(null));
-      readable.readable.once('close', () => this.readable.push(null));
+      const onError = (err: Error) => {
+        if (!this.readable.destroyed) {
+          this.readable.once('error', noop);
+          this.readable.destroy(err);
+        }
+      };
+      const onEnd = () => {
+        if (!this.readable.destroyed && !this.readable.readableEnded) {
+          this.readable.push(null);
+        }
+      };
+      readable.readable.once('error', onError);
+      readable.readable.once('finish', onEnd);
+      readable.readable.once('close', onEnd);
+      // finally() re-settles like the original promise; must catch or it becomes unhandled.
+      pipePromise
+        .finally(() => {
+          readable.readable.off('error', onError);
+          readable.readable.off('finish', onEnd);
+          readable.readable.off('close', onEnd);
+        })
+        .catch(() => {});
+
+      // Forward cancel(reason) to the source first (sequential) so a racing pipeline
+      // destroy(err) cannot overwrite the cancel reason with ERR_STREAM_PREMATURE_CLOSE.
+      const outCancel = readable.cancel.bind(readable);
+      readable.cancel = async (reason?: any) => {
+        await this.cancel(reason);
+        try {
+          await outCancel(reason);
+        } catch (err) {
+          if (!isExpectedCancelError(err, reason)) {
+            throw err;
+          }
+        }
+      };
     }
     return readable;
   }

@@ -1,6 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { describe, expect, it } from '@jest/globals';
-import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
+import { runTestsForEachFetchImpl } from '../../server/test/test-fetch.js';
 
 describe('TextEncoderDecoderStream', () => {
   runTestsForEachFetchImpl(
@@ -51,7 +51,7 @@ describe('TextEncoderDecoderStream', () => {
       });
       it('piped cancellation works', async () => {
         const expectedError = new Error('test error');
-        const thrownError = await new Promise<void>(resolve =>
+        const thrownError = await new Promise<unknown>(resolve => {
           new fetchAPI.ReadableStream({
             cancel: resolve,
           })
@@ -60,8 +60,8 @@ describe('TextEncoderDecoderStream', () => {
             .then(
               () => {},
               () => {},
-            ),
-        );
+            );
+        });
         expect(thrownError).toBe(expectedError);
       });
     },

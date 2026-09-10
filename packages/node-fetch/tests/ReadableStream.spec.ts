@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { setTimeout } from 'node:timers/promises';
 import { describe, expect, it } from '@jest/globals';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
+import { PonyfillTextEncoderStream } from '../src/TextEncoderDecoderStream.js';
 
 describe('ReadableStream', () => {
   it('pull queueing', async () => {
@@ -177,5 +178,138 @@ pullCount: 3
     });
 
     await expect(rs.pipeTo(ws)).rejects.toThrow('write failed');
+  });
+
+  it('cancel(reason) resolves without treating the reason as a stream failure', async () => {
+    let cancelledWith: unknown;
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+      cancel(reason) {
+        cancelledWith = reason;
+      },
+    });
+
+    await expect(rs.cancel(new Error('stop'))).resolves.toBeUndefined();
+    expect(cancelledWith).toBeInstanceOf(Error);
+    expect((cancelledWith as Error).message).toBe('stop');
+  });
+
+  it('cancel(reason) resolves when there is no cancel hook', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+    });
+
+    await expect(rs.cancel(new Error('stop'))).resolves.toBeUndefined();
+  });
+
+  it('destroy(err) is not swallowed when it races with cancel()', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+    });
+
+    // Prevent Node from converting an unhandled 'error' into a thrown exception.
+    rs.readable.on('error', () => {});
+    const origDestroy = rs.readable.destroy.bind(rs.readable);
+    // After cancel marks intent, force destroy(err) so a real failure races the cancel path.
+    rs.readable.destroy = ((err?: Error | null) => {
+      if (err == null) {
+        return origDestroy(new Error('boom'));
+      }
+      return origDestroy(err);
+    }) as typeof rs.readable.destroy;
+
+    await expect(rs.cancel(new Error('stop'))).rejects.toMatchObject({ message: 'boom' });
+    expect(rs.readable.errored).toMatchObject({ message: 'boom' });
+  });
+
+  it('destroy(err) is preserved when cancel hook fulfills during the race', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+      cancel() {
+        return Promise.resolve();
+      },
+    });
+
+    rs.readable.on('error', () => {});
+    const origDestroy = rs.readable.destroy.bind(rs.readable);
+    rs.readable.destroy = ((err?: Error | null) => {
+      if (err == null) {
+        return origDestroy(new Error('boom'));
+      }
+      return origDestroy(err);
+    }) as typeof rs.readable.destroy;
+
+    await expect(rs.cancel(new Error('stop'))).rejects.toMatchObject({ message: 'boom' });
+    expect(rs.readable.errored).toMatchObject({ message: 'boom' });
+  });
+
+  it('cancel() rejects with the stored error when the stream is already errored', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+    });
+    rs.readable.on('error', () => {});
+    rs.readable.destroy(new Error('already failed'));
+    try {
+      await rs.cancel(new Error('stop'));
+      throw new Error('expected cancel to reject');
+    } catch (err) {
+      expect(err).toMatchObject({ message: 'already failed' });
+    }
+  });
+
+  it('cancel() rejects when underlyingSource.cancel fails', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+      cancel() {
+        return Promise.reject(new Error('cancel hook failed'));
+      },
+    });
+    rs.readable.on('error', () => {});
+    await expect(rs.cancel(new Error('stop'))).rejects.toMatchObject({
+      message: 'cancel hook failed',
+    });
+  });
+
+  it('getReader().cancel(reason) reaches underlyingSource.cancel via pipeThrough', async () => {
+    let cancelledWith: unknown;
+    const source = new PonyfillReadableStream({
+      start() {},
+      cancel(reason) {
+        cancelledWith = reason;
+      },
+    });
+    const expectedError = new Error('reader cancel');
+    const piped = source.pipeThrough(new PonyfillTextEncoderStream());
+    await piped.getReader().cancel(expectedError);
+    expect(cancelledWith).toBe(expectedError);
+  });
+
+  it('pipeThrough cancel preserves downstream cancel failures', async () => {
+    const source = new PonyfillReadableStream({
+      start() {},
+    });
+    const downstreamError = new Error('downstream cancel failed');
+    const piped = source.pipeThrough({
+      writable: new WritableStream(),
+      readable: new PonyfillReadableStream({
+        cancel() {
+          return Promise.reject(downstreamError);
+        },
+      }),
+    });
+
+    await expect(piped.cancel(new Error('reader cancel'))).rejects.toBe(downstreamError);
   });
 });
