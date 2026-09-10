@@ -60,6 +60,7 @@ function isReadableStream(obj: any): obj is ReadableStream {
 
 /** In-flight cancel(reason); keyed by underlying Readable (not stored on it). */
 const pendingCancelReasons = new WeakMap<Readable, { value: any }>();
+const noop = () => {};
 
 export class PonyfillReadableStream<T> implements ReadableStream<T> {
   readable: Readable;
@@ -172,7 +173,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     }
     pendingCancelReasons.set(this.readable, { value: reason });
     const readable = this.readable;
-    readable.on('error', () => {});
+    readable.on('error', noop);
     // Always destroy without an error: cancel intent is in the WeakMap for aware streams.
     // For wrapped streams, pipeThrough forwards cancel(reason) to the source explicitly.
     const whenDone = finished(readable).then(
@@ -316,14 +317,14 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     const pipePromise = this.pipeTo(writable);
     pipePromise.catch(err => {
       if (!this.readable.destroyed) {
-        this.readable.on('error', () => {});
+        this.readable.on('error', noop);
         this.readable.destroy(err);
       }
     });
     if (isPonyfillReadableStream(readable)) {
       const onError = (err: Error) => {
         if (!this.readable.destroyed) {
-          this.readable.on('error', () => {});
+          this.readable.on('error', noop);
           this.readable.destroy(err);
         }
       };
