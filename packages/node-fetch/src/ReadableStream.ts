@@ -336,7 +336,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       readable.readable.once('error', onError);
       readable.readable.once('finish', onEnd);
       readable.readable.once('close', onEnd);
-      // finally() re-settles like the original promise — must catch or it becomes unhandled.
+      // finally() re-settles like the original promise; must catch or it becomes unhandled.
       pipePromise
         .finally(() => {
           readable.readable.off('error', onError);
