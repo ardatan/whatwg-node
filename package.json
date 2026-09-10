@@ -33,7 +33,7 @@
   },
   "optionalDependencies": {
     "node-libcurl": "4.1.0",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.69.0"
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.70.0"
   },
   "devDependencies": {
     "@babel/core": "8.0.1",
