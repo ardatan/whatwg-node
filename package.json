@@ -15,7 +15,7 @@
     "esm:check": "bob check",
     "jest-with-gc": "node --expose-gc ./node_modules/.bin/jest",
     "lint": "eslint .",
-    "postinstall": "patch-package && husky",
+    "postinstall": "node ./scripts/apply-patches.cjs && husky",
     "prebuild": "npm run clean-dist",
     "prerelease": "npm run build",
     "prerelease-canary": "npm run build",
@@ -31,7 +31,7 @@
     "version": "changeset version"
   },
   "optionalDependencies": {
-    "node-libcurl": "4.1.0",
+    "node-libcurl": "5.1.2",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.69.0"
   },
   "devDependencies": {
@@ -102,6 +102,7 @@
     "deno@2.9.6": true,
     "esbuild@0.28.1": true,
     "esbuild@0.28.2": true,
+    "node-libcurl@5.1.2": true,
     "workerd@1.20260903.1": true,
     "protobufjs@7.6.6": true,
     "unrs-resolver@1.12.2": true
