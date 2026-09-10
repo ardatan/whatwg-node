@@ -135,7 +135,8 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
               if (res$?.then) {
                 return res$.then(
                   () => {
-                    callback(null);
+                    // Preserve real destroy(err) after the cancel hook runs.
+                    callback(fromCancel ? null : (err ?? null));
                   },
                   cancelErr => {
                     callback(cancelErr);
@@ -146,7 +147,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
               callback(cancelErr);
               return;
             }
-            callback(null);
+            callback(fromCancel ? null : (err ?? null));
             return;
           }
           // Explicit cancel must not surface as a stream failure
@@ -163,6 +164,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   cancel(reason?: any): Promise<void> {
     if (this.readable.destroyed) {
+      const errored = this.readable.errored;
+      if (errored != null) {
+        return Promise.reject(errored);
+      }
       return fakePromise();
     }
     pendingCancelReasons.set(this.readable, { value: reason });
@@ -170,7 +175,23 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     readable.on('error', () => {});
     // Always destroy without an error: cancel intent is in the WeakMap for aware streams.
     // For wrapped streams, pipeThrough forwards cancel(reason) to the source explicitly.
-    const whenDone = finished(readable).catch(() => undefined);
+    const whenDone = finished(readable).then(
+      () => undefined,
+      err => {
+        // Swallow intentional cancel artifacts: destroy(reason) on wrapped streams, and
+        // ERR_STREAM_PREMATURE_CLOSE from destroy() before the readable is drained.
+        // Still propagate cancel-hook failures and racing destroy(err) failures.
+        const code = (err as NodeJS.ErrnoException | undefined)?.code;
+        if (
+          Object.is(err, reason) ||
+          code === 'ERR_STREAM_PREMATURE_CLOSE' ||
+          (err as Error)?.message === 'Premature close'
+        ) {
+          return undefined;
+        }
+        throw err;
+      },
+    );
     readable.destroy();
     return whenDone.finally(() => {
       pendingCancelReasons.delete(readable);
@@ -201,17 +222,10 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         }
         this.locked = false;
       },
-      cancel: reason => {
-        if (iterator.return) {
-          const retResult$ = iterator.return(reason);
-          if (retResult$.then) {
-            return retResult$.then(() => {
-              this.locked = false;
-            });
-          }
-        }
+      cancel: (reason?: any) => {
         this.locked = false;
-        return fakePromise();
+        // Route through stream cancel so pipeThrough's cancel forwarding still runs.
+        return this.cancel(reason);
       },
       get closed() {
         return Promise.race([
@@ -335,7 +349,11 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       const outCancel = readable.cancel.bind(readable);
       readable.cancel = async (reason?: any) => {
         await this.cancel(reason);
-        await outCancel(reason);
+        try {
+          await outCancel(reason);
+        } catch {
+          // Transform may already be closed by the pipeline after source cancel.
+        }
       };
     }
     return readable;
