@@ -5,3 +5,5 @@ CHANGELOG.md
 .changeset
 .husky
 .bob
+test/web-platform-tests/wpt
+test/web-platform-tests/sparse-paths.txt

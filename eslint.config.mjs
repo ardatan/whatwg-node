@@ -29,6 +29,7 @@ export default [
       '*.mjs',
       '*.cjs',
       '*.js',
+      'test/web-platform-tests/**',
     ],
   },
   ...compat
