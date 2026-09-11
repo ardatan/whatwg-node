@@ -511,6 +511,19 @@ function getExpectation() {
   return JSON.parse(readFileSync(EXPECTATION_PATH, 'utf8'));
 }
 
+/** Ports that are fixed in WPT config; anything else is treated as ephemeral. */
+const STABLE_PORTS = new Set(['8000', '8443', '8444', '9000']);
+
+/**
+ * Strip ephemeral listen ports from case names so expectations stay stable across
+ * runs (WPT assigns random ports for alt/http-local/etc.).
+ */
+function normalizeCaseName(name) {
+  return String(name ?? '').replace(/:(\d+)\b/g, (match, port) =>
+    STABLE_PORTS.has(port) ? match : ':<port>',
+  );
+}
+
 function updateExpectations(results) {
   const expectations = getExpectation();
 
@@ -532,17 +545,18 @@ function updateExpectations(results) {
           ? currentFilename.success
           : result.status === 0,
       cases: result.cases.map(c => {
-        const currentCase = currentFilename?.cases?.find(cc => cc.name === c.name);
+        const name = normalizeCaseName(c.name);
+        const currentCase = currentFilename?.cases?.find(cc => normalizeCaseName(cc.name) === name);
 
         if (currentCase?.flaky) {
           return {
-            name: c.name,
+            name,
             flaky: true,
           };
         }
 
         return {
-          name: c.name,
+          name,
           success: c.status === 0,
           message: c.message ?? undefined,
         };
@@ -808,18 +822,22 @@ function successProjection(node) {
     return node;
   }
 
+  // Case arrays → map keyed by normalized name so port churn / reorder is ignored;
+  // only success/flaky bits gate CI.
   if (Array.isArray(node)) {
-    return node.map(entry => ({
-      name: entry.name,
-      success: entry.success,
-      ...(entry.flaky ? { flaky: true } : {}),
-    }));
+    /** @type {Record<string, { success?: boolean, flaky?: boolean }>} */
+    const out = {};
+    for (const entry of node) {
+      const key = normalizeCaseName(entry?.name);
+      out[key] = entry?.flaky ? { flaky: true } : { success: !!entry?.success };
+    }
+    return out;
   }
 
   /** @type {Record<string, unknown>} */
   const out = {};
   for (const [key, value] of Object.entries(node)) {
-    if (key === 'message') {
+    if (key === 'message' || key === 'name') {
       continue;
     }
     if (key === 'success' || key === 'flaky') {

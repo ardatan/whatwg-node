@@ -830,7 +830,7 @@
               "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             },
             {
-              "name": "Fetch http://web-platform.test:40053/fetch/api/resources/top.txt with no-cors mode",
+              "name": "Fetch http://web-platform.test:<port>/fetch/api/resources/top.txt with no-cors mode",
               "success": false,
               "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             }
@@ -22678,19 +22678,64 @@
         "success": true,
         "cases": [
           {
+            "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-dest",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-mode",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-site",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-user",
+            "success": true
+          },
+          {
             "name": "Fetching a resource from the same origin, but spelled with a trailing dot.",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: getaddrinfo ENOTFOUND web-platform.test.\""
+            "success": true
+          },
+          {
+            "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-dest",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-mode",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-site",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-user",
+            "success": true
           },
           {
             "name": "Fetching a resource from the same site, but spelled with a trailing dot.",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: getaddrinfo ENOTFOUND www.web-platform.test.\""
+            "success": true
+          },
+          {
+            "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-dest",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-mode",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-site",
+            "success": false
+          },
+          {
+            "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-user",
+            "success": true
           },
           {
             "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: getaddrinfo ENOTFOUND www.not-web-platform.test.\""
+            "success": true
           }
         ]
       },
