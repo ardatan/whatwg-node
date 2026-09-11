@@ -936,21 +936,22 @@ async function run(filters = []) {
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
       // Used by the weekly bump workflow: refresh baseline without failing on drift.
-      // Guard before write: zero files/cases or pre-harness crashes would corrupt the baseline.
+      // Guard before write: zero files/cases or incomplete harness runs would corrupt the baseline.
       if (results.length === 0 || totalCases === 0) {
         throw new Error('WPT_UPDATE_EXPECTATIONS run produced zero test cases');
       }
 
-      const crashed = results.filter(
-        ({ result }) => result.error != null && result.harnessStatus == null,
-      );
-      if (crashed.length > 0) {
-        const sample = crashed
+      const incomplete = results.filter(({ result }) => result.harnessStatus == null);
+      if (incomplete.length > 0) {
+        const sample = incomplete
           .slice(0, 8)
-          .map(({ test, result }) => `${test.path}: ${result.error?.message ?? 'unknown error'}`)
+          .map(
+            ({ test, result }) =>
+              `${test.path}: ${result.error?.message ?? 'harness did not report completion'}`,
+          )
           .join('\n');
         throw new Error(
-          `WPT_UPDATE_EXPECTATIONS: ${crashed.length} file(s) crashed before harness completion:\n${sample}`,
+          `WPT_UPDATE_EXPECTATIONS: ${incomplete.length} file(s) did not complete the harness:\n${sample}`,
         );
       }
     }
