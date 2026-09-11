@@ -60,8 +60,10 @@ jobs:
         run: npm run test:wpt:setup
 
       - name: Refresh expectation.json
-        # Drift exit code is expected when the submodule moves; we only care about updated files.
-        run: node test/web-platform-tests/wpt-runner.mjs run /fetch /xhr/formdata /mimesniff || true
+        env:
+          # Refresh baseline without failing on success-bit drift; real crashes still fail the step.
+          WPT_UPDATE_EXPECTATIONS: '1'
+        run: node test/web-platform-tests/wpt-runner.mjs run /fetch /xhr/formdata /mimesniff
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8

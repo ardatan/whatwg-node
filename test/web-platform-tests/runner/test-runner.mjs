@@ -203,11 +203,16 @@ async function generateAndRunBundle(url) {
         const scriptUrl = new URL(src, url);
         log(`Loading script: ${scriptUrl}`);
         const scriptResponse = await fetch(scriptUrl);
-        if (scriptResponse.ok) {
-          scripts.push({ url: scriptUrl, content: await scriptResponse.text() });
+        if (!scriptResponse.ok) {
+          throw new Error(`Failed to load script ${scriptUrl}: HTTP ${scriptResponse.status}`);
         }
-      } catch {
-        console.warn(`Failed to load script: ${src}`);
+        scripts.push({ url: scriptUrl, content: await scriptResponse.text() });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        process.stderr.write(
+          `!#!#!#${JSON.stringify({ error: { message, stack: err?.stack } })}\n`,
+        );
+        process.exit(1); // eslint-disable-line n/no-process-exit
       }
     } else if (content.trim()) {
       scripts.push({ content });

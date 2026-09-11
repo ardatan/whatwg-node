@@ -682,7 +682,8 @@ async function setupHostsFile(pythonCommand, hostsPath) {
   }
 
   const entries = '\n\n# Configured for Web Platform Tests (whatwg-node)\n' + stdout;
-  writeFileSync(hostsPath, entries);
+  const existing = existsSync(hostsPath) ? readFileSync(hostsPath, 'utf8') : '';
+  writeFileSync(hostsPath, existing + entries);
   console.log(`Updated ${hostsPath}`);
 }
 
@@ -737,7 +738,7 @@ async function setup() {
 
     const answer = await new Promise(resolve => {
       rl.question(
-        `The WPT require certain entries to be present in your ${hostsPath} file. Should these be configured automatically? (y/n): `,
+        `The WPT requires certain entries to be present in your ${hostsPath} file. Should these be configured automatically? (y/n): `,
         resolve,
       );
     })
@@ -775,6 +776,36 @@ async function setup() {
   }
 
   console.log('✅ Setup complete!');
+}
+
+function successProjection(node) {
+  if (node == null || typeof node !== 'object') {
+    return node;
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(entry => ({
+      name: entry.name,
+      success: entry.success,
+      ...(entry.flaky ? { flaky: true } : {}),
+    }));
+  }
+
+  /** @type {Record<string, unknown>} */
+  const out = {};
+  for (const [key, value] of Object.entries(node)) {
+    if (key === 'message') {
+      continue;
+    }
+    if (key === 'success' || key === 'flaky') {
+      out[key] = value;
+      continue;
+    }
+    if (key === 'cases' || (value && typeof value === 'object')) {
+      out[key] = successProjection(value);
+    }
+  }
+  return out;
 }
 
 async function run(filters = []) {
@@ -849,13 +880,19 @@ async function run(filters = []) {
     const oldExpectations = getExpectation();
     updateExpectations(results);
 
-    const jsondiff = jsondiffpatch.create({
-      propertyFilter: name => {
-        return name === 'success';
-      },
-    });
+    if (process.env.WPT_UPDATE_EXPECTATIONS) {
+      // Used by the weekly bump workflow: refresh baseline without failing on drift.
+      process.exitCode = 0;
+      return;
+    }
 
-    const diff = jsondiff.diff(oldExpectations, getExpectation());
+    // propertyFilter(name === 'success') alone is wrong: it drops container keys like
+    // `fetch`/`xhr` before nested success bits are compared (always empty diff).
+    const jsondiff = jsondiffpatch.create();
+    const diff = jsondiff.diff(
+      successProjection(oldExpectations),
+      successProjection(getExpectation()),
+    );
     process.exitCode = diff === undefined ? 0 : 1;
 
     if (diff !== undefined) {
