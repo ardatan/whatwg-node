@@ -146,14 +146,17 @@ function setupGlobalTestharnessCallbacks() {
 
 process.on('uncaughtException', reason => {
   process.stderr.write(
-    `!#!#!#${JSON.stringify({ error: { stack: reason.stack, message: reason.message } })}\n`,
+    `!#!#!#${JSON.stringify({ error: { stack: reason?.stack, message: reason?.message } })}\n`,
   );
+  process.exitCode = 1;
 });
 
 process.on('unhandledRejection', reason => {
+  const err = reason instanceof Error ? reason : new Error(String(reason));
   process.stderr.write(
-    `!#!#!#${JSON.stringify({ error: { stack: reason.stack, message: reason.message } })}\n`,
+    `!#!#!#${JSON.stringify({ error: { stack: err.stack, message: err.message } })}\n`,
   );
+  process.exitCode = 1;
 });
 
 async function generateAndRunBundle(url) {
@@ -235,4 +238,8 @@ async function generateAndRunBundle(url) {
   log('All scripts executed');
 }
 
-generateAndRunBundle(testUrl);
+generateAndRunBundle(testUrl).catch(err => {
+  const message = err instanceof Error ? err.message : String(err);
+  process.stderr.write(`!#!#!#${JSON.stringify({ error: { message, stack: err?.stack } })}\n`);
+  process.exit(1); // eslint-disable-line n/no-process-exit
+});
