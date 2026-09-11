@@ -159,47 +159,136 @@ process.on('unhandledRejection', reason => {
   process.exitCode = 1;
 });
 
-async function generateAndRunBundle(url) {
-  const response = await fetch(url);
-  const body = await response.text();
+/** True when `ch` ends an HTML tag name (so `<script>` matches but `<scripture>` does not). */
+function isHtmlTagNameBoundary(ch) {
+  return ch === undefined || !/[a-z0-9]/i.test(ch);
+}
 
-  // Avoid HTML-tag regexes (CodeQL js/bad-tag-filter); scan trusted WPT HTML instead.
-  /** @type {{ url?: URL; content: string }[]} */
+/**
+ * Find the next occurrence of an HTML tag name starting at `from`.
+ * `needle` is lowercase and includes the leading `<` / `</` (e.g. `<script`, `</template`).
+ */
+function indexOfHtmlTag(lower, needle, from) {
+  let cursor = from;
+  while (cursor < lower.length) {
+    const idx = lower.indexOf(needle, cursor);
+    if (idx === -1) {
+      return -1;
+    }
+    if (isHtmlTagNameBoundary(lower[idx + needle.length])) {
+      return idx;
+    }
+    cursor = idx + needle.length;
+  }
+  return -1;
+}
+
+/**
+ * Collect executable classic scripts in document order.
+ * Skips HTML comments and inert `<template>` trees; validates open/close tag-name boundaries
+ * (avoids treating `</scripture>` as a script closer). Index/scan only — no HTML-tag regexes.
+ */
+function collectClassicScripts(body) {
+  /** @type {{ openTag: string; content: string }[]} */
   const scripts = [];
   const lower = body.toLowerCase();
   let cursor = 0;
+  let templateDepth = 0;
 
   while (cursor < body.length) {
-    const openIdx = lower.indexOf('<script', cursor);
-    if (openIdx === -1) {
+    const commentIdx = lower.indexOf('<!--', cursor);
+    const templateOpenIdx = indexOfHtmlTag(lower, '<template', cursor);
+    const templateCloseIdx = indexOfHtmlTag(lower, '</template', cursor);
+    const scriptOpenIdx = indexOfHtmlTag(lower, '<script', cursor);
+
+    const next = [
+      commentIdx === -1 ? Infinity : commentIdx,
+      templateOpenIdx === -1 ? Infinity : templateOpenIdx,
+      templateCloseIdx === -1 ? Infinity : templateCloseIdx,
+      scriptOpenIdx === -1 ? Infinity : scriptOpenIdx,
+    ];
+    const min = Math.min(...next);
+    if (min === Infinity) {
       break;
     }
 
-    const afterName = openIdx + '<script'.length;
-    const boundary = body[afterName];
-    if (boundary && /[a-z0-9]/i.test(boundary)) {
-      cursor = afterName;
+    if (min === commentIdx) {
+      const end = lower.indexOf('-->', commentIdx + 4);
+      cursor = end === -1 ? body.length : end + 3;
       continue;
     }
 
-    const openEnd = body.indexOf('>', afterName);
+    if (min === templateOpenIdx) {
+      const openEnd = body.indexOf('>', templateOpenIdx);
+      if (openEnd === -1) {
+        break;
+      }
+      templateDepth++;
+      cursor = openEnd + 1;
+      continue;
+    }
+
+    if (min === templateCloseIdx) {
+      const closeEnd = body.indexOf('>', templateCloseIdx);
+      if (closeEnd === -1) {
+        break;
+      }
+      if (templateDepth > 0) {
+        templateDepth--;
+      }
+      cursor = closeEnd + 1;
+      continue;
+    }
+
+    // `<script ...>`
+    const openEnd = body.indexOf('>', scriptOpenIdx);
     if (openEnd === -1) {
       break;
     }
 
-    const openTag = body.slice(openIdx, openEnd + 1);
-    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(openTag);
+    let closeIdx = indexOfHtmlTag(lower, '</script', openEnd + 1);
+    // Closing tags inside comments should not terminate the script element.
+    while (closeIdx !== -1) {
+      const priorComment = lower.lastIndexOf('<!--', closeIdx);
+      const priorCommentEnd = lower.lastIndexOf('-->', closeIdx);
+      const insideComment = priorComment !== -1 && priorComment > priorCommentEnd;
+      if (!insideComment) {
+        break;
+      }
+      closeIdx = indexOfHtmlTag(lower, '</script', closeIdx + '</script'.length);
+    }
 
-    const closeIdx = lower.indexOf('</script', openEnd + 1);
     if (closeIdx === -1) {
       break;
     }
+
     const closeEnd = body.indexOf('>', closeIdx);
     if (closeEnd === -1) {
       break;
     }
 
-    const content = body.slice(openEnd + 1, closeIdx);
+    if (templateDepth === 0) {
+      scripts.push({
+        openTag: body.slice(scriptOpenIdx, openEnd + 1),
+        content: body.slice(openEnd + 1, closeIdx),
+      });
+    }
+
+    cursor = closeEnd + 1;
+  }
+
+  return scripts;
+}
+
+async function generateAndRunBundle(url) {
+  const response = await fetch(url);
+  const body = await response.text();
+
+  /** @type {{ url?: URL; content: string }[]} */
+  const scripts = [];
+
+  for (const { openTag, content } of collectClassicScripts(body)) {
+    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(openTag);
     if (srcMatch) {
       const src = srcMatch[1] ?? srcMatch[2] ?? srcMatch[3];
       try {
@@ -220,8 +309,6 @@ async function generateAndRunBundle(url) {
     } else if (content.trim()) {
       scripts.push({ content });
     }
-
-    cursor = closeEnd + 1;
   }
 
   log(`Loaded ${scripts.length} scripts`);

@@ -670,7 +670,9 @@ function generateWPTReport(results, startTime, endTime) {
           if (success === false) {
             expected = 'FAIL';
           } else if (Array.isArray(cases)) {
-            const theCase = cases.find(aCase => aCase.name === c.name);
+            const theCase = cases.find(
+              aCase => normalizeCaseName(aCase.name) === normalizeCaseName(c.name),
+            );
             expected = theCase && !theCase.success ? 'FAIL' : 'PASS';
           }
         }
@@ -924,14 +926,20 @@ async function run(filters = []) {
     const report = generateWPTReport(results, startTime, endTime);
     writeFileSync(process.env.WPT_REPORT, JSON.stringify(report));
   } else {
+    const totalCases = results.reduce((n, { result }) => n + (result.cases?.length ?? 0), 0);
+
+    if (process.env.WPT_UPDATE_EXPECTATIONS) {
+      // Used by the weekly bump workflow: refresh baseline without failing on drift.
+      // Guard before write: zero files OR zero cases would wipe useful expectations.
+      if (results.length === 0 || totalCases === 0) {
+        throw new Error('WPT_UPDATE_EXPECTATIONS run produced zero test cases');
+      }
+    }
+
     const oldExpectations = getExpectation();
     updateExpectations(results);
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
-      // Used by the weekly bump workflow: refresh baseline without failing on drift.
-      if (results.length === 0) {
-        throw new Error('WPT_UPDATE_EXPECTATIONS run produced zero test files');
-      }
       process.exitCode = 0;
       return;
     }
