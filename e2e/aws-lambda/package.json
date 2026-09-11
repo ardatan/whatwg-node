@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@e2e/shared-scripts": "0.0.0",
-    "@whatwg-node/fetch": "0.10.13"
+    "@whatwg-node/fetch": "0.11.0"
   },
   "devDependencies": {
     "@pulumi/aws": "7.45.0",
