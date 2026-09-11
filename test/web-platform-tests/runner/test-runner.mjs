@@ -159,9 +159,21 @@ process.on('unhandledRejection', reason => {
   process.exitCode = 1;
 });
 
-/** True when `ch` ends an HTML tag name (so `<script>` matches but `<scripture>` does not). */
+/**
+ * True when `ch` ends an HTML tag name per the HTML tokenizer delimiter set
+ * (so `<script>` / `</script>` match, but `<scripture>` / `</script!>` do not).
+ */
 function isHtmlTagNameBoundary(ch) {
-  return ch === undefined || !/[a-z0-9]/i.test(ch);
+  return (
+    ch === undefined ||
+    ch === '>' ||
+    ch === '/' ||
+    ch === '\t' ||
+    ch === '\n' ||
+    ch === '\f' ||
+    ch === '\r' ||
+    ch === ' '
+  );
 }
 
 /**
