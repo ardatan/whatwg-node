@@ -44,7 +44,7 @@ docker run --rm \
   node:26-bookworm \
   bash -c 'apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3 python3-venv >/dev/null &&
     (python3 test/web-platform-tests/wpt/wpt make-hosts-file >> /etc/hosts) &&
-    npm run build && npm run test:wpt'
+    npm ci && npm run build && npm run test:wpt'
 ```
 
 ## Syncing WPT

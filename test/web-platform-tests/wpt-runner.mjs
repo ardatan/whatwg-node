@@ -341,7 +341,7 @@ async function startWPTServer() {
   }, 30_000);
 
   try {
-    while (!serverResponding && !proc.killed && proc.exitCode == null) {
+    while (!serverResponding && !proc.killed && proc.exitCode == null && !readySettled) {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       try {
@@ -474,7 +474,11 @@ function runSingleTest(url, _options, _expectation, timeout = 10000) {
       const endIndex = stderrOutput.indexOf('\n', delimiterIndex);
       if (endIndex !== -1) {
         const message = stderrOutput.slice(delimiterIndex + 6, endIndex);
-        ({ error } = JSON.parse(message));
+        try {
+          ({ error } = JSON.parse(message));
+        } catch {
+          error = { message: `Failed to parse runner error frame: ${message}` };
+        }
         stderrOutput = stderrOutput.slice(endIndex + 1);
       } else {
         break;
@@ -528,7 +532,7 @@ function updateExpectations(results) {
           ? currentFilename.success
           : result.status === 0,
       cases: result.cases.map(c => {
-        const currentCase = current[filename]?.cases.find(cc => cc.name === c.name);
+        const currentCase = currentFilename?.cases?.find(cc => cc.name === c.name);
 
         if (currentCase?.flaky) {
           return {
@@ -830,6 +834,10 @@ function successProjection(node) {
 }
 
 async function run(filters = []) {
+  if (filters.length === 0) {
+    throw new Error('At least one path filter is required, e.g. `run /fetch`');
+  }
+
   await ensureWPTCheckout();
 
   const startTime = Date.now();
@@ -859,7 +867,7 @@ async function run(filters = []) {
         console.log(`\t${c.index + 1}. "${c.name}": ${c.status === 0 ? '✅ PASS' : '❌ FAIL'}`);
 
         if (c.status !== 0 && (c.message || c.stack)) {
-          log(`${c.message}:\n${c.stack.split('\n').slice(1).join('\n')}`);
+          log(`${c.message ?? ''}:\n${(c.stack ?? '').split('\n').slice(1).join('\n')}`);
         }
       }
     }
@@ -903,6 +911,9 @@ async function run(filters = []) {
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
       // Used by the weekly bump workflow: refresh baseline without failing on drift.
+      if (results.length === 0) {
+        throw new Error('WPT_UPDATE_EXPECTATIONS run produced zero test files');
+      }
       process.exitCode = 0;
       return;
     }
