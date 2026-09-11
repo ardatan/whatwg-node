@@ -19,6 +19,8 @@ const SPARSE_PATHS_FILE = join(import.meta.dirname, 'sparse-paths.txt');
 
 const log = debuglog('WHATWG_NODE_WPT');
 const WPT_SERVER_URL = 'http://web-platform.test:8000';
+const WPT_HTTPS_SERVER_URL = 'https://web-platform.test:8443';
+const WPT_H2_SERVER_URL = 'https://web-platform.test:9000';
 const PYTHON_CANDIDATES = ['python3', 'python'];
 
 let pythonInfoPromise;
@@ -556,6 +558,25 @@ function getManifest() {
   return JSON.parse(readFileSync(manifestPath, 'utf8'));
 }
 
+function resolveTestUrl(testPath) {
+  const normalized = testPath.startsWith('/') ? testPath : `/${testPath}`;
+  const pathname = normalized.split('?')[0];
+  const filename = pathname.slice(pathname.lastIndexOf('/') + 1);
+
+  let base = WPT_SERVER_URL;
+  if (filename.includes('.h2.') || normalized.includes('wpt_flags=h2')) {
+    base = WPT_H2_SERVER_URL;
+  } else if (
+    filename.includes('.https.') ||
+    filename.includes('.wss.') ||
+    normalized.includes('wpt_flags=https')
+  ) {
+    base = WPT_HTTPS_SERVER_URL;
+  }
+
+  return new URL(normalized, base);
+}
+
 function discoverTestsToRun(filter, expectation) {
   const manifest = getManifest();
   const tests = [];
@@ -567,7 +588,7 @@ function discoverTestsToRun(filter, expectation) {
           if (!key.endsWith('.html') && !key.endsWith('.js')) continue;
 
           const testPath = path || `${prefix}/${key}`;
-          const url = new URL(testPath, WPT_SERVER_URL);
+          const url = resolveTestUrl(testPath);
 
           if (
             url.pathname.includes('.worker.') ||

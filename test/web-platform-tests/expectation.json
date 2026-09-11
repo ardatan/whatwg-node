@@ -752,12 +752,12 @@
             {
               "name": "Empty string integrity for opaque response",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: Opaque response's status is 0 expected 0 but got 200"
             },
             {
               "name": "SHA-* integrity for opaque response",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
             }
           ]
         },
@@ -827,10 +827,10 @@
             {
               "name": "Fetch https://web-platform.test:8443/fetch/api/resources/top.txt with no-cors mode",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             },
             {
-              "name": "Fetch http://web-platform.test:54089/fetch/api/resources/top.txt with no-cors mode",
+              "name": "Fetch http://web-platform.test:40053/fetch/api/resources/top.txt with no-cors mode",
               "success": false,
               "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             }
@@ -852,7 +852,7 @@
             {
               "name": "Fetch https://web-platform.test:8443/fetch/api/resources/top.txt with same-origin mode",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
             },
             {
               "name": "Fetch http://www1.web-platform.test:8000/fetch/api/resources/top.txt with same-origin mode",
@@ -2038,44 +2038,8 @@
           ]
         },
         "status.h2.any.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "statusText over H2 for status 200 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "statusText over H2 for status 210 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "statusText over H2 for status 400 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "statusText over H2 for status 404 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "statusText over H2 for status 410 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "statusText over H2 for status 500 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "statusText over H2 for status 502 should be the empty string",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "stream-response.any.html": {
           "success": true,
@@ -2511,17 +2475,17 @@
             {
               "name": "Same domain different protocol different port [no-cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             },
             {
               "name": "Same domain different protocol different port [server forbid CORS]",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
             },
             {
               "name": "Same domain different protocol different port [cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: CORS response's type is cors expected \"cors\" but got \"default\""
             },
             {
               "name": "Cross domain basic usage [no-cors mode]",
@@ -2556,17 +2520,17 @@
             {
               "name": "Cross domain different protocol [no-cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             },
             {
               "name": "Cross domain different protocol [server forbid CORS]",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
             },
             {
               "name": "Cross domain different protocol [cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: CORS response's type is cors expected \"cors\" but got \"default\""
             }
           ]
         },
@@ -2764,17 +2728,17 @@
             {
               "name": "[keepalive] Same domain different protocol different port [no-cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             },
             {
               "name": "[keepalive] Same domain different protocol different port [cors mode, server forbid CORS]",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
             },
             {
               "name": "[keepalive] Same domain different protocol different port [cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: CORS response's type is cors expected \"cors\" but got \"default\""
             },
             {
               "name": "[keepalive] Cross domain basic usage [no-cors mode]",
@@ -2809,17 +2773,17 @@
             {
               "name": "[keepalive] Cross domain different protocol [no-cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: Opaque filter: status is 0 expected 0 but got 200"
             },
             {
               "name": "[keepalive] Cross domain different protocol [cors mode, server forbid CORS]",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
             },
             {
               "name": "[keepalive] Cross domain different protocol [cors mode]",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: CORS response's type is cors expected \"cors\" but got \"default\""
             },
             {
               "name": "[keepalive] Same domain different port GET request in unload [no-cors mode, server forbid CORS]; setting up",
@@ -4551,7 +4515,7 @@
             {
               "name": "getAuthorizationHeaderValue - cross origin redirection",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "assert_equals: expected \"none\" but got \"Basic dXNlcjpwYXNz\""
             }
           ]
         },
@@ -4713,12 +4677,360 @@
           ]
         },
         "header-values-normalize.any.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "XMLHttpRequest with value %00",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %01",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %02",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %03",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %04",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %05",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %06",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %07",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %08",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %09",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %0A",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %0D",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %0E",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %0F",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %10",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %11",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %12",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %13",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %14",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %15",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %16",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %17",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %18",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %19",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %1A",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %1B",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %1C",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %1D",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %1E",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %1F",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value %20",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "fetch() with value %00",
+              "success": true
+            },
+            {
+              "name": "fetch() with value %01",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %02",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %03",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %04",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %05",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %06",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %07",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %08",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %09",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
+            },
+            {
+              "name": "fetch() with value %0A",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %0D",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %0E",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %0F",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %10",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %11",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %12",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %13",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %14",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %15",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %16",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %17",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %18",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %19",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %1A",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %1B",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %1C",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %1D",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %1E",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %1F",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val1\"]\""
+            },
+            {
+              "name": "fetch() with value %20",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
+            }
+          ]
         },
         "header-values.any.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "XMLHttpRequest with value x%00x needs to throw",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value x%0Ax needs to throw",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with value x%0Dx needs to throw",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "XMLHttpRequest with all valid values",
+              "success": false,
+              "message": "XMLHttpRequest is not defined"
+            },
+            {
+              "name": "fetch() with value x%00x needs to throw",
+              "success": true
+            },
+            {
+              "name": "fetch() with value x%0Ax needs to throw",
+              "success": true
+            },
+            {
+              "name": "fetch() with value x%0Dx needs to throw",
+              "success": true
+            },
+            {
+              "name": "fetch() with all valid values",
+              "success": false,
+              "message": "promise_test: Unhandled rejection with value: object \"TypeError [ERR_INVALID_CHAR]: Invalid character in header content [\"val0\"]\""
+            }
+          ]
         },
         "headers-basic.any.html": {
           "success": true,
@@ -5607,14 +5919,8 @@
           "cases": []
         },
         "referrer-no-referrer-service-worker.https.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "referrer-no-referrer-service-worker",
-              "success": false,
-              "message": "Cannot read properties of undefined (reading 'getRegistration')"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "referrer-no-referrer-worker.html": {
           "success": false,
@@ -5625,24 +5931,12 @@
           "cases": []
         },
         "referrer-origin-service-worker.https.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "referrer-origin-service-worker",
-              "success": false,
-              "message": "Cannot read properties of undefined (reading 'getRegistration')"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "referrer-origin-when-cross-origin-service-worker.https.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "referrer-origin-when-cross-origin-service-worker",
-              "success": false,
-              "message": "Cannot read properties of undefined (reading 'getRegistration')"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "referrer-origin-when-cross-origin-worker.html": {
           "success": false,
@@ -5661,14 +5955,8 @@
           "cases": []
         },
         "referrer-unsafe-url-service-worker.https.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "referrer-unsafe-url-service-worker",
-              "success": false,
-              "message": "Cannot read properties of undefined (reading 'getRegistration')"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "referrer-unsafe-url-worker.html": {
           "success": false,
@@ -7576,307 +7864,35 @@
           ]
         },
         "redirect-upload.h2.any.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Fetch upload streaming should be accepted on 303",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-            },
-            {
-              "name": "Fetch upload streaming should fail on 301",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"AggregateError\" (\"AggregateError\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
-            },
-            {
-              "name": "Fetch upload streaming should fail on 302",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"AggregateError\" (\"AggregateError\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
-            },
-            {
-              "name": "Fetch upload streaming should fail on 307",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"AggregateError\" (\"AggregateError\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
-            },
-            {
-              "name": "Fetch upload streaming should fail on 308",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"AggregateError\" (\"AggregateError\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
-            }
-          ]
+          "success": false,
+          "cases": []
         }
       },
       "request": {
         "destination": {
           "fetch-destination-frame.https.html": {
-            "success": true,
-            "cases": [
-              {
-                "name": "Initialize global state",
-                "success": false,
-                "message": "Cannot read properties of undefined (reading 'getRegistration')"
-              },
-              {
-                "name": "frame fetches with a \"frame\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-              }
-            ]
+            "success": false,
+            "cases": []
           },
           "fetch-destination-iframe.https.html": {
-            "success": true,
-            "cases": [
-              {
-                "name": "Initialize global state",
-                "success": false,
-                "message": "Cannot read properties of undefined (reading 'getRegistration')"
-              },
-              {
-                "name": "iframe fetches with a \"iframe\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-              }
-            ]
+            "success": false,
+            "cases": []
           },
           "fetch-destination-no-load-event.https.html": {
-            "success": true,
-            "cases": [
-              {
-                "name": "Initialize global state",
-                "success": false,
-                "message": "Cannot read properties of undefined (reading 'getRegistration')"
-              },
-              {
-                "name": "Background image fetches with an \"image\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "SVG use element fetches with an \"image\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "Font loading API fetches with an \"font\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "CSS font fetches with an \"font\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "sendBeacon() fetches with an empty string Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "Cache.add() fetches with an empty string Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "importScripts() fetches with a \"script\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "@import fetches with a \"style\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              }
-            ]
+            "success": false,
+            "cases": []
           },
           "fetch-destination-prefetch.https.html": {
-            "success": true,
-            "cases": [
-              {
-                "name": "Initialize global state",
-                "success": false,
-                "message": "Cannot read properties of undefined (reading 'getRegistration')"
-              },
-              {
-                "name": "HTMLLinkElement with rel=prefetch fetches with an empty string Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              }
-            ]
+            "success": false,
+            "cases": []
           },
           "fetch-destination-worker.https.html": {
-            "success": true,
-            "cases": [
-              {
-                "name": "Initialize global state",
-                "success": false,
-                "message": "Cannot read properties of undefined (reading 'getRegistration')"
-              },
-              {
-                "name": "DedicatedWorker fetches with a \"worker\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "SharedWorker fetches with a \"sharedworker\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              }
-            ]
+            "success": false,
+            "cases": []
           },
           "fetch-destination.https.html": {
-            "success": true,
-            "cases": [
-              {
-                "name": "Initialize global state",
-                "success": false,
-                "message": "Cannot read properties of undefined (reading 'getRegistration')"
-              },
-              {
-                "name": "HTMLImageElement fetches with an \"image\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLImageElement with srcset attribute fetches with an \"image\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLImageElement with a HTMLPictureElement parent attribute fetches with an \"image\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "SVGImageElement fetches with an \"image\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "fetch() fetches with an empty string Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "XMLHttpRequest() fetches with an empty string Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "EventSource() fetches with an empty string Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLAudioElement fetches with an \"audio\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLVideoElement fetches with a \"video\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLScriptElement fetches with a \"script\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "AudioWorklet module fetches with a \"audioworklet\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "HTMLLinkElement with rel=stylesheet fetches with a \"style\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "Import declaration with `type: \"css\"` fetches with a \"style\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "Import declaration with `type: \"json\"` fetches with a \"json\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "Import declaration with `type: \"text\"` fetches with a \"text\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=fetch fetches with an empty string Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=style fetches with a \"style\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=json fetches with a \"json\" Request.destination",
-                "success": false,
-                "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'contentWindow')\""
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=script fetches with a \"script\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=font fetches with a \"font\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=image fetches with a \"image\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=audio fetches with a \"audio\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=video fetches with a \"video\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=track fetches with a \"track\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=document fetches with a \"document\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=worker fetches with a \"worker\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=sharedworker fetches with a \"sharedworker\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=xslt fetches with a \"xslt\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              },
-              {
-                "name": "HTMLLinkElement with rel=preload and as=manifest fetches with a \"manifest\" Request.destination",
-                "success": false,
-                "message": "assert_unreached: Fetch errored. Reached unreachable code"
-              }
-            ]
+            "success": false,
+            "cases": []
           }
         },
         "forbidden-method.any.html": {
@@ -9028,7 +9044,7 @@
             {
               "name": "Consume String request's body as bytes",
               "success": false,
-              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,40,96,13,46,0,0,0,0,32,97,13,46,0,0,0\" length 65599"
+              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
             },
             {
               "name": "Consume String request's body as JSON",
@@ -9188,7 +9204,7 @@
             {
               "name": "Consume blob response's body as bytes",
               "success": false,
-              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,40,96,13,46,0,0,0,0,32,97,13,46,0,0,0\" length 65599"
+              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
             },
             {
               "name": "Consume blob response's body as blob (empty blob as input)",
@@ -10150,24 +10166,8 @@
           ]
         },
         "request-reset-attributes.https.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Request.isReloadNavigation is reset with non-empty RequestInit",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'getRegistration')\""
-            },
-            {
-              "name": "Request.isHistoryNavigation is reset with non-empty RequestInit",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'getRegistration')\""
-            },
-            {
-              "name": "Request.mode is reset with non-empty RequestInit when it's \"navigate\"",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'getRegistration')\""
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "request-structure.any.html": {
           "success": true,
@@ -10664,7 +10664,7 @@
             {
               "name": "Reading with offset from Response stream",
               "success": false,
-              "message": "assert_array_equals: Buffer should be validated lengths differ, expected array object \"104,105,115,32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
+              "message": "assert_array_equals: Buffer should be validated lengths differ, expected array object \"104,105,115,32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111\" length 25, got object \"47,0,0,0,0,4,0,0,0,0,0,0,0,182,225,2,206,1,0,0\" length 65599"
             }
           ]
         },
@@ -11883,7 +11883,7 @@
           {
             "name": "Dictionary loaded via <link rel=\"compression-dictionary\"> and compressed with another dictionary with \"asdf\" match-dest should be not be registered.",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
           }
         ]
       },
@@ -11893,19 +11893,13 @@
           {
             "name": "Decompression using gzip-encoded dictionary works as expected",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
           }
         ]
       },
       "dictionary-decompression.tentative.https.h2.html": {
         "success": false,
-        "cases": [
-          {
-            "name": "Decompression using Brotli with the dictionary works as expected (HTTP/2)",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
-          }
-        ]
+        "cases": []
       },
       "dictionary-decompression.tentative.https.html": {
         "success": false,
@@ -11971,18 +11965,7 @@
       },
       "dictionary-fetch-with-link-element-crossorigin.tentative.https.html": {
         "success": false,
-        "cases": [
-          {
-            "name": "Initialize global state",
-            "success": false,
-            "message": "Cannot read properties of undefined (reading 'getRegistration')"
-          },
-          {
-            "name": "HTMLLinkElement rel=compression-dictionary",
-            "success": false,
-            "message": "assert_unreached: Fetch errored. Reached unreachable code"
-          }
-        ]
+        "cases": []
       },
       "dictionary-fetch-with-link-element-events.tentative.https.html": {
         "success": false,
@@ -12056,33 +12039,11 @@
       },
       "dictionary-fetch-with-link-integrity.tentative.https.html": {
         "success": false,
-        "cases": [
-          {
-            "name": "Initialize global state",
-            "success": false,
-            "message": "Cannot read properties of undefined (reading 'getRegistration')"
-          },
-          {
-            "name": "HTMLLinkElement rel=compression-dictionary, integrity attribute is ignored.",
-            "success": false,
-            "message": "assert_unreached: Fetch errored. Reached unreachable code"
-          }
-        ]
+        "cases": []
       },
       "dictionary-fetch-with-link-referrer-and-referrerpolicy.tentative.https.html": {
         "success": false,
-        "cases": [
-          {
-            "name": "Initialize global state",
-            "success": false,
-            "message": "Cannot read properties of undefined (reading 'getRegistration')"
-          },
-          {
-            "name": "HTMLLinkElement rel=compression-dictionary (no referrerpolicy attribute)",
-            "success": false,
-            "message": "assert_unreached: Fetch errored. Reached unreachable code"
-          }
-        ]
+        "cases": []
       },
       "dictionary-fetch-with-type-attribute.tentative.https.html": {
         "success": false,
@@ -12125,19 +12086,8 @@
         ]
       },
       "fetch-destination.tentative.https.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "Initialize global state",
-            "success": false,
-            "message": "Cannot read properties of undefined (reading 'getRegistration')"
-          },
-          {
-            "name": "HTMLLinkElement with rel=compression-dictionary fetches with a \"compression-dictionary\" string Request.destination",
-            "success": false,
-            "message": "assert_unreached: Fetch errored. Reached unreachable code"
-          }
-        ]
+        "success": false,
+        "cases": []
       }
     },
     "connection-pool": {
@@ -12260,14 +12210,8 @@
           ]
         },
         "br-navigation.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Naigation to br encoded page",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            }
-          ]
+          "success": false,
+          "cases": []
         }
       },
       "gzip": {
@@ -12342,14 +12286,8 @@
           ]
         },
         "gzip-navigation.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Naigation to gzip encoded page",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            }
-          ]
+          "success": false,
+          "cases": []
         }
       },
       "zstd": {
@@ -12434,14 +12372,8 @@
           ]
         },
         "zstd-navigation.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Naigation to zstd encoded page",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            }
-          ]
+          "success": false,
+          "cases": []
         }
       }
     },
@@ -12761,17 +12693,17 @@
         ]
       },
       "script-js-mislabeled-as-html-nosniff.sub.html": {
+        "success": false,
+        "cases": []
+      },
+      "script-js-mislabeled-as-html.sub.html": {
         "success": true,
         "cases": [
           {
-            "name": "script-js-mislabeled-as-html-nosniff",
+            "name": "script-js-mislabeled-as-html",
             "success": true
           }
         ]
-      },
-      "script-js-mislabeled-as-html.sub.html": {
-        "success": false,
-        "cases": []
       },
       "script-resource-with-json-parser-breaker.tentative.sub.html": {
         "success": false,
@@ -12887,12 +12819,12 @@
           {
             "name": "Cross-scheme (HTTP to HTTPS) no-cors fetch to a same-site URL with a 'Cross-Origin-Resource-Policy: same-site' response header.",
             "success": false,
-            "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+            "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
           },
           {
             "name": "Cross-origin no-cors fetch to a same-site URL with a 'Cross-Origin-Resource-Policy: same-origin' response header.",
             "success": false,
-            "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+            "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
           },
           {
             "name": "Valid cross-origin no-cors fetch with a 'Cross-Origin-Resource-Policy: same-site' response header.",
@@ -12930,23 +12862,21 @@
           },
           {
             "name": "Cross-origin cors fetch with a 'Cross-Origin-Resource-Policy: same-origin' response header.",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "success": true
           },
           {
             "name": "Cross-origin cors fetch with a 'Cross-Origin-Resource-Policy: same-site' response header.",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "success": true
           },
           {
             "name": "Cross-origin no-cors fetch with a 'Cross-Origin-Resource-Policy: same-origin' response header.",
             "success": false,
-            "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+            "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
           },
           {
             "name": "Cross-origin no-cors fetch with a 'Cross-Origin-Resource-Policy: same-site' response header.",
             "success": false,
-            "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+            "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
           },
           {
             "name": "Cross-origin no-cors fetch with a 'Cross-Origin-Resource-Policy: same-origin' response header after a redirection.",
@@ -12955,13 +12885,12 @@
           },
           {
             "name": "Cross-origin no-cors fetch with a 'Cross-Origin-Resource-Policy: same-origin' response header after a cross-origin redirection.",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "success": true
           },
           {
             "name": "Cross-origin no-cors fetch with a 'Cross-Origin-Resource-Policy: same-origin' redirect response header.",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
           }
         ]
       },
@@ -12985,7 +12914,7 @@
           {
             "name": "Cross-Origin-Resource-Policy: same-site blocks retrieving HTTPS from HTTP",
             "success": false,
-            "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: certificate has expired\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+            "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
           }
         ]
       },
@@ -13101,19 +13030,8 @@
     },
     "fetch-later": {
       "activate-after.https.window.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "fetchLater() sends out based on activateAfter.",
-            "success": false,
-            "message": "document is not defined"
-          },
-          {
-            "name": "fetchLater() sends out based on activateAfter, even if document is in BFCache.",
-            "success": false,
-            "message": "window.open is not a function"
-          }
-        ]
+        "success": false,
+        "cases": []
       },
       "basic.https.window.html": {
         "success": true,
@@ -13413,79 +13331,20 @@
       },
       "permissions-policy": {
         "deferred-fetch-allowed-by-permissions-policy-attribute-redirect.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Permissions policy allow=\"deferred-fetch\" allows fetchLater() from a redirected same-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Permissions policy allow=\"deferred-fetch\" disallows fetchLater() from a redirected cross-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "deferred-fetch-allowed-by-permissions-policy-attribute.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Permissions policy \"deferred-fetch\" can be enabled in the same-origin iframe using allow=\"deferred-fetch\" attribute.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Permissions policy \"deferred-fetch\" can be enabled in the cross-origin iframe using allow=\"deferred-fetch\" attribute.",
-              "success": false,
-              "message": "document is not defined"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "deferred-fetch-allowed-by-permissions-policy.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Permissions policy header: \"deferred-fetch=*\" allows fetchLater() in the same-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Permissions policy header: \"deferred-fetch=*\" allows fetchLater() in the cross-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Permissions policy header: \"deferred-fetch=*\" allow=\"deferred-fetch\" allows fetchLater() in the cross-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Permissions policy header: \"deferred-fetch=*\" allows fetchLater() in the top-level document.",
-              "success": false,
-              "message": "fetchLater is not defined"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "deferred-fetch-default-permissions-policy.https.window.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Default \"deferred-fetch\" permissions policy [\"self\"] allows fetchLater() in the same-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Default \"deferred-fetch-minimal\" permissions policy [\"*\"] allows fetchLater() in the cross-origin iframe.",
-              "success": false,
-              "message": "document is not defined"
-            },
-            {
-              "name": "Default \"deferred-fetch\" permissions policy [\"self\"] allows fetchLater() in the top-level document.",
-              "success": false,
-              "message": "fetchLater is not defined"
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "deferred-fetch-supported-by-permissions-policy.window.html": {
           "success": true,
@@ -14007,34 +13866,8 @@
         "cases": []
       },
       "send-on-deactivate.https.window.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "fetchLater() sends on page entering BFCache if BackgroundSync is off.",
-            "success": false,
-            "message": "window.open is not a function"
-          },
-          {
-            "name": "Call fetchLater() when BFCached with activateAfter=0 sends immediately.",
-            "success": false,
-            "message": "window.open is not a function"
-          },
-          {
-            "name": "fetchLater() sends on navigating away a page w/o BFCache.",
-            "success": false,
-            "message": "window.open is not a function"
-          },
-          {
-            "name": "fetchLater() does not send aborted request on navigating away a page w/o BFCache.",
-            "success": false,
-            "message": "window.open is not a function"
-          },
-          {
-            "name": "fetchLater() with activateAfter=1m sends on page entering BFCache if BackgroundSync is off.",
-            "success": false,
-            "message": "window.open is not a function"
-          }
-        ]
+        "success": false,
+        "cases": []
       },
       "send-on-discard": {
         "not-send-after-abort.https.window.html": {
@@ -15905,14 +15738,50 @@
         "success": true,
         "cases": [
           {
-            "name": "Same-site fetch with preflight",
+            "name": "Same-site fetch with preflight: sec-fetch-dest",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "Same-site fetch with preflight: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
+          },
+          {
+            "name": "Same-site fetch with preflight: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"same-site\" but got \"\""
+          },
+          {
+            "name": "Same-site fetch with preflight: sec-fetch-user",
+            "success": true
+          },
+          {
+            "name": "Same-site fetch with preflight",
+            "success": true
+          },
+          {
+            "name": "Cross-site fetch with preflight: sec-fetch-dest",
+            "success": false,
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "Cross-site fetch with preflight: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
+          },
+          {
+            "name": "Cross-site fetch with preflight: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"cross-site\" but got \"\""
+          },
+          {
+            "name": "Cross-site fetch with preflight: sec-fetch-user",
+            "success": true
           },
           {
             "name": "Cross-site fetch with preflight",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "success": true
           }
         ]
       },
@@ -15920,34 +15789,142 @@
         "success": true,
         "cases": [
           {
-            "name": "Same-origin fetch",
+            "name": "Same-origin fetch: sec-fetch-dest",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "Same-origin fetch: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
+          },
+          {
+            "name": "Same-origin fetch: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"same-origin\" but got \"\""
+          },
+          {
+            "name": "Same-origin fetch: sec-fetch-user",
+            "success": true
+          },
+          {
+            "name": "Same-origin fetch",
+            "success": true
+          },
+          {
+            "name": "Same-site fetch: sec-fetch-dest",
+            "success": false,
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "Same-site fetch: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
+          },
+          {
+            "name": "Same-site fetch: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"same-site\" but got \"\""
+          },
+          {
+            "name": "Same-site fetch: sec-fetch-user",
+            "success": true
           },
           {
             "name": "Same-site fetch",
+            "success": true
+          },
+          {
+            "name": "Cross-site fetch: sec-fetch-dest",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "Cross-site fetch: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
+          },
+          {
+            "name": "Cross-site fetch: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"cross-site\" but got \"\""
+          },
+          {
+            "name": "Cross-site fetch: sec-fetch-user",
+            "success": true
           },
           {
             "name": "Cross-site fetch",
+            "success": true
+          },
+          {
+            "name": "Same-origin mode: sec-fetch-dest",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "Same-origin mode: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"same-origin\" but got \"\""
+          },
+          {
+            "name": "Same-origin mode: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"same-origin\" but got \"\""
+          },
+          {
+            "name": "Same-origin mode: sec-fetch-user",
+            "success": true
           },
           {
             "name": "Same-origin mode",
+            "success": true
+          },
+          {
+            "name": "CORS mode: sec-fetch-dest",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "CORS mode: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
+          },
+          {
+            "name": "CORS mode: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"same-origin\" but got \"\""
+          },
+          {
+            "name": "CORS mode: sec-fetch-user",
+            "success": true
           },
           {
             "name": "CORS mode",
+            "success": true
+          },
+          {
+            "name": "no-CORS mode: sec-fetch-dest",
             "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "message": "assert_equals: expected \"empty\" but got \"\""
+          },
+          {
+            "name": "no-CORS mode: sec-fetch-mode",
+            "success": false,
+            "message": "assert_equals: expected \"no-cors\" but got \"\""
+          },
+          {
+            "name": "no-CORS mode: sec-fetch-site",
+            "success": false,
+            "message": "assert_equals: expected \"same-origin\" but got \"\""
+          },
+          {
+            "name": "no-CORS mode: sec-fetch-user",
+            "success": true
           },
           {
             "name": "no-CORS mode",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+            "success": true
           }
         ]
       },
@@ -19614,112 +19591,112 @@
             {
               "name": "sec-fetch-site - Same origin, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Cross-site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Origin -> Cross-Site -> Same-Origin redirect, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Origin -> Same-Site -> Same-Origin redirect, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Cross-Site -> Same Origin, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Cross-Site -> Same-Site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Cross-Site -> Cross-Site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Origin -> Same Origin, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Origin -> Same-Site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Origin -> Cross-Site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Site -> Same Origin, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Site -> Same-Site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - Same-Site -> Cross-Site, init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-mode - no init",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-mode - init: mode=cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-mode - init: mode=no-cors",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-mode - init: mode=same-origin",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-dest - no init",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-user - no init",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-storage-access - Cross-site, init: mode=no-cors, credentials=include",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-storage-access - Same site, init: mode=no-cors, credentials=include",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             }
           ]
         },
@@ -19804,17 +19781,17 @@
             {
               "name": "sec-fetch-site - HTTPS downgrade (header not sent), no init",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - HTTPS upgrade, no init",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             },
             {
               "name": "sec-fetch-site - HTTPS downgrade-upgrade, no init",
               "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"Error: certificate has expired\""
+              "message": "promise_test: Unhandled rejection with value: object \"AggregateError\""
             }
           ]
         },
@@ -23374,28 +23351,363 @@
           ]
         },
         "known-mime-type.sub.any.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "ORB should block opaque font/ttf: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque font/ttf: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque font/ttf: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque font/ttf: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque font/ttf: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque text/plain: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (non-empty): fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque application/json (non-empty): <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (non-empty): <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (non-empty): <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (non-empty): <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (empty): fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque application/json (empty): <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (empty): <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (empty): <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json (empty): <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json which contains non ascii characters: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque application/json which contains non ascii characters: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json which contains non ascii characters: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json which contains non ascii characters: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque application/json which contains non ascii characters: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque image/png: fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque image/png: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript: fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript (utf16 encoded with BOM): fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript (utf16 encoded with BOM): <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript (utf16 encoded without BOM but charset is provided in content-type): fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript (utf16 encoded without BOM but charset is provided in content-type): <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript (iso-8559-1 encoded): fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque text/javascript (iso-8559-1 encoded): <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block text/javascript with valid asm.js: fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block text/javascript with valid asm.js: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block text/javascript with invalid asm.js: fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block text/javascript with invalid asm.js: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            }
+          ]
         },
         "nosniff.sub.any.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "ORB should block opaque text/plain with nosniff: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque text/plain with nosniff: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain with nosniff: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain with nosniff: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque text/plain with nosniff: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with nosniff: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with nosniff: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with nosniff: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with nosniff: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with nosniff: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with empty Content-Type and nosniff: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque response with empty Content-Type and nosniff: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with empty Content-Type and nosniff: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with empty Content-Type and nosniff: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with empty Content-Type and nosniff: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque image with empty Content-Type and nosniff: fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque image with empty Content-Type and nosniff: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            }
+          ]
         },
         "script-js-unlabeled-gzipped.sub.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "script-js-unlabeled-gzipped",
+              "success": true
+            }
+          ]
         },
         "script-unlabeled.sub.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "script-unlabeled",
+              "success": true
+            }
+          ]
         },
         "script-utf16-without-bom-hint-charset.sub.html": {
           "success": false,
           "cases": []
         },
         "status.sub.any.html": {
-          "success": false,
-          "cases": []
+          "success": true,
+          "cases": [
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with status 206: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with status 206: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with status 206: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with status 206: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque-response-blocklisted MIME type with status 206: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with non-ok status: fetch(..., {mode: \"no-cors\"})",
+              "success": false,
+              "message": "assert_unreached: Should have rejected: fetch(..., {mode: \"no-cors\"}) Reached unreachable code"
+            },
+            {
+              "name": "ORB should block opaque response with non-ok status: <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with non-ok status: <audio src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with non-ok status: <video src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB should block opaque response with non-ok status: <script src=...>",
+              "success": false,
+              "message": "document is not defined"
+            }
+          ]
         },
         "status.sub.html": {
           "success": true,
@@ -23421,6 +23733,24 @@
             {
               "name": "ORB shouldn't block opaque failed missing MIME type (application/json): fetch(..., {mode: \"no-cors\"})",
               "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque failed missing MIME type (image/png): fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque failed missing MIME type (image/png): <img src=...>",
+              "success": false,
+              "message": "document is not defined"
+            },
+            {
+              "name": "ORB shouldn't block opaque failed missing MIME type (text/javascript): fetch(..., {mode: \"no-cors\"})",
+              "success": true
+            },
+            {
+              "name": "ORB shouldn't block opaque failed missing MIME type (text/javascript): <script src=...>",
+              "success": false,
+              "message": "document is not defined"
             }
           ]
         }
@@ -23834,7 +24164,8 @@
         "cases": [
           {
             "name": "Range request after cache revalidation with 200 OK response should succeed",
-            "success": true
+            "success": false,
+            "message": "assert_equals: Initial fetch should succeed with 200 expected 200 but got 500"
           }
         ]
       },
@@ -23925,64 +24256,16 @@
         ]
       },
       "sw-416.https.window.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "416 response not allowed following no-cors ranged request",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          }
-        ]
+        "success": false,
+        "cases": []
       },
       "sw-intercept-range.https.window.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "Same-origin range request must be intercepted by the service worker",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          },
-          {
-            "name": "Cross-origin CORS range request must be intercepted by the service worker",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          }
-        ]
+        "success": false,
+        "cases": []
       },
       "sw.https.window.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "Defer range header filter tests to service worker",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          },
-          {
-            "name": "Defer range header passthrough tests to service worker",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          },
-          {
-            "name": "Ranged response not allowed following no-cors ranged request",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          },
-          {
-            "name": "Non-opaque ranged response executed",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          },
-          {
-            "name": "Accept-Encoding should not appear in a service worker",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          },
-          {
-            "name": "Opaque range preload successes and failures should be indistinguishable",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-          }
-        ]
+        "success": false,
+        "cases": []
       }
     },
     "redirect-navigate": {
@@ -24506,14 +24789,8 @@
     },
     "stale-while-revalidate": {
       "fetch-sw.https.html": {
-        "success": true,
-        "cases": [
-          {
-            "name": "Second fetch returns same response",
-            "success": false,
-            "message": "promise_test: Unhandled rejection with value: object \"TypeError: Cannot read properties of undefined (reading 'register')\""
-          }
-        ]
+        "success": false,
+        "cases": []
       },
       "fetch.any.html": {
         "success": true,
@@ -24932,8 +25209,14 @@
         ]
       },
       "constructor-submitter-coordinate.html": {
-        "success": false,
-        "cases": []
+        "success": true,
+        "cases": [
+          {
+            "name": "The constructed FormData object should contain correct entries for Image Button submitter's dispatched coordinate",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"TypeError: window.addEventListener is not a function\""
+          }
+        ]
       },
       "constructor-submitter.html": {
         "success": false,
@@ -25256,24 +25539,8 @@
       }
     },
     "formdata.html": {
-      "success": true,
-      "cases": [
-        {
-          "name": "empty formdata",
-          "success": false,
-          "message": "XMLHttpRequest is not defined"
-        },
-        {
-          "name": "formdata with string",
-          "success": false,
-          "message": "XMLHttpRequest is not defined"
-        },
-        {
-          "name": "formdata with named string",
-          "success": false,
-          "message": "XMLHttpRequest is not defined"
-        }
-      ]
+      "success": false,
+      "cases": []
     }
   }
 }

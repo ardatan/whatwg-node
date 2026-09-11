@@ -50,8 +50,9 @@ docker run --rm \
 ## Syncing WPT
 
 **Cron (recommended):** [`.github/workflows/update-wpt.yml`](../../.github/workflows/update-wpt.yml)
-runs weekly (Monday 06:00 UTC) and on `workflow_dispatch`. It bumps the sparse submodule, refreshes
-`expectation.json`, and opens a PR (`chore/update-wpt`). Merge stays manual so you can review drift.
+runs weekly (Monday 06:00 UTC) and on `workflow_dispatch`. A read-only job syncs WPT and refreshes
+`expectation.json`; a separate write-only job opens the PR (`chore/update-wpt`). Merge stays manual
+so you can review drift.
 
 **Local / on demand:**
 
