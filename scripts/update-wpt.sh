@@ -18,7 +18,7 @@ git -C "$WPT_DIR" sparse-checkout init --cone
 git -C "$WPT_DIR" sparse-checkout set "${PATHS[@]}"
 
 echo "Refreshing MANIFEST.json..."
-if command -v python3 >/dev/null; then
+if command -v python3 > /dev/null; then
   (cd "$WPT_DIR" && python3 wpt manifest)
 else
   echo "python3 not found; skip manifest (CI/setup will generate it)"

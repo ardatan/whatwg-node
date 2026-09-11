@@ -161,8 +161,9 @@ async function generateAndRunBundle(url) {
   const body = await response.text();
 
   // Scripts may have src tags without being enclosed in quotes.
-  const scriptSrcRegex = /<script[^>]*src="?([^"\s>]*)"?[^>]*><\/script>/g;
-  const inlineScriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/g;
+  // Case-insensitive; allow whitespace before the closing `>` (e.g. `</script >`).
+  const scriptSrcRegex = /<script\b[^>]*\bsrc=["']?([^"'\s>]+)["']?[^>]*>\s*<\/script\s*>/gi;
+  const inlineScriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi;
 
   /** @type {{ url?: URL; content: string }[]} */
   const scripts = [];

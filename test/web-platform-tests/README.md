@@ -5,7 +5,7 @@ Runs a subset of [web-platform-tests](https://github.com/web-platform-tests/wpt)
 [undici](https://github.com/nodejs/undici) (Deno MIT license).
 
 The WPT checkout is a **shallow + sparse** submodule: only the dirs listed in
-[`sparse-paths.txt`](./sparse-paths.txt) are materialized (`fetch`, `xhr`, `mimesniff`, plus
+[`sparse-paths.txt`](./sparse-paths.txt) are materialized (`docs`, `fetch`, `xhr`, `mimesniff`, plus
 serve/manifest helpers).
 
 ## Prerequisites
