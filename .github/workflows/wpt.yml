@@ -1,0 +1,61 @@
+name: wpt
+
+on:
+  push:
+    branches:
+      - 'master'
+  pull_request:
+    paths:
+      - 'packages/node-fetch/**'
+      - 'packages/fetch/**'
+      - 'test/web-platform-tests/**'
+      - '.github/workflows/wpt.yml'
+      - 'package.json'
+      - 'package-lock.json'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
+  NODE_NO_WARNINGS: 1
+  CI: true
+
+jobs:
+  wpt:
+    name: wpt / @whatwg-node/node-fetch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+
+      - name: Init WPT submodule (shallow)
+        run: git submodule update --init --depth 1 -- test/web-platform-tests/wpt
+
+      - name: Install Required Libraries
+        run:
+          sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev python3
+          python3-venv
+
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          install-command: bash scripts/ci-npm-install.sh
+          node-version-file: .node-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure hosts file for WPT
+        run: |
+          cd test/web-platform-tests/wpt
+          python3 wpt make-hosts-file | sudo tee -a /etc/hosts
+
+      - name: Setup WPT
+        run: npm run test:wpt:setup
+
+      - name: Run WPT
+        run: node test/web-platform-tests/wpt-runner.mjs run /fetch /xhr/formdata /mimesniff

@@ -81,3 +81,9 @@ deno.lock
 .helix/config.toml
 .helix/languages.toml
 .mise.toml
+
+# WPT local artifacts (expectation.json is committed)
+test/web-platform-tests/wpt/_venv3/
+test/web-platform-tests/wpt/MANIFEST.json
+test/web-platform-tests/wpt/.manifest_cache/
+test/web-platform-tests/hosts.local

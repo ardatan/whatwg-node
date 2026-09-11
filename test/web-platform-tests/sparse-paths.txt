@@ -1,0 +1,9 @@
+# Directories kept in the WPT sparse checkout (cone mode).
+# Root files (wpt, wpt.py, …) are included automatically.
+fetch
+xhr
+mimesniff
+resources
+common
+infrastructure
+tools

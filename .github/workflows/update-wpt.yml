@@ -1,0 +1,89 @@
+name: update-wpt
+
+# Bumps the sparse WPT submodule and refreshes expectation.json, then opens a PR.
+# Merge is still manual so expectation drift can be reviewed.
+
+on:
+  schedule:
+    # Weekly Monday 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
+  NODE_NO_WARNINGS: 1
+  CI: true
+
+jobs:
+  update-wpt:
+    name: bump WPT + expectations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: false
+          # Needed so the bot can push a branch / open a PR
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install system deps
+        run:
+          sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev python3
+          python3-venv
+
+      - name: Setup env
+        uses: the-guild-org/shared-config/setup@v1
+        with:
+          install-command: bash scripts/ci-npm-install.sh
+          node-version-file: .node-version
+
+      - name: Sync WPT submodule (sparse)
+        run: npm run test:wpt:sync
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure hosts file for WPT
+        run: |
+          cd test/web-platform-tests/wpt
+          python3 wpt make-hosts-file | sudo tee -a /etc/hosts
+
+      - name: Setup WPT
+        run: npm run test:wpt:setup
+
+      - name: Refresh expectation.json
+        # Drift exit code is expected when the submodule moves; we only care about updated files.
+        run: node test/web-platform-tests/wpt-runner.mjs run /fetch /xhr/formdata /mimesniff || true
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@271a8d0340265f705b14b6d32b9829c1cb33d45e # v7.0.8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'test: bump WPT submodule and expectations'
+          branch: chore/update-wpt
+          delete-branch: true
+          title: 'test: bump WPT submodule and expectations'
+          body: |
+            Automated weekly WPT bump.
+
+            - Updates `test/web-platform-tests/wpt` (sparse submodule)
+            - Regenerates `test/web-platform-tests/expectation.json`
+
+            Review success-bit drift carefully before merge. Local equivalent:
+
+            ```bash
+            npm run test:wpt:sync
+            npm run test:wpt
+            ```
+          add-paths: |
+            test/web-platform-tests/wpt
+            test/web-platform-tests/expectation.json
+            .gitmodules
