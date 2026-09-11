@@ -9014,7 +9014,7 @@
             {
               "name": "Consume empty FormData request body as text",
               "success": false,
-              "message": "assert_equals: Resolved value should be empty expected 0 but got 32"
+              "message": "assert_equals: Resolved value should be empty expected 0 but got 34"
             },
             {
               "name": "Consume empty ArrayBuffer request body as text",
@@ -9044,7 +9044,7 @@
             {
               "name": "Consume String request's body as bytes",
               "success": false,
-              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"60,0,0,0,0,132,0,0,0,197,218,29,185,240,6,193,60,0,0,0\" length 65599"
+              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
             },
             {
               "name": "Consume String request's body as JSON",
@@ -9204,7 +9204,7 @@
             {
               "name": "Consume blob response's body as bytes",
               "success": false,
-              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"60,0,0,0,0,132,0,0,0,197,218,29,185,240,6,193,60,0,0,0\" length 65599"
+              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
             },
             {
               "name": "Consume blob response's body as blob (empty blob as input)",
@@ -10664,7 +10664,7 @@
             {
               "name": "Reading with offset from Response stream",
               "success": false,
-              "message": "assert_array_equals: Buffer should be validated lengths differ, expected array object \"104,105,115,32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111\" length 25, got object \"39,0,0,0,0,3,0,0,0,0,0,0,0,88,208,171,39,0,0,0\" length 65599"
+              "message": "assert_array_equals: Buffer should be validated lengths differ, expected array object \"104,105,115,32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
             }
           ]
         },
@@ -12664,8 +12664,14 @@
         ]
       },
       "script-html-correctly-labeled.tentative.sub.html": {
-        "success": false,
-        "cases": []
+        "success": true,
+        "cases": [
+          {
+            "name": "CORB-blocked script has no syntax errors",
+            "success": false,
+            "message": "document is not defined"
+          }
+        ]
       },
       "script-html-js-polyglot.sub.html": {
         "success": true,
@@ -12706,8 +12712,144 @@
         ]
       },
       "script-resource-with-json-parser-breaker.tentative.sub.html": {
-        "success": false,
-        "cases": []
+        "success": true,
+        "cases": [
+          {
+            "name": "CORB-blocks 'text/html' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/html' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/html' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/xml' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/xml' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/xml' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/json' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/json' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/json' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/plain' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/plain' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'text/plain' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/javascript' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/javascript' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/javascript' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'image/png' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'image/png' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'image/png' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'image/svg+xml' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'image/svg+xml' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'image/svg+xml' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/pdf' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/pdf' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/pdf' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/zip' that starts with the following JSON parser breaker: )]}'",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/zip' that starts with the following JSON parser breaker: {}&&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          },
+          {
+            "name": "CORB-blocks 'application/zip' that starts with the following JSON parser breaker: {} &&",
+            "success": false,
+            "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
+          }
+        ]
       },
       "script-resource-with-nonsniffable-types.tentative.sub.html": {
         "success": false,

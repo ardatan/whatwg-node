@@ -864,6 +864,12 @@ async function run(filters = []) {
   const expectation = getExpectation();
   const tests = discoverTestsToRun(filters, expectation);
 
+  if (tests.length === 0) {
+    throw new Error(
+      `No WPT test files matched filters: ${filters.join(' ')}. Check the WPT checkout/manifest.`,
+    );
+  }
+
   console.log(`Going to run ${tests.length} test files`);
 
   const results = await runWithTestUtil(async () => {
@@ -930,9 +936,22 @@ async function run(filters = []) {
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
       // Used by the weekly bump workflow: refresh baseline without failing on drift.
-      // Guard before write: zero files OR zero cases would wipe useful expectations.
+      // Guard before write: zero files/cases or pre-harness crashes would corrupt the baseline.
       if (results.length === 0 || totalCases === 0) {
         throw new Error('WPT_UPDATE_EXPECTATIONS run produced zero test cases');
+      }
+
+      const crashed = results.filter(
+        ({ result }) => result.error != null && result.harnessStatus == null,
+      );
+      if (crashed.length > 0) {
+        const sample = crashed
+          .slice(0, 8)
+          .map(({ test, result }) => `${test.path}: ${result.error?.message ?? 'unknown error'}`)
+          .join('\n');
+        throw new Error(
+          `WPT_UPDATE_EXPECTATIONS: ${crashed.length} file(s) crashed before harness completion:\n${sample}`,
+        );
       }
     }
 
