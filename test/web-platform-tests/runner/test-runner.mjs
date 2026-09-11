@@ -160,34 +160,60 @@ async function generateAndRunBundle(url) {
   const response = await fetch(url);
   const body = await response.text();
 
-  // Scripts may have src tags without being enclosed in quotes.
-  // Case-insensitive; allow whitespace before the closing `>` (e.g. `</script >`).
-  const scriptSrcRegex = /<script\b[^>]*\bsrc=["']?([^"'\s>]+)["']?[^>]*>\s*<\/script\s*>/gi;
-  const inlineScriptRegex = /<script\b[^>]*>([\s\S]*?)<\/script\s*>/gi;
-
+  // Avoid HTML-tag regexes (CodeQL js/bad-tag-filter); scan trusted WPT HTML instead.
   /** @type {{ url?: URL; content: string }[]} */
   const scripts = [];
+  const lower = body.toLowerCase();
+  let cursor = 0;
 
-  let match;
-  while ((match = scriptSrcRegex.exec(body)) !== null) {
-    const src = match[1];
-
-    try {
-      const scriptUrl = new URL(src, url);
-      log(`Loading script: ${scriptUrl}`);
-      const scriptResponse = await fetch(scriptUrl);
-      if (scriptResponse.ok) {
-        const scriptContent = await scriptResponse.text();
-        scripts.push({ url: scriptUrl, content: scriptContent });
-      }
-    } catch {
-      console.warn(`Failed to load script: ${src}`);
+  while (cursor < body.length) {
+    const openIdx = lower.indexOf('<script', cursor);
+    if (openIdx === -1) {
+      break;
     }
-  }
 
-  while ((match = inlineScriptRegex.exec(body)) !== null) {
-    const scriptContent = match[1];
-    scripts.push({ content: scriptContent });
+    const afterName = openIdx + '<script'.length;
+    const boundary = body[afterName];
+    if (boundary && /[a-z0-9]/i.test(boundary)) {
+      cursor = afterName;
+      continue;
+    }
+
+    const openEnd = body.indexOf('>', afterName);
+    if (openEnd === -1) {
+      break;
+    }
+
+    const openTag = body.slice(openIdx, openEnd + 1);
+    const srcMatch = /\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(openTag);
+
+    const closeIdx = lower.indexOf('</script', openEnd + 1);
+    if (closeIdx === -1) {
+      break;
+    }
+    const closeEnd = body.indexOf('>', closeIdx);
+    if (closeEnd === -1) {
+      break;
+    }
+
+    const content = body.slice(openEnd + 1, closeIdx);
+    if (srcMatch) {
+      const src = srcMatch[1] ?? srcMatch[2] ?? srcMatch[3];
+      try {
+        const scriptUrl = new URL(src, url);
+        log(`Loading script: ${scriptUrl}`);
+        const scriptResponse = await fetch(scriptUrl);
+        if (scriptResponse.ok) {
+          scripts.push({ url: scriptUrl, content: await scriptResponse.text() });
+        }
+      } catch {
+        console.warn(`Failed to load script: ${src}`);
+      }
+    } else if (content.trim()) {
+      scripts.push({ content });
+    }
+
+    cursor = closeEnd + 1;
   }
 
   log(`Loaded ${scripts.length} scripts`);
