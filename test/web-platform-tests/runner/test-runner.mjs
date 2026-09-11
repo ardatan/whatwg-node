@@ -240,24 +240,14 @@ function collectClassicScripts(body) {
       continue;
     }
 
-    // `<script ...>`
+    // `<script ...>` — raw text content: first real `</script>` closes the element
+    // even if the content contains `<!--` (HTML script data state).
     const openEnd = body.indexOf('>', scriptOpenIdx);
     if (openEnd === -1) {
       break;
     }
 
-    let closeIdx = indexOfHtmlTag(lower, '</script', openEnd + 1);
-    // Closing tags inside comments should not terminate the script element.
-    while (closeIdx !== -1) {
-      const priorComment = lower.lastIndexOf('<!--', closeIdx);
-      const priorCommentEnd = lower.lastIndexOf('-->', closeIdx);
-      const insideComment = priorComment !== -1 && priorComment > priorCommentEnd;
-      if (!insideComment) {
-        break;
-      }
-      closeIdx = indexOfHtmlTag(lower, '</script', closeIdx + '</script'.length);
-    }
-
+    const closeIdx = indexOfHtmlTag(lower, '</script', openEnd + 1);
     if (closeIdx === -1) {
       break;
     }
