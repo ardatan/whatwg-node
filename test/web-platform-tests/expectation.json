@@ -8013,7 +8013,7 @@
             {
               "name": "Request on bad port 22 should throw TypeError.",
               "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: connect ECONNREFUSED 127.0.0.1:22\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Parse Error: Expected HTTP/, RTSP/ or ICE/\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
             },
             {
               "name": "Request on bad port 23 should throw TypeError.",
@@ -9014,7 +9014,7 @@
             {
               "name": "Consume empty FormData request body as text",
               "success": false,
-              "message": "assert_equals: Resolved value should be empty expected 0 but got 34"
+              "message": "assert_equals: Resolved value should be empty expected 0 but got 32"
             },
             {
               "name": "Consume empty ArrayBuffer request body as text",
@@ -9044,7 +9044,7 @@
             {
               "name": "Consume String request's body as bytes",
               "success": false,
-              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
+              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"60,0,0,0,0,132,0,0,0,197,218,29,185,240,6,193,60,0,0,0\" length 65599"
             },
             {
               "name": "Consume String request's body as JSON",
@@ -9204,7 +9204,7 @@
             {
               "name": "Consume blob response's body as bytes",
               "success": false,
-              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\" length 65599"
+              "message": "assert_array_equals: Retrieve and verify request's body lengths differ, expected array object \"32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111,100,121,34\" length 25, got object \"60,0,0,0,0,132,0,0,0,197,218,29,185,240,6,193,60,0,0,0\" length 65599"
             },
             {
               "name": "Consume blob response's body as blob (empty blob as input)",
@@ -10664,7 +10664,7 @@
             {
               "name": "Reading with offset from Response stream",
               "success": false,
-              "message": "assert_array_equals: Buffer should be validated lengths differ, expected array object \"104,105,115,32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111\" length 25, got object \"47,0,0,0,0,4,0,0,0,0,0,0,0,182,225,2,206,1,0,0\" length 65599"
+              "message": "assert_array_equals: Buffer should be validated lengths differ, expected array object \"104,105,115,32,105,115,32,114,101,115,112,111,110,115,101,39,115,32,98,111\" length 25, got object \"39,0,0,0,0,3,0,0,0,0,0,0,0,88,208,171,39,0,0,0\" length 65599"
             }
           ]
         },
@@ -11284,7 +11284,7 @@
               "message": "assert_equals: Response's statusText is \"\" expected \"\" but got \"OK\""
             },
             {
-              "name": "Check response returned by static json() with init {\"status\":400}",
+              "name": "Check response returned by static json() with init {\"status\":<port>}",
               "success": false,
               "message": "assert_equals: Response's statusText is \"\" expected \"\" but got \"Bad Request\""
             },
@@ -13067,12 +13067,12 @@
             "message": "fetchLater is not defined"
           },
           {
-            "name": "fetchLater() with http://[::1] URL does not throw.",
+            "name": "fetchLater() with http://[::<port>] URL does not throw.",
             "success": false,
             "message": "fetchLater is not defined"
           },
           {
-            "name": "fetchLater() with https://[::1] URL does not throw.",
+            "name": "fetchLater() with https://[::<port>] URL does not throw.",
             "success": false,
             "message": "fetchLater is not defined"
           },
@@ -22550,64 +22550,16 @@
       },
       "redirect": {
         "multiple-redirect-https-downgrade-upgrade.sub.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Https downgrade-upgrade top level navigation",
-              "success": false,
-              "message": "window.open is not a function"
-            },
-            {
-              "name": "Https downgrade-upgrade embed",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            },
-            {
-              "name": "Https downgrade-upgrade object",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "redirect-http-upgrade.sub.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Http upgrade top level navigation",
-              "success": false,
-              "message": "window.open is not a function"
-            },
-            {
-              "name": "Http upgrade embed",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            },
-            {
-              "name": "Http upgrade object",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            }
-          ]
+          "success": false,
+          "cases": []
         },
         "redirect-https-downgrade.sub.html": {
-          "success": true,
-          "cases": [
-            {
-              "name": "Https downgrade top level navigation",
-              "success": false,
-              "message": "window.open is not a function"
-            },
-            {
-              "name": "Https downgrade embed",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            },
-            {
-              "name": "Https downgrade object",
-              "success": false,
-              "message": "promise_test: Unhandled rejection with value: object \"ReferenceError: document is not defined\""
-            }
-          ]
+          "success": false,
+          "cases": []
         }
       },
       "report.https.sub.html": {
@@ -22679,15 +22631,18 @@
         "cases": [
           {
             "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-dest",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"empty\" but got \"\""
           },
           {
             "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-mode",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
           },
           {
             "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-site",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"cross-site\" but got \"\""
           },
           {
             "name": "Fetching a resource from the same origin, but spelled with a trailing dot.: sec-fetch-user",
@@ -22699,15 +22654,18 @@
           },
           {
             "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-dest",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"empty\" but got \"\""
           },
           {
             "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-mode",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
           },
           {
             "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-site",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"cross-site\" but got \"\""
           },
           {
             "name": "Fetching a resource from the same site, but spelled with a trailing dot.: sec-fetch-user",
@@ -22719,15 +22677,18 @@
           },
           {
             "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-dest",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"empty\" but got \"\""
           },
           {
             "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-mode",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"cors\" but got \"\""
           },
           {
             "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-site",
-            "success": false
+            "success": false,
+            "message": "assert_equals: expected \"cross-site\" but got \"\""
           },
           {
             "name": "Fetching a resource from a cross-site host, spelled with a trailing dot.: sec-fetch-user",
