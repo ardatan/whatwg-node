@@ -15,8 +15,8 @@
     "@e2e/shared-server": "0.0.157",
     "encoding": "0.1.13",
     "next": "16.3.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@pulumi/pulumi": "^3.261.0",
