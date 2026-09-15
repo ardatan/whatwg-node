@@ -1,5 +1,59 @@
 # @whatwg-node/fetch
 
+## 0.11.0
+
+### Minor Changes
+
+- [#3561](https://github.com/ardatan/whatwg-node/pull/3561)
+  [`52a5bf6`](https://github.com/ardatan/whatwg-node/commit/52a5bf6922e2daef4705aca524b3d165a6424372)
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop support for Node.js 18
+  and 20. The minimum supported Node.js version is now **22.15**.
+
+  ### Why
+
+  Node.js 18 and 20 are end-of-life and no longer receive security updates.
+  Keeping them in our support matrix forced version-specific workarounds and
+  slowed adoption of newer Node TLS APIs.
+
+  The floor is set to **22.15** (not just 22.0) so we can rely on
+  `tls.getCACertificates()`, which landed in Node.js 22.15 / 23.10. That matches
+  the oldest currently supported LTS line (22 Maintenance) while dropping only
+  EOL majors.
+
+  ### SemVer
+
+  - **0.x packages**: minor bump (breaking changes are allowed in minors while
+    major is 0).
+  - **1.x packages** (`@whatwg-node/promise-helpers`,
+    `@whatwg-node/server-plugin-cookies`): **major** bump, since dropping
+    supported Node versions is a breaking engines change for SemVer `>=1.0.0`
+    consumers.
+
+  ### What changed
+
+  - **`engines.node`**: all published packages now declare `>=22.15.0`
+    (including `@whatwg-node/promise-helpers`, which was still on `>=16`).
+  - **`@whatwg-node/server`**: removed the Node 18 `setHeaders` workaround
+    (`isNode1x`); `ServerResponse#setHeaders` is used whenever it exists.
+  - **`@whatwg-node/node-fetch`**: libcurl always loads CAs from
+    `tls.getCACertificates('default')`. The old `NODE_EXTRA_CA_CERTS` /
+    `tls.rootCertificates` fallback path for engines below 22.15 is gone.
+  - **CI / e2e**: unit matrix is `[22, 24, 26]`; AWS Lambda runtime and Azure
+    Function target moved from Node 20 to Node 22.
+
+  If you are still on Node 18 or 20, upgrade to Node.js **22.15+** (or 24 / 26)
+  before installing this release.
+
+### Patch Changes
+
+- Updated dependencies
+  [[`52a5bf6`](https://github.com/ardatan/whatwg-node/commit/52a5bf6922e2daef4705aca524b3d165a6424372),
+  [`b4c83ab`](https://github.com/ardatan/whatwg-node/commit/b4c83abec3571d99672253596e7f78cf26e0e6e7),
+  [`b4c83ab`](https://github.com/ardatan/whatwg-node/commit/b4c83abec3571d99672253596e7f78cf26e0e6e7),
+  [`3f44041`](https://github.com/ardatan/whatwg-node/commit/3f440417d4495fce0847ed4f7b2cb5ce58bbae27),
+  [`3e55abc`](https://github.com/ardatan/whatwg-node/commit/3e55abcd6c5c8a0df4a58e0fb76622928de711b0)]:
+  - @whatwg-node/node-fetch@0.9.0
+
 ## 0.10.13
 
 ### Patch Changes
@@ -17,7 +71,8 @@
 ### Patch Changes
 
 - [`c9b2c87`](https://github.com/ardatan/whatwg-node/commit/c9b2c87bff6f36b71cd1bd97f81f1050efa8dd98)
-  Thanks [@ardatan](https://github.com/ardatan)! - Do not override existing \`user-agent\`
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not override existing
+  \`user-agent\`
 
 - Updated dependencies
   [[`c9b2c87`](https://github.com/ardatan/whatwg-node/commit/c9b2c87bff6f36b71cd1bd97f81f1050efa8dd98)]:
@@ -37,8 +92,9 @@
 
 - [#2656](https://github.com/ardatan/whatwg-node/pull/2656)
   [`d2ef55c`](https://github.com/ardatan/whatwg-node/commit/d2ef55c7735c7127e4ed404dd8bbebe8fd3ebd00)
-  Thanks [@renovate](https://github.com/apps/renovate)! - Fix TypeScript issues and bump the version
-  to get performance improvements for all dependent packages
+  Thanks [@renovate](https://github.com/apps/renovate)! - Fix TypeScript issues
+  and bump the version to get performance improvements for all dependent
+  packages
 - Updated dependencies
   [[`d2ef55c`](https://github.com/ardatan/whatwg-node/commit/d2ef55c7735c7127e4ed404dd8bbebe8fd3ebd00)]:
   - @whatwg-node/node-fetch@0.7.25
@@ -49,8 +105,8 @@
 
 - [#2553](https://github.com/ardatan/whatwg-node/pull/2553)
   [`752b0eb`](https://github.com/ardatan/whatwg-node/commit/752b0ebdc88654ef4ae1e13eb860980f437b4110)
-  Thanks [@renovate](https://github.com/apps/renovate)! - Fix the conflict of urlpattern-ponyfill
-  and \`@types/node\`
+  Thanks [@renovate](https://github.com/apps/renovate)! - Fix the conflict of
+  urlpattern-ponyfill and \`@types/node\`
 
 - Updated dependencies
   [[`b69157b`](https://github.com/ardatan/whatwg-node/commit/b69157bd97aba8fb4c761f8d16afc549c35acfa0)]:
@@ -63,12 +119,13 @@
 - [#2424](https://github.com/ardatan/whatwg-node/pull/2424)
   [`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)
   Thanks [@ardatan](https://github.com/ardatan)! - Performance optimizations
-  - Avoid creating `AbortController` and `AbortSignal` if not needed with `new Request` because it
-    is expensive
-  - Avoid creating a map for `Headers` and try to re-use the init object for `Headers` for
-    performance with a single-line `writeHead`.
+  - Avoid creating `AbortController` and `AbortSignal` if not needed with
+    `new Request` because it is expensive
+  - Avoid creating a map for `Headers` and try to re-use the init object for
+    `Headers` for performance with a single-line `writeHead`.
   - Avoid creating `Buffer` for `string` bodies for performance
-  - Use `setHeaders` which accepts `Headers` since Node 18 if needed to forward `Headers` to Node
+  - Use `setHeaders` which accepts `Headers` since Node 18 if needed to forward
+    `Headers` to Node
 
 - Updated dependencies
   [[`28c4ad9`](https://github.com/ardatan/whatwg-node/commit/28c4ad98aad3ec95a1f0893c54f5484d8564f675)]:
@@ -80,20 +137,22 @@
 
 - [#2383](https://github.com/ardatan/whatwg-node/pull/2383)
   [`9527e8f`](https://github.com/ardatan/whatwg-node/commit/9527e8fe2dc73e362b38060f4a6decbb87a4f597)
-  Thanks [@ardatan](https://github.com/ardatan)! - Some implementations like `compression` npm
-  package do not implement `response.write(data, callback)` signature, but whatwg-node/server waits
-  for it to finish the response stream. Then it causes the response stream hangs when the
-  compression package takes the stream over when the response data is larger than its threshold.
+  Thanks [@ardatan](https://github.com/ardatan)! - Some implementations like
+  `compression` npm package do not implement `response.write(data, callback)`
+  signature, but whatwg-node/server waits for it to finish the response stream.
+  Then it causes the response stream hangs when the compression package takes
+  the stream over when the response data is larger than its threshold.
 
   It is actually a bug in `compression` package;
-  [expressjs/compression#46](https://github.com/expressjs/compression/issues/46) But since it is a
-  common mistake, we prefer to workaround this on our end.
+  [expressjs/compression#46](https://github.com/expressjs/compression/issues/46)
+  But since it is a common mistake, we prefer to workaround this on our end.
 
-  Now after calling `response.write`, it no longer uses callback but first it checks the result;
+  Now after calling `response.write`, it no longer uses callback but first it
+  checks the result;
 
-  if it is `true`, it means stream is drained and we can call `response.end` immediately. else if it
-  is `false`, it means the stream is not drained yet, so we can wait for the `drain` event to call
-  `response.end`.
+  if it is `true`, it means stream is drained and we can call `response.end`
+  immediately. else if it is `false`, it means the stream is not drained yet, so
+  we can wait for the `drain` event to call `response.end`.
 
 - Updated dependencies
   [[`9527e8f`](https://github.com/ardatan/whatwg-node/commit/9527e8fe2dc73e362b38060f4a6decbb87a4f597)]:
@@ -117,9 +176,10 @@
 - [#2093](https://github.com/ardatan/whatwg-node/pull/2093)
   [`31f021a`](https://github.com/ardatan/whatwg-node/commit/31f021ac5df1ddd7f16807d4ed6c5776d250ab29)
   Thanks [@ardatan](https://github.com/ardatan)! - Fixes the
-  `TypeError: bodyInit.stream is not a function` error thrown when `@whatwg-node/server` is used
-  with `node:http2` and attempts the incoming HTTP/2 request to parse with `Request.json`,
-  `Request.text`, `Request.formData`, or `Request.blob` methods.
+  `TypeError: bodyInit.stream is not a function` error thrown when
+  `@whatwg-node/server` is used with `node:http2` and attempts the incoming
+  HTTP/2 request to parse with `Request.json`, `Request.text`,
+  `Request.formData`, or `Request.blob` methods.
 
 - Updated dependencies
   [[`31f021a`](https://github.com/ardatan/whatwg-node/commit/31f021ac5df1ddd7f16807d4ed6c5776d250ab29)]:
@@ -138,17 +198,17 @@
 
 - [#2079](https://github.com/ardatan/whatwg-node/pull/2079)
   [`090b4b0`](https://github.com/ardatan/whatwg-node/commit/090b4b0d2aefbf36707fa236395bc6ea99227b9c)
-  Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug when `set-cookies` given is ignored
-  in `HeadersInit`;
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix the bug when
+  `set-cookies` given is ignored in `HeadersInit`;
 
   ```js
-  import { Headers } from '@whatwg-node/fetch'
+  import { Headers } from "@whatwg-node/fetch";
 
   const headers = new Headers([
-    ['set-cookie', 'a=b'],
-    ['set-cookie', 'c=d']
-  ])
-  expect(headers.getSetCookie()).toEqual(['a=b', 'c=d']) // Previously it was empty
+    ["set-cookie", "a=b"],
+    ["set-cookie", "c=d"],
+  ]);
+  expect(headers.getSetCookie()).toEqual(["a=b", "c=d"]); // Previously it was empty
   ```
 
 - Updated dependencies
@@ -161,10 +221,11 @@
 
 - [#1961](https://github.com/ardatan/whatwg-node/pull/1961)
   [`2785c80`](https://github.com/ardatan/whatwg-node/commit/2785c80be2c887c581ef0fac8150befeab306eba)
-  Thanks [@ardatan](https://github.com/ardatan)! - `ReadableStream`'s `Symbol.asyncIterator` now
-  returns `AsyncIterableIterator` like before even if it is ok to return `AsyncIterator` right now.
-  It is safer to return `AsyncIterableIterator` because it is a common mistake to use
-  `AsyncIterator` as `AsyncIterable`.
+  Thanks [@ardatan](https://github.com/ardatan)! - `ReadableStream`'s
+  `Symbol.asyncIterator` now returns `AsyncIterableIterator` like before even if
+  it is ok to return `AsyncIterator` right now. It is safer to return
+  `AsyncIterableIterator` because it is a common mistake to use `AsyncIterator`
+  as `AsyncIterable`.
 - Updated dependencies
   [[`2785c80`](https://github.com/ardatan/whatwg-node/commit/2785c80be2c887c581ef0fac8150befeab306eba)]:
   - @whatwg-node/node-fetch@0.7.7
@@ -190,8 +251,9 @@
 ### Patch Changes
 
 - [`c68f5ad`](https://github.com/ardatan/whatwg-node/commit/c68f5ad0782476b4b4facf490600b5f3341a4886)
-  Thanks [@ardatan](https://github.com/ardatan)! - Pass errors to ReadableStream's cancel method
-  properly when it is piped, and piped stream is cancelled
+  Thanks [@ardatan](https://github.com/ardatan)! - Pass errors to
+  ReadableStream's cancel method properly when it is piped, and piped stream is
+  cancelled
 
   Implement `ReadableStream.from`
 
@@ -205,7 +267,8 @@
 
 - [#1782](https://github.com/ardatan/whatwg-node/pull/1782)
   [`6c006e1`](https://github.com/ardatan/whatwg-node/commit/6c006e12eaa6705cdf20b7b43cccc44a1f7ea185)
-  Thanks [@ardatan](https://github.com/ardatan)! - \`TextDecoderStream\` and \`TextEncoderStream\`
+  Thanks [@ardatan](https://github.com/ardatan)! - \`TextDecoderStream\` and
+  \`TextEncoderStream\`
 
 ### Patch Changes
 
@@ -226,8 +289,8 @@
 ### Patch Changes
 
 - [`77dd1c3`](https://github.com/ardatan/whatwg-node/commit/77dd1c3acde29aeb828b6eb37b6fbdbb47a16c57)
-  Thanks [@ardatan](https://github.com/ardatan)! - Use \`globalThis\` instead of \`window\` for the
-  global object reference
+  Thanks [@ardatan](https://github.com/ardatan)! - Use \`globalThis\` instead of
+  \`window\` for the global object reference
 
   Fixes the issues with Deno
 
@@ -241,11 +304,12 @@
 
 - [#1577](https://github.com/ardatan/whatwg-node/pull/1577)
   [`99c4344`](https://github.com/ardatan/whatwg-node/commit/99c4344ec82717be079e725538a532a827fbef82)
-  Thanks [@ardatan](https://github.com/ardatan)! - - Improve native ReadableStream handling inside
-  ponyfills
+  Thanks [@ardatan](https://github.com/ardatan)! - - Improve native
+  ReadableStream handling inside ponyfills
   - Use `waitUntil` instead of floating promises
   - Handle early termination in `WritableStream`
-  - Handle `waitUntil` correctly within a dummy call of `ServerAdapter.fetch` method
+  - Handle `waitUntil` correctly within a dummy call of `ServerAdapter.fetch`
+    method
 - Updated dependencies
   [[`99c4344`](https://github.com/ardatan/whatwg-node/commit/99c4344ec82717be079e725538a532a827fbef82)]:
   - @whatwg-node/node-fetch@0.5.23
@@ -256,8 +320,8 @@
 
 - [#1566](https://github.com/ardatan/whatwg-node/pull/1566)
   [`de1e95a`](https://github.com/ardatan/whatwg-node/commit/de1e95a8eb107083e638aa8472089b96b33bbe4a)
-  Thanks [@ardatan](https://github.com/ardatan)! - Avoid constructing DecompressionStream to check
-  supported encodings
+  Thanks [@ardatan](https://github.com/ardatan)! - Avoid constructing
+  DecompressionStream to check supported encodings
 
 - Updated dependencies
   [[`de1e95a`](https://github.com/ardatan/whatwg-node/commit/de1e95a8eb107083e638aa8472089b96b33bbe4a)]:
@@ -269,8 +333,8 @@
 
 - [#1495](https://github.com/ardatan/whatwg-node/pull/1495)
   [`bebc159`](https://github.com/ardatan/whatwg-node/commit/bebc159e0a470a0ea89a8575f620ead3f1b6b594)
-  Thanks [@ardatan](https://github.com/ardatan)! - Implement \`CompressionStream\`,
-  \`WritableStream\` and \`TransformStream\`
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement
+  \`CompressionStream\`, \`WritableStream\` and \`TransformStream\`
 
 - Updated dependencies
   [[`bebc159`](https://github.com/ardatan/whatwg-node/commit/bebc159e0a470a0ea89a8575f620ead3f1b6b594)]:
@@ -282,8 +346,9 @@
 
 - [#1328](https://github.com/ardatan/whatwg-node/pull/1328)
   [`36904b4`](https://github.com/ardatan/whatwg-node/commit/36904b46871aaf823055eb05fbd8969453cba9ae)
-  Thanks [@ardatan](https://github.com/ardatan)! - Add `skipPonyfill` flag to `createFetch` to skip
-  ponyfills and use the native Fetch implementation for Node.js
+  Thanks [@ardatan](https://github.com/ardatan)! - Add `skipPonyfill` flag to
+  `createFetch` to skip ponyfills and use the native Fetch implementation for
+  Node.js
 
 ## 0.9.17
 
@@ -291,7 +356,8 @@
 
 - [#1162](https://github.com/ardatan/whatwg-node/pull/1162)
   [`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)
-  Thanks [@ardatan](https://github.com/ardatan)! - Consume the body with PassThrough
+  Thanks [@ardatan](https://github.com/ardatan)! - Consume the body with
+  PassThrough
 
 - Updated dependencies
   [[`0c6e9ca`](https://github.com/ardatan/whatwg-node/commit/0c6e9ca61ee07b49009b6e4d7d9d5e1d80912450)]:
@@ -335,15 +401,16 @@
 ### Patch Changes
 
 - [`854b778`](https://github.com/ardatan/whatwg-node/commit/854b7786f4ef134a00a4f8f4df02721a7a4c77bb)
-  Thanks [@ardatan](https://github.com/ardatan)! - Do not try to import node-libcurl in Deno and Bun
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not try to import
+  node-libcurl in Deno and Bun
 
 ## 0.9.12
 
 ### Patch Changes
 
 - [`a8467ab`](https://github.com/ardatan/whatwg-node/commit/a8467ab9e3e4701eb0d3101ff904597cd9adc438)
-  Thanks [@ardatan](https://github.com/ardatan)! - Fake promise's then method may not take a
-  callback function
+  Thanks [@ardatan](https://github.com/ardatan)! - Fake promise's then method
+  may not take a callback function
 
 - Updated dependencies
   [[`a8467ab`](https://github.com/ardatan/whatwg-node/commit/a8467ab9e3e4701eb0d3101ff904597cd9adc438)]:
@@ -354,8 +421,8 @@
 ### Patch Changes
 
 - [`96efb10`](https://github.com/ardatan/whatwg-node/commit/96efb10a4508fa1b86482f5238d63ec6015e0d74)
-  Thanks [@ardatan](https://github.com/ardatan)! - Ignore content-length while reading the request
-  body
+  Thanks [@ardatan](https://github.com/ardatan)! - Ignore content-length while
+  reading the request body
 
 - Updated dependencies
   [[`96efb10`](https://github.com/ardatan/whatwg-node/commit/96efb10a4508fa1b86482f5238d63ec6015e0d74)]:
@@ -367,8 +434,9 @@
 
 - [#806](https://github.com/ardatan/whatwg-node/pull/806)
   [`9b6911a`](https://github.com/ardatan/whatwg-node/commit/9b6911a8fca0fc046278a8b490e14eb4412da98f)
-  Thanks [@ardatan](https://github.com/ardatan)! - Return `Buffer` instead of `ArrayBuffer` in
-  `.arrayBuffer` due to a bug in Node.js that returns a bigger ArrayBuffer causing memory overflow
+  Thanks [@ardatan](https://github.com/ardatan)! - Return `Buffer` instead of
+  `ArrayBuffer` in `.arrayBuffer` due to a bug in Node.js that returns a bigger
+  ArrayBuffer causing memory overflow
 - Updated dependencies
   [[`9b6911a`](https://github.com/ardatan/whatwg-node/commit/9b6911a8fca0fc046278a8b490e14eb4412da98f)]:
   - @whatwg-node/node-fetch@0.4.15
@@ -379,11 +447,11 @@
 
 - [#567](https://github.com/ardatan/whatwg-node/pull/567)
   [`f8715cd`](https://github.com/ardatan/whatwg-node/commit/f8715cd15175e348169a11fd5531b901fec47e62)
-  Thanks [@ardatan](https://github.com/ardatan)! - ### Faster HTTP Client experience in Node.js with
-  HTTP/2 support
+  Thanks [@ardatan](https://github.com/ardatan)! - ### Faster HTTP Client
+  experience in Node.js with HTTP/2 support
 
-  If you install `node-libcurl` seperately, `@whatwg-node/fetch` will select `libcurl` instead of
-  `node:http` which is faster.
+  If you install `node-libcurl` seperately, `@whatwg-node/fetch` will select
+  `libcurl` instead of `node:http` which is faster.
 
   [See benchmarks](https://github.com/JCMais/node-libcurl/tree/develop/benchmark#ubuntu-1910-i7-5500u-24ghz---linux-530-42---node-v12162)
 
@@ -396,8 +464,8 @@
 ### Patch Changes
 
 - [`a1c2140`](https://github.com/ardatan/whatwg-node/commit/a1c2140240388ca11a6f4c7bcec2682c47bdc24d)
-  Thanks [@ardatan](https://github.com/ardatan)! - Do not use async iterators to consume incoming
-  Readable stream
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not use async iterators to
+  consume incoming Readable stream
 
 - Updated dependencies
   [[`a1c2140`](https://github.com/ardatan/whatwg-node/commit/a1c2140240388ca11a6f4c7bcec2682c47bdc24d)]:
@@ -408,8 +476,8 @@
 ### Patch Changes
 
 - [`124bbe5`](https://github.com/ardatan/whatwg-node/commit/124bbe55f125dc9248fdde9c7e86637d905739fe)
-  Thanks [@ardatan](https://github.com/ardatan)! - Implement Headers.getSetCookie and a custom
-  serializer for node.inspect
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement
+  Headers.getSetCookie and a custom serializer for node.inspect
 
 - Updated dependencies
   [[`124bbe5`](https://github.com/ardatan/whatwg-node/commit/124bbe55f125dc9248fdde9c7e86637d905739fe)]:
@@ -496,7 +564,8 @@
   - Removed dependency
     [`@peculiar/webcrypto@^1.4.0` ↗︎](https://www.npmjs.com/package/@peculiar/webcrypto/v/1.4.0)
     (from `dependencies`)
-  - Removed dependency [`busboy@^1.6.0` ↗︎](https://www.npmjs.com/package/busboy/v/1.6.0) (from
+  - Removed dependency
+    [`busboy@^1.6.0` ↗︎](https://www.npmjs.com/package/busboy/v/1.6.0) (from
     `dependencies`)
   - Removed dependency
     [`web-streams-polyfill@^3.2.1` ↗︎](https://www.npmjs.com/package/web-streams-polyfill/v/3.2.1)
@@ -510,7 +579,8 @@
 ### Patch Changes
 
 - [`29b9328`](https://github.com/ardatan/whatwg-node/commit/29b9328509f1b7d5e2d86cc450adcbd773b71d41)
-  Thanks [@ardatan](https://github.com/ardatan)! - Export URLPattern constructor not type
+  Thanks [@ardatan](https://github.com/ardatan)! - Export URLPattern constructor
+  not type
 
 ## 0.8.7
 
@@ -524,7 +594,8 @@
     (from `^7.0.0`, in `dependencies`)
 
 - [`6c58ca1`](https://github.com/ardatan/whatwg-node/commit/6c58ca182b2d4538c8f2fe6367add7bbda3c9a38)
-  Thanks [@ardatan](https://github.com/ardatan)! - Return correct types in createFetch
+  Thanks [@ardatan](https://github.com/ardatan)! - Return correct types in
+  createFetch
 
 ## 0.8.6
 
@@ -532,8 +603,8 @@
 
 - [#427](https://github.com/ardatan/whatwg-node/pull/427)
   [`e8bda7c`](https://github.com/ardatan/whatwg-node/commit/e8bda7cdf440a7f4bb617ee1b5df8ee1becb4ad6)
-  Thanks [@Rugvip](https://github.com/Rugvip)! - Restructure type declarations to avoid polluting
-  global namespace.
+  Thanks [@Rugvip](https://github.com/Rugvip)! - Restructure type declarations
+  to avoid polluting global namespace.
 
 - Updated dependencies
   [[`f3ce0e8`](https://github.com/ardatan/whatwg-node/commit/f3ce0e815f6085d199590359a39048c39920e6ce)]:
@@ -555,15 +626,16 @@
 ### Patch Changes
 
 - [`207ee1d`](https://github.com/ardatan/whatwg-node/commit/207ee1de374a38e9c2b61bd4896d1591e3e57117)
-  Thanks [@ardatan](https://github.com/ardatan)! - Detect Deno if the module is imported via 'npm:'
-  or any other Node compatibility method
+  Thanks [@ardatan](https://github.com/ardatan)! - Detect Deno if the module is
+  imported via 'npm:' or any other Node compatibility method
 
 ## 0.8.3
 
 ### Patch Changes
 
 - [`bf585a3`](https://github.com/ardatan/whatwg-node/commit/bf585a3b1cafa63bdee86dace6a0e08f98a9b554)
-  Thanks [@ardatan](https://github.com/ardatan)! - Support iterable Fetch API methods
+  Thanks [@ardatan](https://github.com/ardatan)! - Support iterable Fetch API
+  methods
 
 - Updated dependencies
   [[`9f242f8`](https://github.com/ardatan/whatwg-node/commit/9f242f8268748345899ea4b6f05dac3c6dcecbeb),
@@ -596,7 +668,8 @@
 ### Minor Changes
 
 - [`ea5d252`](https://github.com/ardatan/whatwg-node/commit/ea5d25298c480d4c5483186af41dccda8197164d)
-  Thanks [@ardatan](https://github.com/ardatan)! - New URL and URLSearchParams ponyfills
+  Thanks [@ardatan](https://github.com/ardatan)! - New URL and URLSearchParams
+  ponyfills
 
 ### Patch Changes
 
@@ -642,8 +715,8 @@
 
 - [#314](https://github.com/ardatan/whatwg-node/pull/314)
   [`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4)
-  Thanks [@ardatan](https://github.com/ardatan)! - Align versions with ranged dependencies and cross
-  version support internally
+  Thanks [@ardatan](https://github.com/ardatan)! - Align versions with ranged
+  dependencies and cross version support internally
 
 - Updated dependencies
   [[`3aa1848`](https://github.com/ardatan/whatwg-node/commit/3aa18486d44c507617b25204c3d4a96bc8a4c9e4),
@@ -704,22 +777,25 @@
     [`@whatwg-node/node-fetch@0.0.0` ↗︎](https://www.npmjs.com/package/@whatwg-node/node-fetch/v/0.0.0)
     (to `dependencies`)
   - Removed dependency
-    [`abort-controller@^3.0.0` ↗︎](https://www.npmjs.com/package/abort-controller/v/3.0.0) (from
-    `dependencies`)
-  - Removed dependency
-    [`form-data-encoder@^1.7.1` ↗︎](https://www.npmjs.com/package/form-data-encoder/v/1.7.1) (from
-    `dependencies`)
-  - Removed dependency
-    [`formdata-node@^4.3.1` ↗︎](https://www.npmjs.com/package/formdata-node/v/4.3.1) (from
-    `dependencies`)
-  - Removed dependency [`node-fetch@^2.6.7` ↗︎](https://www.npmjs.com/package/node-fetch/v/2.6.7)
+    [`abort-controller@^3.0.0` ↗︎](https://www.npmjs.com/package/abort-controller/v/3.0.0)
     (from `dependencies`)
-  - Removed dependency [`undici@^5.12.0` ↗︎](https://www.npmjs.com/package/undici/v/5.12.0) (from
+  - Removed dependency
+    [`form-data-encoder@^1.7.1` ↗︎](https://www.npmjs.com/package/form-data-encoder/v/1.7.1)
+    (from `dependencies`)
+  - Removed dependency
+    [`formdata-node@^4.3.1` ↗︎](https://www.npmjs.com/package/formdata-node/v/4.3.1)
+    (from `dependencies`)
+  - Removed dependency
+    [`node-fetch@^2.6.7` ↗︎](https://www.npmjs.com/package/node-fetch/v/2.6.7)
+    (from `dependencies`)
+  - Removed dependency
+    [`undici@^5.12.0` ↗︎](https://www.npmjs.com/package/undici/v/5.12.0) (from
     `dependencies`)
 
 - [#154](https://github.com/ardatan/whatwg-node/pull/154)
   [`9f4fe48`](https://github.com/ardatan/whatwg-node/commit/9f4fe489ff1d08d873a2dd26c02abc54da08dc48)
-  Thanks [@ardatan](https://github.com/ardatan)! - New Fetch API implementation for Node
+  Thanks [@ardatan](https://github.com/ardatan)! - New Fetch API implementation
+  for Node
 
 - Updated dependencies
   [[`9f4fe48`](https://github.com/ardatan/whatwg-node/commit/9f4fe489ff1d08d873a2dd26c02abc54da08dc48)]:
@@ -731,16 +807,16 @@
 
 - [#258](https://github.com/ardatan/whatwg-node/pull/258)
   [`802cb96`](https://github.com/ardatan/whatwg-node/commit/802cb9636eddd8e819b80604fc26d40aac92c828)
-  Thanks [@enisdenjo](https://github.com/enisdenjo)! - Node ponyfill requests must have an abort
-  signal
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - Node ponyfill requests
+  must have an abort signal
 
 ## 0.6.1
 
 ### Patch Changes
 
 - [`9752cca`](https://github.com/ardatan/whatwg-node/commit/9752cca54e7636114d87849ca9c7eb9be3d9dba8)
-  Thanks [@ardatan](https://github.com/ardatan)! - Remove unnecessary ponyfill for the envs
-  supporting Fetch by default
+  Thanks [@ardatan](https://github.com/ardatan)! - Remove unnecessary ponyfill
+  for the envs supporting Fetch by default
 
 ## 0.6.0
 
@@ -748,8 +824,8 @@
 
 - [#241](https://github.com/ardatan/whatwg-node/pull/241)
   [`563cfaa`](https://github.com/ardatan/whatwg-node/commit/563cfaaacf8bb0b08371b7f44887321d7e7c472d)
-  Thanks [@ardatan](https://github.com/ardatan)! - Drop itty-router in favor of new URLPattern in
-  the fetch ponyfill
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop itty-router in favor of
+  new URLPattern in the fetch ponyfill
 
 ### Patch Changes
 
@@ -766,7 +842,8 @@
 
 - [#237](https://github.com/ardatan/whatwg-node/pull/237)
   [`166102f`](https://github.com/ardatan/whatwg-node/commit/166102f6ff52d2197ab7f78c63392b95ebca259c)
-  Thanks [@enisdenjo](https://github.com/enisdenjo)! - http2 support when using Node ponyfill
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - http2 support when using
+  Node ponyfill
 
 ## 0.5.3
 
@@ -781,8 +858,8 @@
 
 - [#179](https://github.com/ardatan/whatwg-node/pull/179)
   [`3297c87`](https://github.com/ardatan/whatwg-node/commit/3297c87409c3bcf8700dd447d603da657acbd821)
-  Thanks [@ardatan](https://github.com/ardatan)! - Fix destroy method for ReadableStream to Readable
-  conversion
+  Thanks [@ardatan](https://github.com/ardatan)! - Fix destroy method for
+  ReadableStream to Readable conversion
 
 ## 0.5.1
 
@@ -796,15 +873,16 @@
 ### Minor Changes
 
 - [`ab5fb52`](https://github.com/ardatan/whatwg-node/commit/ab5fb524753bc7a210b1aaf2e1580566907d4713)
-  Thanks [@ardatan](https://github.com/ardatan)! - Drop broken `fieldsFirst` flag
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop broken `fieldsFirst`
+  flag
 
 ## 0.4.7
 
 ### Patch Changes
 
 - [`e59cbb6`](https://github.com/ardatan/whatwg-node/commit/e59cbb667dfcbdd9c0cf609fd56dbd904ac85cbd)
-  Thanks [@ardatan](https://github.com/ardatan)! - Do not patch global Headers if it is native, and
-  support URL as a first parameter of `fetch`
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not patch global Headers
+  if it is native, and support URL as a first parameter of `fetch`
 
 ## 0.4.6
 
@@ -815,11 +893,13 @@
 
 - [#148](https://github.com/ardatan/whatwg-node/pull/148)
   [`eb10500`](https://github.com/ardatan/whatwg-node/commit/eb105005fd01bd227eff8d52c22b39ea1a8c6700)
-  Thanks [@ardatan](https://github.com/ardatan)! - - On Node 14, fix the return method of
-  Response.body's AsyncIterator to close HTTP connection correctly
-  - On Node 14, handle ReadableStream's cancel correctly if Response.body is a ReadableStream
+  Thanks [@ardatan](https://github.com/ardatan)! - - On Node 14, fix the return
+  method of Response.body's AsyncIterator to close HTTP connection correctly
+  - On Node 14, handle ReadableStream's cancel correctly if Response.body is a
+    ReadableStream
   - Do not modify ReadableStream.cancel's behavior but handle it internally
-  - On Node 18, do not combine Response.body's return and AbortController which causes a memory leak
+  - On Node 18, do not combine Response.body's return and AbortController which
+    causes a memory leak
 
 ## 0.4.5
 
@@ -834,39 +914,40 @@
 ### Patch Changes
 
 - [`9502102`](https://github.com/ardatan/whatwg-node/commit/9502102b265945b37ee38b276ec1533fae0f308f)
-  Thanks [@ardatan](https://github.com/ardatan)! - Breaking Change: Event API is no longer available
-  in this ponyfill; use @whatwg-node/events instead.
+  Thanks [@ardatan](https://github.com/ardatan)! - Breaking Change: Event API is
+  no longer available in this ponyfill; use @whatwg-node/events instead.
 
 ## 0.4.3
 
 ### Patch Changes
 
 - [`c9f05f2`](https://github.com/ardatan/whatwg-node/commit/c9f05f21fb96f63bc22359e3b7981cb9b3b727b5)
-  Thanks [@ardatan](https://github.com/ardatan)! - Add ponyfills for Response.redirect,
-  Response.json and Response.error
+  Thanks [@ardatan](https://github.com/ardatan)! - Add ponyfills for
+  Response.redirect, Response.json and Response.error
 
 ## 0.4.2
 
 ### Patch Changes
 
 - [`7f37b6d`](https://github.com/ardatan/whatwg-node/commit/7f37b6dbeb76cfa54e0ed8672812bf016c1df4fa)
-  Thanks [@ardatan](https://github.com/ardatan)! - fix(fetch): respect filesLimit even with
-  fieldsFirst
+  Thanks [@ardatan](https://github.com/ardatan)! - fix(fetch): respect
+  filesLimit even with fieldsFirst
 
 ## 0.4.1
 
 ### Patch Changes
 
 - [`53753bb`](https://github.com/ardatan/whatwg-node/commit/53753bb5dd83fbc1e7253784b02f2b1f2e02fdb9)
-  Thanks [@ardatan](https://github.com/ardatan)! - fix(fetch): fix formData function
+  Thanks [@ardatan](https://github.com/ardatan)! - fix(fetch): fix formData
+  function
 
 ## 0.4.0
 
 ### Minor Changes
 
 - [`005937c`](https://github.com/ardatan/whatwg-node/commit/005937c72749dfa3914c8b6193a88c772a522275)
-  Thanks [@ardatan](https://github.com/ardatan)! - feat(fetch): new `fieldsFirst` option to allow
-  async stream consumption for multipart forms
+  Thanks [@ardatan](https://github.com/ardatan)! - feat(fetch): new
+  `fieldsFirst` option to allow async stream consumption for multipart forms
 
 - [`effc03d`](https://github.com/ardatan/whatwg-node/commit/effc03d58793328595183ac7cd5c9abab95dec17)
   Thanks [@ardatan](https://github.com/ardatan)! - Bun Support
@@ -876,8 +957,8 @@
 ### Patch Changes
 
 - [`982fa96`](https://github.com/ardatan/whatwg-node/commit/982fa96b09af404a21154098499202bfd29c2054)
-  Thanks [@ardatan](https://github.com/ardatan)! - fix(ponyfill/btoa): handle incoming value as
-  binary encoding
+  Thanks [@ardatan](https://github.com/ardatan)! - fix(ponyfill/btoa): handle
+  incoming value as binary encoding
 
 ## 0.3.1
 
@@ -891,18 +972,20 @@
 ### Minor Changes
 
 - [`8a431d3`](https://github.com/ardatan/whatwg-node/commit/8a431d309271c0d1ff7248ec26afe293ccc01bf6)
-  Thanks [@ardatan](https://github.com/ardatan)! - Add "btoa" ponyfill for Node 14
+  Thanks [@ardatan](https://github.com/ardatan)! - Add "btoa" ponyfill for Node
+  14
 
 * [`8a431d3`](https://github.com/ardatan/whatwg-node/commit/8a431d309271c0d1ff7248ec26afe293ccc01bf6)
-  Thanks [@ardatan](https://github.com/ardatan)! - Support different encodings in TextEncoder and
-  TextDecoder
+  Thanks [@ardatan](https://github.com/ardatan)! - Support different encodings
+  in TextEncoder and TextDecoder
 
 ## 0.2.9
 
 ### Patch Changes
 
 - [`9a8d873`](https://github.com/ardatan/whatwg-node/commit/9a8d8731ff07ea585b1e561718584fbe5edeb963)
-  Thanks [@ardatan](https://github.com/ardatan)! - Workaround for a potential leak on Node 18
+  Thanks [@ardatan](https://github.com/ardatan)! - Workaround for a potential
+  leak on Node 18
 
 ## 0.2.3
 
