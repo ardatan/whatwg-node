@@ -185,10 +185,6 @@ describe('Compression', () => {
       );
       const encodings = [...getSupportedEncodings(fetchAPI), 'none'];
       for (const encoding of encodings) {
-        // Skip deflate-raw with libcurl because it doesn't support it
-        if (encoding === 'deflate-raw' && implName === 'libcurl') {
-          continue;
-        }
         describe(encoding, () => {
           // Deno's fetch does not decompress automatically
           skipIf(!!globalThis.Deno)(`from the server to the client`, async () => {

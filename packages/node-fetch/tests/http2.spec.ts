@@ -4,10 +4,11 @@ import tls from 'node:tls';
 import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { createEphemeralTlsCerts } from '../../server/test/test-tls-certs';
 import { fetchPonyfill } from '../src/fetch';
+import { getUndici } from '../src/getUndici';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 describeIf(
-  globalThis.libcurl &&
+  !!getUndici() &&
     !process.env.LEAK_TEST &&
     !globalThis.Deno &&
     typeof tls.setDefaultCACertificates === 'function',

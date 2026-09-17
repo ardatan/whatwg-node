@@ -32,25 +32,26 @@ recommend to use this package, because this package implements them for Node.js 
 way.
 
 - [See problems with the global fetch/undici in Node.js](https://github.com/nodejs/undici/issues/1203)
-- - We offer a patched version of `node-fetch` that doesn't use `undici` and Node.js streams
+- - We offer a patched version of `node-fetch` that doesn't use `undici.fetch` and Node.js streams
     internally, so it's more efficient than the native one.
 - [See problems with text encoding API in Node.js](https://github.com/nodejs/node/issues/39879)
 - - We use [`Buffer`](https://nodejs.org/api/buffer.html) instead of the native one, because
     `Buffer` is faster than the native one unfortunately.
 - `Body.formData()` is not implemented by Node.js, so we implement it with `busboy` internally. So
   you can consume incoming multipart(file uploads) requests with `.formData` in Node.js.
-- `fetch` implementation of Node.js uses `undici` and it doesn't support HTTP 2, our implementation
-  supports it natively thanks to `node-libcurl`.
 - `file:` protocol support... As in Bun, Deno and other similar Fetch implementations, undici's
   fetch doesn't support `file:` protocol. `@whatwg-node/fetch` allows you to support it in platform
   agnostic way.
 
 ### Faster HTTP Client in Node.js with HTTP/2 support
 
-If you install `node-libcurl` seperately, `@whatwg-node/fetch` will select `libcurl` instead of
-`node:http` which is faster.
+If you install [`undici`](https://www.npmjs.com/package/undici) separately, `@whatwg-node/fetch`
+will use `undici.request` (not `undici.fetch`) as the HTTP transport instead of `node:http`. That
+keeps our own Fetch / Streams ponyfill while getting undici's connection pooling and HTTP/2 support.
 
-[See benchmarks](https://github.com/JCMais/node-libcurl/tree/develop/benchmark#ubuntu-1910-i7-5500u-24ghz---linux-530-42---node-v12162)
+```bash
+npm install undici
+```
 
 ### Handling file uploads with Fetch API
 

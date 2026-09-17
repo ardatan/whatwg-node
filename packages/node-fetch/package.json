@@ -33,6 +33,14 @@
     "./package.json": "./package.json"
   },
   "typings": "dist/typings/index.d.ts",
+  "peerDependencies": {
+    "undici": "^7.0.0 || ^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "undici": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@fastify/busboy": "^3.1.1",
     "@whatwg-node/disposablestack": "^0.0.6",
@@ -41,7 +49,8 @@
   },
   "devDependencies": {
     "@types/pem": "^1.14.0",
-    "pem": "^1.14.8"
+    "pem": "^1.14.8",
+    "undici": "8.10.2"
   },
   "publishConfig": {
     "directory": "dist",

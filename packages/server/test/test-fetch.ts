@@ -6,12 +6,15 @@ import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, beforeAll, describe } from '@jest/globals';
 import { patchSymbols } from '@whatwg-node/disposablestack';
 import { createFetch } from '@whatwg-node/fetch';
+import { getUndici } from '../../node-fetch/src/getUndici';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
 
 patchSymbols();
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
-const libcurl = globalThis.libcurl;
+const DISABLE_UNDICI = Symbol.for('whatwg-node.disable-undici');
+const undiciAvailable = !!getUndici();
+
 export function runTestsForEachFetchImpl(
   callback: (
     implementationName: string,
@@ -23,6 +26,8 @@ export function runTestsForEachFetchImpl(
   opts: { noLibCurl?: boolean; noNativeFetch?: boolean } = {},
 ) {
   describeIf(!globalThis.Deno)('Ponyfill', () => {
+    // `noLibCurl` kept as the option name for call-site compatibility: skip the
+    // undici vs node-http matrix and run a single ponyfill suite.
     if (opts.noLibCurl) {
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('ponyfill', {
@@ -35,9 +40,12 @@ export function runTestsForEachFetchImpl(
       });
       return;
     }
-    describeIf(libcurl)('libcurl', () => {
+    describeIf(undiciAvailable)('undici', () => {
+      beforeAll(() => {
+        (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;
+      });
       const fetchAPI = createFetch({ skipPonyfill: false });
-      callback('libcurl', {
+      callback('undici', {
         fetchAPI,
         createServerAdapter: (baseObj: any, opts?: any) =>
           createServerAdapter(baseObj, {
@@ -45,18 +53,15 @@ export function runTestsForEachFetchImpl(
             ...opts,
           }),
       });
-      afterAll(() => {
-        libcurl.Curl.globalCleanup();
-      });
     });
     describe('node-http', () => {
       beforeAll(() => {
-        (globalThis.libcurl as any) = null;
+        (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = true;
       });
       afterAll(() => {
         httpGlobalAgent.destroy();
         httpsGlobalAgent.destroy();
-        globalThis.libcurl = libcurl;
+        (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;
       });
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('node-http', {
