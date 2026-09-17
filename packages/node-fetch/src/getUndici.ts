@@ -98,10 +98,15 @@ function loadUndici(): UndiciModule | null {
 
 /**
  * Optional `undici` transport on Node. Tests can force the `node:http` path with
- * `globalThis[Symbol.for('whatwg-node.disable-undici')] = true`.
+ * `globalThis[Symbol.for('whatwg-node.disable-undici')] = true`,
+ * `WHATWG_NODE_DISABLE_UNDICI=1`, or `LEAK_TEST=1` (shared Agent would otherwise
+ * trip Jest leak detection).
  */
 export function getUndici(): UndiciModule | null {
   if ((globalThis as Record<symbol, unknown>)[DISABLE_KEY]) {
+    return null;
+  }
+  if (process.env.LEAK_TEST || process.env.WHATWG_NODE_DISABLE_UNDICI) {
     return null;
   }
   return loadUndici();

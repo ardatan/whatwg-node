@@ -14,7 +14,7 @@ import { FetchAPI } from '../src/types';
 patchSymbols();
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 const DISABLE_UNDICI = Symbol.for('whatwg-node.disable-undici');
-const undiciAvailable = !!getUndici();
+const undiciAvailable = !process.env.LEAK_TEST && !!getUndici();
 
 export function runTestsForEachFetchImpl(
   callback: (
