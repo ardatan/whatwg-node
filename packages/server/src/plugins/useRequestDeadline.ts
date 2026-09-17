@@ -50,7 +50,7 @@ export function useRequestDeadline<TServerContext = {}>(
       // dont create a new request because that comes with a performance penalty
       Object.defineProperty(request, 'signal', { value: composedSignal });
 
-      setRequestHandler(function handlerWithDeadline(req, ctx) {
+      setRequestHandler(function handlerWithDeadline(req, ctx, fetchAPI) {
         if (deadlineSignal.aborted) {
           return opts.response(req, ctx);
         }
@@ -70,7 +70,7 @@ export function useRequestDeadline<TServerContext = {}>(
           deadlineSignal.addEventListener('abort', onDeadlineAbort, { once: true });
 
           return handleMaybePromise(
-            () => requestHandler(req, ctx),
+            () => requestHandler(req, ctx, fetchAPI),
             result => {
               clearTimeout(timer);
               deadlineSignal.removeEventListener('abort', onDeadlineAbort);
