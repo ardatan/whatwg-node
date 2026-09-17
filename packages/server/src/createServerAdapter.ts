@@ -74,6 +74,30 @@ export interface ServerAdapterOptions<TServerContext> {
 
 const EMPTY_OBJECT = {};
 
+const nativeFetchAPI: FetchAPI = {
+  fetch: globalThis.fetch,
+  Request: globalThis.Request,
+  Response: globalThis.Response,
+  Headers: globalThis.Headers,
+  FormData: globalThis.FormData,
+  ReadableStream: globalThis.ReadableStream,
+  WritableStream: globalThis.WritableStream,
+  TransformStream: globalThis.TransformStream,
+  CompressionStream: globalThis.CompressionStream,
+  DecompressionStream: globalThis.DecompressionStream,
+  TextDecoderStream: globalThis.TextDecoderStream,
+  TextEncoderStream: globalThis.TextEncoderStream,
+  Blob: globalThis.Blob,
+  File: globalThis.File,
+  crypto: globalThis.crypto,
+  btoa: globalThis.btoa,
+  TextEncoder: globalThis.TextEncoder,
+  TextDecoder: globalThis.TextDecoder,
+  URLPattern: globalThis.URLPattern,
+  URL: globalThis.URL,
+  URLSearchParams: globalThis.URLSearchParams,
+};
+
 function createServerAdapter<
   TServerContext = {},
   THandleRequest extends ServerAdapterRequestHandler<TServerContext> =
@@ -101,14 +125,20 @@ function createServerAdapter<
 ): ServerAdapter<TServerContext, TBaseObject> {
   const useSingleWriteHead =
     options?.__useSingleWriteHead == null ? true : options.__useSingleWriteHead;
-  const fetchAPI = {
+  const expectedFetchAPI = {
     ...DefaultFetchAPI,
     ...options?.fetchAPI,
   };
-  const useCustomAbortCtrl =
-    options?.__useCustomAbortCtrl == null
-      ? fetchAPI.Request !== globalThis.Request
-      : options.__useCustomAbortCtrl;
+  function pickRightFetchAPI(req: Request) {
+    if (req.constructor === expectedFetchAPI.Request) {
+      return expectedFetchAPI;
+    }
+    if (req.constructor === globalThis.Request) {
+      return nativeFetchAPI;
+    }
+    // TODO: This might need a normalization later, but for now return the ponyfill
+    return expectedFetchAPI;
+  }
   const givenHandleRequest =
     typeof serverAdapterBaseObject === 'function'
       ? serverAdapterBaseObject
@@ -188,6 +218,7 @@ function createServerAdapter<
   let handleRequest: ServerAdapterRequestHandler<TServerContext & ServerAdapterInitialContext> =
     onRequestHooks.length > 0 || onResponseHooks.length > 0
       ? function handleRequest(request, serverContext) {
+          const fetchAPI = pickRightFetchAPI(request);
           let requestHandler: ServerAdapterRequestHandler<any> = givenHandleRequest;
           let response: Response | undefined;
           if (onRequestHooks.length === 0) {
@@ -224,7 +255,7 @@ function createServerAdapter<
           function handleEarlyResponse() {
             if (!response) {
               return handleMaybePromise(
-                () => requestHandler(request, serverContext),
+                () => requestHandler(request, serverContext, fetchAPI),
                 handleResponse,
               );
             }
@@ -260,13 +291,20 @@ function createServerAdapter<
 
   if (instrumentation?.request) {
     const originalRequestHandler = handleRequest;
-    handleRequest = (request, initialContext) => {
+    handleRequest = (request, initialContext, fetchAPI) => {
       return getInstrumented({ request }).asyncFn(instrumentation.request, originalRequestHandler)(
         request,
         initialContext,
+        fetchAPI,
       );
     };
   }
+
+  // This is a case for Node, so expected Fetch API can be used
+  const useCustomAbortCtrl =
+    options?.__useCustomAbortCtrl == null
+      ? expectedFetchAPI.Request !== globalThis.Request
+      : options.__useCustomAbortCtrl;
 
   function handleNodeRequestAndResponse(
     nodeRequest: NodeRequest,
@@ -280,8 +318,13 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
-    const request = normalizeNodeRequest(nodeRequest, fetchAPI, nodeResponse, useCustomAbortCtrl);
-    return handleRequest(request, serverContext);
+    const request = normalizeNodeRequest(
+      nodeRequest,
+      expectedFetchAPI,
+      nodeResponse,
+      useCustomAbortCtrl,
+    );
+    return handleRequest(request, serverContext, expectedFetchAPI);
   }
 
   function requestListener(
@@ -304,7 +347,8 @@ function createServerAdapter<
             ...ctx,
           ),
         )
-        .catch(err => handleErrorFromRequestHandler(err, fetchAPI.Response))
+        // For request listener case, the expected fetchAPI can be used
+        .catch(err => handleErrorFromRequestHandler(err, expectedFetchAPI.Response))
         .then(response => sendNodeResponse(response, nodeResponse, nodeRequest, useSingleWriteHead))
         .catch(err =>
           console.error(`Unexpected error while handling request: ${err.message || err}`),
@@ -340,23 +384,24 @@ function createServerAdapter<
     res.onAborted = function (cb: () => void) {
       controller.signal.addEventListener('abort', cb, { once: true });
     };
+    // For this case, picking a different Fetch API is not needed
     const request = getRequestFromUWSRequest({
       req,
       res,
-      fetchAPI,
+      fetchAPI: expectedFetchAPI,
       controller,
     });
     return handleMaybePromise(
       () =>
         handleMaybePromise(
-          () => handleRequest(request, serverContext),
+          () => handleRequest(request, serverContext, expectedFetchAPI),
           response => response,
-          err => handleErrorFromRequestHandler(err, fetchAPI.Response),
+          err => handleErrorFromRequestHandler(err, expectedFetchAPI.Response),
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
           return handleMaybePromise(
-            () => sendResponseToUwsOpts(res, response, controller, fetchAPI),
+            () => sendResponseToUwsOpts(res, response, controller, expectedFetchAPI),
             r => r,
             err => {
               console.error(`Unexpected error while handling request: ${err.message || err}`);
@@ -376,7 +421,7 @@ function createServerAdapter<
       filteredCtxParts.length > 0
         ? completeAssign({}, event, ...filteredCtxParts)
         : isolateObject(event);
-    const response$ = handleRequest(event.request, serverContext);
+    const response$ = handleRequest(event.request, serverContext, expectedFetchAPI);
     event.respondWith(response$);
   }
 
@@ -391,7 +436,7 @@ function createServerAdapter<
               ? waitUntil
               : undefined,
           );
-    return handleRequest(request, serverContext);
+    return handleRequest(request, serverContext, expectedFetchAPI);
   }
 
   const fetchFn: ServerAdapterObject<TServerContext>['fetch'] = (
@@ -401,7 +446,9 @@ function createServerAdapter<
     if (typeof input === 'string' || 'href' in input) {
       const [initOrCtx, ...restOfCtx] = maybeCtx;
       if (isRequestInit(initOrCtx)) {
-        const request = new fetchAPI.Request(input, initOrCtx);
+        // For this case, it is not possible to get a native Request object
+        // So it is ok to pick the expected one
+        const request = new expectedFetchAPI.Request(input, initOrCtx);
         const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
         const signal = (initOrCtx as RequestInit).signal;
         if (signal) {
@@ -409,7 +456,7 @@ function createServerAdapter<
         }
         return res$;
       }
-      const request = new fetchAPI.Request(input);
+      const request = new expectedFetchAPI.Request(input);
       return handleRequestWithWaitUntil(request, ...maybeCtx);
     }
     const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);

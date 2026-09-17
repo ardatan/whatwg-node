@@ -802,10 +802,12 @@ const adapter = createServerAdapter(handler, {
   plugins: [
     useErrorHandling((error, request, context) => {
       console.error('Request failed:', error)
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: error.status || 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return Response.json(
+        { error: error.message },
+        {
+          status: error.status || 500
+        }
+      )
     })
   ]
 })
