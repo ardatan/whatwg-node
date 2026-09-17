@@ -73,6 +73,10 @@ describe('FetchEvent listener', () => {
         expect(handleRequest).toHaveBeenCalledWith(
           fetchEvent.request,
           expect.objectContaining(additionalCtx),
+          expect.objectContaining({
+            Request: expect.any(Function),
+            Response: expect.any(Function),
+          }),
         );
       });
     },

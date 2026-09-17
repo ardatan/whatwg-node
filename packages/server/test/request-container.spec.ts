@@ -14,6 +14,10 @@ describe('Request Container', () => {
         expect(handleRequest).toHaveBeenCalledWith(
           requestContainer.request,
           expect.objectContaining(requestContainer),
+          expect.objectContaining({
+            Request,
+            Response: expect.any(Function),
+          }),
         );
       });
       it('should accept additional parameters as server context', async () => {
@@ -29,6 +33,10 @@ describe('Request Container', () => {
         expect(handleRequest).toHaveBeenCalledWith(
           requestContainer.request,
           expect.objectContaining(requestContainer),
+          expect.objectContaining({
+            Request,
+            Response: expect.any(Function),
+          }),
         );
       });
     },
