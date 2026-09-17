@@ -237,6 +237,32 @@ it('if native Request object is sent, the native API is used during the request 
     }
     expect(usedFetchAPIInHandler![keyName]).toBe(globalThis[keyName as keyof typeof globalThis]);
   }
+  expect(usedFetchAPIInPlugins!.URLPattern).toBeDefined();
+  expect(usedFetchAPIInHandler!.URLPattern).toBeDefined();
+  const responseBody = await res.json();
+  expect(responseBody).toEqual({ hello: 'world' });
+});
+
+it('if native Request object is sent without plugins, the native API is still used', async () => {
+  const nativeRequest = new globalThis.Request(`http://localhost:0/test-path`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ hello: 'world' }),
+  });
+  let usedFetchAPIInHandler: FetchAPI | undefined;
+  await using serverAdapter = createServerAdapter(async (request, _ctx, fetchAPI) => {
+    const body = await request.json();
+    usedFetchAPIInHandler = fetchAPI;
+    return fetchAPI.Response.json(body);
+  });
+  const res = await serverAdapter.fetch(nativeRequest);
+  expect(res).toBeInstanceOf(globalThis.Response);
+  expect(usedFetchAPIInHandler!.Request).toBe(globalThis.Request);
+  expect(usedFetchAPIInHandler!.Response).toBe(globalThis.Response);
+  expect(usedFetchAPIInHandler!.TransformStream).toBe(globalThis.TransformStream);
+  expect(usedFetchAPIInHandler!.URLPattern).toBeDefined();
   const responseBody = await res.json();
   expect(responseBody).toEqual({ hello: 'world' });
 });

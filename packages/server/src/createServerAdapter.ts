@@ -93,7 +93,7 @@ const nativeFetchAPI: FetchAPI = {
   btoa: globalThis.btoa,
   TextEncoder: globalThis.TextEncoder,
   TextDecoder: globalThis.TextDecoder,
-  URLPattern: globalThis.URLPattern,
+  URLPattern: globalThis.URLPattern || DefaultFetchAPI.URLPattern,
   URL: globalThis.URL,
   URLSearchParams: globalThis.URLSearchParams,
 };
@@ -287,7 +287,9 @@ function createServerAdapter<
             handleEarlyResponse,
           );
         }
-      : givenHandleRequest;
+      : function handleRequest(request, serverContext) {
+          return givenHandleRequest(request, serverContext, pickRightFetchAPI(request));
+        };
 
   if (instrumentation?.request) {
     const originalRequestHandler = handleRequest;

@@ -12,7 +12,7 @@ With this patch, this workaround is no longer needed.
 - Native `Request` instances are now detected correctly and routed through the matching runtime fetch API.
 - The request pipeline keeps using the correct `Request`, `Response`, and stream constructors for the active runtime.
 - `useErrorHandling()` now passes the resolved `fetchAPI` into custom error handlers so they can construct responses with the correct runtime primitives.
-- Request handlers now takes `fetchAPI` as a third argument, so that you don't need to worry about which fetch implementation to take.
+- Request handlers now take `fetchAPI` as a third argument, so that you don't need to worry about which fetch implementation to take.
 
 ```ts
 createServerAdapter((request, context, fetchAPI) => fetchAPI.Response.json())

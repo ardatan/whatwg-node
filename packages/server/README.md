@@ -776,7 +776,7 @@ Adds error handling to your request handler.
 
 **Parameters:**
 
-- `errorHandler?: (error: any, request: Request, context: TServerContext) => MaybePromise<Response> | void` -
+- `errorHandler?: (error: any, request: Request, context: TServerContext, fetchAPI: FetchAPI) => MaybePromise<Response> | void` -
   Custom error handler function
 
 **Default Behavior:**
@@ -800,9 +800,9 @@ import { createServerAdapter, useErrorHandling } from '@whatwg-node/server'
 
 const adapter = createServerAdapter(handler, {
   plugins: [
-    useErrorHandling((error, request, context) => {
+    useErrorHandling((error, request, context, fetchAPI) => {
       console.error('Request failed:', error)
-      return Response.json(
+      return fetchAPI.Response.json(
         { error: error.message },
         {
           status: error.status || 500
