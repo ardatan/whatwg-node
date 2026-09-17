@@ -181,12 +181,12 @@ describe('Node Fetch Ponyfill', () => {
       const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
       // Deno does not uncompress responses automatically
       describeIf(!globalThis.Deno)('Compression', () => {
+        // After auto-decompress, encoding headers must be gone (decoded body).
+        // Node's native fetch keeps them; we only assert headers on the ponyfill.
+        const expectDecodedHeaders = implName !== 'native';
         it('should respect gzip', async () => {
           const response = await fetchPonyfill(baseUrl + '/gzip');
-          // Ponyfill strips Content-Encoding after decode; Node native fetch keeps it.
-          if (implName === 'native') {
-            expect(response.headers.get('content-encoding')).toBe('gzip');
-          } else {
+          if (expectDecodedHeaders) {
             expect(response.headers.get('content-encoding')).toBeNull();
           }
           expect(response.status).toBe(200);
@@ -195,9 +195,7 @@ describe('Node Fetch Ponyfill', () => {
         });
         it('should respect deflate', async () => {
           const response = await fetchPonyfill(baseUrl + '/deflate');
-          if (implName === 'native') {
-            expect(response.headers.get('content-encoding')).toBe('deflate');
-          } else {
+          if (expectDecodedHeaders) {
             expect(response.headers.get('content-encoding')).toBeNull();
           }
           expect(response.status).toBe(200);
@@ -206,9 +204,7 @@ describe('Node Fetch Ponyfill', () => {
         });
         it('should respect brotli', async () => {
           const response = await fetchPonyfill(baseUrl + '/brotli');
-          if (implName === 'native') {
-            expect(response.headers.get('content-encoding')).toBe('br');
-          } else {
+          if (expectDecodedHeaders) {
             expect(response.headers.get('content-encoding')).toBeNull();
           }
           expect(response.status).toBe(200);

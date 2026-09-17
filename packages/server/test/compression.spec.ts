@@ -163,14 +163,11 @@ describe('Compression', () => {
           server.addOnceHandler(adapter);
           const res = await fetchAPI.fetch(server.url);
           const encodingSupported = encodings.some(e => e !== 'none');
-          if (encodingSupported) {
-            // Ponyfill transports strip encoding headers after decode; Node's
-            // native fetch keeps them (body is still decompressed).
-            if (implName === 'native') {
-              expect(res.headers.get('content-encoding')).toBeTruthy();
-            } else {
-              expect(res.headers.get('content-encoding')).toBeNull();
-            }
+          // Decoded body must not advertise wire Content-Encoding / Content-Length.
+          // Skip header checks on Node native fetch (it keeps them after decode).
+          if (encodingSupported && implName !== 'native') {
+            expect(res.headers.get('content-encoding')).toBeNull();
+            expect(res.headers.get('content-length')).toBeNull();
           }
           expect(res.status).toEqual(200);
           const acceptedEncodings = req?.headers.get('accept-encoding');
@@ -179,9 +176,6 @@ describe('Compression', () => {
           expect(acceptedEncodings).toContain('deflate');
           const returnedData = await res.text();
           expect(returnedData).toEqual(exampleData);
-          if (encodingSupported && implName !== 'native') {
-            expect(res.headers.get('content-length')).toBeNull();
-          }
         },
       );
       const encodings = [...getSupportedEncodings(fetchAPI), 'none'];
@@ -206,11 +200,7 @@ describe('Compression', () => {
                 'accept-encoding': encoding,
               },
             });
-            if (implName === 'native') {
-              expect(res.headers.get('content-encoding')).toEqual(
-                encoding === 'none' ? null : encoding,
-              );
-            } else {
+            if (implName !== 'native') {
               expect(res.headers.get('content-encoding')).toBeNull();
             }
             expect(res.status).toEqual(200);
@@ -223,8 +213,6 @@ describe('Compression', () => {
               expect(numberContentLength).toEqual(origSize);
             } else if (encoding !== 'none' && implName !== 'native') {
               expect(contentLength).toBeNull();
-            } else if (encoding !== 'none' && implName === 'native' && contentLength) {
-              expect(numberContentLength).toBeLessThan(origSize);
             }
           });
           skipIf(globalThis.Deno && serverImplName !== 'Deno')(

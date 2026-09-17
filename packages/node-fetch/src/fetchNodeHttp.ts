@@ -137,7 +137,8 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         }
 
         const responseHeaders = { ...nodeResponse.headers } as Record<string, string>;
-        // Match native fetch / undici decompress: drop encoding headers once decoded.
+        // After decode the body is plain; drop wire Content-Encoding / Content-Length
+        // (same as undici decompress / Deno / CF; Node native fetch keeps them).
         if (outputStream) {
           delete responseHeaders['content-encoding'];
           delete responseHeaders['content-length'];
