@@ -164,8 +164,8 @@ describe('Compression', () => {
           const res = await fetchAPI.fetch(server.url);
           const encodingSupported = encodings.some(e => e !== 'none');
           // Decoded body must not advertise wire Content-Encoding / Content-Length.
-          // Skip header checks on Node native fetch (it keeps them after decode).
-          if (encodingSupported && implName !== 'native') {
+          // Skip on Node/Bun native fetch (createFetch uses native on Bun).
+          if (encodingSupported && implName !== 'native' && !globalThis.Bun) {
             expect(res.headers.get('content-encoding')).toBeNull();
             expect(res.headers.get('content-length')).toBeNull();
           }
@@ -200,7 +200,7 @@ describe('Compression', () => {
                 'accept-encoding': encoding,
               },
             });
-            if (implName !== 'native') {
+            if (implName !== 'native' && !globalThis.Bun) {
               expect(res.headers.get('content-encoding')).toBeNull();
             }
             expect(res.status).toEqual(200);
@@ -211,7 +211,7 @@ describe('Compression', () => {
             const origSize = Buffer.byteLength(exampleData);
             if (encoding === 'none' && contentLength) {
               expect(numberContentLength).toEqual(origSize);
-            } else if (encoding !== 'none' && implName !== 'native') {
+            } else if (encoding !== 'none' && implName !== 'native' && !globalThis.Bun) {
               expect(contentLength).toBeNull();
             }
           });

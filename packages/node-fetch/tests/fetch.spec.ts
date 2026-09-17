@@ -182,8 +182,8 @@ describe('Node Fetch Ponyfill', () => {
       // Deno does not uncompress responses automatically
       describeIf(!globalThis.Deno)('Compression', () => {
         // After auto-decompress, encoding headers must be gone (decoded body).
-        // Node's native fetch keeps them; we only assert headers on the ponyfill.
-        const expectDecodedHeaders = implName !== 'native';
+        // Node/Bun native fetch keep them; createFetch also forces native on Bun.
+        const expectDecodedHeaders = implName !== 'native' && !globalThis.Bun;
         it('should respect gzip', async () => {
           const response = await fetchPonyfill(baseUrl + '/gzip');
           if (expectDecodedHeaders) {

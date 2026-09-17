@@ -6,6 +6,7 @@ import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, beforeAll, describe } from '@jest/globals';
 import { patchSymbols } from '@whatwg-node/disposablestack';
 import { createFetch } from '@whatwg-node/fetch';
+import { closeSharedUndiciAgent } from '../../node-fetch/src/fetchUndici';
 import { getUndici } from '../../node-fetch/src/getUndici';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
@@ -29,6 +30,9 @@ export function runTestsForEachFetchImpl(
     describeIf(undiciAvailable)('undici', () => {
       beforeAll(() => {
         (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;
+      });
+      afterAll(async () => {
+        await Promise.race([closeSharedUndiciAgent(), setTimeout(1000).then(() => undefined)]);
       });
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('undici', {

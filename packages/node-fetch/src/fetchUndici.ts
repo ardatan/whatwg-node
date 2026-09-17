@@ -11,6 +11,37 @@ import { DEFAULT_ACCEPT_ENCODING, getHeadersObj, isNodeReadable, shouldRedirect 
 
 let sharedAgent: Dispatcher | undefined;
 
+/** Close the shared undici agent (leak tests / suite teardown). */
+export async function closeSharedUndiciAgent(): Promise<void> {
+  const agent = sharedAgent;
+  sharedAgent = undefined;
+  if (!agent) {
+    return;
+  }
+  await agent.close();
+  await agent.destroy();
+}
+
+function wrapDnsSkipBracketedIPv6(
+  dnsInterceptor: Dispatcher.DispatcherComposeInterceptor,
+): Dispatcher.DispatcherComposeInterceptor {
+  // Node 25+ keeps brackets in URL.hostname for IPv6 (`[::1]`). undici's dns
+  // interceptor uses `isIP(hostname)` which fails on bracketed forms and then
+  // `dns.lookup('[::1]')` throws ENOTFOUND. Skip the interceptor for those hosts.
+  return dispatch => {
+    const withDns = dnsInterceptor(dispatch);
+    return (opts, handler) => {
+      if (opts.origin != null) {
+        const origin = opts.origin instanceof URL ? opts.origin : new URL(String(opts.origin));
+        if (origin.hostname.startsWith('[')) {
+          return dispatch(opts, handler);
+        }
+      }
+      return withDns(opts, handler);
+    };
+  };
+}
+
 function getSharedAgent(): Dispatcher {
   if (!sharedAgent) {
     const undici = getUndici();
@@ -32,7 +63,7 @@ function getSharedAgent(): Dispatcher {
     // dns → redirect → decompress → agent. Per-request `maxRedirections` overrides
     // redirect (0 = manual/error passthrough, >0 = follow).
     sharedAgent = agent.compose(
-      undici.interceptors.dns({ maxTTL: 10 * 60 * 1000 }),
+      wrapDnsSkipBracketedIPv6(undici.interceptors.dns({ maxTTL: 10 * 60 * 1000 })),
       undici.interceptors.redirect(),
       undici.interceptors.decompress(),
     );
@@ -112,13 +143,19 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
     let dispatchController: Dispatcher.DispatchController | undefined;
     let removeAbortListener: (() => void) | undefined;
 
-    function asError(reason: unknown, fallbackMessage: string): Error {
-      return reason instanceof Error ? reason : new Error(fallbackMessage);
+    function abortError(reason: unknown, fallbackMessage: string): Error {
+      if (reason instanceof Error) {
+        return reason;
+      }
+      if (typeof reason === 'string' && reason) {
+        return new Error(reason);
+      }
+      return new Error(fallbackMessage);
     }
 
     function settleReject(error: unknown) {
       if (settled) {
-        outputStream?.destroy(asError(error, 'Request failed'));
+        outputStream?.destroy(abortError(error, 'Request failed'));
         return;
       }
       settled = true;
@@ -131,14 +168,19 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
         return;
       }
       settled = true;
-      removeAbortListener?.();
+      // Keep the abort listener until the body finishes so mid-stream
+      // AbortSignal still tears down the undici connection / output stream.
       resolve(response);
     }
 
     if (signal) {
       const onAbort = () => {
-        const reason = asError(signal.reason, 'The operation was aborted.');
-        dispatchController?.abort(reason);
+        // Preserve AbortSignal.reason for the fetch rejection (WPT); undici
+        // DispatchController.abort requires an Error instance.
+        const reason = signal.reason ?? new Error('The operation was aborted.');
+        removeAbortListener?.();
+        dispatchController?.abort(abortError(reason, 'The operation was aborted.'));
+        outputStream?.destroy(abortError(reason, 'The operation was aborted.'));
         settleReject(reason);
       };
       signal.addEventListener('abort', onAbort, { once: true });
@@ -163,7 +205,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
               redirectHistoryLength = context.history.length;
             }
             if (signal?.aborted) {
-              controller.abort(asError(signal.reason, 'The operation was aborted.'));
+              controller.abort(abortError(signal.reason, 'The operation was aborted.'));
             }
           },
           onResponseStart(controller, statusCode, responseHeaders, statusMessage) {
@@ -185,11 +227,20 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
             outputStream =
               createDeflateRawFallback(responseHeaders['content-encoding']) || new PassThrough();
 
+            // Response may already be resolved; still honor later aborts.
+            if (signal?.aborted) {
+              const reason = signal.reason ?? new Error('The operation was aborted.');
+              controller.abort(abortError(reason, 'The operation was aborted.'));
+              outputStream.destroy(abortError(reason, 'The operation was aborted.'));
+              settleReject(reason);
+              return;
+            }
+
             outputStream.on('drain', () => {
               controller.resume();
             });
             outputStream.on('error', err => {
-              controller.abort(asError(err, 'Response stream error'));
+              controller.abort(abortError(err, 'Response stream error'));
             });
 
             let statusText = statusMessage || STATUS_CODES[statusCode];
