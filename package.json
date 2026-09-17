@@ -107,7 +107,7 @@
     "workerd@1.20260903.1": true,
     "protobufjs@7.6.6": true,
     "unrs-resolver@1.12.2": true,
-    "puppeteer@25.10.0": true
+    "puppeteer@25.11.0": true
   },
   "devEngines": {
     "packageManager": {
