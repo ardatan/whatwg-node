@@ -12,6 +12,8 @@ export const options = {
   },
 };
 
+const warmupIterations = 200;
+
 export function handleSummary(data) {
   if (__ENV.GITHUB_TOKEN) {
     githubComment(data, {
@@ -104,6 +106,15 @@ function checkResponseStructure(x) {
     return true;
   }
   return checkRecursive(x, expectedStructure);
+}
+
+export function setup() {
+  for (let i = 0; i < warmupIterations; i++) {
+    const res = http.post(reqUrl, reqBody, reqParams);
+    if (res.status !== 200) {
+      throw new Error(`Warmup request failed with status ${res.status}`);
+    }
+  }
 }
 
 export default function run() {
