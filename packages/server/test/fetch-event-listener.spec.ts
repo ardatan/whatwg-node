@@ -57,7 +57,9 @@ describe('FetchEvent listener', () => {
         expect(calledContext.waitUntil).toBe(fetchEvent.waitUntil);
       });
       it('should accept additional parameters as server context', async () => {
-        const handleRequest = jest.fn((_req: Request, _ctx: any) => Response.json({}));
+        const handleRequest = jest.fn((_req: Request, _ctx: any, _fetchAPI?: any) =>
+          Response.json({}),
+        );
         const adapter = createServerAdapter<{
           foo: string;
         }>(handleRequest);
@@ -73,6 +75,10 @@ describe('FetchEvent listener', () => {
         expect(handleRequest).toHaveBeenCalledWith(
           fetchEvent.request,
           expect.objectContaining(additionalCtx),
+          expect.objectContaining({
+            Request: expect.any(Function),
+            Response: expect.any(Function),
+          }),
         );
       });
     },
