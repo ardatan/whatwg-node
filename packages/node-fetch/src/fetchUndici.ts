@@ -12,7 +12,6 @@ import {
   DEFAULT_ACCEPT_ENCODING,
   getHeadersObj,
   isNodeReadable,
-  pipeThrough,
   shouldRedirect,
 } from './utils.js';
 
@@ -100,69 +99,156 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
     signal = fetchRequest._signal;
   }
 
+  if (signal?.aborted) {
+    return fakeRejectPromise(signal.reason ?? new Error('The operation was aborted.'));
+  }
+
   const requestUrl = fetchRequest.parsedUrl || fetchRequest.url;
+  const parsedUrl = undici.parseURL(requestUrl);
   const body = getRequestBody(fetchRequest);
+  const agent = getSharedAgent();
 
-  return undici
-    .request(requestUrl, {
-      method: fetchRequest.method as Dispatcher.HttpMethod,
-      headers,
-      body: body ?? undefined,
-      signal,
-      dispatcher: getSharedAgent(),
-    })
-    .then(({ statusCode, headers: responseHeaders, body: responseBody, statusText }) => {
-      const locationHeader = responseHeaders.location;
-      const location = Array.isArray(locationHeader) ? locationHeader[0] : locationHeader;
+  return new Promise<PonyfillResponse<TResponseJSON>>((resolve, reject) => {
+    let outputStream: PassThrough | undefined;
+    let settled = false;
+    let discarding = false;
+    let redirectUrl: string | undefined;
+    let dispatchController: { abort: (reason?: unknown) => void } | undefined;
+    let removeAbortListener: (() => void) | undefined;
 
-      if (location && shouldRedirect(statusCode)) {
-        if (fetchRequest.redirect === 'error') {
-          responseBody.resume();
-          throw new Error('Redirects are not allowed');
-        }
-        if (fetchRequest.redirect === 'follow') {
-          const redirectedUrl = new PonyfillURL(
-            location,
-            fetchRequest.parsedUrl || fetchRequest.url,
-          );
-          responseBody.resume();
-          return fetchUndici(new PonyfillRequest(redirectedUrl, fetchRequest)).then(
-            redirectResponse => {
-              redirectResponse.redirected = true;
-              return redirectResponse;
-            },
-          );
-        }
+    function settleReject(error: unknown) {
+      if (settled) {
+        outputStream?.destroy(error as Error);
+        return;
       }
+      settled = true;
+      removeAbortListener?.();
+      reject(error);
+    }
 
-      let outputStream = createDecompressionStream(responseHeaders['content-encoding']);
-      outputStream ||= new PassThrough();
+    function settleResolve(response: PonyfillResponse<TResponseJSON>) {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      removeAbortListener?.();
+      resolve(response);
+    }
 
-      pipeThrough({
-        src: responseBody,
-        dest: outputStream,
-        signal,
-        onError: e => {
-          if (!responseBody.destroyed) {
-            responseBody.destroy(e);
-          }
-          if (!outputStream!.destroyed) {
-            outputStream!.destroy(e);
-          }
+    if (signal) {
+      const onAbort = () => {
+        const reason = signal.reason ?? new Error('The operation was aborted.');
+        dispatchController?.abort(reason);
+        settleReject(reason);
+      };
+      signal.addEventListener('abort', onAbort, { once: true });
+      removeAbortListener = () => signal.removeEventListener('abort', onAbort);
+    }
+
+    try {
+      agent.dispatch(
+        {
+          origin: parsedUrl.origin,
+          path: parsedUrl.search ? `${parsedUrl.pathname}${parsedUrl.search}` : parsedUrl.pathname,
+          method: fetchRequest.method as Dispatcher.HttpMethod,
+          headers,
+          body: body ?? undefined,
         },
-      });
+        {
+          onRequestStart(controller) {
+            dispatchController = controller;
+            if (signal?.aborted) {
+              controller.abort(signal.reason ?? new Error('The operation was aborted.'));
+            }
+          },
+          onResponseStart(controller, statusCode, responseHeaders, statusMessage) {
+            if (statusCode < 200) {
+              return;
+            }
 
-      let resolvedStatusText = statusText || STATUS_CODES[statusCode];
-      if (resolvedStatusText == null) {
-        resolvedStatusText = '';
-      }
+            const locationHeader = responseHeaders.location;
+            const location = Array.isArray(locationHeader) ? locationHeader[0] : locationHeader;
 
-      return new PonyfillResponse(outputStream, {
-        status: statusCode,
-        statusText: resolvedStatusText,
-        headers: responseHeaders as Record<string, string | string[]>,
-        url: fetchRequest.url,
-        signal,
-      });
-    });
+            if (location && shouldRedirect(statusCode)) {
+              if (fetchRequest.redirect === 'error') {
+                discarding = true;
+                settleReject(new Error('Redirects are not allowed'));
+                controller.abort();
+                return;
+              }
+              if (fetchRequest.redirect === 'follow') {
+                discarding = true;
+                redirectUrl = new PonyfillURL(
+                  location,
+                  fetchRequest.parsedUrl || fetchRequest.url,
+                ).href;
+                return;
+              }
+            }
+
+            outputStream = createDecompressionStream(responseHeaders['content-encoding']);
+            outputStream ||= new PassThrough();
+
+            outputStream.on('drain', () => {
+              controller.resume();
+            });
+            outputStream.on('error', err => {
+              controller.abort(err);
+            });
+
+            let statusText = statusMessage || STATUS_CODES[statusCode];
+            if (statusText == null) {
+              statusText = '';
+            }
+
+            settleResolve(
+              new PonyfillResponse(outputStream, {
+                status: statusCode,
+                statusText,
+                headers: responseHeaders as Record<string, string | string[]>,
+                url: fetchRequest.url,
+                signal,
+              }),
+            );
+          },
+          onResponseData(controller, chunk) {
+            if (discarding || !outputStream) {
+              return;
+            }
+            if (!outputStream.write(chunk)) {
+              controller.pause();
+            }
+          },
+          onResponseEnd() {
+            removeAbortListener?.();
+            if (discarding) {
+              if (redirectUrl && !settled) {
+                fetchUndici(new PonyfillRequest(redirectUrl, fetchRequest))
+                  .then(redirectResponse => {
+                    redirectResponse.redirected = true;
+                    settleResolve(redirectResponse);
+                  })
+                  .catch(settleReject);
+              }
+              return;
+            }
+            outputStream?.end();
+          },
+          onResponseError(_controller, error) {
+            if (discarding && redirectUrl) {
+              // Abort after deciding to follow/error redirect is expected.
+              if (!settled) {
+                settleReject(error);
+              }
+              return;
+            }
+            settleReject(error);
+            outputStream?.destroy(error);
+          },
+        },
+      );
+    } catch (error) {
+      settleReject(error);
+    }
+  });
 }

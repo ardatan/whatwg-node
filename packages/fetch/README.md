@@ -46,8 +46,9 @@ way.
 ### Faster HTTP Client in Node.js with HTTP/2 support
 
 If you install [`undici`](https://www.npmjs.com/package/undici) separately, `@whatwg-node/fetch`
-will use `undici.request` (not `undici.fetch`) as the HTTP transport instead of `node:http`. That
-keeps our own Fetch / Streams ponyfill while getting undici's connection pooling and HTTP/2 support.
+will use `undici`'s low-level `dispatch` API (not `undici.fetch`) as the HTTP transport instead of
+`node:http`. That keeps our own Fetch / Streams ponyfill while getting undici's connection pooling
+and HTTP/2 support.
 
 ```bash
 npm install undici
