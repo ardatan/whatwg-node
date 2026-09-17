@@ -136,6 +136,13 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
+        const responseHeaders = { ...nodeResponse.headers } as Record<string, string>;
+        // Match native fetch / undici decompress: drop encoding headers once decoded.
+        if (outputStream) {
+          delete responseHeaders['content-encoding'];
+          delete responseHeaders['content-length'];
+        }
+
         outputStream ||= new PassThrough();
 
         pipeThrough({
@@ -161,7 +168,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
           status: statusCode,
           statusText,
-          headers: nodeResponse.headers as Record<string, string>,
+          headers: responseHeaders,
           url: fetchRequest.url,
           signal,
         });

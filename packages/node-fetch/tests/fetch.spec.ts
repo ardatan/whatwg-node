@@ -183,11 +183,11 @@ describe('Node Fetch Ponyfill', () => {
       describeIf(!globalThis.Deno)('Compression', () => {
         it('should respect gzip', async () => {
           const response = await fetchPonyfill(baseUrl + '/gzip');
-          // undici decompress interceptor strips Content-Encoding after decoding.
-          if (implName === 'undici') {
-            expect(response.headers.get('content-encoding')).toBeNull();
-          } else {
+          // Ponyfill strips Content-Encoding after decode; Node native fetch keeps it.
+          if (implName === 'native') {
             expect(response.headers.get('content-encoding')).toBe('gzip');
+          } else {
+            expect(response.headers.get('content-encoding')).toBeNull();
           }
           expect(response.status).toBe(200);
           const body = await response.json();
@@ -195,10 +195,10 @@ describe('Node Fetch Ponyfill', () => {
         });
         it('should respect deflate', async () => {
           const response = await fetchPonyfill(baseUrl + '/deflate');
-          if (implName === 'undici') {
-            expect(response.headers.get('content-encoding')).toBeNull();
-          } else {
+          if (implName === 'native') {
             expect(response.headers.get('content-encoding')).toBe('deflate');
+          } else {
+            expect(response.headers.get('content-encoding')).toBeNull();
           }
           expect(response.status).toBe(200);
           const body = await response.json();
@@ -206,10 +206,10 @@ describe('Node Fetch Ponyfill', () => {
         });
         it('should respect brotli', async () => {
           const response = await fetchPonyfill(baseUrl + '/brotli');
-          if (implName === 'undici') {
-            expect(response.headers.get('content-encoding')).toBeNull();
-          } else {
+          if (implName === 'native') {
             expect(response.headers.get('content-encoding')).toBe('br');
+          } else {
+            expect(response.headers.get('content-encoding')).toBeNull();
           }
           expect(response.status).toBe(200);
           const body = await response.json();

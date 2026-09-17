@@ -7,12 +7,7 @@ import { getHttpsCheckServerIdentity } from './checkServerIdentity.js';
 import { getUndici } from './getUndici.js';
 import { PonyfillRequest } from './Request.js';
 import { PonyfillResponse } from './Response.js';
-import {
-  DEFAULT_ACCEPT_ENCODING,
-  getHeadersObj,
-  isNodeReadable,
-  shouldRedirect,
-} from './utils.js';
+import { DEFAULT_ACCEPT_ENCODING, getHeadersObj, isNodeReadable, shouldRedirect } from './utils.js';
 
 let sharedAgent: Dispatcher | undefined;
 
@@ -22,17 +17,18 @@ function getSharedAgent(): Dispatcher {
     if (!undici) {
       throw new Error('undici is not available');
     }
+    // allowH2 defaults to true in undici; only override TLS identity when this
+    // Node build still has the IPv6 IP-SAN regression (same as fetchNodeHttp).
     const checkServerIdentity = getHttpsCheckServerIdentity();
-    const agent = new undici.Agent({
-      allowH2: true,
-      ...(checkServerIdentity
+    const agent = new undici.Agent(
+      checkServerIdentity
         ? {
             connect: {
               checkServerIdentity,
             },
           }
-        : {}),
-    });
+        : undefined,
+    );
     // dns → redirect → decompress → agent. Per-request `maxRedirections` overrides
     // redirect (0 = manual/error passthrough, >0 = follow).
     sharedAgent = agent.compose(
@@ -113,12 +109,16 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
     let outputStream: PassThrough | undefined;
     let settled = false;
     let redirectHistoryLength = 0;
-    let dispatchController: { abort: (reason?: unknown) => void } | undefined;
+    let dispatchController: Dispatcher.DispatchController | undefined;
     let removeAbortListener: (() => void) | undefined;
+
+    function asError(reason: unknown, fallbackMessage: string): Error {
+      return reason instanceof Error ? reason : new Error(fallbackMessage);
+    }
 
     function settleReject(error: unknown) {
       if (settled) {
-        outputStream?.destroy(error as Error);
+        outputStream?.destroy(asError(error, 'Request failed'));
         return;
       }
       settled = true;
@@ -137,7 +137,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
 
     if (signal) {
       const onAbort = () => {
-        const reason = signal.reason ?? new Error('The operation was aborted.');
+        const reason = asError(signal.reason, 'The operation was aborted.');
         dispatchController?.abort(reason);
         settleReject(reason);
       };
@@ -163,7 +163,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
               redirectHistoryLength = context.history.length;
             }
             if (signal?.aborted) {
-              controller.abort(signal.reason ?? new Error('The operation was aborted.'));
+              controller.abort(asError(signal.reason, 'The operation was aborted.'));
             }
           },
           onResponseStart(controller, statusCode, responseHeaders, statusMessage) {
@@ -175,13 +175,10 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
             const location = Array.isArray(locationHeader) ? locationHeader[0] : locationHeader;
 
             // maxRedirections: 0 leaves 3xx to us for Fetch redirect: 'error' | 'manual'.
-            if (
-              fetchRequest.redirect === 'error' &&
-              location &&
-              shouldRedirect(statusCode)
-            ) {
-              settleReject(new Error('Redirects are not allowed'));
-              controller.abort();
+            if (fetchRequest.redirect === 'error' && location && shouldRedirect(statusCode)) {
+              const redirectError = new Error('Redirects are not allowed');
+              settleReject(redirectError);
+              controller.abort(redirectError);
               return;
             }
 
@@ -192,7 +189,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
               controller.resume();
             });
             outputStream.on('error', err => {
-              controller.abort(err);
+              controller.abort(asError(err, 'Response stream error'));
             });
 
             let statusText = statusMessage || STATUS_CODES[statusCode];
@@ -203,7 +200,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
             const response = new PonyfillResponse(outputStream, {
               status: statusCode,
               statusText,
-              headers: responseHeaders as Record<string, string | string[]>,
+              headers: responseHeaders as Record<string, string>,
               url: fetchRequest.url,
               signal,
             });
