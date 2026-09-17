@@ -82,6 +82,5 @@ describe('FetchEvent listener', () => {
         );
       });
     },
-    { noLibCurl: true },
   );
 });

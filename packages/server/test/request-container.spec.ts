@@ -44,6 +44,5 @@ describe('Request Container', () => {
         );
       });
     },
-    { noLibCurl: true },
   );
 });

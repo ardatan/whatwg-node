@@ -23,23 +23,9 @@ export function runTestsForEachFetchImpl(
       createServerAdapter: typeof createServerAdapter;
     },
   ) => void,
-  opts: { noLibCurl?: boolean; noNativeFetch?: boolean } = {},
+  opts: { noNativeFetch?: boolean } = {},
 ) {
   describeIf(!globalThis.Deno)('Ponyfill', () => {
-    // `noLibCurl` kept as the option name for call-site compatibility: skip the
-    // undici vs node-http matrix and run a single ponyfill suite.
-    if (opts.noLibCurl) {
-      const fetchAPI = createFetch({ skipPonyfill: false });
-      callback('ponyfill', {
-        fetchAPI,
-        createServerAdapter: (baseObj: any, opts?: any) =>
-          createServerAdapter(baseObj, {
-            fetchAPI,
-            ...opts,
-          }),
-      });
-      return;
-    }
     describeIf(undiciAvailable)('undici', () => {
       beforeAll(() => {
         (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;

@@ -143,7 +143,6 @@ describe('Compression', () => {
           });
         }
       },
-      { noLibCurl: true },
     );
   });
   runTestsForEachFetchImpl((implName, { fetchAPI, createServerAdapter }) => {

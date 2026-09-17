@@ -85,6 +85,5 @@ describe('Server Context', () => {
         });
       });
     },
-    { noLibCurl: true },
   );
 });

@@ -37,6 +37,5 @@ describe('useErrorHandling', () => {
         );
       });
     },
-    { noLibCurl: true },
   );
 });

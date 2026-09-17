@@ -151,6 +151,5 @@ describe('useRequestDeadline', () => {
         expect(onResponse).toHaveBeenCalledTimes(1);
       });
     },
-    { noLibCurl: true },
   );
 });
