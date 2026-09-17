@@ -1,6 +1,5 @@
 import { once } from 'node:events';
 import { Readable, Writable } from 'node:stream';
-import zlib from 'node:zlib';
 import { PonyfillCompressionFormat } from './CompressionStream';
 
 function isHeadersInstance(obj: any): obj is Headers {
@@ -139,8 +138,6 @@ export function getSupportedFormats(): PonyfillCompressionFormat[] {
   if (!globalThis.process?.versions?.node?.startsWith('2')) {
     baseFormats.push('deflate-raw');
   }
-  if (zlib.createZstdCompress != null) {
-    baseFormats.push('zstd');
-  }
+  baseFormats.push('zstd');
   return baseFormats;
 }
