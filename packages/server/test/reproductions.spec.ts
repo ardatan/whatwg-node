@@ -224,11 +224,18 @@ it('if native Request object is sent, the native API is used during the request 
   expect(res).toBeInstanceOf(globalThis.Response);
   for (const key in usedFetchAPIInPlugins) {
     const keyName = key as keyof FetchAPI;
-    expect(usedFetchAPIInPlugins![keyName]).toBe(globalThis[keyName]);
+    // Namespace extras like `createFetch` / `default` are not on globalThis.
+    if (!(keyName in globalThis)) {
+      continue;
+    }
+    expect(usedFetchAPIInPlugins![keyName]).toBe(globalThis[keyName as keyof typeof globalThis]);
   }
   for (const key in usedFetchAPIInHandler) {
     const keyName = key as keyof FetchAPI;
-    expect(usedFetchAPIInHandler![keyName]).toBe(globalThis[keyName]);
+    if (!(keyName in globalThis)) {
+      continue;
+    }
+    expect(usedFetchAPIInHandler![keyName]).toBe(globalThis[keyName as keyof typeof globalThis]);
   }
   const responseBody = await res.json();
   expect(responseBody).toEqual({ hello: 'world' });
