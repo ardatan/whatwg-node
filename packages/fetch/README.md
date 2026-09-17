@@ -45,10 +45,12 @@ way.
 
 ### Faster HTTP Client in Node.js with HTTP/2 support
 
-If you install [`undici`](https://www.npmjs.com/package/undici) separately, `@whatwg-node/fetch`
-will use `undici`'s low-level `dispatch` API with DNS caching, redirect following, and response
-decompression interceptors (not `undici.fetch`) as the HTTP transport instead of `node:http`. That
-keeps our own Fetch / Streams ponyfill while getting undici's connection pooling and HTTP/2 support.
+If you install [`undici`](https://www.npmjs.com/package/undici) separately on **Node.js**,
+`@whatwg-node/fetch` will use `undici`'s low-level `dispatch` API with DNS caching, redirect
+following, and response decompression interceptors (not `undici.fetch`) as the HTTP transport
+instead of `node:http`. That keeps our own Fetch / Streams ponyfill while getting undici's
+connection pooling and HTTP/2 support. Bun and Deno keep using their native fetch / `node:http`
+fallback; the optional undici transport is not enabled there.
 
 ```bash
 npm install undici

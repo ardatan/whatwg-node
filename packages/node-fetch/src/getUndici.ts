@@ -54,6 +54,8 @@ function loadUndiciSideEffectFree(require: NodeRequire): UndiciModule {
 
 function loadUndiciWithRestore(require: NodeRequire): UndiciModule {
   const prevLegacy = (globalThis as Record<symbol, unknown>)[LEGACY_DISPATCHER];
+  // Optional soft-require (same idea as the old libcurl path); not a hard dependency.
+  // eslint-disable-next-line import/no-extraneous-dependencies -- optional runtime transport
   const undici = require('undici') as {
     Agent: typeof Agent;
     interceptors: UndiciInterceptors;
@@ -75,6 +77,12 @@ function loadUndici(): UndiciModule | null {
   if (cached !== undefined) {
     return cached;
   }
+  // Bun / Deno already ship a solid native fetch; keep the optional undici
+  // transport for Node only (mirrors the old libcurl skip on these runtimes).
+  if (globalThis.Bun || globalThis.Deno) {
+    cached = null;
+    return cached;
+  }
   try {
     const require = createRequireFromCwd();
     try {
@@ -89,7 +97,7 @@ function loadUndici(): UndiciModule | null {
 }
 
 /**
- * Optional `undici` transport. Tests can force the `node:http` path with
+ * Optional `undici` transport on Node. Tests can force the `node:http` path with
  * `globalThis[Symbol.for('whatwg-node.disable-undici')] = true`.
  */
 export function getUndici(): UndiciModule | null {

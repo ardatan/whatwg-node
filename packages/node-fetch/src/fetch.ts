@@ -106,8 +106,7 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
     const response = getResponseForBlob(fetchRequest.url);
     return fakePromise(response);
   }
-  // Prefer optional `undici.request` (not undici.fetch) when available.
-  // Custom `node:http` agents stay on the node:http transport.
+  // Prefer optional undici.dispatch (Node) when available; not undici.fetch.
   if (getUndici() && !fetchRequest.agent) {
     return fetchUndici(fetchRequest);
   }
