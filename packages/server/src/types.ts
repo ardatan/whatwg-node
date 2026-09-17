@@ -126,6 +126,7 @@ export type ServerAdapter<
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
   ctx: TServerContext & ServerAdapterInitialContext,
+  fetchAPI: FetchAPI,
 ) => MaybePromise<Response>;
 
 export type ServerAdapterNodeContext = {

@@ -107,9 +107,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             outputStream = zlib.createBrotliDecompress();
             break;
           case 'zstd':
-            if (zlib.createZstdDecompress != null) {
-              outputStream = zlib.createZstdDecompress();
-            }
+            outputStream = zlib.createZstdDecompress();
             break;
         }
         if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
