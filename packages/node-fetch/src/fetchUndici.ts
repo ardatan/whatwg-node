@@ -118,7 +118,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
       if (location && shouldRedirect(statusCode)) {
         if (fetchRequest.redirect === 'error') {
           responseBody.resume();
-          return fakeRejectPromise(new Error('Redirects are not allowed'));
+          throw new Error('Redirects are not allowed');
         }
         if (fetchRequest.redirect === 'follow') {
           const redirectedUrl = new PonyfillURL(
