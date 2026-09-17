@@ -3,9 +3,16 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { Agent, Dispatcher } from 'undici';
 
+export type UndiciInterceptors = {
+  redirect: (opts?: { maxRedirections?: number }) => Dispatcher.DispatcherComposeInterceptor;
+  decompress: (opts?: Record<string, unknown>) => Dispatcher.DispatcherComposeInterceptor;
+  dns: (opts?: { maxTTL?: number; dualStack?: boolean }) => Dispatcher.DispatcherComposeInterceptor;
+};
+
 export type UndiciModule = {
   Agent: typeof Agent;
   parseURL: (url: string | URL | object) => URL;
+  interceptors: UndiciInterceptors;
 };
 
 const DISABLE_KEY = Symbol.for('whatwg-node.disable-undici');
@@ -18,8 +25,16 @@ function createRequireFromCwd() {
   return createRequire(pathToFileURL(path.join(process.cwd(), '_')).href);
 }
 
+function loadInterceptors(require: NodeRequire, undiciRoot: string): UndiciInterceptors {
+  return {
+    redirect: require(path.join(undiciRoot, 'lib/interceptor/redirect.js')),
+    decompress: require(path.join(undiciRoot, 'lib/interceptor/decompress.js')),
+    dns: require(path.join(undiciRoot, 'lib/interceptor/dns.js')),
+  };
+}
+
 /**
- * Prefer loading Agent without executing `undici`'s index.js.
+ * Prefer loading Agent/interceptors without executing `undici`'s index.js.
  * The package entry calls `setGlobalDispatcher` and overwrites
  * `Symbol.for('undici.globalDispatcher.1')`, which breaks Node's built-in `fetch`
  * when the bundled and npm undici versions disagree (e.g. content-length checks).
@@ -33,20 +48,26 @@ function loadUndiciSideEffectFree(require: NodeRequire): UndiciModule {
   return {
     Agent: AgentCtor,
     parseURL: util.parseURL.bind(util),
+    interceptors: loadInterceptors(require, undiciRoot),
   };
 }
 
 function loadUndiciWithRestore(require: NodeRequire): UndiciModule {
   const prevLegacy = (globalThis as Record<symbol, unknown>)[LEGACY_DISPATCHER];
-  const undici = require('undici') as { Agent: typeof Agent };
+  const undici = require('undici') as {
+    Agent: typeof Agent;
+    interceptors: UndiciInterceptors;
+  };
   if (prevLegacy !== undefined) {
     (globalThis as Record<symbol, unknown>)[LEGACY_DISPATCHER] = prevLegacy;
   }
-  // parseURL is not public on the package entry; fall back to WHATWG URL.
   return {
     Agent: undici.Agent,
     parseURL: (url: string | URL | object) =>
-      typeof url === 'string' || url instanceof URL ? new URL(url as string | URL) : new URL(String(url)),
+      typeof url === 'string' || url instanceof URL
+        ? new URL(url as string | URL)
+        : new URL(String(url)),
+    interceptors: undici.interceptors,
   };
 }
 

@@ -166,7 +166,12 @@ describe('Compression', () => {
           const res = await fetchAPI.fetch(server.url);
           const encodingSupported = encodings.some(e => e !== 'none');
           if (encodingSupported) {
-            expect(res.headers.get('content-encoding')).toBeTruthy();
+            // undici decompress interceptor strips Content-Encoding / Content-Length.
+            if (implName === 'undici') {
+              expect(res.headers.get('content-encoding')).toBeNull();
+            } else {
+              expect(res.headers.get('content-encoding')).toBeTruthy();
+            }
           }
           expect(res.status).toEqual(200);
           const acceptedEncodings = req?.headers.get('accept-encoding');
@@ -175,7 +180,7 @@ describe('Compression', () => {
           expect(acceptedEncodings).toContain('deflate');
           const returnedData = await res.text();
           expect(returnedData).toEqual(exampleData);
-          if (encodingSupported) {
+          if (encodingSupported && implName !== 'undici') {
             expect(Number(res.headers.get('content-length'))).toBeLessThan(
               Buffer.byteLength(exampleData),
             );
@@ -204,16 +209,25 @@ describe('Compression', () => {
                 'accept-encoding': encoding,
               },
             });
-            expect(res.headers.get('content-encoding')).toEqual(
-              encoding === 'none' ? null : encoding,
-            );
+            if (implName === 'undici') {
+              expect(res.headers.get('content-encoding')).toBeNull();
+            } else {
+              expect(res.headers.get('content-encoding')).toEqual(
+                encoding === 'none' ? null : encoding,
+              );
+            }
             expect(res.status).toEqual(200);
             const returnedData = await res.text();
             expect(returnedData).toEqual(exampleData);
             const contentLength = res.headers.get('content-length');
             const numberContentLength = Number(contentLength);
             const origSize = Buffer.byteLength(exampleData);
-            if (encoding === 'none' && contentLength) {
+            if (implName === 'undici') {
+              // Content-Length is removed together with Content-Encoding.
+              if (encoding === 'none' && contentLength) {
+                expect(numberContentLength).toEqual(origSize);
+              }
+            } else if (encoding === 'none' && contentLength) {
               expect(numberContentLength).toEqual(origSize);
             } else {
               expect(numberContentLength).toBeLessThan(origSize);

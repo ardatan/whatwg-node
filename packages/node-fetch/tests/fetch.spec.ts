@@ -183,21 +183,34 @@ describe('Node Fetch Ponyfill', () => {
       describeIf(!globalThis.Deno)('Compression', () => {
         it('should respect gzip', async () => {
           const response = await fetchPonyfill(baseUrl + '/gzip');
-          expect(response.headers.get('content-encoding')).toBe('gzip');
+          // undici decompress interceptor strips Content-Encoding after decoding.
+          if (implName === 'undici') {
+            expect(response.headers.get('content-encoding')).toBeNull();
+          } else {
+            expect(response.headers.get('content-encoding')).toBe('gzip');
+          }
           expect(response.status).toBe(200);
           const body = await response.json();
           expect(body.gzipped).toBe(true);
         });
         it('should respect deflate', async () => {
           const response = await fetchPonyfill(baseUrl + '/deflate');
-          expect(response.headers.get('content-encoding')).toBe('deflate');
+          if (implName === 'undici') {
+            expect(response.headers.get('content-encoding')).toBeNull();
+          } else {
+            expect(response.headers.get('content-encoding')).toBe('deflate');
+          }
           expect(response.status).toBe(200);
           const body = await response.json();
           expect(body.deflated).toBe(true);
         });
         it('should respect brotli', async () => {
           const response = await fetchPonyfill(baseUrl + '/brotli');
-          expect(response.headers.get('content-encoding')).toBe('br');
+          if (implName === 'undici') {
+            expect(response.headers.get('content-encoding')).toBeNull();
+          } else {
+            expect(response.headers.get('content-encoding')).toBe('br');
+          }
           expect(response.status).toBe(200);
           const body = await response.json();
           expect(body.brotli).toBe(true);
