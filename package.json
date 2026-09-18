@@ -36,7 +36,6 @@
     "version": "changeset version"
   },
   "optionalDependencies": {
-    "node-libcurl": "4.1.0",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.70.0"
   },
   "devDependencies": {

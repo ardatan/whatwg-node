@@ -41,7 +41,8 @@
   },
   "devDependencies": {
     "@types/pem": "^1.14.0",
-    "pem": "^1.14.8"
+    "pem": "^1.14.8",
+    "undici": "8.10.2"
   },
   "publishConfig": {
     "directory": "dist",

@@ -136,6 +136,14 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           }
         }
 
+        const responseHeaders = { ...nodeResponse.headers } as Record<string, string>;
+        // After decode the body is plain; drop wire Content-Encoding / Content-Length
+        // (same as undici decompress / Deno / CF; Node native fetch keeps them).
+        if (outputStream) {
+          delete responseHeaders['content-encoding'];
+          delete responseHeaders['content-length'];
+        }
+
         outputStream ||= new PassThrough();
 
         pipeThrough({
@@ -161,7 +169,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
         const ponyfillResponse = new PonyfillResponse(outputStream || nodeResponse, {
           status: statusCode,
           statusText,
-          headers: nodeResponse.headers as Record<string, string>,
+          headers: responseHeaders,
           url: fetchRequest.url,
           signal,
         });

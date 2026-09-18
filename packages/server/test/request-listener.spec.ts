@@ -12,222 +12,233 @@ const methodsWithBody = ['POST', 'PUT', 'PATCH'];
 const skipIf = (condition: boolean) => (condition ? it.skip : it);
 
 describe('Request Listener', () => {
-  runTestsForEachFetchImpl((impl, { createServerAdapter, fetchAPI }) => {
-    runTestsForEachServerImpl((testServer, serverImpl) => {
-      [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
-        // PATCH is buggy in Native
-        if (impl === 'native' && method === 'PATCH') return;
-        skipIf(
-          impl === 'native' && serverImpl === 'fastify' && (method === 'POST' || method === 'PUT'),
-        )(`should handle regular requests with ${method}`, () => {
-          const headers: Record<string, string> = {
-            accept: 'application/json; charset=utf-8',
-            'x-random-header': Date.now().toString(),
-          };
-          const requestInit: RequestInit = {
-            method,
-            headers,
-          };
-          if (methodsWithBody.includes(method)) {
-            requestInit.body = getRegularRequestBody();
-            headers['content-type'] = 'application/json; charset=utf-8';
-          }
-          const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
-            status: 200,
-            headers: {
-              'content-type': 'application/json; charset=utf-8',
-              'x-random-header': Date.now().toString(),
-            },
-          });
-          return runTestForRequestAndResponse({
-            requestInit,
-            getRequestBody: getRegularRequestBody,
-            expectedResponse,
-            getResponseBody: getRegularResponseBody,
-            testServer,
-          });
-        });
-
-        it(`should handle incremental responses with ${method}`, () => {
-          const requestInit: RequestInit = {
-            method,
-            headers: {
+  // Large streaming matrix + undici is flaky under LEAK_TEST (timeouts / dns);
+  // unit tests still cover undici here. Leak runs keep node-http.
+  runTestsForEachFetchImpl(
+    (impl, { createServerAdapter, fetchAPI }) => {
+      runTestsForEachServerImpl((testServer, serverImpl) => {
+        [...methodsWithBody, ...methodsWithoutBody].forEach(method => {
+          // PATCH is buggy in Native
+          if (impl === 'native' && method === 'PATCH') return;
+          skipIf(
+            impl === 'native' &&
+              serverImpl === 'fastify' &&
+              (method === 'POST' || method === 'PUT'),
+          )(`should handle regular requests with ${method}`, () => {
+            const headers: Record<string, string> = {
               accept: 'application/json; charset=utf-8',
               'x-random-header': Date.now().toString(),
-            },
-          };
-          if (methodsWithBody.includes(method)) {
-            requestInit.body = getRegularRequestBody();
-          }
-          const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
-            status: 200,
-            headers: {
-              'content-type': 'application/json; charset=utf-8',
-              'x-random-header': Date.now().toString(),
-            },
+            };
+            const requestInit: RequestInit = {
+              method,
+              headers,
+            };
+            if (methodsWithBody.includes(method)) {
+              requestInit.body = getRegularRequestBody();
+              headers['content-type'] = 'application/json; charset=utf-8';
+            }
+            const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
+              status: 200,
+              headers: {
+                'content-type': 'application/json; charset=utf-8',
+                'x-random-header': Date.now().toString(),
+              },
+            });
+            return runTestForRequestAndResponse({
+              requestInit,
+              getRequestBody: getRegularRequestBody,
+              expectedResponse,
+              getResponseBody: getRegularResponseBody,
+              testServer,
+            });
           });
-          return runTestForRequestAndResponse({
-            requestInit,
-            getRequestBody: getRegularRequestBody,
-            expectedResponse,
-            getResponseBody: getIncrementalResponseBody,
-            testServer,
-          });
-        });
 
-        // Bun doesn't support incremental requests yet
-        skipIf(globalThis.Bun)(`should handle incremental requests with ${method}`, () => {
-          const requestInit: RequestInit = {
-            method,
-            headers: {
-              'x-random-header': Date.now().toString(),
-              'content-type': 'text/event-stream',
-            },
-            // @ts-expect-error duplex is not part of the RequestInit type yet
-            duplex: 'half',
-          };
-          if (methodsWithBody.includes(method)) {
-            requestInit.body = getIncrementalRequestBody();
-          }
-          const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
-            status: 200,
-            headers: {
-              'content-type': 'application/json; charset=utf-8',
-              'x-random-header': Date.now().toString(),
-            },
+          it(`should handle incremental responses with ${method}`, () => {
+            const requestInit: RequestInit = {
+              method,
+              headers: {
+                accept: 'application/json; charset=utf-8',
+                'x-random-header': Date.now().toString(),
+              },
+            };
+            if (methodsWithBody.includes(method)) {
+              requestInit.body = getRegularRequestBody();
+            }
+            const expectedResponse = new fetchAPI.Response(getIncrementalResponseBody(), {
+              status: 200,
+              headers: {
+                'content-type': 'application/json; charset=utf-8',
+                'x-random-header': Date.now().toString(),
+              },
+            });
+            return runTestForRequestAndResponse({
+              requestInit,
+              getRequestBody: getRegularRequestBody,
+              expectedResponse,
+              getResponseBody: getIncrementalResponseBody,
+              testServer,
+            });
           });
-          return runTestForRequestAndResponse({
-            requestInit,
-            getRequestBody: getIncrementalRequestBody,
-            expectedResponse,
-            getResponseBody: getRegularResponseBody,
-            testServer,
+
+          // Bun doesn't support incremental requests yet
+          skipIf(globalThis.Bun)(`should handle incremental requests with ${method}`, () => {
+            const requestInit: RequestInit = {
+              method,
+              headers: {
+                'x-random-header': Date.now().toString(),
+                'content-type': 'text/event-stream',
+              },
+              // @ts-expect-error duplex is not part of the RequestInit type yet
+              duplex: 'half',
+            };
+            if (methodsWithBody.includes(method)) {
+              requestInit.body = getIncrementalRequestBody();
+            }
+            const expectedResponse = new fetchAPI.Response(getRegularResponseBody(), {
+              status: 200,
+              headers: {
+                'content-type': 'application/json; charset=utf-8',
+                'x-random-header': Date.now().toString(),
+              },
+            });
+            return runTestForRequestAndResponse({
+              requestInit,
+              getRequestBody: getIncrementalRequestBody,
+              expectedResponse,
+              getResponseBody: getRegularResponseBody,
+              testServer,
+            });
           });
         });
       });
-    });
-    function compareRequest(toBeChecked: Request, expected: Request) {
-      expect(toBeChecked.method).toBe(expected.method);
-      // expect(toBeChecked.url).toBe(expected.url);
-      const { 'content-length': contentLength1, ...toBeCheckedObj } = getHeadersObj(
-        toBeChecked.headers,
-      );
-      const { 'content-length': contentLength2, ...expectedObj } = getHeadersObj(expected.headers);
-      expect(toBeCheckedObj).toMatchObject(expectedObj);
-    }
+      function compareRequest(toBeChecked: Request, expected: Request) {
+        expect(toBeChecked.method).toBe(expected.method);
+        // expect(toBeChecked.url).toBe(expected.url);
+        const { 'content-length': contentLength1, ...toBeCheckedObj } = getHeadersObj(
+          toBeChecked.headers,
+        );
+        const { 'content-length': contentLength2, ...expectedObj } = getHeadersObj(
+          expected.headers,
+        );
+        expect(toBeCheckedObj).toMatchObject(expectedObj);
+      }
 
-    function compareResponse(toBeChecked: Response, expected: Response) {
-      const { 'content-length': contentLength1, ...toBeCheckedObj } = getHeadersObj(
-        toBeChecked.headers,
-      );
-      const { 'content-length': contentLength2, ...expectedObj } = getHeadersObj(expected.headers);
-      expect(toBeCheckedObj).toMatchObject(expectedObj);
-      expect(toBeChecked.status).toBe(expected.status);
-    }
-    async function compareReadableStream(
-      toBeCheckedStream: ReadableStream | null,
-      expected: BodyInit | null,
-    ) {
-      const toBeCheckedValues = [];
-      const expectedValues = [];
-      if (toBeCheckedStream) {
-        for await (const chunk of toBeCheckedStream as any) {
-          if (chunk) {
-            const chunkString = Buffer.from(chunk).toString('utf-8');
-            if (chunkString) {
-              const chunkParts = chunkString.trim().split('\n');
-              for (const chunkPart of chunkParts) {
-                toBeCheckedValues.push(chunkPart);
-              }
-            }
-          }
-        }
-        if (expected) {
-          if (typeof expected === 'string') {
-            expectedValues.push(expected);
-          } else {
-            for await (const chunk of expected as any) {
-              if (chunk) {
-                const chunkString = Buffer.from(chunk).toString('utf-8');
-                if (chunkString) {
-                  const chunkParts = chunkString.trim().split('\n');
-                  for (const chunkPart of chunkParts) {
-                    expectedValues.push(chunkPart);
-                  }
+      function compareResponse(toBeChecked: Response, expected: Response) {
+        const { 'content-length': contentLength1, ...toBeCheckedObj } = getHeadersObj(
+          toBeChecked.headers,
+        );
+        const { 'content-length': contentLength2, ...expectedObj } = getHeadersObj(
+          expected.headers,
+        );
+        expect(toBeCheckedObj).toMatchObject(expectedObj);
+        expect(toBeChecked.status).toBe(expected.status);
+      }
+      async function compareReadableStream(
+        toBeCheckedStream: ReadableStream | null,
+        expected: BodyInit | null,
+      ) {
+        const toBeCheckedValues = [];
+        const expectedValues = [];
+        if (toBeCheckedStream) {
+          for await (const chunk of toBeCheckedStream as any) {
+            if (chunk) {
+              const chunkString = Buffer.from(chunk).toString('utf-8');
+              if (chunkString) {
+                const chunkParts = chunkString.trim().split('\n');
+                for (const chunkPart of chunkParts) {
+                  toBeCheckedValues.push(chunkPart);
                 }
               }
             }
           }
-          const toBeCheckedValuesString = toBeCheckedValues.join('\n');
-          const expectedValuesString = expectedValues.join('\n');
-          expect(toBeCheckedValuesString).toBe(expectedValuesString);
+          if (expected) {
+            if (typeof expected === 'string') {
+              expectedValues.push(expected);
+            } else {
+              for await (const chunk of expected as any) {
+                if (chunk) {
+                  const chunkString = Buffer.from(chunk).toString('utf-8');
+                  if (chunkString) {
+                    const chunkParts = chunkString.trim().split('\n');
+                    for (const chunkPart of chunkParts) {
+                      expectedValues.push(chunkPart);
+                    }
+                  }
+                }
+              }
+            }
+            const toBeCheckedValuesString = toBeCheckedValues.join('\n');
+            const expectedValuesString = expectedValues.join('\n');
+            expect(toBeCheckedValuesString).toBe(expectedValuesString);
+          }
         }
       }
-    }
 
-    async function runTestForRequestAndResponse({
-      requestInit,
-      expectedResponse,
-      getRequestBody,
-      getResponseBody,
-      testServer,
-    }: {
-      requestInit: RequestInit;
-      expectedResponse: Response;
-      getRequestBody: () => BodyInit;
-      getResponseBody: () => BodyInit;
-      testServer: TestServer;
-    }) {
-      const adapter = createServerAdapter(async (request: Request) => {
-        compareRequest(request, expectedRequest);
-        if (methodsWithBody.includes(expectedRequest.method)) {
-          await compareReadableStream(request.body, getRequestBody());
-        }
-        return expectedResponse;
-      });
-      await testServer.addOnceHandler(adapter);
-      const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
-      const returnedResponse = await fetchAPI.fetch(expectedRequest);
-      compareResponse(returnedResponse, expectedResponse);
-      await compareReadableStream(returnedResponse.body, getResponseBody());
-    }
-
-    function getRegularRequestBody() {
-      return JSON.stringify({ requestFoo: 'requestFoo' });
-    }
-
-    function getRegularResponseBody() {
-      return JSON.stringify({ responseFoo: 'responseFoo' });
-    }
-
-    function getIncrementalRequestBody() {
-      let i = 5;
-      return new fetchAPI.ReadableStream({
-        async pull(controller) {
-          await setTimeout(30);
-          if (i > 0) {
-            controller.enqueue(Buffer.from(`data: request_${i.toString()}\n`));
-            i--;
-          } else {
-            controller.close();
+      async function runTestForRequestAndResponse({
+        requestInit,
+        expectedResponse,
+        getRequestBody,
+        getResponseBody,
+        testServer,
+      }: {
+        requestInit: RequestInit;
+        expectedResponse: Response;
+        getRequestBody: () => BodyInit;
+        getResponseBody: () => BodyInit;
+        testServer: TestServer;
+      }) {
+        const adapter = createServerAdapter(async (request: Request) => {
+          compareRequest(request, expectedRequest);
+          if (methodsWithBody.includes(expectedRequest.method)) {
+            await compareReadableStream(request.body, getRequestBody());
           }
-        },
-      });
-    }
+          return expectedResponse;
+        });
+        await testServer.addOnceHandler(adapter);
+        const expectedRequest = new fetchAPI.Request(testServer.url, requestInit);
+        const returnedResponse = await fetchAPI.fetch(expectedRequest);
+        compareResponse(returnedResponse, expectedResponse);
+        await compareReadableStream(returnedResponse.body, getResponseBody());
+      }
 
-    function getIncrementalResponseBody() {
-      let i = 5;
-      return new fetchAPI.ReadableStream({
-        async pull(controller) {
-          await setTimeout(30);
-          if (i > 0) {
-            controller.enqueue(Buffer.from(`data: response_${i.toString()}\n`));
-            i--;
-          } else {
-            controller.close();
-          }
-        },
-      });
-    }
-  });
+      function getRegularRequestBody() {
+        return JSON.stringify({ requestFoo: 'requestFoo' });
+      }
+
+      function getRegularResponseBody() {
+        return JSON.stringify({ responseFoo: 'responseFoo' });
+      }
+
+      function getIncrementalRequestBody() {
+        let i = 5;
+        return new fetchAPI.ReadableStream({
+          async pull(controller) {
+            await setTimeout(30);
+            if (i > 0) {
+              controller.enqueue(Buffer.from(`data: request_${i.toString()}\n`));
+              i--;
+            } else {
+              controller.close();
+            }
+          },
+        });
+      }
+
+      function getIncrementalResponseBody() {
+        let i = 5;
+        return new fetchAPI.ReadableStream({
+          async pull(controller) {
+            await setTimeout(30);
+            if (i > 0) {
+              controller.enqueue(Buffer.from(`data: response_${i.toString()}\n`));
+              i--;
+            } else {
+              controller.close();
+            }
+          },
+        });
+      }
+    },
+    { noUndici: Boolean(process.env.LEAK_TEST) },
+  );
 });

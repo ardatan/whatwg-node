@@ -6,12 +6,15 @@ import type { Dispatcher } from 'undici';
 import { afterAll, afterEach, beforeAll, describe } from '@jest/globals';
 import { patchSymbols } from '@whatwg-node/disposablestack';
 import { createFetch } from '@whatwg-node/fetch';
+import { closeSharedUndiciAgent } from '../../node-fetch/src/fetchUndici';
+import { getUndici } from '../../node-fetch/src/getUndici';
 import { createServerAdapter } from '../src/createServerAdapter';
 import { FetchAPI } from '../src/types';
 
 patchSymbols();
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
-const libcurl = globalThis.libcurl;
+const DISABLE_UNDICI = Symbol.for('whatwg-node.disable-undici');
+
 export function runTestsForEachFetchImpl(
   callback: (
     implementationName: string,
@@ -20,43 +23,44 @@ export function runTestsForEachFetchImpl(
       createServerAdapter: typeof createServerAdapter;
     },
   ) => void,
-  opts: { noLibCurl?: boolean; noNativeFetch?: boolean } = {},
+  opts: { noNativeFetch?: boolean; noUndici?: boolean } = {},
 ) {
+  // Resolve lazily so merely importing this helper (e.g. a LEAK_TEST-skipped
+  // suite) does not load undici into the Jest isolate.
+  const undiciAvailable = !opts.noUndici && !!getUndici();
   describeIf(!globalThis.Deno)('Ponyfill', () => {
-    if (opts.noLibCurl) {
+    describeIf(undiciAvailable)('undici', () => {
+      beforeAll(() => {
+        (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;
+      });
+      afterEach(async () => {
+        if (process.env.LEAK_TEST) {
+          await closeSharedUndiciAgent();
+          globalThis.gc?.();
+        }
+      });
+      afterAll(async () => {
+        await closeSharedUndiciAgent();
+        globalThis.gc?.();
+      });
       const fetchAPI = createFetch({ skipPonyfill: false });
-      callback('ponyfill', {
+      callback('undici', {
         fetchAPI,
         createServerAdapter: (baseObj: any, opts?: any) =>
           createServerAdapter(baseObj, {
             fetchAPI,
             ...opts,
           }),
-      });
-      return;
-    }
-    describeIf(libcurl)('libcurl', () => {
-      const fetchAPI = createFetch({ skipPonyfill: false });
-      callback('libcurl', {
-        fetchAPI,
-        createServerAdapter: (baseObj: any, opts?: any) =>
-          createServerAdapter(baseObj, {
-            fetchAPI,
-            ...opts,
-          }),
-      });
-      afterAll(() => {
-        libcurl.Curl.globalCleanup();
       });
     });
     describe('node-http', () => {
       beforeAll(() => {
-        (globalThis.libcurl as any) = null;
+        (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = true;
       });
       afterAll(() => {
         httpGlobalAgent.destroy();
         httpsGlobalAgent.destroy();
-        globalThis.libcurl = libcurl;
+        (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;
       });
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('node-http', {
@@ -98,5 +102,14 @@ export function runTestsForEachFetchImpl(
   });
   afterEach(() => {
     globalThis?.gc?.();
+  });
+  afterAll(async () => {
+    if (!process.env.LEAK_TEST) {
+      return;
+    }
+    await closeSharedUndiciAgent();
+    globalThis.gc?.();
+    await setTimeout(100);
+    globalThis.gc?.();
   });
 }

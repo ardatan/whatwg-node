@@ -35,12 +35,6 @@ try {
   console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`, err);
 }
 
-try {
-  globals.libcurl = require('node-libcurl');
-} catch (err) {
-  console.warn('Failed to load node-libcurl. Skipping tests that require it.', err);
-}
-
 module.exports = {
   displayName: process.env.LEAK_TEST ? 'Leak Tests' : 'Unit Tests',
   testEnvironment: 'node',
@@ -51,6 +45,8 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     ...(!process.env.LEAK_TEST ? ['<rootDir>/scripts/leak-warmup\\.spec\\.ts$'] : []),
+    // Remote httpbin/github sockets; covered by unit tests, not --detectLeaks.
+    ...(process.env.LEAK_TEST ? ['<rootDir>/packages/node-fetch/tests/fetch\\.spec\\.ts$'] : []),
   ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,

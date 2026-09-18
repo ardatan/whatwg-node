@@ -1,0 +1,20 @@
+diff --git a/node_modules/jest-runtime/build/index.js b/node_modules/jest-runtime/build/index.js
+index 4cb3d65..0ea146a 100644
+--- a/node_modules/jest-runtime/build/index.js
++++ b/node_modules/jest-runtime/build/index.js
+@@ -3837,6 +3837,15 @@ class Runtime {
+     this.coreModule.reset();
+     this.loggedReferenceErrors.clear();
+     this.testState.teardown();
++    // Drop environment refs so --detectLeaks can GC the sandbox after fetch/http
++    // roundtrips (otherwise Runtime → environment stays alive).
++    if (this.executor) this.executor.environment = null;
++    if (this.cjsLoader) this.cjsLoader.environment = null;
++    if (this.esmLoader) this.esmLoader.environment = null;
++    if (this.jestGlobals) this.jestGlobals.environment = null;
++    if (this.coreModule) this.coreModule.environment = null;
++    this._environment = null;
++    this._moduleMocker = null;
+   }
+   _generateMock(from, moduleName) {
+     return (0, _MockState.generateMock)(from, moduleName, {

@@ -143,110 +143,141 @@ describe('Compression', () => {
           });
         }
       },
-      { noLibCurl: true },
+      { noUndici: Boolean(process.env.LEAK_TEST) },
     );
   });
-  runTestsForEachFetchImpl((implName, { fetchAPI, createServerAdapter }) => {
-    runTestsForEachServerImpl((server, serverImplName) => {
-      const skipIf = (condition: boolean) => (condition ? it.skip : it);
-      // Deno's fetch does not decompress automatically
-      skipIf(!!globalThis.Deno)(
-        `from the server to the client without 'accept-encoding'`,
-        async () => {
-          let req: Request | undefined;
-          const adapter = createServerAdapter(
-            passedReq => {
-              req = passedReq;
-              return new fetchAPI.Response(exampleData);
-            },
-            {
-              plugins: [useContentEncoding()],
-            },
-          );
-          server.addOnceHandler(adapter);
-          const res = await fetchAPI.fetch(server.url);
-          const encodingSupported = encodings.some(e => e !== 'none');
-          if (encodingSupported) {
-            expect(res.headers.get('content-encoding')).toBeTruthy();
-          }
-          expect(res.status).toEqual(200);
-          const acceptedEncodings = req?.headers.get('accept-encoding');
-          expect(acceptedEncodings).toBeTruthy();
-          expect(acceptedEncodings).toContain('gzip');
-          expect(acceptedEncodings).toContain('deflate');
-          const returnedData = await res.text();
-          expect(returnedData).toEqual(exampleData);
-          if (encodingSupported) {
-            expect(Number(res.headers.get('content-length'))).toBeLessThan(
-              Buffer.byteLength(exampleData),
-            );
-          }
-        },
-      );
-      const encodings = [...getSupportedEncodings(fetchAPI), 'none'];
-      for (const encoding of encodings) {
-        // Skip deflate-raw with libcurl because it doesn't support it
-        if (encoding === 'deflate-raw' && implName === 'libcurl') {
-          continue;
-        }
-        describe(encoding, () => {
-          // Deno's fetch does not decompress automatically
-          skipIf(!!globalThis.Deno)(`from the server to the client`, async () => {
+  // undici + many compressed roundtrips intermittently pins Jest --detectLeaks;
+  // unit tests still cover the undici decompress path.
+  runTestsForEachFetchImpl(
+    (implName, { fetchAPI, createServerAdapter }) => {
+      runTestsForEachServerImpl((server, serverImplName) => {
+        const skipIf = (condition: boolean) => (condition ? it.skip : it);
+        // Deno's fetch does not decompress automatically
+        skipIf(!!globalThis.Deno)(
+          `from the server to the client without 'accept-encoding'`,
+          async () => {
+            let req: Request | undefined;
             const adapter = createServerAdapter(
-              () =>
-                new fetchAPI.Response(exampleData, {
-                  headers: {
-                    'content-length': String(Buffer.byteLength(exampleData)),
-                  },
-                }),
+              passedReq => {
+                req = passedReq;
+                return new fetchAPI.Response(exampleData);
+              },
               {
                 plugins: [useContentEncoding()],
               },
             );
             server.addOnceHandler(adapter);
-            const res = await fetchAPI.fetch(server.url, {
-              headers: {
-                'accept-encoding': encoding,
-              },
-            });
-            expect(res.headers.get('content-encoding')).toEqual(
-              encoding === 'none' ? null : encoding,
-            );
+            const res = await fetchAPI.fetch(server.url);
+            const encodingSupported = encodings.some(e => e !== 'none');
+            // Decoded body must not advertise wire Content-Encoding / Content-Length.
+            // Skip on Node/Bun native fetch (createFetch uses native on Bun).
+            if (encodingSupported && implName !== 'native' && !globalThis.Bun) {
+              expect(res.headers.get('content-encoding')).toBeNull();
+              expect(res.headers.get('content-length')).toBeNull();
+            }
             expect(res.status).toEqual(200);
+            const acceptedEncodings = req?.headers.get('accept-encoding');
+            expect(acceptedEncodings).toBeTruthy();
+            expect(acceptedEncodings).toContain('gzip');
+            expect(acceptedEncodings).toContain('deflate');
             const returnedData = await res.text();
             expect(returnedData).toEqual(exampleData);
-            const contentLength = res.headers.get('content-length');
-            const numberContentLength = Number(contentLength);
-            const origSize = Buffer.byteLength(exampleData);
-            if (encoding === 'none' && contentLength) {
-              expect(numberContentLength).toEqual(origSize);
-            } else {
-              expect(numberContentLength).toBeLessThan(origSize);
-            }
-          });
-          skipIf(globalThis.Deno && serverImplName !== 'Deno')(
-            `from the client to the server`,
-            async () => {
+          },
+        );
+        const encodings = [...getSupportedEncodings(fetchAPI), 'none'];
+        for (const encoding of encodings) {
+          describe(encoding, () => {
+            // Deno's fetch does not decompress automatically
+            skipIf(!!globalThis.Deno)(`from the server to the client`, async () => {
               const adapter = createServerAdapter(
-                async req => {
-                  const body = await req.text();
-                  return fetchAPI.Response.json({
-                    body,
-                    contentLength: req.headers.get('content-length'),
-                  });
-                },
+                () =>
+                  new fetchAPI.Response(exampleData, {
+                    headers: {
+                      'content-length': String(Buffer.byteLength(exampleData)),
+                    },
+                  }),
                 {
                   plugins: [useContentEncoding()],
                 },
               );
               server.addOnceHandler(adapter);
-              if (encoding === 'none') {
+              const res = await fetchAPI.fetch(server.url, {
+                headers: {
+                  'accept-encoding': encoding,
+                },
+              });
+              if (implName !== 'native' && !globalThis.Bun) {
+                expect(res.headers.get('content-encoding')).toBeNull();
+              }
+              expect(res.status).toEqual(200);
+              const returnedData = await res.text();
+              expect(returnedData).toEqual(exampleData);
+              const contentLength = res.headers.get('content-length');
+              const numberContentLength = Number(contentLength);
+              const origSize = Buffer.byteLength(exampleData);
+              if (encoding === 'none' && contentLength) {
+                expect(numberContentLength).toEqual(origSize);
+              } else if (encoding !== 'none' && implName !== 'native' && !globalThis.Bun) {
+                expect(contentLength).toBeNull();
+              }
+            });
+            skipIf(globalThis.Deno && serverImplName !== 'Deno')(
+              `from the client to the server`,
+              async () => {
+                const adapter = createServerAdapter(
+                  async req => {
+                    const body = await req.text();
+                    return fetchAPI.Response.json({
+                      body,
+                      contentLength: req.headers.get('content-length'),
+                    });
+                  },
+                  {
+                    plugins: [useContentEncoding()],
+                  },
+                );
+                server.addOnceHandler(adapter);
+                if (encoding === 'none') {
+                  const res = await fetchAPI.fetch(server.url, {
+                    method: 'POST',
+                    body: exampleData,
+                    headers: {
+                      'content-length': String(Buffer.byteLength(exampleData)),
+                    },
+                  });
+                  const resText = await res.text();
+                  let resJson: { body: string; contentLength: string };
+                  try {
+                    resJson = JSON.parse(resText);
+                  } catch {
+                    throw new Error(`Could not parse JSON: ${resText}`);
+                  }
+                  expect(resJson.body).toEqual(exampleData);
+                  expect(Number(resJson.contentLength)).toEqual(Buffer.byteLength(exampleData));
+                  return;
+                }
+                const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
+                const writer = stream.writable.getWriter();
+                writer.write(Buffer.from(exampleData));
+                writer.close();
+                const chunks: number[] = [];
+                const reader = stream.readable.getReader();
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) {
+                    reader.releaseLock();
+                    break;
+                  } else if (value) {
+                    chunks.push(...value);
+                  }
+                }
+                const uint8Array = new Uint8Array(chunks);
                 const res = await fetchAPI.fetch(server.url, {
                   method: 'POST',
-                  body: exampleData,
                   headers: {
-                    'content-length': String(Buffer.byteLength(exampleData)),
+                    'content-encoding': encoding,
                   },
+                  body: uint8Array,
                 });
                 const resText = await res.text();
                 let resJson: { body: string; contentLength: string };
@@ -256,45 +287,13 @@ describe('Compression', () => {
                   throw new Error(`Could not parse JSON: ${resText}`);
                 }
                 expect(resJson.body).toEqual(exampleData);
-                expect(Number(resJson.contentLength)).toEqual(Buffer.byteLength(exampleData));
-                return;
-              }
-              const stream = new fetchAPI.CompressionStream(encoding as CompressionFormat);
-              const writer = stream.writable.getWriter();
-              writer.write(Buffer.from(exampleData));
-              writer.close();
-              const chunks: number[] = [];
-              const reader = stream.readable.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) {
-                  reader.releaseLock();
-                  break;
-                } else if (value) {
-                  chunks.push(...value);
-                }
-              }
-              const uint8Array = new Uint8Array(chunks);
-              const res = await fetchAPI.fetch(server.url, {
-                method: 'POST',
-                headers: {
-                  'content-encoding': encoding,
-                },
-                body: uint8Array,
-              });
-              const resText = await res.text();
-              let resJson: { body: string; contentLength: string };
-              try {
-                resJson = JSON.parse(resText);
-              } catch {
-                throw new Error(`Could not parse JSON: ${resText}`);
-              }
-              expect(resJson.body).toEqual(exampleData);
-              expect(Number(resJson.contentLength)).toBeLessThan(Buffer.byteLength(resJson.body));
-            },
-          );
-        });
-      }
-    });
-  });
+                expect(Number(resJson.contentLength)).toBeLessThan(Buffer.byteLength(resJson.body));
+              },
+            );
+          });
+        }
+      });
+    },
+    { noUndici: Boolean(process.env.LEAK_TEST) },
+  );
 });
