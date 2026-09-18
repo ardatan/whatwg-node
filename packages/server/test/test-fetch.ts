@@ -14,7 +14,6 @@ import { FetchAPI } from '../src/types';
 patchSymbols();
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 const DISABLE_UNDICI = Symbol.for('whatwg-node.disable-undici');
-const undiciAvailable = !process.env.LEAK_TEST && !!getUndici();
 
 export function runTestsForEachFetchImpl(
   callback: (
@@ -24,15 +23,25 @@ export function runTestsForEachFetchImpl(
       createServerAdapter: typeof createServerAdapter;
     },
   ) => void,
-  opts: { noNativeFetch?: boolean } = {},
+  opts: { noNativeFetch?: boolean; noUndici?: boolean } = {},
 ) {
+  // Resolve lazily so merely importing this helper (e.g. a LEAK_TEST-skipped
+  // suite) does not load undici into the Jest isolate.
+  const undiciAvailable = !opts.noUndici && !!getUndici();
   describeIf(!globalThis.Deno)('Ponyfill', () => {
     describeIf(undiciAvailable)('undici', () => {
       beforeAll(() => {
         (globalThis as Record<symbol, unknown>)[DISABLE_UNDICI] = false;
       });
+      afterEach(async () => {
+        if (process.env.LEAK_TEST) {
+          await closeSharedUndiciAgent();
+          globalThis.gc?.();
+        }
+      });
       afterAll(async () => {
-        await Promise.race([closeSharedUndiciAgent(), setTimeout(1000).then(() => undefined)]);
+        await closeSharedUndiciAgent();
+        globalThis.gc?.();
       });
       const fetchAPI = createFetch({ skipPonyfill: false });
       callback('undici', {
@@ -93,5 +102,14 @@ export function runTestsForEachFetchImpl(
   });
   afterEach(() => {
     globalThis?.gc?.();
+  });
+  afterAll(async () => {
+    if (!process.env.LEAK_TEST) {
+      return;
+    }
+    await closeSharedUndiciAgent();
+    globalThis.gc?.();
+    await setTimeout(100);
+    globalThis.gc?.();
   });
 }

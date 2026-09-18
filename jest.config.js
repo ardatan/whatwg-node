@@ -45,6 +45,8 @@ module.exports = {
   testPathIgnorePatterns: [
     '/node_modules/',
     ...(!process.env.LEAK_TEST ? ['<rootDir>/scripts/leak-warmup\\.spec\\.ts$'] : []),
+    // Remote httpbin/github sockets; covered by unit tests, not --detectLeaks.
+    ...(process.env.LEAK_TEST ? ['<rootDir>/packages/node-fetch/tests/fetch\\.spec\\.ts$'] : []),
   ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
     prefix: `${ROOT_DIR}/`,

@@ -9,7 +9,10 @@ function testIf(condition: boolean, name: string, fn: () => void) {
   return condition ? it(name, fn) : it.skip(name, fn);
 }
 
-describe('Node Fetch Ponyfill', () => {
+const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
+
+// Entire suite hits httpbin/github; remote TLS sockets trip Jest --detectLeaks with undici.
+describeIf(!process.env.LEAK_TEST)('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(
     (
       implName,

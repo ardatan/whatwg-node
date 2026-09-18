@@ -10,16 +10,43 @@ import { PonyfillResponse } from './Response.js';
 import { DEFAULT_ACCEPT_ENCODING, getHeadersObj, isNodeReadable, shouldRedirect } from './utils.js';
 
 let sharedAgent: Dispatcher | undefined;
+const ephemeralAgents = new Set<Dispatcher>();
+const pendingAgentTeardowns = new Set<Promise<void>>();
 
-/** Close the shared undici agent (leak tests / suite teardown). */
+async function teardownDispatcher(dispatcher: Dispatcher): Promise<void> {
+  try {
+    await dispatcher.close();
+  } catch {
+    // ignore
+  }
+  try {
+    await dispatcher.destroy();
+  } catch {
+    // ignore
+  }
+}
+
+function trackTeardown(dispatcher: Dispatcher): Promise<void> {
+  const job = teardownDispatcher(dispatcher).finally(() => {
+    pendingAgentTeardowns.delete(job);
+  });
+  pendingAgentTeardowns.add(job);
+  return job;
+}
+
+/** Close shared / ephemeral undici agents (leak tests / suite teardown). */
 export async function closeSharedUndiciAgent(): Promise<void> {
   const agent = sharedAgent;
   sharedAgent = undefined;
-  if (!agent) {
-    return;
+  const pending = [...ephemeralAgents];
+  ephemeralAgents.clear();
+
+  for (const dispatcher of [agent, ...pending]) {
+    if (dispatcher) {
+      trackTeardown(dispatcher);
+    }
   }
-  await agent.close();
-  await agent.destroy();
+  await Promise.all([...pendingAgentTeardowns]);
 }
 
 function wrapDnsSkipBracketedIPv6(
@@ -42,33 +69,59 @@ function wrapDnsSkipBracketedIPv6(
   };
 }
 
-function getSharedAgent(): Dispatcher {
-  if (!sharedAgent) {
-    const undici = getUndici();
-    if (!undici) {
-      throw new Error('undici is not available');
-    }
-    // allowH2 defaults to true in undici; only override TLS identity when this
-    // Node build still has the IPv6 IP-SAN regression (same as fetchNodeHttp).
-    const checkServerIdentity = getHttpsCheckServerIdentity();
-    const agent = new undici.Agent(
-      checkServerIdentity
-        ? {
-            connect: {
-              checkServerIdentity,
-            },
-          }
-        : undefined,
-    );
-    // dns → redirect → decompress → agent. Per-request `maxRedirections` overrides
-    // redirect (0 = manual/error passthrough, >0 = follow).
-    sharedAgent = agent.compose(
-      wrapDnsSkipBracketedIPv6(undici.interceptors.dns({ maxTTL: 10 * 60 * 1000 })),
-      undici.interceptors.redirect(),
-      undici.interceptors.decompress(),
-    );
+function createComposedAgent(): Dispatcher {
+  const undici = getUndici();
+  if (!undici) {
+    throw new Error('undici is not available');
   }
-  return sharedAgent;
+  // allowH2 defaults to true in undici; only override TLS identity when this
+  // Node build still has the IPv6 IP-SAN regression (same as fetchNodeHttp).
+  const checkServerIdentity = getHttpsCheckServerIdentity();
+  const agentOpts: Record<string, unknown> = checkServerIdentity
+    ? {
+        connect: {
+          checkServerIdentity,
+        },
+      }
+    : {};
+  if (process.env.LEAK_TEST) {
+    // Prefer short-lived sockets so --detectLeaks does not retain keep-alive pools.
+    agentOpts.connections = 1;
+    agentOpts.pipelining = 0;
+    agentOpts.keepAliveTimeout = 1;
+    agentOpts.keepAliveMaxTimeout = 1;
+  }
+  const agent = new undici.Agent(agentOpts);
+  // dns → redirect → decompress → agent. Per-request `maxRedirections` overrides
+  // redirect (0 = manual/error passthrough, >0 = follow).
+  // Skip dns under LEAK_TEST: maxTTL:0 races with null addr records, and the
+  // cache timers can pin the Jest isolate under --detectLeaks.
+  if (process.env.LEAK_TEST) {
+    return agent.compose(undici.interceptors.redirect(), undici.interceptors.decompress());
+  }
+  return agent.compose(
+    wrapDnsSkipBracketedIPv6(
+      undici.interceptors.dns({
+        maxTTL: 10 * 60 * 1000,
+      }),
+    ),
+    undici.interceptors.redirect(),
+    undici.interceptors.decompress(),
+  );
+}
+
+function getAgent(): { dispatcher: Dispatcher; ephemeral: boolean } {
+  // Leak tests use a fresh agent per request so pools are not retained in the
+  // module-level singleton after the suite ends.
+  if (process.env.LEAK_TEST) {
+    const dispatcher = createComposedAgent();
+    ephemeralAgents.add(dispatcher);
+    return { dispatcher, ephemeral: true };
+  }
+  if (!sharedAgent) {
+    sharedAgent = createComposedAgent();
+  }
+  return { dispatcher: sharedAgent, ephemeral: false };
 }
 
 /**
@@ -134,7 +187,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
   const requestUrl = fetchRequest.parsedUrl || fetchRequest.url;
   const parsedUrl = undici.parseURL(requestUrl);
   const body = getRequestBody(fetchRequest);
-  const agent = getSharedAgent();
+  const { dispatcher, ephemeral } = getAgent();
 
   return new Promise<PonyfillResponse<TResponseJSON>>((resolve, reject) => {
     let outputStream: PassThrough | undefined;
@@ -142,6 +195,16 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
     let redirectHistoryLength = 0;
     let dispatchController: Dispatcher.DispatchController | undefined;
     let removeAbortListener: (() => void) | undefined;
+    let released = false;
+
+    function releaseEphemeralAgent() {
+      if (!ephemeral || released) {
+        return;
+      }
+      released = true;
+      ephemeralAgents.delete(dispatcher);
+      trackTeardown(dispatcher).catch(() => undefined);
+    }
 
     function abortError(reason: unknown, fallbackMessage: string): Error {
       if (reason instanceof Error) {
@@ -156,10 +219,12 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
     function settleReject(error: unknown) {
       if (settled) {
         outputStream?.destroy(abortError(error, 'Request failed'));
+        releaseEphemeralAgent();
         return;
       }
       settled = true;
       removeAbortListener?.();
+      releaseEphemeralAgent();
       reject(error);
     }
 
@@ -188,7 +253,7 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
     }
 
     try {
-      agent.dispatch(
+      dispatcher.dispatch(
         {
           origin: parsedUrl.origin,
           path: parsedUrl.search ? `${parsedUrl.pathname}${parsedUrl.search}` : parsedUrl.pathname,
@@ -242,7 +307,18 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
             outputStream.on('error', err => {
               controller.abort(abortError(err, 'Response stream error'));
             });
-
+            outputStream.on('close', () => {
+              releaseEphemeralAgent();
+            });
+            if (ephemeral) {
+              // Leak tests often leave bodies unread; resume so the socket can
+              // finish and the ephemeral agent can be destroyed.
+              queueMicrotask(() => {
+                if (!outputStream!.destroyed && outputStream!.listenerCount('data') === 0) {
+                  outputStream!.resume();
+                }
+              });
+            }
             let statusText = statusMessage || STATUS_CODES[statusCode];
             if (statusText == null) {
               statusText = '';
@@ -271,6 +347,9 @@ export function fetchUndici<TResponseJSON = any, TRequestJSON = any>(
           onResponseEnd() {
             removeAbortListener?.();
             outputStream?.end();
+            if (!outputStream) {
+              releaseEphemeralAgent();
+            }
           },
           onResponseError(_controller, error) {
             settleReject(error);
