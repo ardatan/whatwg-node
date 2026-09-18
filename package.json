@@ -52,7 +52,7 @@
     "@jest/globals": "30.4.1",
     "@theguild/prettier-config": "3.0.1",
     "@types/deno": "2.7.0",
-    "@types/node": "26.5.1",
+    "@types/node": "26.6.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@typescript-eslint/eslint-plugin": "8.70.0",
@@ -84,7 +84,7 @@
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "undici": "8.10.2",
     "vite-tsconfig-paths": "6.1.1",
-    "vitest": "5.0.0"
+    "vitest": "5.0.1"
   },
   "overrides": {
     "@pulumi/pulumi": "3.262.0",
