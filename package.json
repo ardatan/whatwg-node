@@ -37,7 +37,7 @@
   },
   "optionalDependencies": {
     "node-libcurl": "4.1.0",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.70.0"
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.71.0"
   },
   "devDependencies": {
     "@babel/core": "8.0.5",
@@ -76,7 +76,7 @@
     "lint-staged": "17.5.1",
     "lodash": "4.18.1",
     "patch-package": "8.0.1",
-    "prettier": "3.9.6",
+    "prettier": "3.9.7",
     "puppeteer": "25.11.0",
     "qs": "6.16.0",
     "rimraf": "6.1.3",
