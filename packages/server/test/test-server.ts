@@ -138,7 +138,7 @@ if (!globalThis.Deno && !globalThis.Bun && typeof tls.setDefaultCACertificates =
     let handler: any;
     const { caCert, serviceKey, certificate } = await createEphemeralTlsCerts();
 
-    // Trust the ephemeral CA for Node TLS / libcurl (via getCACertificates('default')).
+    // Trust the ephemeral CA for Node TLS (via getCACertificates('default')).
     const previousDefaultCaCerts = tls.getCACertificates('default');
     tls.setDefaultCACertificates([...previousDefaultCaCerts, caCert]);
 

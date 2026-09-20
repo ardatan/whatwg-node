@@ -35,12 +35,6 @@ try {
   console.warn(`Failed to load uWebSockets.js. Skipping tests that require it.`, err);
 }
 
-try {
-  globals.libcurl = require('node-libcurl');
-} catch (err) {
-  console.warn('Failed to load node-libcurl. Skipping tests that require it.', err);
-}
-
 module.exports = {
   displayName: process.env.LEAK_TEST ? 'Leak Tests' : 'Unit Tests',
   testEnvironment: 'node',

@@ -1,7 +1,6 @@
 import { Buffer } from 'node:buffer';
 import { createReadStream, promises as fsPromises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { fetchCurl } from './fetchCurl.js';
 import { fetchNodeHttp } from './fetchNodeHttp.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
@@ -104,9 +103,6 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   if (fetchRequest.url.startsWith('blob:')) {
     const response = getResponseForBlob(fetchRequest.url);
     return fakePromise(response);
-  }
-  if (globalThis.libcurl && !fetchRequest.agent) {
-    return fetchCurl(fetchRequest);
   }
   return fetchNodeHttp(fetchRequest);
 }

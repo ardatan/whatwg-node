@@ -5,13 +5,8 @@ import { afterAll, beforeAll, describe, expect, it } from '@jest/globals';
 import { createEphemeralTlsCerts } from '../../server/test/test-tls-certs';
 import { fetchPonyfill } from '../src/fetch';
 
-const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
-describeIf(
-  globalThis.libcurl &&
-    !process.env.LEAK_TEST &&
-    !globalThis.Deno &&
-    typeof tls.setDefaultCACertificates === 'function',
-)('http2', () => {
+// HTTP/2 client support requires undici or another HTTP/2-capable transport (not yet wired).
+describe.skip('http2', () => {
   let server: Http2SecureServer;
   let previousDefaultCaCerts: string[];
   const sessions = new Set<ServerHttp2Session>();

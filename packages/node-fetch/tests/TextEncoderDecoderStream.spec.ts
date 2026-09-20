@@ -65,6 +65,5 @@ describe('TextEncoderDecoderStream', () => {
         expect(thrownError).toBe(expectedError);
       });
     },
-    { noLibCurl: true },
   );
 });
