@@ -9,7 +9,7 @@ const skipIf = (condition: boolean) => (condition ? it.skip : it);
 
 describe('Request Abort', () => {
   runTestsForEachServerImpl((server, serverImplName) => {
-    runTestsForEachFetchImpl((implementationName, { fetchAPI, createServerAdapter }) => {
+    runTestsForEachFetchImpl((_implementationName, { fetchAPI, createServerAdapter }) => {
       skipIf(
         (globalThis.Bun && serverImplName !== 'Bun') ||
           (globalThis.Deno && serverImplName !== 'Deno'),
