@@ -37,9 +37,18 @@ describe('Redirections', () => {
         requestCount = 0;
       });
       afterAll(async () => {
-        server.closeAllConnections?.();
+        // Bun's closeAllConnections can leave the listener already closed.
+        if (!globalThis.Bun) {
+          server.closeAllConnections?.();
+        }
         await new Promise<void>((resolve, reject) => {
-          server.close(err => (err ? reject(err) : resolve()));
+          server.close(err => {
+            if (err && (err as NodeJS.ErrnoException).code !== 'ERR_SERVER_NOT_RUNNING') {
+              reject(err);
+              return;
+            }
+            resolve();
+          });
         });
       });
       for (const statusCode of redirectionStatusCodes) {
