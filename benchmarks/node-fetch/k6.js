@@ -16,7 +16,7 @@ const activeHandlesSampleDelay = '5s';
 /** @type{import('k6/options').Options} */
 export const options = {
   thresholds: {
-    active_handles: ['p(95)<250'], // sustained active handles must stay below 250
+    active_handles: ['max<250'], // active handles must be below 250
   },
   scenarios: {
     [scenario]: {
