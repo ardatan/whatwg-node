@@ -1,0 +1,15 @@
+diff --git a/node_modules/jest-environment-node/build/index.js b/node_modules/jest-environment-node/build/index.js
+index 3be3347..2d1fbad 100644
+--- a/node_modules/jest-environment-node/build/index.js
++++ b/node_modules/jest-environment-node/build/index.js
+@@ -232,6 +232,10 @@ class NodeEnvironment {
+     this.fakeTimers = null;
+     this.fakeTimersModern = null;
+     this._globalProxy.clear();
++    // Allow --detectLeaks to collect the environment after native/http fetch.
++    this.global = null;
++    this.moduleMocker = null;
++    this._globalProxy = null;
+   }
+   exportConditions() {
+     return this._configuredExportConditions ?? this.customExportConditions;

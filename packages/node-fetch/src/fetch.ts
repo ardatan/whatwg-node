@@ -2,6 +2,8 @@ import { Buffer } from 'node:buffer';
 import { createReadStream, promises as fsPromises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { fetchNodeHttp } from './fetchNodeHttp.js';
+import { fetchUndici } from './fetchUndici.js';
+import { getUndici } from './getUndici.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
@@ -103,6 +105,10 @@ export function fetchPonyfill<TResponseJSON = any, TRequestJSON = any>(
   if (fetchRequest.url.startsWith('blob:')) {
     const response = getResponseForBlob(fetchRequest.url);
     return fakePromise(response);
+  }
+  // Prefer optional undici.dispatch (Node) when available; not undici.fetch.
+  if (getUndici() && !fetchRequest.agent) {
+    return fetchUndici(fetchRequest);
   }
   return fetchNodeHttp(fetchRequest);
 }

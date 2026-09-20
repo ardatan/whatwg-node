@@ -425,6 +425,8 @@ function runSingleTest(url, _options, _expectation, timeout = 10000) {
       env: {
         ...process.env,
         NO_COLOR: '1',
+        // WPT expectation.json is baselined on node:http; undici is covered elsewhere.
+        WHATWG_NODE_DISABLE_UNDICI: '1',
         ...(useExtraCACerts ? { NODE_EXTRA_CA_CERTS: CA_CERT_PATH } : {}),
       },
     },
