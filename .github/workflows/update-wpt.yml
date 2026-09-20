@@ -37,9 +37,7 @@ jobs:
           submodules: false
 
       - name: Install system deps
-        run:
-          sudo apt update && sudo apt install -y libcurl4-openssl-dev libssl-dev python3
-          python3-venv
+        run: sudo apt update && sudo apt install -y python3 python3-venv
 
       - name: Setup env
         uses: the-guild-org/shared-config/setup@v1

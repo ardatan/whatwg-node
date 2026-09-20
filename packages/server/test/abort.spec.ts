@@ -9,7 +9,7 @@ const skipIf = (condition: boolean) => (condition ? it.skip : it);
 
 describe('Request Abort', () => {
   runTestsForEachServerImpl((server, serverImplName) => {
-    runTestsForEachFetchImpl((implementationName, { fetchAPI, createServerAdapter }) => {
+    runTestsForEachFetchImpl((_implementationName, { fetchAPI, createServerAdapter }) => {
       skipIf(
         (globalThis.Bun && serverImplName !== 'Bun') ||
           (globalThis.Deno && serverImplName !== 'Deno'),
@@ -42,10 +42,9 @@ describe('Request Abort', () => {
 
       // #3011: error/abort on the response body must destroy the Node response and
       // close the socket (client sees RST / ECONNRESET). Use raw node:http(s) so we
-      // assert the socket itself. Skip libcurl/uWS/Bun/Deno (different write paths).
+      // assert the socket itself. Skip uWS/Bun/Deno (different write paths).
       skipIf(
-        implementationName === 'libcurl' ||
-          serverImplName === 'uWebSockets' ||
+        serverImplName === 'uWebSockets' ||
           serverImplName === 'Bun' ||
           serverImplName === 'Deno' ||
           (globalThis.Bun && serverImplName !== 'Bun') ||
