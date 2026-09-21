@@ -306,10 +306,13 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
       // Prefer `.pipe()` over `stream/promises.pipeline`: the promise pipeline allocates an
       // AbortController and aborts it on teardown (DOMException + stack), which dominates
       // per-request cost for short pipeThrough TransformStreams (e.g. body-size limiting).
+      // Still mirror pipeline's premature-close behavior: dest/src `close` without a normal
+      // `finish` / end must reject so canceling a TransformStream readable cannot hang pipeTo.
       const src = this.readable;
       const dest = destination.writable;
       return new Promise<void>((resolve, reject) => {
         let settled = false;
+        let completed = false;
         const settle = (err?: unknown) => {
           if (settled) {
             return;
@@ -318,11 +321,18 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           src.off('error', onError);
           dest.off('error', onError);
           dest.off('finish', onFinish);
+          src.off('close', onSrcClose);
+          dest.off('close', onDestClose);
           if (err != null) {
             reject(err);
           } else {
             resolve();
           }
+        };
+        const prematureCloseError = () => {
+          const err = new Error('Premature close') as NodeJS.ErrnoException;
+          err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+          return err;
         };
         const onError = (err: Error) => {
           if (!src.destroyed) {
@@ -335,10 +345,25 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
           }
           settle(err);
         };
-        const onFinish = () => settle();
+        const onFinish = () => {
+          completed = true;
+          settle();
+        };
+        const onSrcClose = () => {
+          if (!completed && !src.readableEnded) {
+            onError(prematureCloseError());
+          }
+        };
+        const onDestClose = () => {
+          if (!completed && !dest.writableFinished) {
+            onError(prematureCloseError());
+          }
+        };
         src.once('error', onError);
         dest.once('error', onError);
         dest.once('finish', onFinish);
+        src.once('close', onSrcClose);
+        dest.once('close', onDestClose);
         src.pipe(dest, { end: true });
       });
     }
