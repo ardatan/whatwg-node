@@ -2,7 +2,6 @@
 '@whatwg-node/server': minor
 '@whatwg-node/fetch': minor
 '@whatwg-node/node-fetch': minor
-'@whatwg-node/events': minor
 '@whatwg-node/cookie-store': minor
 '@whatwg-node/server-plugin-cookies': major
 '@whatwg-node/disposablestack': minor
@@ -26,6 +25,8 @@ The floor is set to **22.15** (not just 22.0) so we can rely on `tls.getCACertif
 ### What changed
 
 - **`engines.node`**: all published packages now declare `>=22.15.0` (including `@whatwg-node/promise-helpers`, which was still on `>=16`).
+- **`@whatwg-node/events`**: removed. Native `CustomEvent` / `Event` / `EventTarget` are available on Node.js 22+, so the ponyfill is no longer maintained; use the platform globals.
+- **`@whatwg-node/fetch`**: dropped the `require("crypto").webcrypto` fallback; `crypto` is always `globalThis.crypto` on supported runtimes.
 - **`@whatwg-node/server`**: removed the Node 18 `setHeaders` workaround (`isNode1x`); `ServerResponse#setHeaders` is used whenever it exists.
 - **`@whatwg-node/node-fetch`**: Runtime guards for `zlib.createZstdCompress` / `createZstdDecompress` are removed; `zstd` is always included in `Accept-Encoding`.
 - **CI / e2e**: unit matrix is `[22, 24, 26]`; AWS Lambda runtime and Azure Function target moved from Node 20 to Node 22.

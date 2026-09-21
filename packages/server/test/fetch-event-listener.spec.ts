@@ -1,9 +1,8 @@
 import { describe, expect, it, jest } from '@jest/globals';
-import { CustomEvent } from '@whatwg-node/events';
 import { fakePromise, FetchEvent } from '@whatwg-node/server';
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
-class PonyfillFetchEvent extends CustomEvent<{}> implements FetchEvent {
+class TestFetchEvent extends CustomEvent<{}> implements FetchEvent {
   constructor(
     public request: Request,
     public respondWith: FetchEvent['respondWith'],
@@ -24,7 +23,7 @@ describe('FetchEvent listener', () => {
         returnedResponse$ = response$;
       });
       const waitUntil = jest.fn();
-      const fetchEvent = new PonyfillFetchEvent(
+      const fetchEvent = new TestFetchEvent(
         new Request('http://localhost:8080'),
         respondWith,
         waitUntil,
@@ -44,7 +43,7 @@ describe('FetchEvent listener', () => {
       const adapter = createServerAdapter(handleRequest);
       const respondWith = jest.fn();
       const waitUntil = jest.fn();
-      const fetchEvent = new PonyfillFetchEvent(
+      const fetchEvent = new TestFetchEvent(
         new Request('http://localhost:8080'),
         respondWith,
         waitUntil,
@@ -64,7 +63,7 @@ describe('FetchEvent listener', () => {
       }>(handleRequest);
       const respondWith = jest.fn();
       const waitUntil = jest.fn();
-      const fetchEvent = new PonyfillFetchEvent(
+      const fetchEvent = new TestFetchEvent(
         new Request('http://localhost:8080'),
         respondWith,
         waitUntil,
