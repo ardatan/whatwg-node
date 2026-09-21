@@ -1,5 +1,22 @@
 # @whatwg-node/server
 
+## 0.13.0
+
+### Minor Changes
+
+- [#3617](https://github.com/ardatan/whatwg-node/pull/3617)
+  [`f78c03b`](https://github.com/ardatan/whatwg-node/commit/f78c03b0b08586a9da7a6a8953c646f5d2733aa4)
+  Thanks [@ardatan](https://github.com/ardatan)! - Stop exporting `crypto` from
+  `@whatwg-node/fetch` (and from `createFetch` / `FetchAPI`). Use
+  `globalThis.crypto` instead; it is available on all supported runtimes
+  (Node.js >=22.15).
+
+### Patch Changes
+
+- Updated dependencies
+  [[`f78c03b`](https://github.com/ardatan/whatwg-node/commit/f78c03b0b08586a9da7a6a8953c646f5d2733aa4)]:
+  - @whatwg-node/fetch@0.12.0
+
 ## 0.12.0
 
 ### Minor Changes
