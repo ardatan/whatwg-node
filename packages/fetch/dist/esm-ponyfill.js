@@ -12,7 +12,6 @@ const TextDecoderStream = globalThis.TextDecoderStream;
 const TextEncoderStream = globalThis.TextEncoderStream;
 const Blob = globalThis.Blob;
 const File = globalThis.File;
-const crypto = globalThis.crypto;
 const btoa = globalThis.btoa;
 const TextEncoder = globalThis.TextEncoder;
 const TextDecoder = globalThis.TextDecoder;
@@ -35,7 +34,6 @@ export {
     TextEncoderStream,
     Blob,
     File,
-    crypto,
     btoa,
     TextEncoder,
     TextDecoder,
@@ -60,7 +58,6 @@ export function createFetch() {
     TextEncoderStream,
     Blob,
     File,
-    crypto,
     btoa,
     TextEncoder,
     TextDecoder,
