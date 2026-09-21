@@ -27,16 +27,19 @@ function requestForUrl(
 describe('Discard unread request body', () => {
   runTestsForEachFetchImpl((_impl, { createServerAdapter, fetchAPI }) => {
     runTestsForEachServerImpl((testServer, serverImplName) => {
+      const skipNativeRuntimes =
+        (globalThis.Bun && serverImplName !== 'Bun') ||
+        (globalThis.Deno && serverImplName !== 'Deno');
+
       // Assert IncomingMessage flowing/ended — Node http(s) + express (requestListener path).
       skipIf(
-        serverImplName === 'uWebSockets' ||
+        skipNativeRuntimes ||
+          serverImplName === 'uWebSockets' ||
           serverImplName === 'Bun' ||
           serverImplName === 'Deno' ||
           serverImplName === 'fastify' ||
           serverImplName === 'koa' ||
-          serverImplName === 'hapi' ||
-          (globalThis.Bun && serverImplName !== 'Bun') ||
-          (globalThis.Deno && serverImplName !== 'Deno'),
+          serverImplName === 'hapi',
       )('drains unread request body while a streaming response is still open', async () => {
         const midStream$ = createDeferredPromise<{
           readableFlowing: boolean | null;
@@ -103,13 +106,122 @@ describe('Discard unread request body', () => {
         expect(state.readableFlowing === true || state.readableEnded === true).toBe(true);
       });
 
+      // Node resume() + uWS drain-only onData: streaming response must finish with a large
+      // unread upload still on the wire (no hang waiting for the body).
+      skipIf(skipNativeRuntimes || serverImplName === 'Bun' || serverImplName === 'Deno')(
+        'finishes a streaming response without reading a large request body',
+        async () => {
+          const adapter = createServerAdapter(
+            () =>
+              new fetchAPI.Response(
+                new fetchAPI.ReadableStream<Uint8Array>({
+                  start(controller) {
+                    const id = setInterval(() => {
+                      controller.enqueue(new TextEncoder().encode('x'));
+                    }, 20);
+                    setTimeout(() => {
+                      clearInterval(id);
+                      controller.close();
+                    }, 150);
+                  },
+                }),
+              ),
+          );
+          await testServer.addOnceHandler(adapter);
+
+          const url = new URL(testServer.url);
+          const body = Buffer.alloc(200_000, 'a');
+          const chunks: Buffer[] = [];
+
+          await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('streaming response hung')), 5000);
+            const req = requestForUrl(
+              url,
+              {
+                path: url.pathname + url.search,
+                method: 'POST',
+                headers: {
+                  'content-length': body.length,
+                  'content-type': 'application/octet-stream',
+                  connection: 'keep-alive',
+                },
+              },
+              res => {
+                expect(res.statusCode).toBe(200);
+                res.on('data', chunk => chunks.push(chunk));
+                res.on('end', () => {
+                  clearTimeout(timeout);
+                  resolve();
+                });
+              },
+            );
+            req.on('error', err => {
+              clearTimeout(timeout);
+              reject(err);
+            });
+            req.end(body);
+          });
+
+          expect(Buffer.concat(chunks).length).toBeGreaterThan(0);
+        },
+      );
+
+      skipIf(skipNativeRuntimes || serverImplName === 'Bun' || serverImplName === 'Deno')(
+        'still reads the full request body when the handler consumes it',
+        async () => {
+          const adapter = createServerAdapter(async request => {
+            const text = await request.text();
+            return new fetchAPI.Response(String(text.length), { status: 200 });
+          });
+          await testServer.addOnceHandler(adapter);
+
+          const url = new URL(testServer.url);
+          const body = Buffer.alloc(50_000, 'c');
+
+          const statusAndBody = await new Promise<{ status?: number; text: string }>(
+            (resolve, reject) => {
+              const timeout = setTimeout(() => reject(new Error('body-read request hung')), 5000);
+              const chunks: Buffer[] = [];
+              const req = requestForUrl(
+                url,
+                {
+                  path: url.pathname + url.search,
+                  method: 'POST',
+                  headers: {
+                    'content-length': body.length,
+                    'content-type': 'application/octet-stream',
+                  },
+                },
+                res => {
+                  res.on('data', chunk => chunks.push(chunk));
+                  res.on('end', () => {
+                    clearTimeout(timeout);
+                    resolve({
+                      status: res.statusCode,
+                      text: Buffer.concat(chunks).toString('utf8'),
+                    });
+                  });
+                },
+              );
+              req.on('error', err => {
+                clearTimeout(timeout);
+                reject(err);
+              });
+              req.end(body);
+            },
+          );
+
+          expect(statusAndBody.status).toBe(200);
+          expect(statusAndBody.text).toBe(String(body.length));
+        },
+      );
+
       // Covers Node keep-alive drain and uWS lazy onData drain (same early-response path).
       skipIf(
-        serverImplName === 'Bun' ||
+        skipNativeRuntimes ||
+          serverImplName === 'Bun' ||
           serverImplName === 'Deno' ||
-          serverImplName === 'hapi' ||
-          (globalThis.Bun && serverImplName !== 'Bun') ||
-          (globalThis.Deno && serverImplName !== 'Deno'),
+          serverImplName === 'hapi',
       )('keeps the connection reusable after early response without reading the body', async () => {
         const adapter = createServerAdapter(() => new fetchAPI.Response('nope', { status: 413 }));
         await testServer.addOnceHandler(adapter);
@@ -164,8 +276,7 @@ describe('Discard unread request body', () => {
           await testServer.addOnceHandler(adapter);
           const second = await post(2);
           expect(second.status).toBe(413);
-          // Only assert socket reuse on Node requestListener adapters we know keep the socket open.
-          // Frameworks like Hapi may close after each response even with Connection: keep-alive.
+          // Only assert socket reuse on adapters we know keep the socket open.
           if (
             agent &&
             (serverImplName === 'node:http' ||
