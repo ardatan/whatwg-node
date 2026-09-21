@@ -298,7 +298,7 @@ function responseUsesNodeRequestBody(
   if (bodyInit === rawRequest) {
     return true;
   }
-  if (isReadable(bodyInit) && bodyInit === rawRequest) {
+  if (bodyInit != null && isReadable(bodyInit) && bodyInit === rawRequest) {
     return true;
   }
   const body = response.body as { readable?: Readable } | Readable | null;
@@ -308,8 +308,9 @@ function responseUsesNodeRequestBody(
   if (isReadable(body) && body === rawRequest) {
     return true;
   }
-  if (isReadable((body as { readable?: Readable }).readable)) {
-    return (body as { readable: Readable }).readable === rawRequest;
+  const readable = (body as { readable?: Readable }).readable;
+  if (readable != null && isReadable(readable)) {
+    return readable === rawRequest;
   }
   return false;
 }
