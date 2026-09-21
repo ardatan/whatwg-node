@@ -178,7 +178,7 @@ describe('Discard unread request body', () => {
           const url = new URL(testServer.url);
           const body = Buffer.alloc(50_000, 'c');
 
-          const statusAndBody = await new Promise<{ status?: number; text: string }>(
+          const statusAndBody = await new Promise<{ status: number | undefined; text: string }>(
             (resolve, reject) => {
               const timeout = setTimeout(() => reject(new Error('body-read request hung')), 5000);
               const chunks: Buffer[] = [];
