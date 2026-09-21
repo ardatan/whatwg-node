@@ -28,7 +28,6 @@ module.exports = function createNodePonyfill(opts = {}) {
       TextEncoderStream: globalThis.TextEncoderStream,
       Blob: globalThis.Blob,
       File: globalThis.File,
-      crypto: globalThis.crypto,
       btoa: globalThis.btoa,
       TextEncoder: globalThis.TextEncoder,
       TextDecoder: globalThis.TextDecoder,
@@ -59,7 +58,6 @@ module.exports = function createNodePonyfill(opts = {}) {
 
   ponyfills.Blob = newNodeFetch.Blob;
   ponyfills.File = newNodeFetch.File;
-  ponyfills.crypto = globalThis.crypto;
   ponyfills.btoa = newNodeFetch.btoa;
   ponyfills.TextEncoder = newNodeFetch.TextEncoder;
   ponyfills.TextDecoder = newNodeFetch.TextDecoder;

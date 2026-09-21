@@ -20,7 +20,6 @@ declare module '@whatwg-node/fetch' {
   export const TextEncoderStream: typeof globalThis.TextEncoderStream;
   export const Blob: typeof globalThis.Blob;
   export const File: typeof globalThis.File;
-  export const crypto: typeof globalThis.crypto;
   export const btoa: typeof globalThis.btoa;
   export const TextDecoder: typeof globalThis.TextDecoder;
   export const TextEncoder: typeof globalThis.TextEncoder;
@@ -62,7 +61,6 @@ declare module '@whatwg-node/fetch' {
     TextEncoderStream: typeof TextEncoderStream;
     Blob: typeof Blob;
     File: typeof File;
-    crypto: typeof crypto;
     btoa: typeof btoa;
     TextEncoder: typeof TextEncoder;
     TextDecoder: typeof TextDecoder;

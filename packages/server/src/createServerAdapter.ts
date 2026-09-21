@@ -91,7 +91,6 @@ const nativeFetchAPI: FetchAPI = {
   TextEncoderStream: globalThis.TextEncoderStream,
   Blob: globalThis.Blob,
   File: globalThis.File,
-  crypto: globalThis.crypto,
   btoa: globalThis.btoa,
   TextEncoder: globalThis.TextEncoder,
   TextDecoder: globalThis.TextDecoder,

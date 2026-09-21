@@ -96,10 +96,6 @@ The following are exported by this package:
 - [TextDecoder](https://developer.mozilla.org/en-US/docs/Web/API/TextDecoder)
 - [btoa](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/btoa)
 
-### Web Crypto API
-
-- [crypto](https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API)
-
 ### Create variations of the implementation
 
 - `createFetch`
