@@ -78,22 +78,24 @@ export function getRequestFromUWSRequest({
   };
 
   // uWebSockets.js requires onData to be attached synchronously before any await in the
-  // route handler; otherwise upload chunks can be lost. Always subscribe for methods with
-  // a body, then {@link discardUnreadUWSRequestBody} can stop buffering if unused.
+  // route handler; otherwise upload chunks can be lost. Always subscribe (including GET/HEAD
+  // so empty-body completion still marks `stopped` for text/json helpers), then
+  // {@link discardUnreadUWSRequestBody} can stop retaining chunks if unused.
   let discarding = false;
   let bodyConsumed = false;
+
+  res.onData(function (ab, isLast) {
+    if (!discarding && !stopped) {
+      push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+    }
+    if (isLast) {
+      stop();
+    }
+  });
 
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
-    res.onData(function (ab, isLast) {
-      if (!discarding && !stopped) {
-        push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
-      }
-      if (isLast) {
-        stop();
-      }
-    });
     controller.signal.addEventListener(
       'abort',
       () => {
