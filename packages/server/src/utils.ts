@@ -233,6 +233,36 @@ function configureSocket(rawRequest: NodeRequest) {
   rawRequest?.socket?.setKeepAlive?.(true);
 }
 
+/**
+ * Discard an unread Node request body after we have decided to respond.
+ *
+ * Without this, keep-alive connections can stall (or buffer the full body until the response
+ * finishes) when plugins short-circuit via `endResponse` without consuming `request.body`.
+ * Resuming the underlying `IncomingMessage` puts it into flowing mode so Node drains remaining
+ * bytes without destroying the socket (see Node.js `IncomingMessage` docs).
+ *
+ * We intentionally do not call `Request.body.cancel()` here: with the node-fetch ponyfill that
+ * destroys the `IncomingMessage` and can RST keep-alive connections.
+ *
+ * GET/HEAD are skipped: there is no body to drain, and resuming those messages can interfere
+ * with native fetch abort → response-body `cancel()` on some Node/TLS paths.
+ */
+export function discardUnreadNodeRequestBody(nodeRequest: NodeRequest) {
+  const rawRequest = (nodeRequest.raw || nodeRequest.req || nodeRequest) as
+    IncomingMessage | Http2ServerRequest;
+  const method = ((rawRequest as IncomingMessage).method || nodeRequest.method || '').toUpperCase();
+  if (method === 'GET' || method === 'HEAD' || !rawRequest) {
+    return;
+  }
+  if (
+    typeof (rawRequest as IncomingMessage).resume === 'function' &&
+    !(rawRequest as IncomingMessage).readableEnded &&
+    !(rawRequest as IncomingMessage).destroyed
+  ) {
+    (rawRequest as IncomingMessage).resume();
+  }
+}
+
 function endResponse(serverResponse: NodeResponse) {
   // @ts-expect-error Avoid arguments adaptor trampoline https://v8.dev/blog/adaptor-frame
   serverResponse.end(null, null, null);
@@ -304,6 +334,10 @@ export function sendNodeResponse(
   nodeRequest: NodeRequest,
   __useSingleWriteHead: boolean,
 ) {
+  // Defense in depth when callers use sendNodeResponse without going through
+  // handleNodeRequestAndResponse (e.g. after a custom handleRequest). Safe if already discarded.
+  discardUnreadNodeRequestBody(nodeRequest);
+
   if (serverResponse.closed || serverResponse.destroyed || serverResponse.writableEnded) {
     return;
   }

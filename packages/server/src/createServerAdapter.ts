@@ -20,6 +20,7 @@ import {
 import {
   completeAssign,
   createCustomAbortControllerSignal,
+  discardUnreadNodeRequestBody,
   ensureDisposableStackRegisteredForTerminateEvents,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
@@ -326,7 +327,15 @@ function createServerAdapter<
       nodeResponse,
       useCustomAbortCtrl,
     );
-    return handleRequest(request, serverContext, expectedFetchAPI);
+    return handleMaybePromise(
+      () => handleRequest(request, serverContext, expectedFetchAPI),
+      response => {
+        // Framework integrations (Fastify/Koa/Hapi) send the Response themselves; still discard
+        // unread Node request bytes so keep-alive is not blocked after early endResponse.
+        discardUnreadNodeRequestBody(nodeRequest);
+        return response;
+      },
+    );
   }
 
   function requestListener(
@@ -387,7 +396,7 @@ function createServerAdapter<
       controller.signal.addEventListener('abort', cb, { once: true });
     };
     // For this case, picking a different Fetch API is not needed
-    const request = getRequestFromUWSRequest({
+    const { request, discardUnreadBody } = getRequestFromUWSRequest({
       req,
       res,
       fetchAPI: expectedFetchAPI,
@@ -404,7 +413,12 @@ function createServerAdapter<
         if (!controller.signal.aborted && !resEnded) {
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, expectedFetchAPI),
-            r => r,
+            r => {
+              // If the handler / plugins never touched the body, stop buffering further onData
+              // chunks (keep-alive + large uploads short-circuited via endResponse).
+              discardUnreadBody();
+              return r;
+            },
             err => {
               console.error(`Unexpected error while handling request: ${err.message || err}`);
             },

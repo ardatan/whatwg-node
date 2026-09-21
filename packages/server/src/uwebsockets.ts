@@ -67,7 +67,11 @@ export function getRequestFromUWSRequest({
     }
   };
   res.onData(function (ab, isLast) {
-    push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+    // Once we have discarded / finished the body, ignore further chunks so early responses
+    // (endResponse without reading) do not buffer the rest of a large upload into `chunks`.
+    if (!stopped) {
+      push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+    }
     if (isLast) {
       stop();
     }
@@ -122,7 +126,9 @@ export function getRequestFromUWSRequest({
     url += `?${query}`;
   }
   let buffer: Buffer<ArrayBuffer> | undefined;
+  let bodyAccessed = false;
   function getBody() {
+    bodyAccessed = true;
     if (!getReadableStream) {
       return null;
     }
@@ -149,6 +155,7 @@ export function getRequestFromUWSRequest({
     return buffer;
   }
   function collectBuffer() {
+    bodyAccessed = true;
     if (stopped) {
       return fakePromise(getBufferFromChunks());
     }
@@ -194,7 +201,17 @@ export function getRequestFromUWSRequest({
       enumerable: true,
     },
   });
-  return request;
+  return {
+    request,
+    discardUnreadBody() {
+      if (bodyAccessed) {
+        return;
+      }
+      stop();
+      chunks.length = 0;
+      buffer = undefined;
+    },
+  };
 }
 
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
