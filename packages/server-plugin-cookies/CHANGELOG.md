@@ -1,5 +1,69 @@
 # @whatwg-node/server-plugin-cookies
 
+## 2.0.0
+
+### Major Changes
+
+- [#3561](https://github.com/ardatan/whatwg-node/pull/3561)
+  [`52a5bf6`](https://github.com/ardatan/whatwg-node/commit/52a5bf6922e2daef4705aca524b3d165a6424372)
+  Thanks [@ardatan](https://github.com/ardatan)! - Drop support for Node.js 18
+  and 20. The minimum supported Node.js version is now **22.15**.
+
+  ### Why
+
+  Node.js 18 and 20 are end-of-life and no longer receive security updates.
+  Keeping them in our support matrix forced version-specific workarounds and
+  slowed adoption of newer Node TLS APIs.
+
+  The floor is set to **22.15** (not just 22.0) so we can rely on
+  `tls.getCACertificates()` (Node.js 22.15 / 23.10) and always-on `zlib` zstd
+  helpers (`createZstdCompress` / `createZstdDecompress`, Node.js 22.15 / 23.8).
+  That matches the oldest currently supported LTS line (22 Maintenance) while
+  dropping only EOL majors.
+
+  ### SemVer
+
+  - **0.x packages**: minor bump (breaking changes are allowed in minors while
+    major is 0).
+  - **1.x packages** (`@whatwg-node/promise-helpers`,
+    `@whatwg-node/server-plugin-cookies`): **major** bump, since dropping
+    supported Node versions is a breaking engines change for SemVer `>=1.0.0`
+    consumers.
+
+  ### What changed
+
+  - **`engines.node`**: all published packages now declare `>=22.15.0`
+    (including `@whatwg-node/promise-helpers`, which was still on `>=16`).
+  - **`@whatwg-node/events`**: removed. Native `CustomEvent` / `Event` /
+    `EventTarget` are available on Node.js 22+, so the ponyfill is no longer
+    maintained; use the platform globals.
+  - **`@whatwg-node/fetch`**: dropped the `require("crypto").webcrypto`
+    fallback; `crypto` is always `globalThis.crypto` on supported runtimes.
+  - **`@whatwg-node/server`**: removed the Node 18 `setHeaders` workaround
+    (`isNode1x`); `ServerResponse#setHeaders` is used whenever it exists.
+  - **`@whatwg-node/node-fetch`**: Runtime guards for `zlib.createZstdCompress`
+    / `createZstdDecompress` are removed; `zstd` is always included in
+    `Accept-Encoding`.
+  - **CI / e2e**: unit matrix is `[22, 24, 26]`; AWS Lambda runtime and Azure
+    Function target moved from Node 20 to Node 22.
+
+  If you are still on Node 18 or 20, upgrade to Node.js **22.15+** (or 24 / 26)
+  before installing this release.
+
+### Patch Changes
+
+- Updated dependencies
+  [[`205d949`](https://github.com/ardatan/whatwg-node/commit/205d949ae0e80ff96f4363f021ae63e344ee1e54),
+  [`ebb2ab6`](https://github.com/ardatan/whatwg-node/commit/ebb2ab662404139dd5670dae85f560edb2abbb99),
+  [`52a5bf6`](https://github.com/ardatan/whatwg-node/commit/52a5bf6922e2daef4705aca524b3d165a6424372),
+  [`36ef02b`](https://github.com/ardatan/whatwg-node/commit/36ef02b4a3b9ee9a0f5b3a6ede66aaceb91caec6),
+  [`3e55abc`](https://github.com/ardatan/whatwg-node/commit/3e55abcd6c5c8a0df4a58e0fb76622928de711b0),
+  [`d3b2c17`](https://github.com/ardatan/whatwg-node/commit/d3b2c17e0e84881f6cb53936a3336bfbd9b6fb35),
+  [`b4c83ab`](https://github.com/ardatan/whatwg-node/commit/b4c83abec3571d99672253596e7f78cf26e0e6e7),
+  [`72dad02`](https://github.com/ardatan/whatwg-node/commit/72dad02b67ba90a24fc2469da67b3fd6e483c987)]:
+  - @whatwg-node/server@0.12.0
+  - @whatwg-node/cookie-store@0.3.0
+
 ## 1.0.7
 
 ### Patch Changes
@@ -16,7 +80,8 @@
 
 - [#3402](https://github.com/ardatan/whatwg-node/pull/3402)
   [`bb195f8`](https://github.com/ardatan/whatwg-node/commit/bb195f851e09712bda2a20462f464ebbe8ca513e)
-  Thanks [@enisdenjo](https://github.com/enisdenjo)! - @whatwg-node/server is a peer dependency
+  Thanks [@enisdenjo](https://github.com/enisdenjo)! - @whatwg-node/server is a
+  peer dependency
 
 ## 1.0.6
 
@@ -62,8 +127,8 @@
 
 - [#1495](https://github.com/ardatan/whatwg-node/pull/1495)
   [`bebc159`](https://github.com/ardatan/whatwg-node/commit/bebc159e0a470a0ea89a8575f620ead3f1b6b594)
-  Thanks [@ardatan](https://github.com/ardatan)! - Implement \`CompressionStream\`,
-  \`WritableStream\` and \`TransformStream\`
+  Thanks [@ardatan](https://github.com/ardatan)! - Implement
+  \`CompressionStream\`, \`WritableStream\` and \`TransformStream\`
 
 - Updated dependencies
   [[`bebc159`](https://github.com/ardatan/whatwg-node/commit/bebc159e0a470a0ea89a8575f620ead3f1b6b594)]:
@@ -120,7 +185,8 @@
 ### Patch Changes
 
 - [`503627f`](https://github.com/ardatan/whatwg-node/commit/503627f67e44395ec0050c2877427aa2f706ff3f)
-  Thanks [@ardatan](https://github.com/ardatan)! - Do not set set-cookie header if no cookie is set
+  Thanks [@ardatan](https://github.com/ardatan)! - Do not set set-cookie header
+  if no cookie is set
 
 ## 0.0.5
 
@@ -176,4 +242,5 @@
 ### Patch Changes
 
 - [`20d249c`](https://github.com/ardatan/whatwg-node/commit/20d249c0058ebadde12e46fbf62d4318b627099d)
-  Thanks [@ardatan](https://github.com/ardatan)! - Support older versions of Node
+  Thanks [@ardatan](https://github.com/ardatan)! - Support older versions of
+  Node
