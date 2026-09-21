@@ -9,7 +9,7 @@ import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('useLimitRequestBodySize', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI }) => {
-    function createAdapter(limit: number | false) {
+    function createAdapter(limit: number) {
       return createServerAdapter(
         request =>
           handleMaybePromise(
@@ -93,18 +93,6 @@ describe('useLimitRequestBodySize', () => {
       });
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({ body: 'hello' });
-    });
-
-    it('does nothing when the limit is disabled', async () => {
-      const adapter = createAdapter(false);
-      const large = 'x'.repeat(50_000);
-      const response = await adapter.fetch('http://localhost/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: large,
-      });
-      expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toEqual({ body: large });
     });
 
     it('works with a native Request and ReadableStream', async () => {

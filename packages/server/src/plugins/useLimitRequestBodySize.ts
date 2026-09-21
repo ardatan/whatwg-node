@@ -34,15 +34,11 @@ function responseFromHTTPError(fetchAPI: { Response: typeof Response }, error: H
  * rejected early via `endResponse`. Bodies are also counted while streaming, so chunked or
  * missing `Content-Length` requests are covered too.
  *
- * Pass `false` to disable the limit.
+ * To disable limiting, omit this plugin from the adapter.
  */
 export function useLimitRequestBodySize<TServerContext = {}>(
-  limit: number | false,
+  limit: number,
 ): ServerAdapterPlugin<TServerContext> {
-  if (limit === false) {
-    return {};
-  }
-
   return {
     onRequest({ request, setRequest, fetchAPI, endResponse }) {
       const contentLength = request.headers.get('content-length');
