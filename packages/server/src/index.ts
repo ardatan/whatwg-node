@@ -6,6 +6,7 @@ export * from './plugins/useCors.js';
 export * from './plugins/useErrorHandling.js';
 export * from './plugins/useContentEncoding.js';
 export * from './plugins/useRequestDeadline.js';
+export * from './plugins/useLimitRequestBodySize.js';
 export * from './uwebsockets.js';
 export { Response } from '@whatwg-node/fetch';
 export { DisposableSymbols } from '@whatwg-node/disposablestack';

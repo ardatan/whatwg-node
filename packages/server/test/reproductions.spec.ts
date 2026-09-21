@@ -10,8 +10,8 @@ import {
   createServerAdapter,
   FetchAPI,
   Response,
-  ServerAdapterPlugin,
   useErrorHandling,
+  useLimitRequestBodySize,
 } from '@whatwg-node/server';
 
 let server: Server | undefined;
@@ -268,37 +268,6 @@ it('if native Request object is sent without plugins, the native API is still us
 });
 
 it('a native Request object can be replaced with a new one using TransformStream', async () => {
-  const useMaxRequestBodySize = (limit: number): ServerAdapterPlugin => ({
-    onRequest({ request, setRequest, fetchAPI }) {
-      if (!request.body) {
-        return;
-      }
-
-      let bytesRead = 0;
-      const limitedBody = request.body.pipeThrough(
-        new fetchAPI.TransformStream<Uint8Array, Uint8Array>({
-          transform(chunk, controller) {
-            bytesRead += chunk.byteLength;
-            if (bytesRead > limit) {
-              controller.error(new Error(`Request body too large`));
-              return;
-            }
-            controller.enqueue(chunk);
-          },
-        }),
-      );
-      const limitedRequest = new fetchAPI.Request(request.url, {
-        method: request.method,
-        headers: request.headers,
-        signal: request.signal,
-        body: limitedBody,
-        // @ts-expect-error Required by some runtimes for streamed bodies; missing from `fetchAPI.Request`'s types.
-        duplex: 'half',
-      });
-      setRequest(limitedRequest);
-    },
-  });
-
   const serverAdapter = createServerAdapter<{}>(
     request =>
       handleMaybePromise(
@@ -307,14 +276,14 @@ it('a native Request object can be replaced with a new one using TransformStream
       ),
     {
       plugins: [
-        useMaxRequestBodySize(20),
+        useLimitRequestBodySize(20),
         useErrorHandling((err, _req, _ctx, fetchAPI) =>
           fetchAPI.Response.json(
             {
               error: err.message,
             },
             {
-              status: 500,
+              status: err.status ?? 500,
             },
           ),
         ),
@@ -341,7 +310,6 @@ it('a native Request object can be replaced with a new one using TransformStream
     body: JSON.stringify({ hello: 'world', extra: 'data' }),
   });
   const failedRes = await serverAdapter.fetch(largeRequest);
-  expect(failedRes.status).toBe(500);
-  const failedResponseBody = await failedRes.json();
-  expect(failedResponseBody).toEqual({ error: 'Request body too large' });
+  expect(failedRes.status).toBe(413);
+  expect(await failedRes.text()).toMatch(/Request body too large/);
 });
