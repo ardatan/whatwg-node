@@ -1,5 +1,13 @@
 # @whatwg-node/server-plugin-cookies
 
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies
+  [[`f78c03b`](https://github.com/ardatan/whatwg-node/commit/f78c03b0b08586a9da7a6a8953c646f5d2733aa4)]:
+  - @whatwg-node/server@0.13.0
+
 ## 2.0.0
 
 ### Major Changes
