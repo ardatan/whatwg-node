@@ -103,9 +103,9 @@ describe('Discard unread request body', () => {
         expect(state.readableFlowing === true || state.readableEnded === true).toBe(true);
       });
 
+      // Covers Node keep-alive drain and uWS onData discard (same early-response path).
       skipIf(
-        serverImplName === 'uWebSockets' ||
-          serverImplName === 'Bun' ||
+        serverImplName === 'Bun' ||
           serverImplName === 'Deno' ||
           (globalThis.Bun && serverImplName !== 'Bun') ||
           (globalThis.Deno && serverImplName !== 'Deno'),
@@ -114,38 +114,46 @@ describe('Discard unread request body', () => {
         await testServer.addOnceHandler(adapter);
 
         const url = new URL(testServer.url);
-        const agent = new http.Agent({ keepAlive: true, maxSockets: 1 });
+        // https keep-alive needs https.Agent; skip reuse assertion there and still check status.
+        const agent =
+          url.protocol === 'http:' ? new http.Agent({ keepAlive: true, maxSockets: 1 }) : undefined;
         const body = Buffer.alloc(100_000, 'b');
 
         function post(id: number) {
-          return new Promise<{ id: number; status: number | undefined }>((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error(`request ${id} hung`)), 3000);
-            const req = requestForUrl(
-              url,
-              {
-                path: url.pathname + url.search,
-                method: 'POST',
-                agent: url.protocol === 'http:' ? agent : undefined,
-                headers: {
-                  'content-length': body.length,
-                  'content-type': 'application/octet-stream',
-                  connection: 'keep-alive',
+          return new Promise<{ id: number; status: number | undefined; reusedSocket: boolean }>(
+            (resolve, reject) => {
+              const timeout = setTimeout(() => reject(new Error(`request ${id} hung`)), 3000);
+              const req = requestForUrl(
+                url,
+                {
+                  path: url.pathname + url.search,
+                  method: 'POST',
+                  agent,
+                  headers: {
+                    'content-length': body.length,
+                    'content-type': 'application/octet-stream',
+                    connection: 'keep-alive',
+                  },
                 },
-              },
-              res => {
-                res.resume();
-                res.on('end', () => {
-                  clearTimeout(timeout);
-                  resolve({ id, status: res.statusCode });
-                });
-              },
-            );
-            req.on('error', err => {
-              clearTimeout(timeout);
-              reject(err);
-            });
-            req.end(body);
-          });
+                res => {
+                  res.resume();
+                  res.on('end', () => {
+                    clearTimeout(timeout);
+                    resolve({
+                      id,
+                      status: res.statusCode,
+                      reusedSocket: Boolean(req.reusedSocket),
+                    });
+                  });
+                },
+              );
+              req.on('error', err => {
+                clearTimeout(timeout);
+                reject(err);
+              });
+              req.end(body);
+            },
+          );
         }
 
         try {
@@ -155,8 +163,19 @@ describe('Discard unread request body', () => {
           await testServer.addOnceHandler(adapter);
           const second = await post(2);
           expect(second.status).toBe(413);
+          // Only assert socket reuse on Node requestListener adapters we know keep the socket open.
+          // Frameworks like Hapi may close after each response even with Connection: keep-alive.
+          if (
+            agent &&
+            (serverImplName === 'node:http' ||
+              serverImplName === 'express' ||
+              serverImplName === 'uWebSockets')
+          ) {
+            expect(first.reusedSocket).toBe(false);
+            expect(second.reusedSocket).toBe(true);
+          }
         } finally {
-          agent.destroy();
+          agent?.destroy();
         }
       });
     });

@@ -37,6 +37,7 @@ import {
   sendNodeResponse,
 } from './utils.js';
 import {
+  discardUnreadUWSRequestBody,
   fakePromise,
   getRequestFromUWSRequest,
   isUWSResponse,
@@ -396,7 +397,7 @@ function createServerAdapter<
       controller.signal.addEventListener('abort', cb, { once: true });
     };
     // For this case, picking a different Fetch API is not needed
-    const { request, discardUnreadBody } = getRequestFromUWSRequest({
+    const request = getRequestFromUWSRequest({
       req,
       res,
       fetchAPI: expectedFetchAPI,
@@ -411,14 +412,12 @@ function createServerAdapter<
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
+          // Discard before writing so long-lived / streaming responses do not keep buffering
+          // an unread upload into `chunks` for the whole response lifetime.
+          discardUnreadUWSRequestBody(request);
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, expectedFetchAPI),
-            r => {
-              // If the handler / plugins never touched the body, stop buffering further onData
-              // chunks (keep-alive + large uploads short-circuited via endResponse).
-              discardUnreadBody();
-              return r;
-            },
+            r => r,
             err => {
               console.error(`Unexpected error while handling request: ${err.message || err}`);
             },

@@ -34,6 +34,13 @@ interface GetRequestFromUWSOpts {
   controller: AbortController;
 }
 
+const uwsDiscardUnreadBodyByRequest = new WeakMap<Request, () => void>();
+
+/** Discard an unread uWS request body previously created by {@link getRequestFromUWSRequest}. */
+export function discardUnreadUWSRequestBody(request: Request) {
+  uwsDiscardUnreadBodyByRequest.get(request)?.();
+}
+
 export function getRequestFromUWSRequest({
   req,
   res,
@@ -137,12 +144,11 @@ export function getRequestFromUWSRequest({
     }
     return getReadableStream();
   }
+  // Do not pass a `body` getter into the Request init: some Fetch implementations read it
+  // during construction, which would falsely mark the body as accessed and skip discard.
   const request = new fetchAPI.Request(url, {
     method,
     headers,
-    get body() {
-      return getBody();
-    },
     signal: controller.signal,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore - not in the TS types yet
@@ -201,17 +207,17 @@ export function getRequestFromUWSRequest({
       enumerable: true,
     },
   });
-  return {
-    request,
-    discardUnreadBody() {
-      if (bodyAccessed) {
-        return;
-      }
-      stop();
-      chunks.length = 0;
-      buffer = undefined;
-    },
-  };
+  // Construction / property definition must not count as handler access.
+  bodyAccessed = false;
+  uwsDiscardUnreadBodyByRequest.set(request, () => {
+    if (bodyAccessed) {
+      return;
+    }
+    stop();
+    chunks.length = 0;
+    buffer = undefined;
+  });
+  return request;
 }
 
 export function createWritableFromUWS(uwsResponse: UWSResponse, fetchAPI: FetchAPI) {
