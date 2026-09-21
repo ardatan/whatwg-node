@@ -8,6 +8,12 @@ import {
 import { runTestsForEachFetchImpl } from './test-fetch.js';
 
 describe('useLimitRequestBodySize', () => {
+  it('rejects non-finite or negative limits', () => {
+    expect(() => useLimitRequestBodySize(Number.NaN)).toThrow(TypeError);
+    expect(() => useLimitRequestBodySize(Number.POSITIVE_INFINITY)).toThrow(TypeError);
+    expect(() => useLimitRequestBodySize(-1)).toThrow(TypeError);
+  });
+
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI }) => {
     function createAdapter(limit: number) {
       return createServerAdapter(

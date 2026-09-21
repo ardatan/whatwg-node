@@ -51,6 +51,12 @@ export function useLimitRequestBodySize<TServerContext = {}>(
   limit: number,
   options?: LimitRequestBodySizeOptions,
 ): ServerAdapterPlugin<TServerContext> {
+  if (!Number.isFinite(limit) || limit < 0) {
+    throw new TypeError(
+      `useLimitRequestBodySize: expected a finite non-negative limit, got ${String(limit)}`,
+    );
+  }
+
   const responseFromError = options?.responseFromError ?? defaultResponseFromError;
 
   return {
