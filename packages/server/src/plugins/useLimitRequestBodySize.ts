@@ -42,15 +42,10 @@ function defaultResponseFromError(error: HTTPError, fetchAPI: FetchAPI) {
  * Limits the size of incoming HTTP request bodies.
  *
  * Requests whose `Content-Length` exceeds `limit` (or whose `Content-Length` is invalid) are
- * rejected early via `endResponse`. When a valid `Content-Length` is within the limit and neither
- * `Transfer-Encoding` nor `Content-Encoding` is present, the body is trusted to that length and
- * not wrapped — wrapping every request in `pipeThrough` is expensive (~TransformStream + pipeline
- * teardown) and adds no safety once the HTTP parser has framed the body.
- *
- * Bodies are still counted while streaming when:
- * - `Content-Length` is missing (e.g. chunked transfer)
- * - `Transfer-Encoding` is present (overrides `Content-Length` per RFC 9112 §6.3)
- * - `Content-Encoding` is present (`useContentEncoding` may decode past the declared length)
+ * rejected early via `endResponse`. Bodies are also counted while streaming (via
+ * `TransformStream`), including when `Content-Length` is missing, wrong, or overridden — so a
+ * short `Content-Length` cannot bypass the limit. `Transfer-Encoding` and `Content-Encoding`
+ * cases are covered by the same byte counter.
  *
  * When using `useContentEncoding`, register it **before** this plugin so the byte counter sees
  * decoded bytes. `onRequest` hooks run in `plugins` array order; the reverse order would count
@@ -80,13 +75,6 @@ export function useLimitRequestBodySize<TServerContext = {}>(
         }
         if (Number(contentLength) > limit) {
           endResponse(responseFromError(new RequestBodyTooLargeError(), fetchAPI));
-          return;
-        }
-        // A compliant HTTP parser frames the body to exactly this many bytes, so piping through a
-        // TransformStream would only add overhead. Transfer-Encoding overrides Content-Length, and
-        // a Content-Encoding body may already be decoded (useContentEncoding runs in onRequest) and
-        // grow past the declared length — both keep the wrapper.
-        if (!request.headers.has('transfer-encoding') && !request.headers.has('content-encoding')) {
           return;
         }
       }

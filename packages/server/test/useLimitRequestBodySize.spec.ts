@@ -106,23 +106,6 @@ describe('useLimitRequestBodySize', () => {
       await expect(response.json()).resolves.toEqual({ body: 'hello' });
     });
 
-    it('does not byte-count when Content-Length alone is within the limit', async () => {
-      // Trust Content-Length framing: a hand-built Request whose body is longer than the
-      // declared length is accepted (no TransformStream wrap) as long as CL ≤ limit.
-      const adapter = createAdapter(100);
-      const response = await adapter.fetch(
-        new fetchAPI.Request('http://localhost/test', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain',
-            'Content-Length': '5',
-          },
-          body: 'this is longer than five but Content-Length says five',
-        }),
-      );
-      expect(response.status).toBe(200);
-    });
-
     it('still byte-counts when Transfer-Encoding is present alongside Content-Length', async () => {
       const adapter = createAdapter(10);
       const encoder = new TextEncoder();
