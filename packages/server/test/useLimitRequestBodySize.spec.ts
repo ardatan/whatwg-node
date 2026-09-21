@@ -1,5 +1,5 @@
 import { describe, expect, it } from '@jest/globals';
-import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import type { ServerAdapterPlugin } from '../src/plugins/types.js';
 import { useErrorHandling } from '../src/plugins/useErrorHandling.js';
 import {
   RequestBodyTooLargeError,
@@ -17,24 +17,29 @@ describe('useLimitRequestBodySize', () => {
   runTestsForEachFetchImpl((_, { createServerAdapter, fetchAPI }) => {
     function createAdapter(limit: number) {
       return createServerAdapter(
-        request =>
-          handleMaybePromise(
-            () => request.text(),
-            body => fetchAPI.Response.json({ body }),
-          ),
+        async request => {
+          const body = await request.text();
+          return fetchAPI.Response.json({ body });
+        },
         {
           plugins: [
             useLimitRequestBodySize(limit),
-            useErrorHandling((err, _req, _ctx, api) => {
+            useErrorHandling((err: any) => {
               if (
                 err instanceof RequestBodyTooLargeError ||
                 err?.name === 'RequestBodyTooLargeError'
               ) {
-                return api.Response.json({ error: err.message }, { status: err.status ?? 413 });
+                return fetchAPI.Response.json(
+                  { error: err.message },
+                  { status: err.status ?? 413 },
+                );
               }
-              return api.Response.json({ error: String(err?.message ?? err) }, { status: 500 });
+              return fetchAPI.Response.json(
+                { error: String(err?.message ?? err) },
+                { status: 500 },
+              );
             }),
-          ],
+          ] as ServerAdapterPlugin[],
           fetchAPI,
         },
       );
@@ -99,6 +104,115 @@ describe('useLimitRequestBodySize', () => {
       });
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toEqual({ body: 'hello' });
+    });
+
+    it('does not byte-count when Content-Length alone is within the limit', async () => {
+      // Trust Content-Length framing: a hand-built Request whose body is longer than the
+      // declared length is accepted (no TransformStream wrap) as long as CL ≤ limit.
+      const adapter = createAdapter(100);
+      const response = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Length': '5',
+          },
+          body: 'this is longer than five but Content-Length says five',
+        }),
+      );
+      expect(response.status).toBe(200);
+    });
+
+    it('still byte-counts when Transfer-Encoding is present alongside Content-Length', async () => {
+      const adapter = createAdapter(10);
+      const encoder = new TextEncoder();
+      const stream = new fetchAPI.ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode('this is longer than ten'));
+          controller.close();
+        },
+      });
+      const response = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Length': '5',
+            'Transfer-Encoding': 'chunked',
+          },
+          body: stream,
+          // @ts-expect-error duplex is required for streamed bodies
+          duplex: 'half',
+        }),
+      );
+      expect(response.status).toBe(413);
+      await expect(response.json()).resolves.toEqual({ error: 'Request body too large' });
+    });
+
+    it('byte-counts decoded bodies when Content-Encoding is present', async () => {
+      const { gzipSync } = await import('node:zlib');
+      const { useContentEncoding } = await import('../src/plugins/useContentEncoding.js');
+      const plain = 'x'.repeat(50_000);
+      const compressed = gzipSync(plain);
+      expect(compressed.byteLength).toBeLessThan(1000);
+
+      const adapter = createServerAdapter(
+        async request => {
+          const body = await request.text();
+          return fetchAPI.Response.json({ length: body.length });
+        },
+        {
+          // Encoding must run before the limit plugin so we count decoded bytes.
+          plugins: [
+            useContentEncoding(),
+            useLimitRequestBodySize(1000),
+            useErrorHandling((err: any) => {
+              if (
+                err instanceof RequestBodyTooLargeError ||
+                err?.name === 'RequestBodyTooLargeError'
+              ) {
+                return fetchAPI.Response.json(
+                  { error: err.message },
+                  { status: err.status ?? 413 },
+                );
+              }
+              return fetchAPI.Response.json(
+                { error: String(err?.message ?? err) },
+                { status: 500 },
+              );
+            }),
+          ] as ServerAdapterPlugin[],
+          fetchAPI,
+        },
+      );
+
+      const tooLarge = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Encoding': 'gzip',
+            'Content-Length': String(compressed.byteLength),
+          },
+          body: compressed,
+        }),
+      );
+      expect(tooLarge.status).toBe(413);
+
+      const small = gzipSync('hello');
+      const ok = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Encoding': 'gzip',
+            'Content-Length': String(small.byteLength),
+          },
+          body: small,
+        }),
+      );
+      expect(ok.status).toBe(200);
+      await expect(ok.json()).resolves.toEqual({ length: 5 });
     });
 
     it('uses responseFromError for early Content-Length rejects', async () => {
