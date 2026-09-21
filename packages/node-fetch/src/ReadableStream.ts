@@ -1,7 +1,7 @@
 import { Buffer } from 'node:buffer';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
-import { finished, pipeline } from 'node:stream/promises';
+import { finished } from 'node:stream/promises';
 import { fakeRejectPromise, handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { fakePromise } from './utils.js';
 import { PonyfillWritableStream } from './WritableStream.js';
@@ -303,13 +303,72 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
 
   pipeTo(destination: WritableStream<T>): Promise<void> {
     if (isPonyfillWritableStream(destination)) {
-      return pipeline(this.readable, destination.writable, {
-        end: true,
+      // Prefer `.pipe()` over `stream/promises.pipeline`: the promise pipeline allocates an
+      // AbortController and aborts it on teardown (DOMException + stack), which dominates
+      // per-request cost for short pipeThrough TransformStreams (e.g. body-size limiting).
+      // Still mirror pipeline's premature-close behavior: dest/src `close` without a normal
+      // `finish` / end must reject so canceling a TransformStream readable cannot hang pipeTo.
+      const src = this.readable;
+      const dest = destination.writable;
+      return new Promise<void>((resolve, reject) => {
+        let settled = false;
+        let completed = false;
+        const settle = (err?: unknown) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          src.off('error', onError);
+          dest.off('error', onError);
+          dest.off('finish', onFinish);
+          src.off('close', onSrcClose);
+          dest.off('close', onDestClose);
+          if (err != null) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        };
+        const prematureCloseError = () => {
+          const err = new Error('Premature close') as NodeJS.ErrnoException;
+          err.code = 'ERR_STREAM_PREMATURE_CLOSE';
+          return err;
+        };
+        const onError = (err: Error) => {
+          if (!src.destroyed) {
+            src.once('error', noop);
+            src.destroy(err);
+          }
+          if (!dest.destroyed) {
+            dest.once('error', noop);
+            dest.destroy(err);
+          }
+          settle(err);
+        };
+        const onFinish = () => {
+          completed = true;
+          settle();
+        };
+        const onSrcClose = () => {
+          if (!completed && !src.readableEnded) {
+            onError(prematureCloseError());
+          }
+        };
+        const onDestClose = () => {
+          if (!completed && !dest.writableFinished) {
+            onError(prematureCloseError());
+          }
+        };
+        src.once('error', onError);
+        dest.once('error', onError);
+        dest.once('finish', onFinish);
+        src.once('close', onSrcClose);
+        dest.once('close', onDestClose);
+        src.pipe(dest, { end: true });
       });
-    } else {
-      const writer = destination.getWriter();
-      return this.pipeToWriter(writer);
     }
+    const writer = destination.getWriter();
+    return this.pipeToWriter(writer);
   }
 
   pipeThrough<T2>({
@@ -350,7 +409,7 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
         })
         .catch(() => {});
 
-      // Forward cancel(reason) to the source first (sequential) so a racing pipeline
+      // Forward cancel(reason) to the source first (sequential) so a racing pipe
       // destroy(err) cannot overwrite the cancel reason with ERR_STREAM_PREMATURE_CLOSE.
       const outCancel = readable.cancel.bind(readable);
       readable.cancel = async (reason?: any) => {
