@@ -201,7 +201,7 @@ export function normalizeNodeRequest(
 }
 
 export function isReadable(stream: any): stream is Readable {
-  return stream.read != null;
+  return stream != null && stream.read != null;
 }
 
 export function isNodeRequest(request: any): request is NodeRequest {
@@ -231,6 +231,88 @@ function configureSocket(rawRequest: NodeRequest) {
   rawRequest?.socket?.setTimeout?.(0);
   rawRequest?.socket?.setNoDelay?.(true);
   rawRequest?.socket?.setKeepAlive?.(true);
+}
+
+/**
+ * Discard an unread Node request body after we have decided to respond.
+ *
+ * Without this, keep-alive connections can stall (or buffer the full body until the response
+ * finishes) when plugins short-circuit via `endResponse` without consuming `request.body`.
+ * Resuming the underlying `IncomingMessage` puts it into flowing mode so Node drains remaining
+ * bytes without destroying the socket (see Node.js `IncomingMessage` docs).
+ *
+ * We intentionally do not call `Request.body.cancel()` here: with the node-fetch ponyfill that
+ * destroys the `IncomingMessage` and can RST keep-alive connections.
+ *
+ * GET/HEAD are skipped: there is no body to drain, and resuming those messages can interfere
+ * with native fetch abort → response-body `cancel()` on some Node/TLS paths.
+ *
+ * When `response` is provided and its body is backed by the same IncomingMessage (e.g.
+ * `new Response(request.body)`), we skip resume so piping the response is not racing a drain.
+ *
+ * Pass the Fetch `Request` when available: native `Response(request.body)` keeps a ReadableStream
+ * wrapper (not the IncomingMessage), so identity must be checked via `request.body === response.body`.
+ */
+const nodeRequestBodyHeldByResponse = new WeakSet<object>();
+
+export function discardUnreadNodeRequestBody(
+  nodeRequest: NodeRequest,
+  response?: Response,
+  fetchRequest?: Request,
+) {
+  const rawRequest = (nodeRequest.raw || nodeRequest.req || nodeRequest) as
+    IncomingMessage | Http2ServerRequest;
+  const method = ((rawRequest as IncomingMessage).method || nodeRequest.method || '').toUpperCase();
+  if (method === 'GET' || method === 'HEAD' || !rawRequest) {
+    return;
+  }
+  if (nodeRequestBodyHeldByResponse.has(rawRequest as object)) {
+    return;
+  }
+  if (responseUsesNodeRequestBody(response, rawRequest as IncomingMessage, fetchRequest)) {
+    nodeRequestBodyHeldByResponse.add(rawRequest as object);
+    return;
+  }
+  if (
+    typeof (rawRequest as IncomingMessage).resume === 'function' &&
+    !(rawRequest as IncomingMessage).readableEnded &&
+    !(rawRequest as IncomingMessage).destroyed
+  ) {
+    (rawRequest as IncomingMessage).resume();
+  }
+}
+
+function responseUsesNodeRequestBody(
+  response: Response | undefined,
+  rawRequest: IncomingMessage,
+  fetchRequest?: Request,
+): boolean {
+  if (!response) {
+    return false;
+  }
+  // Native + ponyfill: `new Response(request.body)` — same stream instance on both sides.
+  if (fetchRequest?.body != null && response.body != null && fetchRequest.body === response.body) {
+    return true;
+  }
+  const bodyInit = (response as { bodyInit?: unknown }).bodyInit;
+  if (bodyInit === rawRequest) {
+    return true;
+  }
+  if (bodyInit != null && isReadable(bodyInit) && bodyInit === rawRequest) {
+    return true;
+  }
+  const body = response.body as { readable?: Readable } | Readable | null;
+  if (!body) {
+    return false;
+  }
+  if (isReadable(body) && body === rawRequest) {
+    return true;
+  }
+  const readable = (body as { readable?: Readable }).readable;
+  if (readable != null && isReadable(readable)) {
+    return readable === rawRequest;
+  }
+  return false;
 }
 
 function endResponse(serverResponse: NodeResponse) {
@@ -304,6 +386,11 @@ export function sendNodeResponse(
   nodeRequest: NodeRequest,
   __useSingleWriteHead: boolean,
 ) {
+  // Defense in depth when callers use sendNodeResponse without going through
+  // handleNodeRequestAndResponse (e.g. after a custom handleRequest). Safe if already discarded.
+  // Skip when the response body is the request stream (e.g. `new Response(request.body)`).
+  discardUnreadNodeRequestBody(nodeRequest, fetchResponse);
+
   if (serverResponse.closed || serverResponse.destroyed || serverResponse.writableEnded) {
     return;
   }

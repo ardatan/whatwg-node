@@ -20,6 +20,7 @@ import {
 import {
   completeAssign,
   createCustomAbortControllerSignal,
+  discardUnreadNodeRequestBody,
   ensureDisposableStackRegisteredForTerminateEvents,
   handleAbortSignalAndPromiseResponse,
   handleErrorFromRequestHandler,
@@ -36,6 +37,7 @@ import {
   sendNodeResponse,
 } from './utils.js';
 import {
+  discardUnreadUWSRequestBody,
   fakePromise,
   getRequestFromUWSRequest,
   isUWSResponse,
@@ -326,7 +328,19 @@ function createServerAdapter<
       nodeResponse,
       useCustomAbortCtrl,
     );
-    return handleRequest(request, serverContext, expectedFetchAPI);
+    return handleMaybePromise(
+      () => handleRequest(request, serverContext, expectedFetchAPI),
+      response => {
+        // Framework integrations (Fastify/Koa/Hapi) send the Response themselves; still discard
+        // unread Node request bytes so keep-alive is not blocked after early endResponse.
+        discardUnreadNodeRequestBody(nodeRequest, response, request);
+        return response;
+      },
+      err => {
+        discardUnreadNodeRequestBody(nodeRequest);
+        throw err;
+      },
+    );
   }
 
   function requestListener(
@@ -402,6 +416,9 @@ function createServerAdapter<
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
+          // If the handler never touched the body, drop buffered upload chunks before writing
+          // so long-lived / streaming responses do not retain an unread body in memory.
+          discardUnreadUWSRequestBody(request);
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, expectedFetchAPI),
             r => r,
