@@ -37,8 +37,8 @@ interface GetRequestFromUWSOpts {
 const uwsDrainUnreadBodyByRequest = new WeakMap<Request, () => void>();
 
 /**
- * If the handler never read the body, attach a no-op `onData` drain so uWS can finish the
- * request without buffering upload bytes. No-op when body was (or will be) consumed.
+ * If the handler never read the body, stop retaining upload chunks while keeping the
+ * existing `onData` subscription so uWS can finish delivering the request.
  */
 export function discardUnreadUWSRequestBody(request: Request) {
   uwsDrainUnreadBodyByRequest.get(request)?.();
@@ -77,35 +77,23 @@ export function getRequestFromUWSRequest({
     }
   };
 
-  // Lazy onData: do not buffer until the handler touches the body. If the response is sent
-  // without reading, {@link discardUnreadUWSRequestBody} registers a drain-only listener.
-  let onDataMode: 'none' | 'consume' | 'drain' = 'none';
-  function ensureOnData(mode: 'consume' | 'drain') {
-    if (onDataMode !== 'none') {
-      return;
-    }
-    onDataMode = mode;
-    if (mode === 'consume') {
-      res.onData(function (ab, isLast) {
-        if (!stopped) {
-          push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
-        }
-        if (isLast) {
-          stop();
-        }
-      });
-      return;
-    }
-    res.onData(function (_ab, isLast) {
-      if (isLast) {
-        stop();
-      }
-    });
-  }
+  // uWebSockets.js requires onData to be attached synchronously before any await in the
+  // route handler; otherwise upload chunks can be lost. Always subscribe for methods with
+  // a body, then {@link discardUnreadUWSRequestBody} can stop buffering if unused.
+  let discarding = false;
+  let bodyConsumed = false;
 
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
+    res.onData(function (ab, isLast) {
+      if (!discarding && !stopped) {
+        push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+      }
+      if (isLast) {
+        stop();
+      }
+    });
     controller.signal.addEventListener(
       'abort',
       () => {
@@ -115,7 +103,7 @@ export function getRequestFromUWSRequest({
     );
     let readableStream: ReadableStream;
     getReadableStream = () => {
-      ensureOnData('consume');
+      bodyConsumed = true;
       if (!readableStream) {
         readableStream = new fetchAPI.ReadableStream({
           start(streamCtrl) {
@@ -159,12 +147,13 @@ export function getRequestFromUWSRequest({
       return null;
     }
     if (stopped) {
+      bodyConsumed = true;
       return getBufferFromChunks();
     }
     return getReadableStream();
   }
   // Do not pass `body` in Request init: some Fetch implementations read it during construction
-  // and would start consuming/buffering before the handler runs.
+  // and would start consuming before the handler runs.
   const request = new fetchAPI.Request(url, {
     method,
     headers,
@@ -180,7 +169,7 @@ export function getRequestFromUWSRequest({
     return buffer;
   }
   function collectBuffer() {
-    ensureOnData('consume');
+    bodyConsumed = true;
     if (stopped) {
       return fakePromise(getBufferFromChunks());
     }
@@ -194,41 +183,113 @@ export function getRequestFromUWSRequest({
       }
     });
   }
-  Object.defineProperties(request, {
-    body: {
-      get() {
-        return getBody();
+  function installBodyAccessors(target: Request) {
+    Object.defineProperties(target, {
+      body: {
+        get() {
+          return getBody();
+        },
+        configurable: true,
+        enumerable: true,
       },
-      configurable: true,
-      enumerable: true,
-    },
-    json: {
-      value() {
-        return collectBuffer()
-          .then(b => b.toString('utf8'))
-          .then(t => JSON.parse(t));
+      bodyUsed: {
+        get() {
+          return bodyConsumed;
+        },
+        configurable: true,
+        enumerable: true,
       },
-      configurable: true,
-      enumerable: true,
-    },
-    text: {
-      value() {
-        return collectBuffer().then(b => b.toString('utf8'));
+      json: {
+        value() {
+          return collectBuffer()
+            .then(b => b.toString('utf8'))
+            .then(t => JSON.parse(t));
+        },
+        configurable: true,
+        enumerable: true,
       },
-      configurable: true,
-      enumerable: true,
-    },
-    arrayBuffer: {
-      value() {
-        return collectBuffer();
+      text: {
+        value() {
+          return collectBuffer().then(b => b.toString('utf8'));
+        },
+        configurable: true,
+        enumerable: true,
       },
-      configurable: true,
-      enumerable: true,
-    },
-  });
+      arrayBuffer: {
+        value() {
+          return collectBuffer();
+        },
+        configurable: true,
+        enumerable: true,
+      },
+      bytes: {
+        value() {
+          return collectBuffer().then(b => new Uint8Array(b));
+        },
+        configurable: true,
+        enumerable: true,
+      },
+      blob: {
+        value() {
+          return collectBuffer().then(b => new fetchAPI.Blob([new Uint8Array(b)]));
+        },
+        configurable: true,
+        enumerable: true,
+      },
+      formData: {
+        value() {
+          return collectBuffer().then(b =>
+            new fetchAPI.Request(url, {
+              method: method || 'POST',
+              headers,
+              body: new Uint8Array(b),
+              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+              // @ts-ignore - not in the TS types yet
+              duplex: 'half',
+            }).formData(),
+          );
+        },
+        configurable: true,
+        enumerable: true,
+      },
+      clone: {
+        value() {
+          const cloned = new fetchAPI.Request(url, {
+            method,
+            headers,
+            signal: controller.signal,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - not in the TS types yet
+            duplex,
+          });
+          installBodyAccessors(cloned);
+          if (getReadableStream) {
+            uwsDrainUnreadBodyByRequest.set(cloned, () => {
+              if (bodyConsumed) {
+                return;
+              }
+              discarding = true;
+              chunks.length = 0;
+              buffer = undefined;
+            });
+          }
+          return cloned;
+        },
+        configurable: true,
+        enumerable: true,
+      },
+    });
+  }
+  installBodyAccessors(request);
   if (getReadableStream) {
     uwsDrainUnreadBodyByRequest.set(request, () => {
-      ensureOnData('drain');
+      if (bodyConsumed) {
+        return;
+      }
+      // Keep onData attached (uWS may still deliver chunks after end) but stop retaining them.
+      discarding = true;
+      chunks.length = 0;
+      buffer = undefined;
     });
   }
   return request;

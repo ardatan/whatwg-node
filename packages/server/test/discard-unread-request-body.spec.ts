@@ -216,7 +216,62 @@ describe('Discard unread request body', () => {
         },
       );
 
-      // Covers Node keep-alive drain and uWS lazy onData drain (same early-response path).
+      // Discard must not resume the IncomingMessage when it is also the response body.
+      skipIf(
+        skipNativeRuntimes ||
+          serverImplName === 'Bun' ||
+          serverImplName === 'Deno' ||
+          serverImplName === 'uWebSockets' ||
+          serverImplName === 'fastify' ||
+          serverImplName === 'koa' ||
+          serverImplName === 'hapi',
+      )('echoes request.body when used as the response body', async () => {
+        const adapter = createServerAdapter(
+          request => new fetchAPI.Response(request.body, { status: 200 }),
+        );
+        await testServer.addOnceHandler(adapter);
+
+        const url = new URL(testServer.url);
+        const body = Buffer.from('echo-me-please');
+
+        const statusAndBody = await new Promise<{ status: number | undefined; text: string }>(
+          (resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('echo request hung')), 5000);
+            const chunks: Buffer[] = [];
+            const req = requestForUrl(
+              url,
+              {
+                path: url.pathname + url.search,
+                method: 'POST',
+                headers: {
+                  'content-length': body.length,
+                  'content-type': 'application/octet-stream',
+                },
+              },
+              res => {
+                res.on('data', chunk => chunks.push(chunk));
+                res.on('end', () => {
+                  clearTimeout(timeout);
+                  resolve({
+                    status: res.statusCode,
+                    text: Buffer.concat(chunks).toString('utf8'),
+                  });
+                });
+              },
+            );
+            req.on('error', err => {
+              clearTimeout(timeout);
+              reject(err);
+            });
+            req.end(body);
+          },
+        );
+
+        expect(statusAndBody.status).toBe(200);
+        expect(statusAndBody.text).toBe('echo-me-please');
+      });
+
+      // Covers Node keep-alive drain and uWS unread-chunk discard (same early-response path).
       skipIf(
         skipNativeRuntimes ||
           serverImplName === 'Bun' ||

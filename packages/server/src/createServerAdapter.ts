@@ -333,8 +333,12 @@ function createServerAdapter<
       response => {
         // Framework integrations (Fastify/Koa/Hapi) send the Response themselves; still discard
         // unread Node request bytes so keep-alive is not blocked after early endResponse.
-        discardUnreadNodeRequestBody(nodeRequest);
+        discardUnreadNodeRequestBody(nodeRequest, response);
         return response;
+      },
+      err => {
+        discardUnreadNodeRequestBody(nodeRequest);
+        throw err;
       },
     );
   }
@@ -412,8 +416,8 @@ function createServerAdapter<
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
-          // If the handler never touched the body, attach a drain-only onData before writing
-          // so uWS finishes the upload without buffering into `chunks`.
+          // If the handler never touched the body, drop buffered upload chunks before writing
+          // so long-lived / streaming responses do not retain an unread body in memory.
           discardUnreadUWSRequestBody(request);
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, expectedFetchAPI),
