@@ -43,8 +43,8 @@ describe('Discard unread request body', () => {
           readableEnded: boolean;
         }>();
 
-        const adapter = createServerAdapter((_request, ctx: { req?: IncomingMessage }) => {
-          const nodeReq = ctx.req;
+        const adapter = createServerAdapter((_request, ctx) => {
+          const nodeReq = (ctx as { req?: IncomingMessage }).req;
           setTimeout(() => {
             midStream$.resolve({
               readableFlowing: nodeReq?.readableFlowing ?? null,
@@ -118,7 +118,7 @@ describe('Discard unread request body', () => {
         const body = Buffer.alloc(100_000, 'b');
 
         function post(id: number) {
-          return new Promise<{ id: number; status?: number }>((resolve, reject) => {
+          return new Promise<{ id: number; status: number | undefined }>((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error(`request ${id} hung`)), 3000);
             const req = requestForUrl(
               url,
