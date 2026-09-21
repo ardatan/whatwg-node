@@ -34,11 +34,14 @@ interface GetRequestFromUWSOpts {
   controller: AbortController;
 }
 
-const uwsDiscardUnreadBodyByRequest = new WeakMap<Request, () => void>();
+const uwsDrainUnreadBodyByRequest = new WeakMap<Request, () => void>();
 
-/** Discard an unread uWS request body previously created by {@link getRequestFromUWSRequest}. */
+/**
+ * If the handler never read the body, attach a no-op `onData` drain so uWS can finish the
+ * request without buffering upload bytes. No-op when body was (or will be) consumed.
+ */
 export function discardUnreadUWSRequestBody(request: Request) {
-  uwsDiscardUnreadBodyByRequest.get(request)?.();
+  uwsDrainUnreadBodyByRequest.get(request)?.();
 }
 
 export function getRequestFromUWSRequest({
@@ -73,16 +76,33 @@ export function getRequestFromUWSRequest({
       stopFn();
     }
   };
-  res.onData(function (ab, isLast) {
-    // Once we have discarded / finished the body, ignore further chunks so early responses
-    // (endResponse without reading) do not buffer the rest of a large upload into `chunks`.
-    if (!stopped) {
-      push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+
+  // Lazy onData: do not buffer until the handler touches the body. If the response is sent
+  // without reading, {@link discardUnreadUWSRequestBody} registers a drain-only listener.
+  let onDataMode: 'none' | 'consume' | 'drain' = 'none';
+  function ensureOnData(mode: 'consume' | 'drain') {
+    if (onDataMode !== 'none') {
+      return;
     }
-    if (isLast) {
-      stop();
+    onDataMode = mode;
+    if (mode === 'consume') {
+      res.onData(function (ab, isLast) {
+        if (!stopped) {
+          push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
+        }
+        if (isLast) {
+          stop();
+        }
+      });
+      return;
     }
-  });
+    res.onData(function (_ab, isLast) {
+      if (isLast) {
+        stop();
+      }
+    });
+  }
+
   let getReadableStream: (() => ReadableStream) | undefined;
   if (method !== 'get' && method !== 'head') {
     duplex = 'half';
@@ -95,6 +115,7 @@ export function getRequestFromUWSRequest({
     );
     let readableStream: ReadableStream;
     getReadableStream = () => {
+      ensureOnData('consume');
       if (!readableStream) {
         readableStream = new fetchAPI.ReadableStream({
           start(streamCtrl) {
@@ -133,9 +154,7 @@ export function getRequestFromUWSRequest({
     url += `?${query}`;
   }
   let buffer: Buffer<ArrayBuffer> | undefined;
-  let bodyAccessed = false;
   function getBody() {
-    bodyAccessed = true;
     if (!getReadableStream) {
       return null;
     }
@@ -144,8 +163,8 @@ export function getRequestFromUWSRequest({
     }
     return getReadableStream();
   }
-  // Do not pass a `body` getter into the Request init: some Fetch implementations read it
-  // during construction, which would falsely mark the body as accessed and skip discard.
+  // Do not pass `body` in Request init: some Fetch implementations read it during construction
+  // and would start consuming/buffering before the handler runs.
   const request = new fetchAPI.Request(url, {
     method,
     headers,
@@ -161,7 +180,7 @@ export function getRequestFromUWSRequest({
     return buffer;
   }
   function collectBuffer() {
-    bodyAccessed = true;
+    ensureOnData('consume');
     if (stopped) {
       return fakePromise(getBufferFromChunks());
     }
@@ -207,16 +226,11 @@ export function getRequestFromUWSRequest({
       enumerable: true,
     },
   });
-  // Construction / property definition must not count as handler access.
-  bodyAccessed = false;
-  uwsDiscardUnreadBodyByRequest.set(request, () => {
-    if (bodyAccessed) {
-      return;
-    }
-    stop();
-    chunks.length = 0;
-    buffer = undefined;
-  });
+  if (getReadableStream) {
+    uwsDrainUnreadBodyByRequest.set(request, () => {
+      ensureOnData('drain');
+    });
+  }
   return request;
 }
 

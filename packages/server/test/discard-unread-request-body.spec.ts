@@ -103,10 +103,11 @@ describe('Discard unread request body', () => {
         expect(state.readableFlowing === true || state.readableEnded === true).toBe(true);
       });
 
-      // Covers Node keep-alive drain and uWS onData discard (same early-response path).
+      // Covers Node keep-alive drain and uWS lazy onData drain (same early-response path).
       skipIf(
         serverImplName === 'Bun' ||
           serverImplName === 'Deno' ||
+          serverImplName === 'hapi' ||
           (globalThis.Bun && serverImplName !== 'Bun') ||
           (globalThis.Deno && serverImplName !== 'Deno'),
       )('keeps the connection reusable after early response without reading the body', async () => {

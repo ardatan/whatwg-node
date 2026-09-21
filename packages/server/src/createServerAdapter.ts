@@ -412,8 +412,8 @@ function createServerAdapter<
         ),
       response => {
         if (!controller.signal.aborted && !resEnded) {
-          // Discard before writing so long-lived / streaming responses do not keep buffering
-          // an unread upload into `chunks` for the whole response lifetime.
+          // If the handler never touched the body, attach a drain-only onData before writing
+          // so uWS finishes the upload without buffering into `chunks`.
           discardUnreadUWSRequestBody(request);
           return handleMaybePromise(
             () => sendResponseToUwsOpts(res, response, controller, expectedFetchAPI),
