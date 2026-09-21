@@ -3,6 +3,7 @@ import { setTimeout } from 'node:timers/promises';
 import { describe, expect, it } from '@jest/globals';
 import { PonyfillReadableStream } from '../src/ReadableStream.js';
 import { PonyfillTextEncoderStream } from '../src/TextEncoderDecoderStream.js';
+import { PonyfillTransformStream } from '../src/TransformStream.js';
 
 describe('ReadableStream', () => {
   it('pull queueing', async () => {
@@ -279,6 +280,26 @@ pullCount: 3
     rs.readable.on('error', () => {});
     await expect(rs.cancel(new Error('stop'))).rejects.toMatchObject({
       message: 'cancel hook failed',
+    });
+  });
+
+  it('pipeTo rejects when a piped TransformStream readable is canceled', async () => {
+    const rs = new PonyfillReadableStream({
+      start(controller) {
+        controller.enqueue(Buffer.from('x'));
+      },
+    });
+    const ts = new PonyfillTransformStream({
+      transform(chunk, controller) {
+        controller.enqueue(chunk);
+      },
+    });
+    const pipePromise = rs.pipeTo(ts.writable);
+    // Ignore unhandled rejection if cancel races ahead of the assertion.
+    pipePromise.catch(() => {});
+    await ts.readable.cancel(new Error('stop'));
+    await expect(pipePromise).rejects.toMatchObject({
+      code: 'ERR_STREAM_PREMATURE_CLOSE',
     });
   });
 
