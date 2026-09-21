@@ -52,6 +52,10 @@ function defaultResponseFromError(error: HTTPError, fetchAPI: FetchAPI) {
  * - `Transfer-Encoding` is present (overrides `Content-Length` per RFC 9112 §6.3)
  * - `Content-Encoding` is present (`useContentEncoding` may decode past the declared length)
  *
+ * When using `useContentEncoding`, register it **before** this plugin so the byte counter sees
+ * decoded bytes. `onRequest` hooks run in `plugins` array order; the reverse order would count
+ * compressed size and then allow decompression past `limit`.
+ *
  * To disable limiting, omit this plugin from the adapter.
  */
 export function useLimitRequestBodySize<TServerContext = {}>(
