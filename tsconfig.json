@@ -26,7 +26,6 @@
       "@whatwg-node/cookie-store": ["./packages/cookie-store/src/index.ts"],
       "@whatwg-node/server": ["./packages/server/src/index.ts"],
       "@whatwg-node/node-fetch": ["./packages/node-fetch/src/index.ts"],
-      "@whatwg-node/events": ["./packages/events/src/index.ts"],
       "@whatwg-node/disposablestack": ["./packages/disposablestack/src/index.ts"],
       "@whatwg-node/promise-helpers": ["./packages/promise-helpers/src/index.ts"],
       "@e2e/*": ["./e2e/*/src/index.ts"],

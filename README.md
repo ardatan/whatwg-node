@@ -23,10 +23,6 @@ A ponyfill package for the [Fetch Standard](https://fetch.spec.whatwg.org/).
 Fetch conformance for the Node implementation (`@whatwg-node/node-fetch`) is also exercised via a
 subset of [web-platform-tests](./test/web-platform-tests/README.md) (`npm run test:wpt`).
 
-### [@whatwg-node/events](./packages/events)
-
-A ponyfill package for the [DOM Events Standard](https://dom.spec.whatwg.org/#events).
-
 ### [@whatwg-node/server](./packages/server)
 
 A platform-independent JavaScript HTTP server adapter implementation that uses the

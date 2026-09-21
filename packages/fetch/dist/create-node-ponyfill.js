@@ -91,10 +91,5 @@ module.exports = function createNodePonyfill(opts = {}) {
     }
   }
 
-  if (!ponyfills.crypto) {
-    const cryptoModule = require("crypto");
-    ponyfills.crypto = cryptoModule.webcrypto;
-  }
-
   return ponyfills;
 }

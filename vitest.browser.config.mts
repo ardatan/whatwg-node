@@ -14,7 +14,6 @@ export default defineConfig({
       '@whatwg-node/promise-helpers': path.join(root, 'packages/promise-helpers/src/index.ts'),
       '@whatwg-node/disposablestack': path.join(root, 'packages/disposablestack/src/index.ts'),
       '@whatwg-node/cookie-store': path.join(root, 'packages/cookie-store/src/index.ts'),
-      '@whatwg-node/events': path.join(root, 'packages/events/src/index.ts'),
       '@whatwg-node/node-fetch': path.join(root, 'packages/node-fetch/src/index.ts'),
       '@whatwg-node/server': path.join(root, 'packages/server/src/index.ts'),
       // packages/fetch ships committed dist/ (bob: false)
