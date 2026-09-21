@@ -201,7 +201,7 @@ export function normalizeNodeRequest(
 }
 
 export function isReadable(stream: any): stream is Readable {
-  return stream.read != null;
+  return stream != null && stream.read != null;
 }
 
 export function isNodeRequest(request: any): request is NodeRequest {
@@ -249,15 +249,28 @@ function configureSocket(rawRequest: NodeRequest) {
  *
  * When `response` is provided and its body is backed by the same IncomingMessage (e.g.
  * `new Response(request.body)`), we skip resume so piping the response is not racing a drain.
+ *
+ * Pass the Fetch `Request` when available: native `Response(request.body)` keeps a ReadableStream
+ * wrapper (not the IncomingMessage), so identity must be checked via `request.body === response.body`.
  */
-export function discardUnreadNodeRequestBody(nodeRequest: NodeRequest, response?: Response) {
+const nodeRequestBodyHeldByResponse = new WeakSet<object>();
+
+export function discardUnreadNodeRequestBody(
+  nodeRequest: NodeRequest,
+  response?: Response,
+  fetchRequest?: Request,
+) {
   const rawRequest = (nodeRequest.raw || nodeRequest.req || nodeRequest) as
     IncomingMessage | Http2ServerRequest;
   const method = ((rawRequest as IncomingMessage).method || nodeRequest.method || '').toUpperCase();
   if (method === 'GET' || method === 'HEAD' || !rawRequest) {
     return;
   }
-  if (responseUsesNodeRequestBody(response, rawRequest as IncomingMessage)) {
+  if (nodeRequestBodyHeldByResponse.has(rawRequest as object)) {
+    return;
+  }
+  if (responseUsesNodeRequestBody(response, rawRequest as IncomingMessage, fetchRequest)) {
+    nodeRequestBodyHeldByResponse.add(rawRequest as object);
     return;
   }
   if (
@@ -272,9 +285,14 @@ export function discardUnreadNodeRequestBody(nodeRequest: NodeRequest, response?
 function responseUsesNodeRequestBody(
   response: Response | undefined,
   rawRequest: IncomingMessage,
+  fetchRequest?: Request,
 ): boolean {
   if (!response) {
     return false;
+  }
+  // Native + ponyfill: `new Response(request.body)` — same stream instance on both sides.
+  if (fetchRequest?.body != null && response.body != null && fetchRequest.body === response.body) {
+    return true;
   }
   const bodyInit = (response as { bodyInit?: unknown }).bodyInit;
   if (bodyInit === rawRequest) {

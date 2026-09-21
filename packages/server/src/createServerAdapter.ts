@@ -333,7 +333,7 @@ function createServerAdapter<
       response => {
         // Framework integrations (Fastify/Koa/Hapi) send the Response themselves; still discard
         // unread Node request bytes so keep-alive is not blocked after early endResponse.
-        discardUnreadNodeRequestBody(nodeRequest, response);
+        discardUnreadNodeRequestBody(nodeRequest, response, request);
         return response;
       },
       err => {

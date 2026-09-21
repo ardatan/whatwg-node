@@ -238,16 +238,20 @@ export function getRequestFromUWSRequest({
       },
       formData: {
         value() {
-          return collectBuffer().then(b =>
-            new fetchAPI.Request(url, {
-              method: method || 'POST',
-              headers,
-              body: new Uint8Array(b),
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore - not in the TS types yet
-              duplex: 'half',
-            }).formData(),
-          );
+          bodyConsumed = true;
+          if (!getReadableStream) {
+            return fakePromise(new fetchAPI.FormData());
+          }
+          // Stream path so abort rejects with aborted/closed instead of parsing a partial body.
+          return new fetchAPI.Request(url, {
+            method: method || 'POST',
+            headers,
+            body: getBody(),
+            signal: controller.signal,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore - not in the TS types yet
+            duplex: 'half',
+          }).formData();
         },
         configurable: true,
         enumerable: true,
