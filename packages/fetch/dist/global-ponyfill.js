@@ -18,4 +18,25 @@ module.exports.TextDecoder = globalThis.TextDecoder;
 module.exports.URLPattern = globalThis.URLPattern;
 module.exports.URL = globalThis.URL;
 module.exports.URLSearchParams = globalThis.URLSearchParams;
-module.exports.createFetch = () => globalThis;
+module.exports.createFetch = () => ({
+  fetch: globalThis.fetch,
+  Headers: globalThis.Headers,
+  Request: globalThis.Request,
+  Response: globalThis.Response,
+  FormData: globalThis.FormData,
+  ReadableStream: globalThis.ReadableStream,
+  WritableStream: globalThis.WritableStream,
+  TransformStream: globalThis.TransformStream,
+  CompressionStream: globalThis.CompressionStream,
+  DecompressionStream: globalThis.DecompressionStream,
+  TextDecoderStream: globalThis.TextDecoderStream,
+  TextEncoderStream: globalThis.TextEncoderStream,
+  Blob: globalThis.Blob,
+  File: globalThis.File,
+  btoa: globalThis.btoa,
+  TextEncoder: globalThis.TextEncoder,
+  TextDecoder: globalThis.TextDecoder,
+  URLPattern: globalThis.URLPattern,
+  URL: globalThis.URL,
+  URLSearchParams: globalThis.URLSearchParams,
+});
