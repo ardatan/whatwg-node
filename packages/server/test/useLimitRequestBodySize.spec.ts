@@ -95,6 +95,47 @@ describe('useLimitRequestBodySize', () => {
       await expect(response.json()).resolves.toEqual({ body: 'hello' });
     });
 
+    it('uses responseFromError for early Content-Length rejects', async () => {
+      const adapter = createServerAdapter(() => fetchAPI.Response.json({ ok: true }), {
+        plugins: [
+          useLimitRequestBodySize(10, {
+            responseFromError: (error, api) =>
+              api.Response.json(
+                {
+                  errors: [
+                    {
+                      message: error.message,
+                      extensions: { http: { status: error.status } },
+                    },
+                  ],
+                },
+                { status: error.status },
+              ),
+          }),
+        ],
+        fetchAPI,
+      });
+      const response = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Length': '100',
+          },
+          body: 'short',
+        }),
+      );
+      expect(response.status).toBe(413);
+      await expect(response.json()).resolves.toEqual({
+        errors: [
+          {
+            message: 'Request body too large',
+            extensions: { http: { status: 413 } },
+          },
+        ],
+      });
+    });
+
     it('works with a native Request and ReadableStream', async () => {
       const adapter = createAdapter(10);
       const encoder = new globalThis.TextEncoder();

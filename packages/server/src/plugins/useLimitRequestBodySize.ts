@@ -1,3 +1,4 @@
+import type { FetchAPI } from '../types.js';
 import type { ServerAdapterPlugin } from './types.js';
 import { HTTPError } from './useErrorHandling.js';
 
@@ -15,12 +16,22 @@ export class InvalidContentLengthError extends HTTPError {
   }
 }
 
+export type LimitRequestBodySizeOptions = {
+  /**
+   * Maps early-reject errors (invalid `Content-Length` / body too large) to an HTTP `Response`
+   * used with `endResponse`. Defaults to a plain-text body with the error status and message.
+   *
+   * Frameworks such as GraphQL Yoga can supply a factory that returns a GraphQL error payload.
+   */
+  responseFromError?: (error: HTTPError, fetchAPI: FetchAPI) => Response;
+};
+
 // Only a single non-negative integer is a valid Content-Length. Anything else (non-numeric,
 // negative, or multiple comma-joined values as seen in request-smuggling attempts) is rejected
 // outright instead of being allowed to silently skip this check.
 const CONTENT_LENGTH_RE = /^\d+$/;
 
-function responseFromHTTPError(fetchAPI: { Response: typeof Response }, error: HTTPError) {
+function defaultResponseFromError(error: HTTPError, fetchAPI: FetchAPI) {
   return new fetchAPI.Response(error.message, {
     status: error.status,
     headers: error.headers,
@@ -38,17 +49,20 @@ function responseFromHTTPError(fetchAPI: { Response: typeof Response }, error: H
  */
 export function useLimitRequestBodySize<TServerContext = {}>(
   limit: number,
+  options?: LimitRequestBodySizeOptions,
 ): ServerAdapterPlugin<TServerContext> {
+  const responseFromError = options?.responseFromError ?? defaultResponseFromError;
+
   return {
     onRequest({ request, setRequest, fetchAPI, endResponse }) {
       const contentLength = request.headers.get('content-length');
       if (contentLength != null) {
         if (!CONTENT_LENGTH_RE.test(contentLength)) {
-          endResponse(responseFromHTTPError(fetchAPI, new InvalidContentLengthError()));
+          endResponse(responseFromError(new InvalidContentLengthError(), fetchAPI));
           return;
         }
         if (Number(contentLength) > limit) {
-          endResponse(responseFromHTTPError(fetchAPI, new RequestBodyTooLargeError()));
+          endResponse(responseFromError(new RequestBodyTooLargeError(), fetchAPI));
           return;
         }
       }
