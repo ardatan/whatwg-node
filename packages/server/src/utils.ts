@@ -786,8 +786,8 @@ class CustomAbortControllerSignal extends EventTarget implements AbortSignal, Ab
 
   abort(reason?: any) {
     // Always abort via the native controller so dependents created with
-    // AbortSignal.any (which brand-checks for Node's private #brand) observe
-    // the abort. See https://github.com/nodejs/node/pull/54965
+    // AbortSignal.any (Node's private #brand check) observe the abort.
+    // See https://github.com/nodejs/node/pull/65846 (landed in v26.10.0).
     const nativeCtrl = this.ensureNativeCtrl();
     this._reason = reason || new DOMException('This operation was aborted', 'AbortError');
     this.aborted = true;
@@ -795,8 +795,9 @@ class CustomAbortControllerSignal extends EventTarget implements AbortSignal, Ab
   }
 
   get signal(): AbortSignal {
-    // Must return a real AbortSignal: Node's AbortSignal.any validates with
-    // `#brand in value` (private field), which Proxies / duck-types cannot pass.
+    // Must return a real AbortSignal: since Node v26.10.0, AbortSignal.any
+    // validates with `#brand in value` (nodejs/node#65846). Proxies that only
+    // spoof getPrototypeOf no longer pass.
     return this.ensureNativeCtrl().signal;
   }
 
