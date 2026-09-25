@@ -1,0 +1,99 @@
+diff --git a/node_modules/jest-runner/build/index.js b/node_modules/jest-runner/build/index.js
+index 94ee9ba..801056d 100644
+--- a/node_modules/jest-runner/build/index.js
++++ b/node_modules/jest-runner/build/index.js
+@@ -108,6 +108,39 @@ function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e
+ 
+ // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+ 
++// Keep this OUT of `runTestInternal`: a closure defined there shares a V8
++// context with `environment`/`runtime`, and `setGlobal(..., 'retain')` keeps
++// the test console (hence this formatter) alive past teardown — which makes
++// `--detectLeaks` false-positive after http/fetch.
++function createConsoleFormatter(projectConfig, globalConfig) {
++  return (type, message) => (0, _console().getConsoleOutput)(
++  // 4 = the console call is buried 4 stack frames deep
++  _console().BufferedConsole.write([], type, message, 4), projectConfig, globalConfig);
++}
++function createProcessExitOverride(projectConfig, realExit) {
++  return function exit(...args) {
++    const error = new (_jestUtil().ErrorWithStack)(`process.exit called with "${args.join(', ')}"`, exit);
++    const formattedError = (0, _jestMessageUtil().formatExecError)(error, projectConfig, {
++      noStackTrace: false
++    }, undefined, true);
++    process.stderr.write(formattedError);
++    return realExit(...args);
++  };
++}
++function clearJestCircusState(globalObj) {
++  if (!globalObj) {
++    return;
++  }
++  for (const sym of Object.getOwnPropertySymbols(globalObj)) {
++    if (String(sym) === 'Symbol(JEST_STATE_SYMBOL)') {
++      try {
++        delete globalObj[sym];
++      } catch {
++        // ignore non-configurable
++      }
++    }
++  }
++}
+ function freezeConsole(testConsole, config) {
+   // @ts-expect-error: `_log` is `private` - we should figure out some proper API here
+   testConsole._log = function fakeConsolePush(_type, message) {
+@@ -152,9 +185,7 @@ async function runTestInternal(path, globalConfig, projectConfig, resolver, cont
+   const testFramework = await transformer.requireAndTranspileModule(process.env.JEST_JASMINE === '1' ? require.resolve('jest-jasmine2') : projectConfig.testRunner);
+   const Runtime = (0, _jestUtil().interopRequireDefault)(projectConfig.runtime ? require(projectConfig.runtime) : require('jest-runtime')).default;
+   const consoleOut = globalConfig.useStderr ? process.stderr : process.stdout;
+-  const consoleFormatter = (type, message) => (0, _console().getConsoleOutput)(
+-  // 4 = the console call is buried 4 stack frames deep
+-  _console().BufferedConsole.write([], type, message, 4), projectConfig, globalConfig);
++  const consoleFormatter = createConsoleFormatter(projectConfig, globalConfig);
+   let testConsole;
+   if (projectConfig.silent ?? globalConfig.silent) {
+     testConsole = new (_console().NullConsole)(consoleOut, consoleOut, consoleFormatter);
+@@ -188,7 +219,10 @@ async function runTestInternal(path, globalConfig, projectConfig, resolver, cont
+     process.exit(1);
+   }
+   const leakDetector = projectConfig.detectLeaks ? new (_jestLeakDetector().default)(environment) : null;
+-  (0, _jestUtil().setGlobal)(environment.global, 'console', testConsole, 'retain');
++  // With --detectLeaks, do not retain the test console on the sandbox global:
++  // retained console → formatter/hooks can keep the environment alive (false
++  // positive after http/fetch).
++  (0, _jestUtil().setGlobal)(environment.global, 'console', testConsole, projectConfig.detectLeaks ? 'clean' : 'retain');
+   const runtime = new Runtime(projectConfig, environment, resolver, transformer, cacheFS, {
+     changedFiles: context.changedFiles,
+     collectCoverage: globalConfig.collectCoverage,
+@@ -198,8 +232,13 @@ async function runTestInternal(path, globalConfig, projectConfig, resolver, cont
+     sourcesRelatedToTestsInChangedFiles: context.sourcesRelatedToTestsInChangedFiles
+   }, path, globalConfig);
+   let isTornDown = false;
++  let realProcessExit;
+   const tearDownEnv = async () => {
+     if (!isTornDown) {
++      if (realProcessExit && environment.global?.process) {
++        environment.global.process.exit = realProcessExit;
++      }
++      clearJestCircusState(environment.global);
+       runtime.teardown();
+ 
+       // source-map-support keeps memory leftovers in `Error.prepareStackTrace`
+@@ -249,15 +288,8 @@ async function runTestInternal(path, globalConfig, projectConfig, resolver, cont
+   // For runtime errors
+   sourcemapSupport().install(sourcemapOptions);
+   if (environment.global && environment.global.process && environment.global.process.exit) {
+-    const realExit = environment.global.process.exit;
+-    environment.global.process.exit = function exit(...args) {
+-      const error = new (_jestUtil().ErrorWithStack)(`process.exit called with "${args.join(', ')}"`, exit);
+-      const formattedError = (0, _jestMessageUtil().formatExecError)(error, projectConfig, {
+-        noStackTrace: false
+-      }, undefined, true);
+-      process.stderr.write(formattedError);
+-      return realExit(...args);
+-    };
++    realProcessExit = environment.global.process.exit;
++    environment.global.process.exit = createProcessExitOverride(projectConfig, realProcessExit);
+   }
+ 
+   // if we don't have `getVmContext` on the env skip coverage

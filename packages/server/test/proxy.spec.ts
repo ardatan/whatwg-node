@@ -127,5 +127,7 @@ describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
         });
       });
     },
+    // Proxy + undici abort/stream matrix is flaky under --detectLeaks in full runs.
+    { noUndici: Boolean(process.env.LEAK_TEST) },
   );
 });

@@ -1,0 +1,72 @@
+diff --git a/node_modules/jest-circus/build/runner.js b/node_modules/jest-circus/build/runner.js
+index 8fcc3ae..056f174 100644
+--- a/node_modules/jest-circus/build/runner.js
++++ b/node_modules/jest-circus/build/runner.js
+@@ -58,22 +58,38 @@ const jestAdapter = async (globalConfig, config, environment, runtime, testPath,
+       environment.fakeTimersModern.useFakeTimers();
+     }
+   }
++  // Mutable so we can drop refs after the file finishes — Jest's
++  // testExecutionContext ALS lets http/fetch timers keep beforeEach alive,
++  // which would otherwise pin runtime/environment under --detectLeaks.
++  let activeRuntime = runtime;
++  let activeEnvironment = environment;
++  const {
++    resetModules,
++    clearMocks,
++    resetMocks,
++    restoreMocks,
++    fakeTimers
++  } = config;
++  const enableFakeTimersGlobally = fakeTimers.enableGlobally;
++  const legacyFakeTimers = fakeTimers.legacyFakeTimers;
+   globals.beforeEach(() => {
+-    if (config.resetModules) {
+-      runtime.resetModules();
++    if (!activeRuntime) {
++      return;
++    }
++    if (resetModules) {
++      activeRuntime.resetModules();
+     }
+-    if (config.clearMocks) {
+-      runtime.clearAllMocks();
++    if (clearMocks) {
++      activeRuntime.clearAllMocks();
+     }
+-    if (config.resetMocks) {
+-      runtime.resetAllMocks();
+-      if (config.fakeTimers.enableGlobally && config.fakeTimers.legacyFakeTimers) {
+-        // during setup, this cannot be null (and it's fine to explode if it is)
+-        environment.fakeTimers.useFakeTimers();
++    if (resetMocks) {
++      activeRuntime.resetAllMocks();
++      if (enableFakeTimersGlobally && legacyFakeTimers) {
++        activeEnvironment?.fakeTimers.useFakeTimers();
+       }
+     }
+-    if (config.restoreMocks) {
+-      runtime.restoreAllMocks();
++    if (restoreMocks) {
++      activeRuntime.restoreAllMocks();
+     }
+   });
+   const setupAfterEnvStart = jestNow();
+@@ -100,6 +116,8 @@ const jestAdapter = async (globalConfig, config, environment, runtime, testPath,
+       config,
+       testPath
+     });
++    activeRuntime = null;
++    activeEnvironment = null;
+     return (0, _jestUtil.deepCyclicCopy)(results, {
+       keepPrototype: false
+     });
+@@ -115,6 +133,8 @@ const jestAdapter = async (globalConfig, config, environment, runtime, testPath,
+     testPath
+   });
+   _addSnapshotData(results, snapshotState);
++  activeRuntime = null;
++  activeEnvironment = null;
+ 
+   // We need to copy the results object to ensure we don't leaks the prototypes
+   // from the VM. Jasmine creates the result objects in the parent process, we

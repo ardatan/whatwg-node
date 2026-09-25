@@ -32,7 +32,7 @@ recommend to use this package, because this package implements them for Node.js 
 way.
 
 - [See problems with the global fetch/undici in Node.js](https://github.com/nodejs/undici/issues/1203)
-- - We offer a patched version of `node-fetch` that doesn't use `undici` and Node.js streams
+- - We offer a patched version of `node-fetch` that doesn't use `undici.fetch` and Node.js streams
     internally, so it's more efficient than the native one.
 - [See problems with text encoding API in Node.js](https://github.com/nodejs/node/issues/39879)
 - - We use [`Buffer`](https://nodejs.org/api/buffer.html) instead of the native one, because
@@ -42,6 +42,19 @@ way.
 - `file:` protocol support... As in Bun, Deno and other similar Fetch implementations, undici's
   fetch doesn't support `file:` protocol. `@whatwg-node/fetch` allows you to support it in platform
   agnostic way.
+
+### Faster HTTP Client in Node.js with HTTP/2 support
+
+If you install [`undici`](https://www.npmjs.com/package/undici) separately on **Node.js**,
+`@whatwg-node/fetch` will use `undici`'s low-level `dispatch` API with DNS caching, redirect
+following, and response decompression interceptors (not `undici.fetch`) as the HTTP transport
+instead of `node:http`. That keeps our own Fetch / Streams ponyfill while getting undici's
+connection pooling and HTTP/2 support. Bun and Deno keep using their native fetch / `node:http`
+fallback; the optional undici transport is not enabled there.
+
+```bash
+npm install undici
+```
 
 ### Handling file uploads with Fetch API
 
