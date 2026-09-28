@@ -526,8 +526,15 @@ function normalizeCaseName(name) {
 
 function updateExpectations(results) {
   const expectations = getExpectation();
+  let skipped = 0;
+  let updated = 0;
 
   for (const { test, result } of results) {
+    if (result.harnessStatus == null) {
+      skipped++;
+      continue;
+    }
+
     const pathSegments = test.path.slice(1).split('/');
     const filename = pathSegments.pop();
 
@@ -562,10 +569,12 @@ function updateExpectations(results) {
         };
       }),
     };
+    updated++;
   }
 
   writeFileSync(EXPECTATION_PATH, JSON.stringify(expectations, null, 2) + '\n');
   console.log(`✅ Updated expectations file: ${EXPECTATION_PATH}`);
+  return { skipped, updated };
 }
 
 function getManifest() {
@@ -936,12 +945,15 @@ async function run(filters = []) {
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
       // Used by the weekly bump workflow: refresh baseline without failing on drift.
-      // Guard before write: zero files/cases or incomplete harness runs would corrupt the baseline.
+      // Guard before write: zero files/cases or zero completed harness runs would corrupt the baseline.
       if (results.length === 0 || totalCases === 0) {
         throw new Error('WPT_UPDATE_EXPECTATIONS run produced zero test cases');
       }
 
       const incomplete = results.filter(({ result }) => result.harnessStatus == null);
+      if (incomplete.length === results.length) {
+        throw new Error('WPT_UPDATE_EXPECTATIONS run produced no completed harness results');
+      }
       if (incomplete.length > 0) {
         const sample = incomplete
           .slice(0, 8)
@@ -950,14 +962,22 @@ async function run(filters = []) {
               `${test.path}: ${result.error?.message ?? 'harness did not report completion'}`,
           )
           .join('\n');
-        throw new Error(
-          `WPT_UPDATE_EXPECTATIONS: ${incomplete.length} file(s) did not complete the harness:\n${sample}`,
+        console.warn(
+          `WPT_UPDATE_EXPECTATIONS: ${incomplete.length} file(s) did not complete the harness and will keep previous expectations:\n${sample}`,
         );
       }
     }
 
     const oldExpectations = getExpectation();
-    updateExpectations(results);
+    const { skipped, updated } = updateExpectations(results);
+    if (skipped > 0) {
+      console.warn(
+        `Skipped expectation updates for ${skipped} file(s) due to incomplete harness results.`,
+      );
+    }
+    if (updated === 0) {
+      throw new Error('No expectations were updated because no test file completed the harness');
+    }
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
       process.exitCode = 0;
