@@ -22,7 +22,7 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
         ? init.headers
         : new PonyfillHeaders(init?.headers);
     this.status = init?.status || 200;
-    this.statusText = init?.statusText || STATUS_CODES[this.status] || 'OK';
+    this.statusText = init?.statusText ?? STATUS_CODES[this.status] ?? 'OK';
     this.url = init?.url || '';
     this.redirected = init?.redirected || false;
     this.type = init?.type || 'default';
@@ -53,14 +53,25 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   }
 
   static redirect(url: string, status = 302) {
-    if (status < 300 || status > 399) {
-      throw new RangeError('Invalid status code');
+    let location = url;
+    // A relative URL has no base here, so it stays as the Location value.
+    // An absolute URL that cannot be parsed is still a TypeError.
+    if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(url)) {
+      try {
+        location = new URL(url).href;
+      } catch (cause) {
+        throw new TypeError(`Failed to parse URL from ${url}`, { cause });
+      }
+    }
+    if (status !== 301 && status !== 302 && status !== 303 && status !== 307 && status !== 308) {
+      throw new RangeError(`Invalid status code ${status}`);
     }
     return new PonyfillResponse(null, {
       headers: {
-        location: url,
+        location,
       },
       status,
+      statusText: '',
     });
   }
 

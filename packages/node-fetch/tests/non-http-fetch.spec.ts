@@ -27,6 +27,12 @@ describe('File protocol', () => {
   });
 });
 
+describe('unsupported protocols', () => {
+  it('rejects mailto with TypeError', async () => {
+    await expect(fetchPonyfill('mailto:user@example.com')).rejects.toBeInstanceOf(TypeError);
+  });
+});
+
 describe('data uris', () => {
   it('should accept base64-encoded gif data uri', async () => {
     const mimeType = 'image/gif';

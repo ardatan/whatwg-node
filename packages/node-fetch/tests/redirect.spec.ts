@@ -21,6 +21,11 @@ describe('Redirections', () => {
         } else if (req.url === '/redirected') {
           res.writeHead(200);
           res.end('redirected');
+        } else if (req.url === '/to-data') {
+          res.writeHead(302, {
+            Location: 'data:,Hello',
+          });
+          res.end();
         }
       });
       return new Promise<void>(resolve => {
@@ -54,5 +59,17 @@ describe('Redirections', () => {
         expect(requestListener).toHaveBeenCalledTimes(1);
       });
     }
+    it('rejects redirect mode error with TypeError', async () => {
+      await expect(
+        fetchAPI.fetch(`http://localhost:${addressInfo.port}/status-302`, {
+          redirect: 'error',
+        }),
+      ).rejects.toMatchObject({ name: 'TypeError' });
+    });
+    it('rejects a redirect to a data URL with TypeError', async () => {
+      await expect(
+        fetchAPI.fetch(`http://localhost:${addressInfo.port}/to-data`),
+      ).rejects.toMatchObject({ name: 'TypeError' });
+    });
   });
 });

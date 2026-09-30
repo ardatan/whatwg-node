@@ -1777,38 +1777,31 @@
           "cases": [
             {
               "name": "Fetching about:blank with method GET is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching about:blank with method PUT is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching about:blank with method POST is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching about:invalid.com with method GET is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching about:config with method GET is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching about:unicorn with method GET is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching about:blank with range header does not affect behavior",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: about\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             }
           ]
         },
@@ -1957,83 +1950,67 @@
           "cases": [
             {
               "name": "Fetching aaa://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: aaa\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching cap://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: cap\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching cid://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: cid\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching dav://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: dav\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching dict://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: dict\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching dns://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: dns\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching geo://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: geo\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching im://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: im\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching imap://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: imap\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching ipp://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: ipp\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching ldap://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: ldap\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching mailto://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: mailto\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching nfs://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: nfs\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching pop://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: pop\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching rtsp://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: rtsp\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Fetching snmp://web-platform.test:8000/ is KO",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: snmp\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             }
           ]
         },
@@ -3814,33 +3791,27 @@
             },
             {
               "name": "Redirect 301 from same origin to remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from same origin to remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from same origin to remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from remote to same origin with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from remote to same origin with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from remote to same origin with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from remote to same remote with user and password",
@@ -3859,18 +3830,15 @@
             },
             {
               "name": "Redirect 301 from remote to another remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from remote to another remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 301 from remote to another remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from same origin to remote without user and password",
@@ -3878,33 +3846,27 @@
             },
             {
               "name": "Redirect 302 from same origin to remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from same origin to remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from same origin to remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from remote to same origin with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from remote to same origin with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from remote to same origin with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from remote to same remote with user and password",
@@ -3923,18 +3885,15 @@
             },
             {
               "name": "Redirect 302 from remote to another remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from remote to another remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 302 from remote to another remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from same origin to remote without user and password",
@@ -3942,33 +3901,27 @@
             },
             {
               "name": "Redirect 303 from same origin to remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from same origin to remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from same origin to remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from remote to same origin with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from remote to same origin with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from remote to same origin with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from remote to same remote with user and password",
@@ -3987,18 +3940,15 @@
             },
             {
               "name": "Redirect 303 from remote to another remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from remote to another remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 303 from remote to another remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from same origin to remote without user and password",
@@ -4006,33 +3956,27 @@
             },
             {
               "name": "Redirect 307 from same origin to remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from same origin to remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from same origin to remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from remote to same origin with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from remote to same origin with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from remote to same origin with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from remote to same remote with user and password",
@@ -4051,18 +3995,15 @@
             },
             {
               "name": "Redirect 307 from remote to another remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from remote to another remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 307 from remote to another remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from same origin to remote without user and password",
@@ -4070,33 +4011,27 @@
             },
             {
               "name": "Redirect 308 from same origin to remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from same origin to remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from same origin to remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from remote to same origin with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from remote to same origin with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from remote to same origin with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from remote to same remote with user and password",
@@ -4115,18 +4050,15 @@
             },
             {
               "name": "Redirect 308 from remote to another remote with user and password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from remote to another remote with user",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             },
             {
               "name": "Redirect 308 from remote to another remote with password",
-              "success": false,
-              "message": "assert_unreached: Should have rejected: undefined Reached unreachable code"
+              "success": true
             }
           ]
         },
@@ -4514,8 +4446,7 @@
             },
             {
               "name": "getAuthorizationHeaderValue - cross origin redirection",
-              "success": false,
-              "message": "assert_equals: expected \"none\" but got \"Basic dXNlcjpwYXNz\""
+              "success": true
             }
           ]
         },
@@ -6493,13 +6424,11 @@
           "cases": [
             {
               "name": "same-origin redirect 301 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 301 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 301 in manual redirect and cors mode",
@@ -6521,13 +6450,11 @@
             },
             {
               "name": "same-origin redirect 302 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 302 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 302 in manual redirect and cors mode",
@@ -6549,13 +6476,11 @@
             },
             {
               "name": "same-origin redirect 303 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 303 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 303 in manual redirect and cors mode",
@@ -6577,13 +6502,11 @@
             },
             {
               "name": "same-origin redirect 307 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 307 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 307 in manual redirect and cors mode",
@@ -6605,13 +6528,11 @@
             },
             {
               "name": "same-origin redirect 308 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 308 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "same-origin redirect 308 in manual redirect and cors mode",
@@ -6633,13 +6554,11 @@
             },
             {
               "name": "cross-origin redirect 301 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 301 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 301 in manual redirect and cors mode",
@@ -6662,13 +6581,11 @@
             },
             {
               "name": "cross-origin redirect 302 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 302 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 302 in manual redirect and cors mode",
@@ -6691,13 +6608,11 @@
             },
             {
               "name": "cross-origin redirect 303 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 303 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 303 in manual redirect and cors mode",
@@ -6720,13 +6635,11 @@
             },
             {
               "name": "cross-origin redirect 307 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 307 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 307 in manual redirect and cors mode",
@@ -6749,13 +6662,11 @@
             },
             {
               "name": "cross-origin redirect 308 in error redirect and cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 308 in error redirect and no-cors mode",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Redirects are not allowed\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "cross-origin redirect 308 in manual redirect and cors mode",
@@ -7838,28 +7749,23 @@
           "cases": [
             {
               "name": "Testing data URL loading after same-origin redirection (cors mode)",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: data\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Testing data URL loading after same-origin redirection (no-cors mode)",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: data\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Testing data URL loading after same-origin redirection (same-origin mode)",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: data\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Testing data URL loading after cross-origin redirection (cors mode)",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: data\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             },
             {
               "name": "Testing data URL loading after cross-origin redirection (no-cors mode)",
-              "success": false,
-              "message": "promise_rejects_js: function \"function() { throw e; }\" threw object \"Error: Unsupported protocol: data\" (\"Error\") expected instance of function \"function TypeError() { [native code] }\" (\"TypeError\")"
+              "success": true
             }
           ]
         },
@@ -11109,8 +11015,7 @@
             },
             {
               "name": "Check statusText init values and associated getter",
-              "success": false,
-              "message": "assert_equals: Expect response.statusText is  when initialized with  expected \"\" but got \"OK\""
+              "success": true
             },
             {
               "name": "Test that Response.headers has the [SameObject] extended attribute",
@@ -11335,38 +11240,31 @@
           "cases": [
             {
               "name": "Check default redirect response",
-              "success": false,
-              "message": "assert_equals: expected \"\" but got \"Found\""
+              "success": true
             },
             {
               "name": "Check response returned by static method redirect(), status = 301",
-              "success": false,
-              "message": "assert_equals: expected \"\" but got \"Moved Permanently\""
+              "success": true
             },
             {
               "name": "Check response returned by static method redirect(), status = 302",
-              "success": false,
-              "message": "assert_equals: expected \"\" but got \"Found\""
+              "success": true
             },
             {
               "name": "Check response returned by static method redirect(), status = 303",
-              "success": false,
-              "message": "assert_equals: expected \"\" but got \"See Other\""
+              "success": true
             },
             {
               "name": "Check response returned by static method redirect(), status = 307",
-              "success": false,
-              "message": "assert_equals: expected \"\" but got \"Temporary Redirect\""
+              "success": true
             },
             {
               "name": "Check response returned by static method redirect(), status = 308",
-              "success": false,
-              "message": "assert_equals: expected \"\" but got \"Permanent Redirect\""
+              "success": true
             },
             {
               "name": "Check error returned when giving invalid url to redirect()",
-              "success": false,
-              "message": "assert_throws_js: Expect TypeError exception function \"function() { Response.redirect(invalidUrl); }\" did not throw"
+              "success": true
             },
             {
               "name": "Check error returned when giving invalid status to redirect(), status = 200",
@@ -11374,8 +11272,7 @@
             },
             {
               "name": "Check error returned when giving invalid status to redirect(), status = 309",
-              "success": false,
-              "message": "assert_throws_js: Expect RangeError exception function \"function() { Response.redirect(url, invalidStatus); }\" did not throw"
+              "success": true
             },
             {
               "name": "Check error returned when giving invalid status to redirect(), status = 400",

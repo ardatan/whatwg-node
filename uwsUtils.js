@@ -3,11 +3,7 @@ const uws = require('uWebSockets.js');
 module.exports = {
   createUWS() {
     let handler;
-    let uwsApp = uws.App().any('/*', (...args) => {
-      const res = handler(...args);
-      handler = undefined;
-      return res;
-    });
+    let uwsApp = uws.App().any('/*', (...args) => handler(...args));
     let listenSocket;
     return {
       getApp() {
@@ -26,6 +22,7 @@ module.exports = {
         });
       },
       stop() {
+        handler = undefined;
         if (listenSocket) {
           uws.us_listen_socket_close(listenSocket);
           uwsApp.close();

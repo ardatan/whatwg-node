@@ -138,6 +138,26 @@ describe('Form Data', () => {
     expect(err).toBeInstanceOf(Error);
     expect(err).toHaveProperty('message', 'File size limit exceeded: 1 bytes');
   });
+  it('encodes FormData with a fixed-length boundary', async () => {
+    const formData = new PonyfillFormData();
+    formData.append('name', 'value');
+    const first = new PonyfillRequest('http://localhost:8080', {
+      method: 'POST',
+      body: formData,
+    });
+    const second = new PonyfillRequest('http://localhost:8080', {
+      method: 'POST',
+      body: formData,
+    });
+    const firstText = await first.text();
+    const secondText = await second.text();
+    const firstBoundary = first.headers.get('content-type')?.split('boundary=')[1];
+    const secondBoundary = second.headers.get('content-type')?.split('boundary=')[1];
+
+    expect(firstBoundary).toHaveLength(16);
+    expect(secondBoundary).toHaveLength(16);
+    expect(Buffer.byteLength(firstText)).toBe(Buffer.byteLength(secondText));
+  });
   it('support native Blob', async () => {
     const formData = new PonyfillFormData();
     const blob = new NodeBlob(['Hello world!'], { type: 'text/plain' });

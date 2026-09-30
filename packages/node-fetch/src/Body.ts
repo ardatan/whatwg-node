@@ -569,7 +569,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (isFormData(bodyInit)) {
-    const boundary = Math.random().toString(36).substr(2);
+    const boundary = createFormDataBoundary();
     const contentType = `multipart/form-data; boundary=${boundary}`;
     return {
       bodyType: BodyInitType.FormData,
@@ -604,6 +604,18 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   }
 
   throw new Error('Unknown body type');
+}
+
+const FORM_DATA_BOUNDARY_LENGTH = 16;
+
+function createFormDataBoundary(): string {
+  // A fixed length keeps a resent FormData body the same size, so Content-Length stays valid.
+  const alphabet = '0123456789abcdefghijklmnopqrstuvwxyz';
+  let boundary = '';
+  for (let i = 0; i < FORM_DATA_BOUNDARY_LENGTH; i++) {
+    boundary += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return boundary;
 }
 
 function isFormData(value: any): value is FormData {
