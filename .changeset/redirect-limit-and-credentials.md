@@ -13,6 +13,6 @@ That path also reused the previous request's `Headers` object for the next hop. 
 
 `redirect: 'error'` rejects with a `TypeError`. A redirect whose target scheme is not `http` or `https` also rejects with a `TypeError`. `redirect: 'manual'` still returns the redirect response.
 
-`Response.redirect()` parses the URL and throws `TypeError` when parsing fails. The status must be `301`, `302`, `303`, `307`, or `308`; any other status throws `RangeError`. The response status text is empty, and the `Location` header is the serialized URL.
+`Response.redirect()` serializes an absolute URL into the `Location` header and throws `TypeError` when that URL cannot be parsed. A relative URL is stored as given, so `Response.redirect('/')` sets `Location` to `/`. The status must be `301`, `302`, `303`, `307`, or `308`; any other status throws `RangeError`. The response status text is empty.
 
 `@whatwg-node/fetch` uses this transport on Node, so the same limits apply there.

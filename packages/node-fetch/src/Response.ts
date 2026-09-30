@@ -53,11 +53,15 @@ export class PonyfillResponse<TJSON = any> extends PonyfillBody<TJSON> implement
   }
 
   static redirect(url: string, status = 302) {
-    let location: string;
-    try {
-      location = new URL(url).href;
-    } catch (cause) {
-      throw new TypeError(`Failed to parse URL from ${url}`, { cause });
+    let location = url;
+    // A relative URL has no base here, so it stays as the Location value.
+    // An absolute URL that cannot be parsed is still a TypeError.
+    if (/^[a-zA-Z][a-zA-Z\d+.-]*:/.test(url)) {
+      try {
+        location = new URL(url).href;
+      } catch (cause) {
+        throw new TypeError(`Failed to parse URL from ${url}`, { cause });
+      }
     }
     if (status !== 301 && status !== 302 && status !== 303 && status !== 307 && status !== 308) {
       throw new RangeError(`Invalid status code ${status}`);

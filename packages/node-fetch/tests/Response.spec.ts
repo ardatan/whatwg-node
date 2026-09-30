@@ -18,9 +18,16 @@ describe('Response.redirect', () => {
     expect(response.headers.get('Location')).toBe('https://example.com/a');
   });
 
-  it('throws TypeError when the URL cannot be parsed', () => {
+  it('keeps a relative Location without resolving it', () => {
+    const response = PonyfillResponse.redirect('/');
+    expect(response.body).toBeNull();
+    expect(response.status).toBe(302);
+    expect(response.headers.get('Location')).toBe('/');
+    expect(PonyfillResponse.redirect('/relative').headers.get('Location')).toBe('/relative');
+  });
+
+  it('throws TypeError when an absolute URL cannot be parsed', () => {
     expect(() => PonyfillResponse.redirect('http://:this is not a url')).toThrow(TypeError);
-    expect(() => PonyfillResponse.redirect('/relative')).toThrow(TypeError);
   });
 
   it('throws RangeError when the status is not a redirect status', () => {
