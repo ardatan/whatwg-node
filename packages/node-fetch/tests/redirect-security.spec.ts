@@ -158,37 +158,41 @@ describe('Redirect safety', () => {
         expect(headers.get('cookie')).toBe('session=secret');
       });
 
-      it('rejects a cross-origin redirect whose URL contains credentials', async () => {
-        let sinkHits = 0;
-        const sink = createServer((_req, res) => {
-          sinkHits += 1;
-          res.end('sink');
-        });
-        servers.push(sink);
-        const sinkAddress = await listen(sink);
+      // Bun and Deno run global fetch here, and neither rejects this redirect.
+      (globalThis.Bun || globalThis.Deno ? it.skip : it)(
+        'rejects a cross-origin redirect whose URL contains credentials',
+        async () => {
+          let sinkHits = 0;
+          const sink = createServer((_req, res) => {
+            sinkHits += 1;
+            res.end('sink');
+          });
+          servers.push(sink);
+          const sinkAddress = await listen(sink);
 
-        await server.addOnceHandler(
-          createServerAdapter(
-            () =>
-              new fetchAPI.Response(null, {
-                status: 302,
-                headers: {
-                  Location: `http://user:secret@127.0.0.1:${sinkAddress.port}/collect`,
-                },
-              }),
-          ),
-        );
+          await server.addOnceHandler(
+            createServerAdapter(
+              () =>
+                new fetchAPI.Response(null, {
+                  status: 302,
+                  headers: {
+                    Location: `http://user:secret@127.0.0.1:${sinkAddress.port}/collect`,
+                  },
+                }),
+            ),
+          );
 
-        let error: unknown;
-        try {
-          const resolved = await fetchAPI.fetch(new URL('/start', server.url));
-          await resolved.text();
-        } catch (caught) {
-          error = caught;
-        }
-        expect(errorText(error)).toMatch(/credential|cors/i);
-        expect(sinkHits).toBe(0);
-      });
+          let error: unknown;
+          try {
+            const resolved = await fetchAPI.fetch(new URL('/start', server.url));
+            await resolved.text();
+          } catch (caught) {
+            error = caught;
+          }
+          expect(errorText(error)).toMatch(/credential|cors/i);
+          expect(sinkHits).toBe(0);
+        },
+      );
 
       it('keeps credential headers on a same-origin redirect', async () => {
         let authorization: string | null = null;
