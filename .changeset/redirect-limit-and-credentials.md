@@ -11,6 +11,10 @@ That path also reused the previous request's `Headers` object for the next hop. 
 
 `301` and `302` responses to `POST`, and `303` responses to any method other than `GET` or `HEAD`, are resent as `GET` with no body. The request-body headers go with the body: `Content-Encoding`, `Content-Language`, `Content-Location`, `Content-Type`, and `Content-Length`. `307` and `308` keep the method and body when that body can be sent again. A one-shot stream cannot, and that redirect rejects.
 
+A cross-origin redirect whose URL includes a username or password is rejected with `TypeError` when the request mode is `cors`. Following it would send those URL credentials to the new origin as `Authorization`.
+
+A resent `FormData` body is encoded again with a new multipart boundary of the same length, so its `Content-Length` stays valid. `Content-Type` is replaced because that header names the boundary.
+
 `redirect: 'error'` rejects with a `TypeError`. A redirect whose target scheme is not `http` or `https` also rejects with a `TypeError`. `redirect: 'manual'` still returns the redirect response.
 
 `Response.redirect()` serializes an absolute URL into the `Location` header and throws `TypeError` when that URL cannot be parsed. A relative URL is stored as given, so `Response.redirect('/')` sets `Location` to `/`. The status must be `301`, `302`, `303`, `307`, or `308`; any other status throws `RangeError`. The response status text is empty.

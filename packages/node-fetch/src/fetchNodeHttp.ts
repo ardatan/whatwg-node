@@ -95,6 +95,15 @@ function createRedirectRequest<TRequestJSON>(
   statusCode: number | undefined,
 ): PonyfillRequest<TRequestJSON> {
   const crossOrigin = redirectedUrl.origin !== fetchRequest.parsedUrl.origin;
+  // Node turns URL username/password into an Authorization header. A cors
+  // request must not carry those credentials to another origin.
+  if (
+    crossOrigin &&
+    fetchRequest.mode === 'cors' &&
+    (redirectedUrl.username !== '' || redirectedUrl.password !== '')
+  ) {
+    throw new TypeError('URL cannot contain credentials for request mode "cors"');
+  }
   const rewriteMethod = shouldRewriteRedirectMethod(statusCode, fetchRequest.method);
   const replayed = rewriteMethod
     ? { body: null, dropContentType: false }
