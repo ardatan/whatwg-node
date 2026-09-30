@@ -178,10 +178,11 @@ jobs:
         # TODO: Add vercel and azure
     name: e2e / ${{ matrix.plan }}
     runs-on: ubuntu-latest
-    # Only on push to master: pull_request checkouts run unreviewed PR
-    # scripts, so deployment secrets must never be in that job env.
-    # See GHSA-89q4-9xjr-cx4x.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # Fork pull requests stay skipped: that checkout is unreviewed and this
+    # job's environment holds cloud deployment credentials.
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master') || (github.event_name ==
+      'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
