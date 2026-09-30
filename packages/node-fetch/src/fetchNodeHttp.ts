@@ -219,7 +219,12 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           if (fetchRequest.redirect === 'follow') {
             const redirectCount = redirectCounts.get(fetchRequest) ?? 0;
             if (redirectCount >= MAX_REDIRECTS) {
-              reject(new TypeError('redirect count exceeded'));
+              // Deno rejects with this message. Bun uses TooManyRedirects.
+              const redirectError = new TypeError(
+                `Fetch failed: Maximum number of redirects (${MAX_REDIRECTS}) reached`,
+              );
+              (redirectError as TypeError & { code: string }).code = 'TooManyRedirects';
+              reject(redirectError);
               nodeResponse.resume();
               return;
             }

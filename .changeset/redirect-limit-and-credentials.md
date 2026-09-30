@@ -5,7 +5,7 @@
 
 Follow the Fetch standard when the Node HTTP transport follows redirects.
 
-`fetchNodeHttp` recursed on every 3xx `Location` while `redirect` was `'follow'` (the default) and never counted hops. A response that always redirects could keep one `fetch` call issuing requests until the process ran out of memory. Following now stops after 20 redirects. The promise rejects with `TypeError: redirect count exceeded`. A chain of 20 redirects that then returns a normal response still completes.
+`fetchNodeHttp` recursed on every 3xx `Location` while `redirect` was `'follow'` (the default) and never counted hops. A response that always redirects could keep one `fetch` call issuing requests until the process ran out of memory. Following now stops after 20 redirects. The promise rejects with `TypeError: Fetch failed: Maximum number of redirects (20) reached` and `code` `TooManyRedirects`, the same limit Deno and Bun report. A chain of 20 redirects that then returns a normal response still completes.
 
 That path also reused the previous request's `Headers` object for the next hop. A cross-origin `Location` therefore received `Authorization`, `Proxy-Authorization`, `Cookie`, `Cookie2`, and an explicit `Host`. Those headers are removed when the origin changes. The scheme is part of the origin, so an `https` to `http` redirect drops them too. Same-origin redirects still send them. Removal happens on a new header list, so the caller's own `Headers` object is left unchanged.
 
