@@ -35,29 +35,6 @@ function redirectFailureText(error: unknown): string {
   return `${String(current.message ?? error)} ${String(cause ?? '')} ${String(current.code ?? '')}`;
 }
 
-function keepHandling(
-  server: { name: string; addOnceHandler(handler: any): Promise<void> | void },
-  createServerAdapter: (handler: (request: Request) => unknown) => any,
-  handle: (request: Request) => unknown,
-) {
-  const adapter = createServerAdapter(request => {
-    // uWebSockets drops the handler after a single request. Reattach after this
-    // turn so the next hop still has a handler, once the current call has cleared it.
-    // Other servers keep the handler, so disposing and replacing it on every hop
-    // only leaves unsettled dispose work behind.
-    if (server.name === 'uWebSockets') {
-      queueMicrotask(() => {
-        const pending = server.addOnceHandler(adapter);
-        if (pending) {
-          pending.catch(() => undefined);
-        }
-      });
-    }
-    return handle(request);
-  });
-  return server.addOnceHandler(adapter);
-}
-
 afterAll(async () => {
   httpGlobalAgent.destroy();
   httpsGlobalAgent.destroy();
@@ -84,18 +61,20 @@ describe('Redirect safety', () => {
     runTestsForEachServerImpl(server => {
       it('follows 20 redirects and then the final response', async () => {
         let hits = 0;
-        await keepHandling(server, createServerAdapter, () => {
-          hits += 1;
-          if (hits <= 20) {
-            return new fetchAPI.Response(null, {
-              status: 302,
-              headers: { Location: `/hop-${hits}` },
+        await server.addOnceHandler(
+          createServerAdapter(() => {
+            hits += 1;
+            if (hits <= 20) {
+              return new fetchAPI.Response(null, {
+                status: 302,
+                headers: { Location: `/hop-${hits}` },
+              });
+            }
+            return new fetchAPI.Response('done', {
+              headers: { 'content-type': 'text/plain' },
             });
-          }
-          return new fetchAPI.Response('done', {
-            headers: { 'content-type': 'text/plain' },
-          });
-        });
+          }),
+        );
 
         const response = await fetchAPI.fetch(new URL('/start', server.url));
 
@@ -106,16 +85,18 @@ describe('Redirect safety', () => {
 
       it('rejects when a redirect chain exceeds 20', async () => {
         let hits = 0;
-        await keepHandling(server, createServerAdapter, () => {
-          hits += 1;
-          if (hits > 30) {
-            return new fetchAPI.Response('cap', { status: 500 });
-          }
-          return new fetchAPI.Response(null, {
-            status: 302,
-            headers: { Location: '/loop' },
-          });
-        });
+        await server.addOnceHandler(
+          createServerAdapter(() => {
+            hits += 1;
+            if (hits > 30) {
+              return new fetchAPI.Response('cap', { status: 500 });
+            }
+            return new fetchAPI.Response(null, {
+              status: 302,
+              headers: { Location: '/loop' },
+            });
+          }),
+        );
 
         try {
           const resolved = await fetchAPI.fetch(new URL('/loop', server.url));
@@ -143,14 +124,14 @@ describe('Redirect safety', () => {
         servers.push(sink);
         const sinkAddress = await listen(sink);
 
-        await keepHandling(
-          server,
-          createServerAdapter,
-          () =>
-            new fetchAPI.Response(null, {
-              status: 302,
-              headers: { Location: `http://127.0.0.1:${sinkAddress.port}/collect` },
-            }),
+        await server.addOnceHandler(
+          createServerAdapter(
+            () =>
+              new fetchAPI.Response(null, {
+                status: 302,
+                headers: { Location: `http://127.0.0.1:${sinkAddress.port}/collect` },
+              }),
+          ),
         );
 
         const redirector = new URL(server.url);
@@ -183,18 +164,20 @@ describe('Redirect safety', () => {
         let authorization: string | null = null;
         let cookie: string | null = null;
         let trace: string | null = null;
-        await keepHandling(server, createServerAdapter, request => {
-          if (new URL(request.url).pathname === '/start') {
-            return new fetchAPI.Response(null, {
-              status: 302,
-              headers: { Location: '/collect' },
-            });
-          }
-          authorization = request.headers.get('authorization');
-          cookie = request.headers.get('cookie');
-          trace = request.headers.get('x-trace');
-          return new fetchAPI.Response('ok');
-        });
+        await server.addOnceHandler(
+          createServerAdapter(request => {
+            if (new URL(request.url).pathname === '/start') {
+              return new fetchAPI.Response(null, {
+                status: 302,
+                headers: { Location: '/collect' },
+              });
+            }
+            authorization = request.headers.get('authorization');
+            cookie = request.headers.get('cookie');
+            trace = request.headers.get('x-trace');
+            return new fetchAPI.Response('ok');
+          }),
+        );
 
         const response = await fetchAPI.fetch(new URL('/start', server.url), {
           headers: {
@@ -213,17 +196,19 @@ describe('Redirect safety', () => {
       it.each([301, 302, 303])('rewrites %s POST to GET and drops the body', async statusCode => {
         let method = '';
         let body = '';
-        await keepHandling(server, createServerAdapter, async request => {
-          if (new URL(request.url).pathname === '/start') {
-            return new fetchAPI.Response(null, {
-              status: statusCode,
-              headers: { Location: '/collect' },
-            });
-          }
-          method = request.method;
-          body = await request.text();
-          return new fetchAPI.Response('sink');
-        });
+        await server.addOnceHandler(
+          createServerAdapter(async request => {
+            if (new URL(request.url).pathname === '/start') {
+              return new fetchAPI.Response(null, {
+                status: statusCode,
+                headers: { Location: '/collect' },
+              });
+            }
+            method = request.method;
+            body = await request.text();
+            return new fetchAPI.Response('sink');
+          }),
+        );
 
         const response = await fetchAPI.fetch(new URL('/start', server.url), {
           method: 'POST',
@@ -242,18 +227,20 @@ describe('Redirect safety', () => {
       it.each([307, 308])('replays a POST body across two %s redirects', async statusCode => {
         let method = '';
         let body = '';
-        await keepHandling(server, createServerAdapter, async request => {
-          const path = new URL(request.url).pathname;
-          if (path === '/start' || path === '/mid') {
-            return new fetchAPI.Response(null, {
-              status: statusCode,
-              headers: { Location: path === '/start' ? '/mid' : '/done' },
-            });
-          }
-          method = request.method;
-          body = await request.text();
-          return new fetchAPI.Response('ok');
-        });
+        await server.addOnceHandler(
+          createServerAdapter(async request => {
+            const path = new URL(request.url).pathname;
+            if (path === '/start' || path === '/mid') {
+              return new fetchAPI.Response(null, {
+                status: statusCode,
+                headers: { Location: path === '/start' ? '/mid' : '/done' },
+              });
+            }
+            method = request.method;
+            body = await request.text();
+            return new fetchAPI.Response('ok');
+          }),
+        );
 
         const response = await fetchAPI.fetch(new URL('/start', server.url), {
           method: 'POST',
@@ -269,14 +256,14 @@ describe('Redirect safety', () => {
       (globalThis.Bun ? it.skip : it)(
         'rejects a 307 redirect when the body is a stream',
         async () => {
-          await keepHandling(
-            server,
-            createServerAdapter,
-            () =>
-              new fetchAPI.Response(null, {
-                status: 307,
-                headers: { Location: '/done' },
-              }),
+          await server.addOnceHandler(
+            createServerAdapter(
+              () =>
+                new fetchAPI.Response(null, {
+                  status: 307,
+                  headers: { Location: '/done' },
+                }),
+            ),
           );
 
           const stream = new fetchAPI.ReadableStream({
@@ -321,14 +308,14 @@ describe('Redirect safety', () => {
         servers.push(sink);
         const sinkAddress = await listen(sink);
 
-        await keepHandling(
-          server,
-          createServerAdapter,
-          () =>
-            new fetchAPI.Response(null, {
-              status: 307,
-              headers: { Location: `http://127.0.0.1:${sinkAddress.port}/collect` },
-            }),
+        await server.addOnceHandler(
+          createServerAdapter(
+            () =>
+              new fetchAPI.Response(null, {
+                status: 307,
+                headers: { Location: `http://127.0.0.1:${sinkAddress.port}/collect` },
+              }),
+          ),
         );
 
         const response = await fetchAPI.fetch(new URL('/start', server.url), {
