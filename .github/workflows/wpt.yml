@@ -62,6 +62,8 @@ jobs:
         run: node test/web-platform-tests/wpt-runner.mjs run /fetch /xhr/formdata /mimesniff
 
       # Always upload so a drift failure can be rebased from CI without re-running locally.
+      # On an improvement-only run the file is the previous baseline plus the
+      # newly passing cases, which the commit job below pushes to the PR branch.
       - name: Upload expectation.json
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -69,3 +71,43 @@ jobs:
           name: wpt-expectation
           path: test/web-platform-tests/expectation.json
           if-no-files-found: ignore
+
+  # Separate job so the WPT run (untrusted upstream scripts) stays read-only.
+  # Only same-repo PRs can be pushed to. A regression still fails `wpt` and
+  # this job does not run.
+  commit-passing-expectations:
+    name: wpt / record newly passing expectations
+    needs: wpt
+    if: >-
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name ==
+      github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: true
+          submodules: false
+
+      - name: Download expectation.json
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: wpt-expectation
+          path: /tmp/wpt-expectation
+
+      - name: Commit newly passing expectations
+        run: |
+          set -euo pipefail
+          cp /tmp/wpt-expectation/expectation.json test/web-platform-tests/expectation.json
+          if git diff --quiet -- test/web-platform-tests/expectation.json; then
+            echo "No newly passing expectations to record."
+            exit 0
+          fi
+          git add test/web-platform-tests/expectation.json
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit \
+            -m "test(wpt): record newly passing expectations" \
+            -m "A test that was expected to fail now passes. Keep that result as the baseline."
+          git push origin "HEAD:${{ github.head_ref }}"

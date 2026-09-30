@@ -6,8 +6,8 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { pathToFileURL } from 'node:url';
 import { debuglog } from 'node:util';
-import * as jsondiffpatch from 'jsondiffpatch';
 import { sanitizeUnpairedSurrogates } from './runner/utils.mjs';
 
 const REPO_ROOT = join(import.meta.dirname, '..', '..');
@@ -956,7 +956,8 @@ async function run(filters = []) {
       }
     }
 
-    const oldExpectations = getExpectation();
+    const oldExpectationText = readFileSync(EXPECTATION_PATH, 'utf8');
+    const oldExpectations = JSON.parse(oldExpectationText);
     updateExpectations(results);
 
     if (process.env.WPT_UPDATE_EXPECTATIONS) {
@@ -964,38 +965,169 @@ async function run(filters = []) {
       return;
     }
 
-    // propertyFilter(name === 'success') alone is wrong: it drops container keys like
-    // `fetch`/`xhr` before nested success bits are compared (always empty diff).
-    const jsondiff = jsondiffpatch.create();
-    const diff = jsondiff.diff(
+    const updated = getExpectation();
+    const drift = classifySuccessDrift(
       successProjection(oldExpectations),
-      successProjection(getExpectation()),
+      successProjection(updated),
     );
-    process.exitCode = diff === undefined ? 0 : 1;
 
-    if (diff !== undefined) {
-      console.dir(diff, { depth: Infinity });
+    if (drift.regressions.length > 0) {
+      // Leave the regenerated file in place so the artifact can be reviewed.
+      console.log('Expectation regressions:');
+      for (const regression of drift.regressions) {
+        console.log(`  ${regression}`);
+      }
+      process.exitCode = 1;
+      return;
     }
+
+    if (drift.improvements.length > 0) {
+      // A case that was expected to fail and now passes is recorded on the
+      // previous baseline. The full rewrite is not committed: messages and
+      // ordering of unrelated cases stay as they were.
+      const patched = applyPassingImprovements(oldExpectations, drift.improvements);
+      writeFileSync(EXPECTATION_PATH, JSON.stringify(patched, null, 2) + '\n');
+      console.log('Newly passing expectations:');
+      for (const improvement of drift.improvements) {
+        console.log(`  ${improvement.join(' / ')}`);
+      }
+      process.exitCode = 0;
+      return;
+    }
+
+    writeFileSync(EXPECTATION_PATH, oldExpectationText);
+    process.exitCode = 0;
   }
 }
 
-const command = process.argv[2];
-const filters = process.argv.slice(3);
+/**
+ * Success-bit drift between two `successProjection` trees.
+ * `false → true` is an improvement. Anything else (a passing case that fails,
+ * a new or removed case, a flaky-bit change) stays a regression for review.
+ * @param {unknown} oldNode
+ * @param {unknown} newNode
+ * Improvement paths keep each key as its own segment so case names that
+ * contain "/" are not split.
+ * @returns {{ improvements: string[][], regressions: string[] }}
+ */
+export function classifySuccessDrift(oldNode, newNode) {
+  /** @type {{ improvements: string[][], regressions: string[] }} */
+  const drift = { improvements: [], regressions: [] };
+  walkSuccessDrift(oldNode, newNode, [], drift);
+  return drift;
+}
 
-switch (command) {
-  case 'setup':
-    await setup();
-    break;
-  case 'run':
-    await run(filters);
-    break;
-  default:
-    console.log(`
+/**
+ * @param {unknown} oldNode
+ * @param {unknown} newNode
+ * @param {string[]} path
+ * @param {{ improvements: string[][], regressions: string[] }} drift
+ */
+function walkSuccessDrift(oldNode, newNode, path, drift) {
+  if (Object.is(oldNode, newNode)) {
+    return;
+  }
+
+  const oldIsObject = oldNode != null && typeof oldNode === 'object';
+  const newIsObject = newNode != null && typeof newNode === 'object';
+  if (!oldIsObject || !newIsObject) {
+    drift.regressions.push(
+      `${path.join('/') || '(root)'}: ${JSON.stringify(oldNode)} -> ${JSON.stringify(newNode)}`,
+    );
+    return;
+  }
+
+  const oldRecord = /** @type {Record<string, unknown>} */ (oldNode);
+  const newRecord = /** @type {Record<string, unknown>} */ (newNode);
+  const keys = new Set([...Object.keys(oldRecord), ...Object.keys(newRecord)]);
+
+  for (const key of keys) {
+    const childPath = [...path, key];
+    if (!Object.hasOwn(oldRecord, key)) {
+      drift.regressions.push(`${childPath.join('/')}: added`);
+      continue;
+    }
+    if (!Object.hasOwn(newRecord, key)) {
+      drift.regressions.push(`${childPath.join('/')}: removed`);
+      continue;
+    }
+    if (key === 'success') {
+      if (oldRecord.success === false && newRecord.success === true) {
+        drift.improvements.push(path);
+      } else if (oldRecord.success !== newRecord.success) {
+        drift.regressions.push(
+          `${childPath.join('/')}: ${JSON.stringify(oldRecord.success)} -> ${JSON.stringify(newRecord.success)}`,
+        );
+      }
+      continue;
+    }
+    if (key === 'flaky') {
+      if (oldRecord.flaky !== newRecord.flaky) {
+        drift.regressions.push(
+          `${childPath.join('/')}: ${JSON.stringify(oldRecord.flaky)} -> ${JSON.stringify(newRecord.flaky)}`,
+        );
+      }
+      continue;
+    }
+    walkSuccessDrift(oldRecord[key], newRecord[key], childPath, drift);
+  }
+}
+
+/**
+ * @param {Record<string, any>} expectations
+ * @param {string[][]} improvementPaths paths from `classifySuccessDrift`
+ */
+export function applyPassingImprovements(expectations, improvementPaths) {
+  const patched = structuredClone(expectations);
+  for (const segments of improvementPaths) {
+    const improvementPath = segments.join(' / ');
+    let node = patched;
+    for (let i = 0; i < segments.length; i++) {
+      const segment = segments[i];
+      if (segment === 'cases') {
+        const caseName = segments[i + 1];
+        const found = node.cases?.find(entry => normalizeCaseName(entry?.name) === caseName);
+        if (!found) {
+          throw new Error(`Cannot record passing case at ${improvementPath}`);
+        }
+        found.success = true;
+        delete found.message;
+        node = null;
+        break;
+      }
+      node = node[segment];
+      if (node == null) {
+        throw new Error(`Cannot record passing expectation at ${improvementPath}`);
+      }
+    }
+    if (node) {
+      node.success = true;
+    }
+  }
+  return patched;
+}
+
+const isCli = process.argv[1] != null && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isCli) {
+  const command = process.argv[2];
+  const filters = process.argv.slice(3);
+
+  switch (command) {
+    case 'setup':
+      await setup();
+      break;
+    case 'run':
+      await run(filters);
+      break;
+    default:
+      console.log(`
 WPT Test Runner for @whatwg-node/node-fetch
 
 Commands:
   setup              Configure environment
   run [filter...]    Run tests
 `);
-    break;
+      break;
+  }
 }
