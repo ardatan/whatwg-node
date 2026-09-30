@@ -4514,8 +4514,7 @@
             },
             {
               "name": "getAuthorizationHeaderValue - cross origin redirection",
-              "success": false,
-              "message": "assert_equals: expected \"none\" but got \"Basic dXNlcjpwYXNz\""
+              "success": true
             }
           ]
         },
