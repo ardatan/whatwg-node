@@ -99,6 +99,8 @@ jobs:
           path: /tmp/wpt-expectation
 
       - name: Commit newly passing expectations
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail
           cp /tmp/wpt-expectation/expectation.json test/web-platform-tests/expectation.json
@@ -110,4 +112,4 @@ jobs:
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit \
             -m "test(wpt): record newly passing expectations" \
             -m "A test that was expected to fail now passes. Keep that result as the baseline."
-          git push origin "HEAD:${{ github.head_ref }}"
+          git push origin "HEAD:${PR_HEAD_REF}"
