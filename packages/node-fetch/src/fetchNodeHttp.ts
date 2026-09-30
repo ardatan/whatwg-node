@@ -4,7 +4,8 @@ import { PassThrough, Readable } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
 import { getHttpsCheckServerIdentity } from './checkServerIdentity.js';
-import { PonyfillRequest } from './Request.js';
+import { PonyfillHeaders } from './Headers.js';
+import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
 import { PonyfillResponse } from './Response.js';
 import { PonyfillURL } from './URL.js';
 import {
@@ -16,6 +17,99 @@ import {
   safeWrite,
   shouldRedirect,
 } from './utils.js';
+
+// https://fetch.spec.whatwg.org/#http-redirect-fetch step 7
+const MAX_REDIRECTS = 20;
+const redirectCounts = new WeakMap<PonyfillRequest, number>();
+
+// https://fetch.spec.whatwg.org/#cors-non-wildcard-request-header-name
+// Cookie, Cookie2, and Host are forbidden request headers. Undici removes them
+// on a cross-origin redirect because this client has no cookie jar and would
+// otherwise forward caller-supplied credentials.
+const CROSS_ORIGIN_REMOVED_HEADERS = [
+  'authorization',
+  'proxy-authorization',
+  'cookie',
+  'cookie2',
+  'host',
+] as const;
+
+// https://fetch.spec.whatwg.org/#request-body-header-name
+// Content-Length is included for the same reason as undici: this Headers
+// implementation does not treat it as forbidden.
+const REQUEST_BODY_HEADERS = [
+  'content-encoding',
+  'content-language',
+  'content-location',
+  'content-type',
+  'content-length',
+] as const;
+
+function shouldRewriteRedirectMethod(statusCode: number | undefined, method: string): boolean {
+  return (
+    ((statusCode === 301 || statusCode === 302) && method === 'POST') ||
+    (statusCode === 303 && method !== 'GET' && method !== 'HEAD')
+  );
+}
+
+function headersForRedirect(source: Headers, omit: ReadonlySet<string>): PonyfillHeaders {
+  // Rebuild instead of deleting on a copy. Header names from a plain object
+  // stay in their original case until the map is materialized, so
+  // `delete('authorization')` would miss `Authorization`.
+  const headers = new PonyfillHeaders();
+  source.forEach((value, key) => {
+    if (!omit.has(key.toLowerCase())) {
+      headers.append(key, value);
+    }
+  });
+  return headers;
+}
+
+function createRedirectRequest<TRequestJSON>(
+  fetchRequest: PonyfillRequest<TRequestJSON>,
+  redirectedUrl: URL,
+  statusCode: number | undefined,
+): PonyfillRequest<TRequestJSON> {
+  const crossOrigin = redirectedUrl.origin !== fetchRequest.parsedUrl.origin;
+  const rewriteMethod = shouldRewriteRedirectMethod(statusCode, fetchRequest.method);
+
+  if (!crossOrigin && !rewriteMethod) {
+    return new PonyfillRequest(redirectedUrl, fetchRequest);
+  }
+
+  const omit = new Set<string>();
+  if (crossOrigin) {
+    for (const headerName of CROSS_ORIGIN_REMOVED_HEADERS) {
+      omit.add(headerName);
+    }
+  }
+  if (rewriteMethod) {
+    for (const headerName of REQUEST_BODY_HEADERS) {
+      omit.add(headerName);
+    }
+  }
+  const headers = headersForRedirect(fetchRequest.headers, omit);
+
+  const redirectInit: RequestPonyfillInit = {
+    method: rewriteMethod ? 'GET' : fetchRequest.method,
+    headers,
+    body: rewriteMethod ? null : fetchRequest.body,
+    redirect: fetchRequest.redirect,
+    credentials: fetchRequest.credentials,
+    mode: fetchRequest.mode,
+    cache: fetchRequest.cache,
+    integrity: fetchRequest.integrity,
+    keepalive: fetchRequest.keepalive,
+    referrer: fetchRequest.referrer,
+    referrerPolicy: fetchRequest.referrerPolicy,
+    duplex: fetchRequest.duplex,
+    headersSerializer: fetchRequest.headersSerializer,
+    agent: fetchRequest.agent,
+    signal: fetchRequest._signal,
+  };
+
+  return new PonyfillRequest(redirectedUrl, redirectInit);
+}
 
 function getRequestFnForProtocol(url: string) {
   if (url.startsWith('http:')) {
@@ -110,7 +204,10 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             outputStream = zlib.createZstdDecompress();
             break;
         }
-        if (nodeResponse.headers.location && shouldRedirect(nodeResponse.statusCode)) {
+        const location = Array.isArray(nodeResponse.headers.location)
+          ? nodeResponse.headers.location[0]
+          : nodeResponse.headers.location;
+        if (location && shouldRedirect(nodeResponse.statusCode)) {
           if (fetchRequest.redirect === 'error') {
             const redirectError = new Error('Redirects are not allowed');
             reject(redirectError);
@@ -118,13 +215,27 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
             return;
           }
           if (fetchRequest.redirect === 'follow') {
-            const redirectedUrl = new PonyfillURL(
-              nodeResponse.headers.location,
-              fetchRequest.parsedUrl || fetchRequest.url,
+            const redirectCount = redirectCounts.get(fetchRequest) ?? 0;
+            if (redirectCount >= MAX_REDIRECTS) {
+              reject(new TypeError('redirect count exceeded'));
+              nodeResponse.resume();
+              return;
+            }
+            let redirectedUrl: URL;
+            try {
+              redirectedUrl = new PonyfillURL(location, fetchRequest.parsedUrl || fetchRequest.url);
+            } catch (error) {
+              reject(error);
+              nodeResponse.resume();
+              return;
+            }
+            const redirectRequest = createRedirectRequest(
+              fetchRequest,
+              redirectedUrl,
+              nodeResponse.statusCode,
             );
-            const redirectResponse$ = fetchNodeHttp(
-              new PonyfillRequest(redirectedUrl, fetchRequest),
-            );
+            redirectCounts.set(redirectRequest, redirectCount + 1);
+            const redirectResponse$ = fetchNodeHttp(redirectRequest);
             resolve(
               redirectResponse$.then(redirectResponse => {
                 redirectResponse.redirected = true;
