@@ -11,4 +11,8 @@ That path also reused the previous request's `Headers` object for the next hop. 
 
 `301` and `302` responses to `POST`, and `303` responses to any method other than `GET` or `HEAD`, are resent as `GET` with no body. The request-body headers go with the body: `Content-Encoding`, `Content-Language`, `Content-Location`, `Content-Type`, and `Content-Length`. `307` and `308` keep the method and body when that body can be sent again. A one-shot stream cannot, and that redirect rejects.
 
-`redirect: 'manual'` and `redirect: 'error'` behave as before. `@whatwg-node/fetch` uses this transport on Node, so the same limits apply there.
+`redirect: 'error'` rejects with a `TypeError`. A redirect whose target scheme is not `http` or `https` also rejects with a `TypeError`. `redirect: 'manual'` still returns the redirect response.
+
+`Response.redirect()` parses the URL and throws `TypeError` when parsing fails. The status must be `301`, `302`, `303`, `307`, or `308`; any other status throws `RangeError`. The response status text is empty, and the `Location` header is the serialized URL.
+
+`@whatwg-node/fetch` uses this transport on Node, so the same limits apply there.

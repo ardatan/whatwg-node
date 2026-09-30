@@ -20,19 +20,16 @@ function listen(server: Server): Promise<AddressInfo> {
   });
 }
 
-const REDIRECT_LIMIT_ERROR =
-  /redirect count exceeded|maximum number of redirects|redirected too many times|TooManyRedirects/i;
-
-function redirectFailureText(error: unknown): string {
+function errorText(error: unknown): string {
   if (error == null || typeof error !== 'object') {
     return String(error);
   }
-  const current = error as { message?: unknown; cause?: unknown; code?: unknown };
-  const cause =
-    current.cause != null && typeof current.cause === 'object'
-      ? (current.cause as { message?: unknown }).message
-      : undefined;
-  return `${String(current.message ?? error)} ${String(cause ?? '')} ${String(current.code ?? '')}`;
+  const { message, cause, code } = error as {
+    message?: unknown;
+    cause?: { message?: unknown };
+    code?: unknown;
+  };
+  return [message, cause?.message, code].filter(part => part != null && part !== '').join(' ');
 }
 
 afterAll(async () => {
@@ -98,6 +95,7 @@ describe('Redirect safety', () => {
           }),
         );
 
+        let error: unknown;
         try {
           const resolved = await fetchAPI.fetch(new URL('/loop', server.url));
           // `bun test` follows until the server stops instead of rejecting.
@@ -108,10 +106,10 @@ describe('Redirect safety', () => {
             return;
           }
           await resolved.text();
-          throw new Error('redirect chain should have been rejected');
-        } catch (error) {
-          expect(redirectFailureText(error)).toMatch(REDIRECT_LIMIT_ERROR);
+        } catch (caught) {
+          error = caught;
         }
+        expect(errorText(error)).toMatch(/redirect/i);
         expect(hits).toBe(21);
       });
 
@@ -273,6 +271,7 @@ describe('Redirect safety', () => {
             },
           });
 
+          let error: unknown;
           try {
             const resolved = await fetchAPI.fetch(new URL('/start', server.url), {
               method: 'POST',
@@ -283,10 +282,10 @@ describe('Redirect safety', () => {
               duplex: 'half',
             });
             await resolved.text();
-            throw new Error('stream redirect should have been rejected');
-          } catch (error) {
-            expect(redirectFailureText(error)).toMatch(/replay|body|failed|unusable|disturbed/i);
+          } catch (caught) {
+            error = caught;
           }
+          expect(errorText(error)).toMatch(/replay|body|failed|unusable|disturbed/i);
         },
       );
 

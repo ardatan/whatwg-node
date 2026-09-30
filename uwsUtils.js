@@ -22,6 +22,7 @@ module.exports = {
         });
       },
       stop() {
+        handler = undefined;
         if (listenSocket) {
           uws.us_listen_socket_close(listenSocket);
           uwsApp.close();

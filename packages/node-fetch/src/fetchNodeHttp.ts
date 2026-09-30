@@ -145,7 +145,7 @@ function getRequestFnForProtocol(url: string) {
   } else if (url.startsWith('https:')) {
     return httpsRequest;
   }
-  throw new Error(`Unsupported protocol: ${url.split(':')[0] || url}`);
+  throw new TypeError(`Unsupported protocol: ${url.split(':')[0] || url}`);
 }
 
 function isHttpsRequest(url: string | URL | undefined): boolean {
@@ -237,7 +237,7 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
           : nodeResponse.headers.location;
         if (location && shouldRedirect(nodeResponse.statusCode)) {
           if (fetchRequest.redirect === 'error') {
-            const redirectError = new Error('Redirects are not allowed');
+            const redirectError = new TypeError('Redirects are not allowed');
             reject(redirectError);
             nodeResponse.resume();
             return;
