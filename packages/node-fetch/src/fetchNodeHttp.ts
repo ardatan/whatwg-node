@@ -3,6 +3,7 @@ import { request as httpsRequest } from 'node:https';
 import { PassThrough, Readable } from 'node:stream';
 import zlib from 'node:zlib';
 import { handleMaybePromise } from '@whatwg-node/promise-helpers';
+import type { BodyPonyfillInit } from './Body.js';
 import { getHttpsCheckServerIdentity } from './checkServerIdentity.js';
 import { PonyfillHeaders } from './Headers.js';
 import { PonyfillRequest, RequestPonyfillInit } from './Request.js';
@@ -65,6 +66,29 @@ function headersForRedirect(source: Headers, omit: ReadonlySet<string>): Ponyfil
   return headers;
 }
 
+const REPLAYABLE_BODY_TYPES = new Set(['String', 'Blob', 'FormData']);
+
+function replayableRedirectBody(fetchRequest: PonyfillRequest): {
+  body: BodyPonyfillInit | null;
+  dropContentType: boolean;
+} {
+  const bodyInit = fetchRequest['bodyInit'] as BodyPonyfillInit | null | undefined;
+  const bodyType = fetchRequest['bodyType'] as string | undefined;
+  const buffer = fetchRequest['_buffer'] as Buffer | undefined;
+  if (bodyInit == null && buffer == null) {
+    return { body: null, dropContentType: false };
+  }
+  // A buffer, string, blob, or FormData can be sent again. A stream's source
+  // is null after the first hop, which the Fetch standard treats as a network error.
+  if (buffer != null) {
+    return { body: buffer as BodyPonyfillInit, dropContentType: false };
+  }
+  if (bodyType != null && REPLAYABLE_BODY_TYPES.has(bodyType)) {
+    return { body: bodyInit ?? null, dropContentType: bodyType === 'FormData' };
+  }
+  throw new TypeError('Request body cannot be replayed across redirects');
+}
+
 function createRedirectRequest<TRequestJSON>(
   fetchRequest: PonyfillRequest<TRequestJSON>,
   redirectedUrl: URL,
@@ -72,10 +96,9 @@ function createRedirectRequest<TRequestJSON>(
 ): PonyfillRequest<TRequestJSON> {
   const crossOrigin = redirectedUrl.origin !== fetchRequest.parsedUrl.origin;
   const rewriteMethod = shouldRewriteRedirectMethod(statusCode, fetchRequest.method);
-
-  if (!crossOrigin && !rewriteMethod) {
-    return new PonyfillRequest(redirectedUrl, fetchRequest);
-  }
+  const replayed = rewriteMethod
+    ? { body: null, dropContentType: false }
+    : replayableRedirectBody(fetchRequest);
 
   const omit = new Set<string>();
   if (crossOrigin) {
@@ -88,12 +111,15 @@ function createRedirectRequest<TRequestJSON>(
       omit.add(headerName);
     }
   }
+  if (replayed.dropContentType) {
+    omit.add('content-type');
+  }
   const headers = headersForRedirect(fetchRequest.headers, omit);
 
   const redirectInit: RequestPonyfillInit = {
     method: rewriteMethod ? 'GET' : fetchRequest.method,
     headers,
-    body: rewriteMethod ? null : fetchRequest.body,
+    body: replayed.body,
     redirect: fetchRequest.redirect,
     credentials: fetchRequest.credentials,
     mode: fetchRequest.mode,
@@ -236,11 +262,18 @@ export function fetchNodeHttp<TResponseJSON = any, TRequestJSON = any>(
               nodeResponse.resume();
               return;
             }
-            const redirectRequest = createRedirectRequest(
-              fetchRequest,
-              redirectedUrl,
-              nodeResponse.statusCode,
-            );
+            let redirectRequest: PonyfillRequest<TRequestJSON>;
+            try {
+              redirectRequest = createRedirectRequest(
+                fetchRequest,
+                redirectedUrl,
+                nodeResponse.statusCode,
+              );
+            } catch (error) {
+              reject(error);
+              nodeResponse.resume();
+              return;
+            }
             redirectCounts.set(redirectRequest, redirectCount + 1);
             const redirectResponse$ = fetchNodeHttp(redirectRequest);
             resolve(

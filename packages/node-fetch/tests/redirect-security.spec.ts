@@ -216,6 +216,70 @@ describe('Redirect safety', () => {
         expect(body).toBe('');
       });
 
+      it.each([307, 308])('replays a POST body across two %s redirects', async statusCode => {
+        let method = '';
+        let body = '';
+        await keepHandling(server, createServerAdapter, async request => {
+          const path = new URL(request.url).pathname;
+          if (path === '/start' || path === '/mid') {
+            return new fetchAPI.Response(null, {
+              status: statusCode,
+              headers: { Location: path === '/start' ? '/mid' : '/done' },
+            });
+          }
+          method = request.method;
+          body = await request.text();
+          return new fetchAPI.Response('ok');
+        });
+
+        const response = await fetchAPI.fetch(new URL('/start', server.url), {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: 'secret-body',
+        });
+
+        expect(await response.text()).toBe('ok');
+        expect(method).toBe('POST');
+        expect(body).toBe('secret-body');
+      });
+
+      (globalThis.Bun ? it.skip : it)(
+        'rejects a 307 redirect when the body is a stream',
+        async () => {
+          await keepHandling(
+            server,
+            createServerAdapter,
+            () =>
+              new fetchAPI.Response(null, {
+                status: 307,
+                headers: { Location: '/done' },
+              }),
+          );
+
+          const stream = new fetchAPI.ReadableStream({
+            start(controller: ReadableStreamDefaultController<Uint8Array>) {
+              controller.enqueue(new TextEncoder().encode('secret-body'));
+              controller.close();
+            },
+          });
+
+          try {
+            const resolved = await fetchAPI.fetch(new URL('/start', server.url), {
+              method: 'POST',
+              body: stream,
+              headers: { 'Content-Type': 'text/plain' },
+              // Streaming request bodies require duplex, which is not on this RequestInit yet.
+              // @ts-expect-error duplex is not part of RequestInit type yet
+              duplex: 'half',
+            });
+            await resolved.text();
+            throw new Error('stream redirect should have been rejected');
+          } catch (error) {
+            expect(redirectFailureText(error)).toMatch(/replay|body|failed|unusable|disturbed/i);
+          }
+        },
+      );
+
       it('keeps POST method and body on a 307 redirect, without credential headers', async () => {
         let sinkMethod: string | undefined;
         let sinkBody = '';
