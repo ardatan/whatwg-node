@@ -103,9 +103,11 @@ function createRedirectRequest<TRequestJSON>(
     referrer: fetchRequest.referrer,
     referrerPolicy: fetchRequest.referrerPolicy,
     duplex: fetchRequest.duplex,
-    headersSerializer: fetchRequest.headersSerializer,
-    agent: fetchRequest.agent,
-    signal: fetchRequest._signal,
+    ...(fetchRequest.headersSerializer
+      ? { headersSerializer: fetchRequest.headersSerializer }
+      : {}),
+    ...(fetchRequest.agent != null ? { agent: fetchRequest.agent } : {}),
+    ...(fetchRequest._signal ? { signal: fetchRequest._signal } : {}),
   };
 
   return new PonyfillRequest(redirectedUrl, redirectInit);
