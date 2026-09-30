@@ -1,5 +1,58 @@
 # @whatwg-node/node-fetch
 
+## 0.9.1
+
+### Patch Changes
+
+- [#3642](https://github.com/ardatan/whatwg-node/pull/3642)
+  [`ed29dc2`](https://github.com/ardatan/whatwg-node/commit/ed29dc2ff369e8fb17834a48f6e47c844102049b)
+  Thanks [@ardatan](https://github.com/ardatan)! - Follow the Fetch standard
+  when the Node HTTP transport follows redirects.
+
+  `fetchNodeHttp` recursed on every 3xx `Location` while `redirect` was
+  `'follow'` (the default) and never counted hops. A response that always
+  redirects could keep one `fetch` call issuing requests until the process ran
+  out of memory. Following now stops after 20 redirects. The promise rejects
+  with `TypeError: Fetch failed: Maximum number of redirects (20) reached` and
+  `code` `TooManyRedirects`. A chain of 20 redirects that then returns a normal
+  response still completes.
+
+  That path also reused the previous request's `Headers` object for the next
+  hop. A cross-origin `Location` therefore received `Authorization`,
+  `Proxy-Authorization`, `Cookie`, `Cookie2`, and an explicit `Host`. Those
+  headers are removed when the origin changes. The scheme is part of the origin,
+  so an `https` to `http` redirect drops them too. Same-origin redirects still
+  send them. Removal happens on a new header list, so the caller's own `Headers`
+  object is left unchanged.
+
+  `301` and `302` responses to `POST`, and `303` responses to any method other
+  than `GET` or `HEAD`, are resent as `GET` with no body. The request-body
+  headers go with the body: `Content-Encoding`, `Content-Language`,
+  `Content-Location`, `Content-Type`, and `Content-Length`. `307` and `308` keep
+  the method and body when that body can be sent again. A one-shot stream
+  cannot, and that redirect rejects.
+
+  A cross-origin redirect whose URL includes a username or password is rejected
+  with `TypeError` when the request mode is `cors`. Following it would send
+  those URL credentials to the new origin as `Authorization`.
+
+  A resent `FormData` body is encoded again with a new multipart boundary of the
+  same length, so its `Content-Length` stays valid. `Content-Type` is replaced
+  because that header names the boundary.
+
+  `redirect: 'error'` rejects with a `TypeError`. A redirect whose target scheme
+  is not `http` or `https` also rejects with a `TypeError`. `redirect: 'manual'`
+  still returns the redirect response.
+
+  `Response.redirect()` serializes an absolute URL into the `Location` header
+  and throws `TypeError` when that URL cannot be parsed. A relative URL is
+  stored as given, so `Response.redirect('/')` sets `Location` to `/`. The
+  status must be `301`, `302`, `303`, `307`, or `308`; any other status throws
+  `RangeError`. The response status text is empty.
+
+  `@whatwg-node/fetch` uses this transport on Node, so the same limits apply
+  there.
+
 ## 0.9.0
 
 ### Minor Changes
