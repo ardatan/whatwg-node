@@ -1,6 +1,13 @@
-import { createServer, IncomingHttpHeaders, Server } from 'node:http';
+import {
+  createServer,
+  globalAgent as httpGlobalAgent,
+  IncomingHttpHeaders,
+  Server,
+} from 'node:http';
+import { globalAgent as httpsGlobalAgent } from 'node:https';
 import { AddressInfo } from 'node:net';
-import { afterEach, describe, expect, it } from '@jest/globals';
+import { setTimeout as delay } from 'node:timers/promises';
+import { afterAll, afterEach, describe, expect, it } from '@jest/globals';
 import { runTestsForEachFetchImpl } from '../../server/test/test-fetch';
 import { runTestsForEachServerImpl } from '../../server/test/test-server';
 
@@ -29,33 +36,49 @@ function redirectFailureText(error: unknown): string {
 }
 
 function keepHandling(
-  server: { addOnceHandler(handler: any): Promise<void> | void },
+  server: { name: string; addOnceHandler(handler: any): Promise<void> | void },
   createServerAdapter: (handler: (request: Request) => unknown) => any,
   handle: (request: Request) => unknown,
 ) {
   const adapter = createServerAdapter(request => {
     // uWebSockets drops the handler after a single request. Reattach after this
     // turn so the next hop still has a handler, once the current call has cleared it.
-    queueMicrotask(() => {
-      const pending = server.addOnceHandler(adapter);
-      if (pending) {
-        pending.catch(() => undefined);
-      }
-    });
+    // Other servers keep the handler, so disposing and replacing it on every hop
+    // only leaves unsettled dispose work behind.
+    if (server.name === 'uWebSockets') {
+      queueMicrotask(() => {
+        const pending = server.addOnceHandler(adapter);
+        if (pending) {
+          pending.catch(() => undefined);
+        }
+      });
+    }
     return handle(request);
   });
   return server.addOnceHandler(adapter);
 }
 
+afterAll(async () => {
+  httpGlobalAgent.destroy();
+  httpsGlobalAgent.destroy();
+  // Let socket close callbacks run before Jest's leak detector snapshots this isolate.
+  await delay(50);
+});
+
 describe('Redirect safety', () => {
   runTestsForEachFetchImpl((implementationName, { createServerAdapter, fetchAPI }) => {
     const servers: Server[] = [];
 
-    afterEach(() => {
-      for (const server of servers.splice(0)) {
-        server.closeAllConnections?.();
-        server.close();
-      }
+    afterEach(async () => {
+      await Promise.all(
+        servers.splice(0).map(
+          server =>
+            new Promise<void>(resolve => {
+              server.closeAllConnections?.();
+              server.close(() => resolve());
+            }),
+        ),
+      );
     });
 
     runTestsForEachServerImpl(server => {

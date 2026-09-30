@@ -44,6 +44,9 @@ module.exports = {
   modulePathIgnorePatterns: ['dist', 'test-assets', 'test-files', 'fixtures', 'bun'],
   testPathIgnorePatterns: [
     '/node_modules/',
+    // node:test file. Jest 30's default testMatch includes *.test.mjs, but Babel cannot
+    // parse import.meta in the imported runner, and loading node:test leaves an open handle.
+    '<rootDir>/test/web-platform-tests/expectation-drift\\.test\\.mjs$',
     ...(!process.env.LEAK_TEST ? ['<rootDir>/scripts/leak-warmup\\.spec\\.ts$'] : []),
   ],
   moduleNameMapper: pathsToModuleNameMapper(tsconfig.compilerOptions.paths, {
