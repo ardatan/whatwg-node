@@ -11,8 +11,8 @@
     "@whatwg-node/fetch": "0.12.1"
   },
   "devDependencies": {
-    "@pulumi/aws": "7.47.0",
-    "@pulumi/pulumi": "^3.261.0",
+    "@pulumi/aws": "7.48.0",
+    "@pulumi/pulumi": "^3.265.0",
     "@types/aws-lambda": "8.10.163",
     "@types/node": "26.6.2",
     "esbuild": "0.28.2",
