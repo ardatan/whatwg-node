@@ -199,6 +199,10 @@ jobs:
 
       - name: Install pulumi
         uses: pulumi/setup-pulumi@b374ceb6168550de27c6eba92e01c1a774040e11 # v2
+        with:
+          # Match the @pulumi/pulumi override. A second SDK copy, or a newer
+          # CLI, fails resource registration with a protobuf type error.
+          pulumi-version: 3.265.0
 
       - name: Set outputs
         id: vars
