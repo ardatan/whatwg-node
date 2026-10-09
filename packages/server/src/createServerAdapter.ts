@@ -269,6 +269,11 @@ function createServerAdapter<
                   request,
                   setRequest(newRequest) {
                     request = newRequest;
+                    // Update the server context's request if it matches the old request
+                    // Ensure that the server context's request stays in sync with the updated request.
+                    if (serverContext.request === request) {
+                      serverContext.request = newRequest;
+                    }
                   },
                   serverContext,
                   fetchAPI,
