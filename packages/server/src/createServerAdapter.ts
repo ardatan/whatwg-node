@@ -256,7 +256,7 @@ function createServerAdapter<
           function handleEarlyResponse() {
             if (!response) {
               return handleMaybePromise(
-                () => requestHandler(request, serverContext, fetchAPI),
+                () => requestHandler(request, serverContext),
                 handleResponse,
               );
             }
@@ -269,6 +269,11 @@ function createServerAdapter<
                   request,
                   setRequest(newRequest) {
                     request = newRequest;
+                    // Update the server context's request if it matches the old request
+                    // Ensure that the server context's request stays in sync with the updated request.
+                    if (serverContext.request === request) {
+                      serverContext.request = newRequest;
+                    }
                   },
                   serverContext,
                   fetchAPI,
@@ -288,17 +293,14 @@ function createServerAdapter<
             handleEarlyResponse,
           );
         }
-      : function handleRequest(request, serverContext) {
-          return givenHandleRequest(request, serverContext, pickRightFetchAPI(request));
-        };
+      : givenHandleRequest;
 
   if (instrumentation?.request) {
     const originalRequestHandler = handleRequest;
-    handleRequest = (request, initialContext, fetchAPI) => {
+    handleRequest = (request, initialContext) => {
       return getInstrumented({ request }).asyncFn(instrumentation.request, originalRequestHandler)(
         request,
         initialContext,
-        fetchAPI,
       );
     };
   }
@@ -321,14 +323,20 @@ function createServerAdapter<
     if (!serverContext.waitUntil) {
       serverContext.waitUntil = waitUntil;
     }
+    if (!serverContext.fetchAPI) {
+      serverContext.fetchAPI = expectedFetchAPI;
+    }
     const request = normalizeNodeRequest(
       nodeRequest,
       expectedFetchAPI,
       nodeResponse,
       useCustomAbortCtrl,
     );
+    if (!serverContext.request) {
+      serverContext.request = request;
+    }
     return handleMaybePromise(
-      () => handleRequest(request, serverContext, expectedFetchAPI),
+      () => handleRequest(request, serverContext),
       response => {
         // Framework integrations (Fastify/Koa/Hapi) send the Response themselves; still discard
         // unread Node request bytes so keep-alive is not blocked after early endResponse.
@@ -351,6 +359,7 @@ function createServerAdapter<
       req: nodeRequest,
       res: nodeResponse,
       waitUntil,
+      fetchAPI: expectedFetchAPI,
     };
     return unfakePromise(
       fakePromise()
@@ -372,16 +381,15 @@ function createServerAdapter<
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
-    const defaultServerContext = {
+    let serverContext: any = {
       res,
       req,
       waitUntil,
+      fetchAPI: expectedFetchAPI,
     };
     const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
-    const serverContext =
-      filteredCtxParts.length > 0
-        ? completeAssign(defaultServerContext, ...ctx)
-        : defaultServerContext;
+    serverContext =
+      filteredCtxParts.length > 0 ? completeAssign(serverContext, ...ctx) : serverContext;
 
     const controller = useCustomAbortCtrl
       ? createCustomAbortControllerSignal()
@@ -406,10 +414,13 @@ function createServerAdapter<
       fetchAPI: expectedFetchAPI,
       controller,
     });
+    if (!serverContext.request) {
+      serverContext.request = request;
+    }
     return handleMaybePromise(
       () =>
         handleMaybePromise(
-          () => handleRequest(request, serverContext, expectedFetchAPI),
+          () => handleRequest(request, serverContext),
           response => response,
           err => handleErrorFromRequestHandler(err, expectedFetchAPI.Response),
         ),
@@ -438,23 +449,25 @@ function createServerAdapter<
     const serverContext =
       filteredCtxParts.length > 0
         ? completeAssign({}, event, ...filteredCtxParts)
-        : isolateObject(event);
-    const response$ = handleRequest(event.request, serverContext, expectedFetchAPI);
+        : isolateObject({
+            originalCtx: event,
+          });
+    const response$ = handleRequest(event.request, serverContext);
     event.respondWith(response$);
   }
 
-  function handleRequestWithWaitUntil(request: Request, ...ctx: Partial<TServerContext>[]) {
+  function handleRequestWithInitialContext(request: Request, ...ctx: Partial<TServerContext>[]) {
     const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
     const serverContext =
       filteredCtxParts.length > 1
         ? completeAssign({}, ...filteredCtxParts)
-        : isolateObject(
-            filteredCtxParts[0],
-            filteredCtxParts[0] == null || filteredCtxParts[0].waitUntil == null
-              ? waitUntil
-              : undefined,
-          );
-    return handleRequest(request, serverContext, expectedFetchAPI);
+        : isolateObject({
+            originalCtx: filteredCtxParts[0],
+            waitUntil: filteredCtxParts[0]?.waitUntil ?? waitUntil,
+            request,
+            fetchAPI: filteredCtxParts[0]?.fetchAPI ?? pickRightFetchAPI(request),
+          });
+    return handleRequest(request, serverContext);
   }
 
   const fetchFn: ServerAdapterObject<TServerContext>['fetch'] = (
@@ -467,7 +480,7 @@ function createServerAdapter<
         // For this case, it is not possible to get a native Request object
         // So it is ok to pick the expected one
         const request = new expectedFetchAPI.Request(input, initOrCtx);
-        const res$ = handleRequestWithWaitUntil(request, ...restOfCtx);
+        const res$ = handleRequestWithInitialContext(request, ...restOfCtx);
         const signal = (initOrCtx as RequestInit).signal;
         if (signal) {
           return handleAbortSignalAndPromiseResponse(res$, signal);
@@ -475,9 +488,9 @@ function createServerAdapter<
         return res$;
       }
       const request = new expectedFetchAPI.Request(input);
-      return handleRequestWithWaitUntil(request, ...maybeCtx);
+      return handleRequestWithInitialContext(request, ...maybeCtx);
     }
-    const res$ = handleRequestWithWaitUntil(input, ...maybeCtx);
+    const res$ = handleRequestWithInitialContext(input, ...maybeCtx);
     return handleAbortSignalAndPromiseResponse(res$, input.signal);
   };
 
@@ -515,7 +528,7 @@ function createServerAdapter<
         return handleEvent(input, ...maybeCtx);
       }
       // In this input is also the context
-      return handleRequestWithWaitUntil(input.request, input, ...maybeCtx);
+      return handleRequestWithInitialContext(input.request, input, ...maybeCtx);
     }
 
     // Or is it Request itself?
@@ -524,7 +537,7 @@ function createServerAdapter<
   };
 
   const adapterObj: ServerAdapterObject<TServerContext> = {
-    handleRequest: handleRequestWithWaitUntil,
+    handleRequest: handleRequestWithInitialContext,
     fetch: fetchFn,
     handleNodeRequestAndResponse,
     requestListener,
