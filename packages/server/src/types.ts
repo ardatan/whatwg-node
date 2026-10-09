@@ -151,7 +151,7 @@ export type ServerAdapterInitialContext = {
    *
    * This is typically an instance of the standard `Request` object used in the Fetch API.
    */
-  request: Request;
+  request: object;
   /**
    * WHATWG Fetch API instance associated with the current server context.
    */
