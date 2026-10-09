@@ -38,7 +38,7 @@ export function useRequestDeadline<TServerContext = {}>(
   opts: RequestDeadlineOptions<TServerContext>,
 ): ServerAdapterPlugin<TServerContext> {
   return {
-    onRequest({ request, requestHandler, setRequestHandler }) {
+    onRequest({ request, requestHandler, setRequestHandler, fetchAPI }) {
       // AbortSignal.timeout() creates an internal timer with no cancellation handle, so it keeps
       // the event loop alive and holds memory for the full timeout duration even when the request
       // finishes early. using AbortController + setTimeout gives us a timer handle we can clearTimeout
@@ -50,7 +50,7 @@ export function useRequestDeadline<TServerContext = {}>(
       // dont create a new request because that comes with a performance penalty
       Object.defineProperty(request, 'signal', { value: composedSignal });
 
-      setRequestHandler(function handlerWithDeadline(req, ctx, fetchAPI) {
+      setRequestHandler(function handlerWithDeadline(req, ctx) {
         if (deadlineSignal.aborted) {
           return opts.response(req, ctx);
         }
@@ -70,7 +70,7 @@ export function useRequestDeadline<TServerContext = {}>(
           deadlineSignal.addEventListener('abort', onDeadlineAbort, { once: true });
 
           return handleMaybePromise(
-            () => requestHandler(req, ctx, fetchAPI),
+            () => requestHandler(req, ctx),
             result => {
               clearTimeout(timer);
               deadlineSignal.removeEventListener('abort', onDeadlineAbort);

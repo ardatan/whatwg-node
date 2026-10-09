@@ -588,24 +588,31 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
   });
 }
 
+interface IsolateObjectOptions<TIsolatedObject extends object> {
+  originalCtx: TIsolatedObject;
+  waitUntil?: WaitUntilFn;
+  request?: Request;
+  fetchAPI?: FetchAPI;
+}
+
 export function isolateObject<TIsolatedObject extends object>(
-  originalCtx: TIsolatedObject,
-  waitUntilFn?: WaitUntilFn,
+  options: IsolateObjectOptions<TIsolatedObject>,
 ): TIsolatedObject {
-  if (originalCtx == null) {
-    if (waitUntilFn == null) {
-      return {} as TIsolatedObject;
-    }
+  if (options.originalCtx == null) {
     return {
-      waitUntil: waitUntilFn,
+      waitUntil: options.waitUntil,
+      request: options.request,
+      fetchAPI: options.fetchAPI,
     } as TIsolatedObject;
   }
   return completeAssign(
-    Object.create(originalCtx),
+    Object.create(options.originalCtx),
     {
-      waitUntil: waitUntilFn,
+      waitUntil: options.waitUntil,
+      request: options.request,
+      fetchAPI: options.fetchAPI,
     },
-    originalCtx,
+    options.originalCtx,
   );
 }
 
