@@ -6,8 +6,8 @@ Request handlers take the incoming `Request` and the server context. The Fetch A
 
 `ServerAdapterRequestHandler` is now `(request, ctx) => MaybePromise<Response>`. `ctx` is `TServerContext & ServerAdapterInitialContext`. That initial context still has `waitUntil`, and it now also has:
 
-- `request` — the `Request` being handled
-- `fetchAPI` — the WHATWG Fetch API implementation for that request (`Request`, `Response`, `URL`, and the rest of the surface returned by `createFetch`)
+- `request`: the `Request` being handled
+- `fetchAPI`: the WHATWG Fetch API implementation for that request (`Request`, `Response`, `URL`, and the rest of the surface returned by `createFetch`)
 
 `WaitUntilFn` is typed as `(promise: MaybePromise<void>) => void`. A non-promise value is ignored. A promise is retained until it settles, including through disposal when `disposeOnProcessTerminate` is set, so it does not surface as an unhandled rejection.
 
