@@ -101,7 +101,7 @@
     "tar": "7.5.22",
     "tmp": "0.2.7",
     "undici": "8.11.2",
-    "vite": "8.3.2"
+    "vite": "8.3.3"
   },
   "allowScripts": {
     "bun@1.4.0": true,
