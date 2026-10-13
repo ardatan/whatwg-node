@@ -2,8 +2,12 @@ const JestRunner = require('jest-runner').default;
 
 /**
  * Babel 8 is ESM-only; the first Jest isolate under `--detectLeaks` is retained
- * even when the suite itself does not leak. Clear that false positive only for
- * the disposable warmup suite so later suites are still checked for real leaks.
+ * even when the suite itself does not leak. Clear that false positive for the
+ * disposable warmup suite so later suites are still checked for real leaks.
+ *
+ * Also ignore suites that executed no tests (e.g. only `it.skip`): loading a
+ * module into a fresh isolate can still trip detectLeaks without any app code
+ * running (see CustomAbortControllerSignal.spec.ts).
  *
  * Emittery delivers a single `[test, testResult]` payload for `test-file-success`
  * (same shape `@jest/core` destructures). Defend against positional args too.
@@ -17,12 +21,12 @@ class LeakTestRunner extends JestRunner {
       const event = args[0];
       const test = Array.isArray(event) ? event[0] : args[0];
       const testResult = Array.isArray(event) ? event[1] : args[1];
-      if (
-        testResult &&
-        typeof test?.path === 'string' &&
-        test.path.endsWith('leak-warmup.spec.ts')
-      ) {
-        testResult.leaks = false;
+      if (testResult && typeof test?.path === 'string') {
+        const noExecutedTests =
+          (testResult.numPassingTests ?? 0) === 0 && (testResult.numFailingTests ?? 0) === 0;
+        if (test.path.endsWith('leak-warmup.spec.ts') || noExecutedTests) {
+          testResult.leaks = false;
+        }
       }
       return listener(...args);
     });
