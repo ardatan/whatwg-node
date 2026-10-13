@@ -12,7 +12,7 @@ function testIf(condition: boolean, name: string, fn: () => void) {
 describe('Node Fetch Ponyfill', () => {
   runTestsForEachFetchImpl(
     (
-      implName,
+      _implName,
       {
         fetchAPI: {
           fetch: fetchPonyfill,
@@ -81,44 +81,35 @@ describe('Node Fetch Ponyfill', () => {
         expect(body.data).toBe('test');
       });
       // Deno does not support Node.js streams as RequestInit.body yet
-      testIf(
-        !globalThis.Deno && (globalThis.Bun ? implName !== 'native' : true),
-        'should accept Readable bodies',
-        async () => {
-          const response = await fetchPonyfill(baseUrl + '/post', {
-            method: 'POST',
-            duplex: 'half',
-            // @ts-expect-error Readable is not part of RequestInit type yet
-            body: Readable.from(Buffer.from('test')),
-          });
-          expect(response.status).toBe(200);
-          const body = await response.json();
-          expect(body.data).toBe('test');
-        },
-      );
-      // Bun does not support ReadableStream in fetch yet
-      testIf(
-        globalThis.Bun ? implName !== 'native' : true,
-        'should accept ReadableStream bodies',
-        async () => {
-          const response = await fetchPonyfill(baseUrl + '/post', {
-            method: 'POST',
-            body: new PonyfillReadableStream({
-              async start(controller) {
-                await setTimeout(100);
-                controller.enqueue(Buffer.from('test'));
-                await setTimeout(100);
-                controller.close();
-              },
-            }),
-            // @ts-expect-error duplex is not part of RequestInit type yet
-            duplex: 'half',
-          });
-          expect(response.status).toBe(200);
-          const body = await response.json();
-          expect(body.data).toBe('test');
-        },
-      );
+      testIf(!globalThis.Deno, 'should accept Readable bodies', async () => {
+        const response = await fetchPonyfill(baseUrl + '/post', {
+          method: 'POST',
+          duplex: 'half',
+          // @ts-expect-error Readable is not part of RequestInit type yet
+          body: Readable.from(Buffer.from('test')),
+        });
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body.data).toBe('test');
+      });
+      it('should accept ReadableStream bodies', async () => {
+        const response = await fetchPonyfill(baseUrl + '/post', {
+          method: 'POST',
+          body: new PonyfillReadableStream({
+            async start(controller) {
+              await setTimeout(100);
+              controller.enqueue(Buffer.from('test'));
+              await setTimeout(100);
+              controller.close();
+            },
+          }),
+          // @ts-expect-error duplex is not part of RequestInit type yet
+          duplex: 'half',
+        });
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body.data).toBe('test');
+      });
       it('should accept Blob bodies', async () => {
         const response = await fetchPonyfill(baseUrl + '/post', {
           method: 'POST',
