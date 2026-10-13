@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
-import type { Readable, Writable } from 'node:stream';
+import { PassThrough, type Readable, type Writable } from 'node:stream';
 import {
   createDeferredPromise,
   fakePromise,
@@ -90,6 +90,8 @@ function isRequestBody(body: any): body is BodyInit {
   }
   return false;
 }
+
+const nodeRequestBodyBridgeByIncoming = new WeakMap<object, PassThrough>();
 
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
@@ -189,13 +191,23 @@ export function normalizeNodeRequest(
     });
   }
 
+  // Native undici Request pauses an unused IncomingMessage body (TLS uploads stall). Bridge
+  // through PassThrough so discard can unpipe and resume the real socket stream safely.
+  let requestBody: any = rawRequest;
+  if (fetchAPI.Request === globalThis.Request && isReadable(rawRequest)) {
+    const bridge = new PassThrough({ highWaterMark: 16 * 1024 });
+    (rawRequest as IncomingMessage).pipe(bridge);
+    nodeRequestBodyBridgeByIncoming.set(rawRequest as object, bridge);
+    requestBody = bridge;
+  }
+
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
     headers: normalizedHeaders,
     signal: controller.signal,
     // @ts-expect-error - AsyncIterable is supported as body
-    body: rawRequest,
+    body: requestBody,
     duplex: 'half',
   });
 }
@@ -242,7 +254,8 @@ function configureSocket(rawRequest: NodeRequest) {
  * bytes without destroying the socket (see Node.js `IncomingMessage` docs).
  *
  * We intentionally do not call `Request.body.cancel()` here: with the node-fetch ponyfill that
- * destroys the `IncomingMessage` and can RST keep-alive connections.
+ * destroys the `IncomingMessage` and can RST keep-alive connections. Native Request bodies are
+ * bridged via PassThrough in `normalizeNodeRequest` so we can unpipe before resume instead.
  *
  * GET/HEAD are skipped: there is no body to drain, and resuming those messages can interfere
  * with native fetch abort → response-body `cancel()` on some Node/TLS paths.
@@ -278,6 +291,13 @@ export function discardUnreadNodeRequestBody(
     !(rawRequest as IncomingMessage).readableEnded &&
     !(rawRequest as IncomingMessage).destroyed
   ) {
+    const bridge = nodeRequestBodyBridgeByIncoming.get(rawRequest as object);
+    if (bridge) {
+      nodeRequestBodyBridgeByIncoming.delete(rawRequest as object);
+      (rawRequest as IncomingMessage).unpipe(bridge);
+      bridge.removeAllListeners();
+      bridge.destroy();
+    }
     (rawRequest as IncomingMessage).resume();
   }
 }
