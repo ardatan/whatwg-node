@@ -75,8 +75,7 @@ describe('Request Listener', () => {
           });
         });
 
-        // Bun doesn't support incremental requests yet
-        skipIf(globalThis.Bun)(`should handle incremental requests with ${method}`, () => {
+        it(`should handle incremental requests with ${method}`, () => {
           const requestInit: RequestInit = {
             method,
             headers: {
