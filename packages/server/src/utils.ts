@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Http2ServerRequest, Http2ServerResponse } from 'node:http2';
 import type { Socket } from 'node:net';
-import { PassThrough, type Readable, type Writable } from 'node:stream';
+import type { Readable, Writable } from 'node:stream';
 import {
   createDeferredPromise,
   fakePromise,
@@ -90,8 +90,6 @@ function isRequestBody(body: any): body is BodyInit {
   }
   return false;
 }
-
-const nodeRequestBodyBridgeByIncoming = new WeakMap<object, PassThrough>();
 
 export function normalizeNodeRequest(
   nodeRequest: NodeRequest,
@@ -191,14 +189,18 @@ export function normalizeNodeRequest(
     });
   }
 
-  // Native undici Request pauses an unused IncomingMessage body (TLS uploads stall). Bridge
-  // through PassThrough so discard can unpipe and resume the real socket stream safely.
-  let requestBody: any = rawRequest;
+  // Native undici Request pauses an unused IncomingMessage, which stalls TLS uploads when the
+  // body is never read. Wrap it in a platform ReadableStream whose cancel() resumes the socket
+  // stream — no extra node:stream runtime import (PassThrough) required.
   if (fetchAPI.Request === globalThis.Request && isReadable(rawRequest)) {
-    const bridge = new PassThrough({ highWaterMark: 16 * 1024 });
-    (rawRequest as IncomingMessage).pipe(bridge);
-    nodeRequestBodyBridgeByIncoming.set(rawRequest as object, bridge);
-    requestBody = bridge;
+    return new fetchAPI.Request(fullUrl, {
+      method: nodeRequest.method,
+      headers: normalizedHeaders,
+      signal: controller.signal,
+      body: createNativeNodeRequestBodyStream(rawRequest as IncomingMessage, fetchAPI),
+      // @ts-expect-error duplex is required for streamed bodies in some runtimes
+      duplex: 'half',
+    });
   }
 
   // perf: instead of spreading the object, we can just pass it as is and it performs better
@@ -207,8 +209,95 @@ export function normalizeNodeRequest(
     headers: normalizedHeaders,
     signal: controller.signal,
     // @ts-expect-error - AsyncIterable is supported as body
-    body: requestBody,
+    body: rawRequest,
     duplex: 'half',
+  });
+}
+
+/**
+ * Adapter from Node `IncomingMessage` to a WHATWG `ReadableStream` for the platform Request.
+ *
+ * Uses flowing-mode `data` events with backpressure via pause/resume. `cancel()` resumes the
+ * IncomingMessage (does not destroy it) so keep-alive can drain unread bytes — same drain
+ * semantics as a PassThrough bridge, without a runtime `node:stream` import.
+ */
+function createNativeNodeRequestBodyStream(
+  rawRequest: IncomingMessage,
+  fetchAPI: FetchAPI,
+): ReadableStream<Uint8Array> {
+  let closed = false;
+  let detach: (() => void) | undefined;
+
+  return new fetchAPI.ReadableStream<Uint8Array>({
+    start(controller) {
+      const onData = (chunk: Buffer | Uint8Array) => {
+        if (closed) {
+          return;
+        }
+        try {
+          controller.enqueue(chunk);
+        } catch {
+          closed = true;
+          detach?.();
+          return;
+        }
+        if (controller.desiredSize != null && controller.desiredSize <= 0) {
+          rawRequest.pause();
+        }
+      };
+      const onEnd = () => {
+        if (closed) {
+          return;
+        }
+        closed = true;
+        detach?.();
+        try {
+          controller.close();
+        } catch {
+          // already closed/errored
+        }
+      };
+      const onError = (err: Error) => {
+        if (closed) {
+          return;
+        }
+        closed = true;
+        detach?.();
+        try {
+          controller.error(err);
+        } catch {
+          // already closed/errored
+        }
+      };
+      detach = () => {
+        rawRequest.off('data', onData);
+        rawRequest.off('end', onEnd);
+        rawRequest.off('error', onError);
+        detach = undefined;
+      };
+      rawRequest.on('data', onData);
+      rawRequest.on('end', onEnd);
+      rawRequest.on('error', onError);
+      // Attaching `data` switches IncomingMessage to flowing mode. Pause until the consumer
+      // pulls so an unread body does not fill the stream queue before discard/cancel.
+      rawRequest.pause();
+    },
+    pull() {
+      if (!closed && !rawRequest.readableEnded && !rawRequest.destroyed) {
+        rawRequest.resume();
+      }
+    },
+    cancel() {
+      closed = true;
+      detach?.();
+      if (
+        typeof rawRequest.resume === 'function' &&
+        !rawRequest.readableEnded &&
+        !rawRequest.destroyed
+      ) {
+        rawRequest.resume();
+      }
+    },
   });
 }
 
@@ -253,9 +342,10 @@ function configureSocket(rawRequest: NodeRequest) {
  * Resuming the underlying `IncomingMessage` puts it into flowing mode so Node drains remaining
  * bytes without destroying the socket (see Node.js `IncomingMessage` docs).
  *
- * We intentionally do not call `Request.body.cancel()` here: with the node-fetch ponyfill that
- * destroys the `IncomingMessage` and can RST keep-alive connections. Native Request bodies are
- * bridged via PassThrough in `normalizeNodeRequest` so we can unpipe before resume instead.
+ * We intentionally do not call `Request.body.cancel()` for the node-fetch ponyfill: that destroys
+ * the `IncomingMessage` and can RST keep-alive connections. For the platform `Request`, the body
+ * is a `ReadableStream` wrapper from `normalizeNodeRequest` whose `cancel()` resumes the socket
+ * stream, so cancel + resume is safe there.
  *
  * GET/HEAD are skipped: there is no body to drain, and resuming those messages can interfere
  * with native fetch abort → response-body `cancel()` on some Node/TLS paths.
@@ -291,12 +381,20 @@ export function discardUnreadNodeRequestBody(
     !(rawRequest as IncomingMessage).readableEnded &&
     !(rawRequest as IncomingMessage).destroyed
   ) {
-    const bridge = nodeRequestBodyBridgeByIncoming.get(rawRequest as object);
-    if (bridge) {
-      nodeRequestBodyBridgeByIncoming.delete(rawRequest as object);
-      (rawRequest as IncomingMessage).unpipe(bridge);
-      bridge.removeAllListeners();
-      bridge.destroy();
+    // Platform Request: cancel the web-stream wrapper so its cancel() can resume IncomingMessage.
+    // Ponyfill Request: skip cancel (it would destroy the socket-backed stream).
+    if (
+      fetchRequest != null &&
+      fetchRequest.constructor === globalThis.Request &&
+      fetchRequest.body != null &&
+      typeof fetchRequest.body.cancel === 'function'
+    ) {
+      try {
+        // Fire-and-forget; resume() below remains the drain path if cancel rejects.
+        Promise.resolve(fetchRequest.body.cancel()).catch(() => undefined);
+      } catch {
+        // resume() below remains the drain path
+      }
     }
     (rawRequest as IncomingMessage).resume();
   }
