@@ -92,6 +92,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-puppeteer-
             ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-
+      - name: Install Puppeteer Chrome
+        run: npx puppeteer browsers install chrome
       - parallel:
           - name: Unit Tests
             uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4
