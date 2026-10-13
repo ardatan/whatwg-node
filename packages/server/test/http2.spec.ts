@@ -11,8 +11,8 @@ import { runTestsForEachFetchImpl } from './test-fetch';
 
 const describeIf = (condition: boolean) => (condition ? describe : describe.skip);
 
-// HTTP2 is not supported fully on Bun and Deno
-describeIf(!globalThis.Bun && !globalThis.Deno)('http2', () => {
+// HTTP2 is not supported fully on Deno
+describeIf(!globalThis.Deno)('http2', () => {
   let server: Http2Server;
   let client: ClientHttp2Session;
 

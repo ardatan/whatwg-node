@@ -11,9 +11,8 @@ const NODE_MAJOR_VERSION = Number.parseInt(process.versions.node.split('.')[0], 
 const ABORT_POLL_INTERVAL_MS = 100;
 const MAX_ABORT_WAIT_MS = 5000;
 const MAX_ABORT_POLL_ATTEMPTS = MAX_ABORT_WAIT_MS / ABORT_POLL_INTERVAL_MS;
-// Bun does not support streams on Request body
-// Readable streams for fetch() are not available on Bun
-describeIf(!globalThis.Bun && !globalThis.Deno)('Proxy', () => {
+// Readable streams for fetch() are not available on Deno
+describeIf(!globalThis.Deno)('Proxy', () => {
   runTestsForEachFetchImpl(
     (fetchImplName, { createServerAdapter, fetchAPI: { fetch, Response, URL } }) => {
       let aborted: boolean = false;

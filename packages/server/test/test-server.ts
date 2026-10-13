@@ -103,9 +103,7 @@ export function createNodeHttpTestServer(): Promise<TestServer> {
           connections.forEach(socket => {
             socket.destroy();
           });
-          if (!globalThis.Bun) {
-            server.closeAllConnections();
-          }
+          server.closeAllConnections();
           return new Promise<void>((resolve, reject) => {
             server.close(err => {
               if (err) {
@@ -179,9 +177,7 @@ if (!globalThis.Deno && !globalThis.Bun && typeof tls.setDefaultCACertificates =
             connections.forEach(socket => {
               socket.destroy();
             });
-            if (!globalThis.Bun) {
-              server.closeAllConnections();
-            }
+            server.closeAllConnections();
             await new Promise<void>((resolve, reject) => {
               server.close(err => {
                 if (err) {
@@ -291,9 +287,7 @@ if (!globalThis.Deno && !globalThis.Bun) {
         sockets.forEach(socket => {
           socket.destroy();
         });
-        if (!globalThis.Bun) {
-          fastifyApp.server.closeAllConnections();
-        }
+        fastifyApp.server.closeAllConnections();
         await new Promise<void>((resolve, reject) => {
           fastifyApp.server.close(err => {
             if (err) {
@@ -409,9 +403,7 @@ if (globalThis.Bun) {
         for (const socket of sockets) {
           socket.destroy();
         }
-        if (!globalThis.Bun) {
-          server?.closeAllConnections();
-        }
+        server?.closeAllConnections();
         return new Promise<void>((resolve, reject) => {
           if (server) {
             server.close(err => {
@@ -519,9 +511,7 @@ if (globalThis.Bun) {
         for (const socket of sockets) {
           socket.destroy();
         }
-        if (!globalThis.Bun) {
-          server.listener.closeAllConnections();
-        }
+        server.listener.closeAllConnections();
         return server.stop();
       },
       async addOnceHandler(newHandler, ...ctxParts) {

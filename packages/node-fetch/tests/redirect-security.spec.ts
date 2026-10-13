@@ -287,43 +287,40 @@ describe('Redirect safety', () => {
         expect(body).toBe('secret-body');
       });
 
-      (globalThis.Bun ? it.skip : it)(
-        'rejects a 307 redirect when the body is a stream',
-        async () => {
-          await server.addOnceHandler(
-            createServerAdapter(
-              () =>
-                new fetchAPI.Response(null, {
-                  status: 307,
-                  headers: { Location: '/done' },
-                }),
-            ),
-          );
+      it('rejects a 307 redirect when the body is a stream', async () => {
+        await server.addOnceHandler(
+          createServerAdapter(
+            () =>
+              new fetchAPI.Response(null, {
+                status: 307,
+                headers: { Location: '/done' },
+              }),
+          ),
+        );
 
-          const stream = new fetchAPI.ReadableStream({
-            start(controller: ReadableStreamDefaultController<Uint8Array>) {
-              controller.enqueue(new TextEncoder().encode('secret-body'));
-              controller.close();
-            },
+        const stream = new fetchAPI.ReadableStream({
+          start(controller: ReadableStreamDefaultController<Uint8Array>) {
+            controller.enqueue(new TextEncoder().encode('secret-body'));
+            controller.close();
+          },
+        });
+
+        let error: unknown;
+        try {
+          const resolved = await fetchAPI.fetch(new URL('/start', server.url), {
+            method: 'POST',
+            body: stream,
+            headers: { 'Content-Type': 'text/plain' },
+            // Streaming request bodies require duplex, which is not on this RequestInit yet.
+            // @ts-expect-error duplex is not part of RequestInit type yet
+            duplex: 'half',
           });
-
-          let error: unknown;
-          try {
-            const resolved = await fetchAPI.fetch(new URL('/start', server.url), {
-              method: 'POST',
-              body: stream,
-              headers: { 'Content-Type': 'text/plain' },
-              // Streaming request bodies require duplex, which is not on this RequestInit yet.
-              // @ts-expect-error duplex is not part of RequestInit type yet
-              duplex: 'half',
-            });
-            await resolved.text();
-          } catch (caught) {
-            error = caught;
-          }
-          expect(errorText(error)).toMatch(/replay|body|failed|unusable|disturbed/i);
-        },
-      );
+          await resolved.text();
+        } catch (caught) {
+          error = caught;
+        }
+        expect(errorText(error)).toMatch(/replay|body|failed|unusable|disturbed/i);
+      });
 
       it('keeps POST method and body on a 307 redirect, without credential headers', async () => {
         let sinkMethod: string | undefined;
