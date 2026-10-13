@@ -190,9 +190,14 @@ export function normalizeNodeRequest(
   }
 
   // Native undici Request pauses an unused IncomingMessage, which stalls TLS uploads when the
-  // body is never read. Wrap it in a platform ReadableStream whose cancel() resumes the socket
-  // stream — no extra node:stream runtime import (PassThrough) required.
-  if (fetchAPI.Request === globalThis.Request && isReadable(rawRequest)) {
+  // body is never read. Only wrap on encrypted sockets (HTTPS): plain HTTP already drains via
+  // resume(). Track wrapped messages so discard can cancel our stream (not undici's).
+  if (
+    fetchAPI.Request === globalThis.Request &&
+    isReadable(rawRequest) &&
+    Boolean((rawRequest as any).socket?.encrypted)
+  ) {
+    nativeHttpsRequestBodyByIncoming.add(rawRequest as object);
     return new fetchAPI.Request(fullUrl, {
       method: nodeRequest.method,
       headers: normalizedHeaders,
@@ -357,6 +362,8 @@ function configureSocket(rawRequest: NodeRequest) {
  * wrapper (not the IncomingMessage), so identity must be checked via `request.body === response.body`.
  */
 const nodeRequestBodyHeldByResponse = new WeakSet<object>();
+/** IncomingMessages whose body was wrapped by {@link createNativeNodeRequestBodyStream}. */
+const nativeHttpsRequestBodyByIncoming = new WeakSet<object>();
 
 export function discardUnreadNodeRequestBody(
   nodeRequest: NodeRequest,
@@ -381,14 +388,14 @@ export function discardUnreadNodeRequestBody(
     !(rawRequest as IncomingMessage).readableEnded &&
     !(rawRequest as IncomingMessage).destroyed
   ) {
-    // Platform Request: cancel the web-stream wrapper so its cancel() can resume IncomingMessage.
-    // Ponyfill Request: skip cancel (it would destroy the socket-backed stream).
+    // Only cancel our HTTPS ReadableStream wrapper. Cancelling undici's native body (HTTP) or
+    // the ponyfill body can retain/destroy the socket and break keep-alive / leak tests.
     if (
-      fetchRequest != null &&
-      fetchRequest.constructor === globalThis.Request &&
-      fetchRequest.body != null &&
+      nativeHttpsRequestBodyByIncoming.has(rawRequest as object) &&
+      fetchRequest?.body != null &&
       typeof fetchRequest.body.cancel === 'function'
     ) {
+      nativeHttpsRequestBodyByIncoming.delete(rawRequest as object);
       try {
         // Fire-and-forget; resume() below remains the drain path if cancel rejects.
         Promise.resolve(fetchRequest.body.cancel()).catch(() => undefined);
