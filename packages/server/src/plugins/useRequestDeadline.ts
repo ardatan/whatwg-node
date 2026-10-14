@@ -38,7 +38,7 @@ export function useRequestDeadline<TServerContext = {}>(
   opts: RequestDeadlineOptions<TServerContext>,
 ): ServerAdapterPlugin<TServerContext> {
   return {
-    onRequest({ request, requestHandler, setRequestHandler, fetchAPI }) {
+    onRequest({ request, requestHandler, setRequestHandler }) {
       // AbortSignal.timeout() creates an internal timer with no cancellation handle, so it keeps
       // the event loop alive and holds memory for the full timeout duration even when the request
       // finishes early. using AbortController + setTimeout gives us a timer handle we can clearTimeout

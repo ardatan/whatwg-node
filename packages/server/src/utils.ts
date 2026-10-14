@@ -589,7 +589,7 @@ export function handleErrorFromRequestHandler(error: any, ResponseCtor: typeof R
 }
 
 interface IsolateObjectOptions<TIsolatedObject extends object> {
-  originalCtx: TIsolatedObject;
+  originalCtx?: TIsolatedObject | null;
   waitUntil?: WaitUntilFn;
   request?: Request;
   fetchAPI?: FetchAPI;
@@ -605,7 +605,11 @@ export function isolateObject<TIsolatedObject extends object>(
       fetchAPI: options.fetchAPI,
     } as TIsolatedObject;
   }
-  return completeAssign(
+  // Defaults first, then caller own props so non-enumerable descriptors (e.g. CF
+  // `waitUntil`) are preserved. Re-apply nullish reserved fields afterward so a
+  // caller `{ fetchAPI: undefined }` cannot wipe the computed fallback. Always
+  // re-apply an explicit Fetch `request` so it shadows framework `request` (Koa).
+  const isolated = completeAssign(
     Object.create(options.originalCtx),
     {
       waitUntil: options.waitUntil,
@@ -613,7 +617,26 @@ export function isolateObject<TIsolatedObject extends object>(
       fetchAPI: options.fetchAPI,
     },
     options.originalCtx,
-  );
+  ) as TIsolatedObject & {
+    waitUntil?: WaitUntilFn;
+    request?: Request;
+    fetchAPI?: FetchAPI;
+  };
+  if (isolated.waitUntil == null && options.waitUntil !== undefined) {
+    isolated.waitUntil = options.waitUntil;
+  }
+  if (options.request !== undefined) {
+    Object.defineProperty(isolated, 'request', {
+      value: options.request,
+      writable: true,
+      enumerable: true,
+      configurable: true,
+    });
+  }
+  if (isolated.fetchAPI == null && options.fetchAPI !== undefined) {
+    isolated.fetchAPI = options.fetchAPI;
+  }
+  return isolated;
 }
 
 export function handleAbortSignalAndPromiseResponse(

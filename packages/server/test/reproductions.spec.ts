@@ -205,10 +205,10 @@ it('if native Request object is sent, the native API is used during the request 
   let usedFetchAPIInPlugins: FetchAPI | undefined;
   let usedFetchAPIInHandler: FetchAPI | undefined;
   await using serverAdapter = createServerAdapter(
-    async (request, _ctx, fetchAPI) => {
+    async (request, ctx) => {
       const body = await request.json();
-      usedFetchAPIInHandler = fetchAPI;
-      return fetchAPI.Response.json(body);
+      usedFetchAPIInHandler = ctx.fetchAPI;
+      return ctx.fetchAPI.Response.json(body);
     },
     {
       plugins: [
@@ -252,10 +252,10 @@ it('if native Request object is sent without plugins, the native API is still us
     body: JSON.stringify({ hello: 'world' }),
   });
   let usedFetchAPIInHandler: FetchAPI | undefined;
-  await using serverAdapter = createServerAdapter(async (request, _ctx, fetchAPI) => {
+  await using serverAdapter = createServerAdapter(async (request, ctx) => {
     const body = await request.json();
-    usedFetchAPIInHandler = fetchAPI;
-    return fetchAPI.Response.json(body);
+    usedFetchAPIInHandler = ctx.fetchAPI;
+    return ctx.fetchAPI.Response.json(body);
   });
   const res = await serverAdapter.fetch(nativeRequest);
   expect(res).toBeInstanceOf(globalThis.Response);

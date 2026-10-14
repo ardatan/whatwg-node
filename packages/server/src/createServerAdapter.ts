@@ -268,12 +268,12 @@ function createServerAdapter<
                 onRequestHook({
                   request,
                   setRequest(newRequest) {
-                    request = newRequest;
-                    // Update the server context's request if it matches the old request
-                    // Ensure that the server context's request stays in sync with the updated request.
+                    // Compare against the current request before replacing it so the
+                    // context stays in sync when it still points at the old request.
                     if (serverContext.request === request) {
                       serverContext.request = newRequest;
                     }
+                    request = newRequest;
                   },
                   serverContext,
                   fetchAPI,
@@ -318,23 +318,24 @@ function createServerAdapter<
   ) {
     const nodeResponse: NodeResponse =
       (nodeResponseOrContainer as any).raw || nodeResponseOrContainer;
-    const serverContext = ctx.length > 1 ? completeAssign(...ctx) : ctx[0] || {};
-    // Ensure `waitUntil` is available in the server context
-    if (!serverContext.waitUntil) {
-      serverContext.waitUntil = waitUntil;
-    }
-    if (!serverContext.fetchAPI) {
-      serverContext.fetchAPI = expectedFetchAPI;
-    }
     const request = normalizeNodeRequest(
       nodeRequest,
       expectedFetchAPI,
       nodeResponse,
       useCustomAbortCtrl,
     );
-    if (!serverContext.request) {
-      serverContext.request = request;
-    }
+    const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
+    const originalCtx =
+      filteredCtxParts.length > 1 ? completeAssign({}, ...filteredCtxParts) : filteredCtxParts[0];
+    // Isolate so we never mutate a reused caller context (e.g. Koa), and always
+    // set the Fetch Request as an own property so it is not shadowed by
+    // framework `request` fields.
+    const serverContext = isolateObject({
+      originalCtx,
+      waitUntil: originalCtx?.waitUntil ?? waitUntil,
+      fetchAPI: originalCtx?.fetchAPI ?? expectedFetchAPI,
+      request,
+    });
     return handleMaybePromise(
       () => handleRequest(request, serverContext),
       response => {
@@ -381,15 +382,24 @@ function createServerAdapter<
   }
 
   function handleUWS(res: UWSResponse, req: UWSRequest, ...ctx: Partial<TServerContext>[]) {
-    let serverContext: any = {
-      res,
-      req,
-      waitUntil,
-      fetchAPI: expectedFetchAPI,
-    };
     const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
-    serverContext =
-      filteredCtxParts.length > 0 ? completeAssign(serverContext, ...ctx) : serverContext;
+    const originalCtx =
+      filteredCtxParts.length > 0
+        ? completeAssign(
+            {
+              res,
+              req,
+              waitUntil,
+              fetchAPI: expectedFetchAPI,
+            },
+            ...filteredCtxParts,
+          )
+        : {
+            res,
+            req,
+            waitUntil,
+            fetchAPI: expectedFetchAPI,
+          };
 
     const controller = useCustomAbortCtrl
       ? createCustomAbortControllerSignal()
@@ -414,9 +424,12 @@ function createServerAdapter<
       fetchAPI: expectedFetchAPI,
       controller,
     });
-    if (!serverContext.request) {
-      serverContext.request = request;
-    }
+    const serverContext = isolateObject({
+      originalCtx,
+      waitUntil: originalCtx.waitUntil ?? waitUntil,
+      fetchAPI: originalCtx.fetchAPI ?? expectedFetchAPI,
+      request,
+    });
     return handleMaybePromise(
       () =>
         handleMaybePromise(
@@ -446,27 +459,28 @@ function createServerAdapter<
       throw new TypeError(`Expected FetchEvent, got ${event}`);
     }
     const filteredCtxParts = ctx.filter(partCtx => partCtx != null);
-    const serverContext =
-      filteredCtxParts.length > 0
-        ? completeAssign({}, event, ...filteredCtxParts)
-        : isolateObject({
-            originalCtx: event,
-          });
+    const originalCtx =
+      filteredCtxParts.length > 0 ? completeAssign({}, event, ...filteredCtxParts) : event;
+    const serverContext = isolateObject({
+      originalCtx,
+      request: event.request,
+      waitUntil: originalCtx.waitUntil ?? event.waitUntil ?? waitUntil,
+      fetchAPI: originalCtx.fetchAPI ?? pickRightFetchAPI(event.request),
+    });
     const response$ = handleRequest(event.request, serverContext);
     event.respondWith(response$);
   }
 
   function handleRequestWithInitialContext(request: Request, ...ctx: Partial<TServerContext>[]) {
     const filteredCtxParts: any[] = ctx.filter(partCtx => partCtx != null);
-    const serverContext =
-      filteredCtxParts.length > 1
-        ? completeAssign({}, ...filteredCtxParts)
-        : isolateObject({
-            originalCtx: filteredCtxParts[0],
-            waitUntil: filteredCtxParts[0]?.waitUntil ?? waitUntil,
-            request,
-            fetchAPI: filteredCtxParts[0]?.fetchAPI ?? pickRightFetchAPI(request),
-          });
+    const originalCtx =
+      filteredCtxParts.length > 1 ? completeAssign({}, ...filteredCtxParts) : filteredCtxParts[0];
+    const serverContext = isolateObject({
+      originalCtx,
+      waitUntil: originalCtx?.waitUntil ?? waitUntil,
+      request,
+      fetchAPI: originalCtx?.fetchAPI ?? pickRightFetchAPI(request),
+    });
     return handleRequest(request, serverContext);
   }
 
