@@ -147,11 +147,12 @@ export type ServerAdapterInitialContext = {
    */
   waitUntil: WaitUntilFn;
   /**
-   * The incoming request object associated with the current server context.
+   * The incoming Fetch `Request` associated with the current server context.
    *
-   * This is typically an instance of the standard `Request` object used in the Fetch API.
+   * Always the WHATWG Request for this invocation (an own property), even when the
+   * caller context also exposes a framework `request` (e.g. Koa) on the prototype.
    */
-  request: object;
+  request: Request;
   /**
    * WHATWG Fetch API instance associated with the current server context.
    */
