@@ -189,6 +189,24 @@ export function normalizeNodeRequest(
     });
   }
 
+  // Native undici Request pauses an unused IncomingMessage, which stalls TLS uploads when the
+  // body is never read. Only wrap on encrypted sockets (HTTPS): plain HTTP already drains via
+  // resume().
+  if (
+    fetchAPI.Request === globalThis.Request &&
+    isReadable(rawRequest) &&
+    Boolean((rawRequest as any).socket?.encrypted)
+  ) {
+    return new fetchAPI.Request(fullUrl, {
+      method: nodeRequest.method,
+      headers: normalizedHeaders,
+      signal: controller.signal,
+      body: createNativeNodeRequestBodyStream(rawRequest as IncomingMessage, fetchAPI),
+      // @ts-expect-error duplex is required for streamed bodies in some runtimes
+      duplex: 'half',
+    });
+  }
+
   // perf: instead of spreading the object, we can just pass it as is and it performs better
   return new fetchAPI.Request(fullUrl, {
     method: nodeRequest.method,
@@ -197,6 +215,105 @@ export function normalizeNodeRequest(
     // @ts-expect-error - AsyncIterable is supported as body
     body: rawRequest,
     duplex: 'half',
+  });
+}
+
+/** Drain helpers for HTTPS bodies wrapped by {@link createNativeNodeRequestBodyStream}. */
+const nativeHttpsRequestBodyDrainByIncoming = new WeakMap<object, () => void>();
+
+/**
+ * Adapter from Node `IncomingMessage` to a WHATWG `ReadableStream` for the platform Request.
+ *
+ * Listeners attach on first pull (not in start) so an unread body does not pin the socket.
+ * Discard drains via {@link nativeHttpsRequestBodyDrainByIncoming} — not `body.cancel()` —
+ * so we never leave a floating cancel promise retaining the Request graph.
+ */
+function createNativeNodeRequestBodyStream(
+  rawRequest: IncomingMessage,
+  fetchAPI: FetchAPI,
+): ReadableStream<Uint8Array> {
+  let closed = false;
+  let attached = false;
+  let detach: (() => void) | undefined;
+
+  const drain = () => {
+    closed = true;
+    detach?.();
+    nativeHttpsRequestBodyDrainByIncoming.delete(rawRequest as object);
+    if (
+      typeof rawRequest.resume === 'function' &&
+      !rawRequest.readableEnded &&
+      !rawRequest.destroyed
+    ) {
+      rawRequest.resume();
+    }
+  };
+  nativeHttpsRequestBodyDrainByIncoming.set(rawRequest as object, drain);
+
+  return new fetchAPI.ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (closed) {
+        return;
+      }
+      if (!attached) {
+        attached = true;
+        const onData = (chunk: Buffer | Uint8Array) => {
+          if (closed) {
+            return;
+          }
+          try {
+            controller.enqueue(chunk);
+          } catch {
+            drain();
+            return;
+          }
+          if (controller.desiredSize != null && controller.desiredSize <= 0) {
+            rawRequest.pause();
+          }
+        };
+        const onEnd = () => {
+          if (closed) {
+            return;
+          }
+          closed = true;
+          detach?.();
+          nativeHttpsRequestBodyDrainByIncoming.delete(rawRequest as object);
+          try {
+            controller.close();
+          } catch {
+            // already closed/errored
+          }
+        };
+        const onError = (err: Error) => {
+          if (closed) {
+            return;
+          }
+          closed = true;
+          detach?.();
+          nativeHttpsRequestBodyDrainByIncoming.delete(rawRequest as object);
+          try {
+            controller.error(err);
+          } catch {
+            // already closed/errored
+          }
+        };
+        detach = () => {
+          rawRequest.off('data', onData);
+          rawRequest.off('end', onEnd);
+          rawRequest.off('error', onError);
+          detach = undefined;
+        };
+        rawRequest.on('data', onData);
+        rawRequest.on('end', onEnd);
+        rawRequest.on('error', onError);
+      }
+      if (!rawRequest.readableEnded && !rawRequest.destroyed) {
+        rawRequest.resume();
+      }
+    },
+    cancel() {
+      drain();
+    },
   });
 }
 
@@ -241,8 +358,9 @@ function configureSocket(rawRequest: NodeRequest) {
  * Resuming the underlying `IncomingMessage` puts it into flowing mode so Node drains remaining
  * bytes without destroying the socket (see Node.js `IncomingMessage` docs).
  *
- * We intentionally do not call `Request.body.cancel()` here: with the node-fetch ponyfill that
- * destroys the `IncomingMessage` and can RST keep-alive connections.
+ * We intentionally do not call `Request.body.cancel()`: ponyfill cancel destroys the
+ * `IncomingMessage` (RST keep-alive), and native cancel can retain the Request graph via a
+ * floating promise under Jest `--detectLeaks`. HTTPS wrappers register a sync drain instead.
  *
  * GET/HEAD are skipped: there is no body to drain, and resuming those messages can interfere
  * with native fetch abort → response-body `cancel()` on some Node/TLS paths.
@@ -278,6 +396,11 @@ export function discardUnreadNodeRequestBody(
     !(rawRequest as IncomingMessage).readableEnded &&
     !(rawRequest as IncomingMessage).destroyed
   ) {
+    const drainHttpsWrapper = nativeHttpsRequestBodyDrainByIncoming.get(rawRequest as object);
+    if (drainHttpsWrapper) {
+      drainHttpsWrapper();
+      return;
+    }
     (rawRequest as IncomingMessage).resume();
   }
 }
