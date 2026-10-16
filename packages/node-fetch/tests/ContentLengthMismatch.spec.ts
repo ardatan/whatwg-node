@@ -82,7 +82,7 @@ describe('Content-Length mismatch enforcement', () => {
     await expect(request.text()).resolves.toBe('any length is fine');
   });
 
-  it('rejects a buffered body that is larger than Content-Length', async () => {
+  it('rejects a buffered body that is larger than Content-Length without streaming', async () => {
     const large = Buffer.alloc(1024, 0x61);
     const request = new PonyfillRequest('http://localhost/test', {
       method: 'POST',
@@ -94,6 +94,23 @@ describe('Content-Length mismatch enforcement', () => {
     });
 
     await expect(request.arrayBuffer()).rejects.toThrow(ContentLengthMismatchError);
+  });
+
+  it('rejects a streamed body via text() by counting chunks (no raw .body access)', async () => {
+    const encoder = new TextEncoder();
+    const stream = Readable.from([encoder.encode('hello'), encoder.encode(' world')]);
+
+    const request = new PonyfillRequest('http://localhost/test', {
+      method: 'POST',
+      headers: {
+        'content-type': 'text/plain',
+        'content-length': '5',
+      },
+      body: stream,
+      duplex: 'half',
+    });
+
+    await expect(request.text()).rejects.toThrow(ContentLengthMismatchError);
   });
 
   it('rejects when a single chunk is larger than Content-Length without delivering it', async () => {

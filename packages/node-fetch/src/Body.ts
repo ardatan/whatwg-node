@@ -83,6 +83,26 @@ export class PonyfillBody<TJSON = any> implements Body {
     return this._enforceContentLength && Number.isFinite(this.contentLength);
   }
 
+  /**
+   * Known size for static body inits (string / Buffer / Blob / empty).
+   * `null` means the body is a dynamic stream and length is only known while reading.
+   */
+  private getKnownStaticByteLength(): number | null {
+    if (this.bodyInit == null) {
+      return 0;
+    }
+    if (typeof this.bodyInit === 'string') {
+      return Buffer.byteLength(this.bodyInit);
+    }
+    if (this._buffer) {
+      return this._buffer.byteLength;
+    }
+    if (this.bodyType === BodyInitType.Blob) {
+      return (this.bodyInit as PonyfillBlob).size;
+    }
+    return null;
+  }
+
   private assertExactContentLength(byteLength: number): void {
     if (!this.shouldEnforceContentLength()) {
       return;
@@ -101,7 +121,13 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
   }
 
-  private generateBody(): PonyfillReadableStream<Uint8Array> | null {
+  /**
+   * @param forRawStreamAccess - When true (`.body` / `formData` pipe), dynamic
+   * streams are wrapped with a Transform that counts bytes. Static inits never
+   * need that: size is known up front. Chunk-collect paths (`text` / `buffer`)
+   * pass false and count while pushing into `_chunks` instead.
+   */
+  private generateBody(forRawStreamAccess = false): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody?.readable?.destroyed && this._buffer) {
       this._generatedBody.readable = Readable.from(this._buffer);
     }
@@ -111,7 +137,16 @@ export class PonyfillBody<TJSON = any> implements Body {
     let body = this._bodyFactory();
 
     if (body != null && this.shouldEnforceContentLength()) {
-      body = wrapReadableWithContentLengthCheck(body, this.contentLength!);
+      const known = this.getKnownStaticByteLength();
+      if (known != null) {
+        if (known !== this.contentLength) {
+          // Fail without reading: static size already disagrees with Content-Length.
+          body = createImmediateErrorReadableStream(new ContentLengthMismatchError());
+        }
+        // Matching static size — expose the body factory stream as-is (no Transform).
+      } else if (forRawStreamAccess) {
+        body = wrapReadableWithContentLengthCheck(body, this.contentLength!);
+      }
     }
 
     this._generatedBody = body;
@@ -160,7 +195,8 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 
   public get body(): PonyfillReadableStream<Uint8Array<ArrayBuffer>> | null {
-    const _body = this.generateBody();
+    // Raw stream consumers need Transform-based counting for dynamic bodies.
+    const _body = this.generateBody(true);
     if (_body != null) {
       const ponyfillReadableStream = _body;
       const readable = _body.readable;
@@ -189,11 +225,11 @@ export class PonyfillBody<TJSON = any> implements Body {
   _chunks: MaybePromise<Uint8Array<ArrayBuffer>[]> | null = null;
 
   _doCollectChunksFromReadableJob() {
+    const enforce = this.shouldEnforceContentLength();
+    const expected = this.contentLength as number;
+
     if (this.bodyType === BodyInitType.AsyncIterable) {
-      // Route through generateBody so Content-Length enforcement wraps the stream.
-      if (this.shouldEnforceContentLength()) {
-        // fall through to the stream collector below
-      } else if (Array.fromAsync) {
+      if (Array.fromAsync && !enforce) {
         return handleMaybePromise(
           () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>),
           chunks => {
@@ -201,29 +237,39 @@ export class PonyfillBody<TJSON = any> implements Body {
             return this._chunks;
           },
         );
-      } else {
-        const iterator = (this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>)[
-          Symbol.asyncIterator
-        ]();
-        const chunks: Uint8Array<ArrayBuffer>[] = [];
-        const collectValue = (): MaybePromise<Uint8Array<ArrayBuffer>[]> =>
-          handleMaybePromise(
-            () => iterator.next(),
-            ({ value, done }) => {
-              if (value) {
-                chunks.push(value);
-              }
-              if (!done) {
-                return collectValue();
-              }
-              this._chunks = chunks;
-              return this._chunks;
-            },
-          );
-        return collectValue();
       }
+      const iterator = (this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>)[
+        Symbol.asyncIterator
+      ]();
+      const chunks: Uint8Array<ArrayBuffer>[] = [];
+      let bytesRead = 0;
+      const collectValue = (): MaybePromise<Uint8Array<ArrayBuffer>[]> =>
+        handleMaybePromise(
+          () => iterator.next(),
+          ({ value, done }) => {
+            if (value) {
+              if (enforce) {
+                if (bytesRead + value.byteLength > expected) {
+                  throw new ContentLengthMismatchError();
+                }
+                bytesRead += value.byteLength;
+              }
+              chunks.push(value);
+            }
+            if (!done) {
+              return collectValue();
+            }
+            if (enforce && bytesRead !== expected) {
+              throw new ContentLengthMismatchError();
+            }
+            this._chunks = chunks;
+            return this._chunks;
+          },
+        );
+      return collectValue();
     }
-    const _body = this.generateBody();
+    // Collect path: no Transform — count while buffering chunks.
+    const _body = this.generateBody(false);
     if (!_body) {
       const rejected = this.rejectedContentLengthMismatch(0);
       if (rejected) {
@@ -240,12 +286,25 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise((this._chunks = []));
     }
     const chunks: Uint8Array<ArrayBuffer>[] = [];
+    let bytesRead = 0;
     return new Promise<Uint8Array<ArrayBuffer>[]>((resolve, reject) => {
       _body.readable.on('data', chunk => {
+        if (enforce) {
+          const size = (chunk as Uint8Array).byteLength;
+          if (bytesRead + size > expected) {
+            _body.readable.destroy(new ContentLengthMismatchError());
+            return;
+          }
+          bytesRead += size;
+        }
         chunks.push(chunk);
       });
       _body.readable.once('error', reject);
       _body.readable.once('end', () => {
+        if (enforce && bytesRead !== expected) {
+          reject(new ContentLengthMismatchError());
+          return;
+        }
         resolve((this._chunks = chunks));
       });
     });
@@ -321,8 +380,9 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise(this._formData);
     }
     this._formData = new PonyfillFormData();
-    const _body = this.generateBody();
-    if (_body == null) {
+    // Use `.body` so dynamic streams get Transform-based Content-Length enforcement.
+    const stream = this.body?.readable;
+    if (!stream) {
       return fakePromise(this._formData);
     }
     const formDataLimits = {
@@ -330,11 +390,6 @@ export class PonyfillBody<TJSON = any> implements Body {
       ...opts?.formDataLimits,
     };
     return new Promise((resolve, reject) => {
-      const stream = this.body?.readable;
-      if (!stream) {
-        return reject(new Error('No stream available'));
-      }
-
       // form data file that is currently being processed, it's
       // important to keep track of it in case the stream ends early
       let currFile: BusboyFileStream | null = null;
@@ -454,7 +509,11 @@ export class PonyfillBody<TJSON = any> implements Body {
         return this._buffer;
       });
     }
-    if (this.bodyType === BodyInitType.Blob && !this.shouldEnforceContentLength()) {
+    if (this.bodyType === BodyInitType.Blob) {
+      const rejected = this.rejectedContentLengthMismatch((this.bodyInit as PonyfillBlob).size);
+      if (rejected) {
+        return rejected;
+      }
       if (hasBufferMethod(this.bodyInit)) {
         return this.bodyInit.buffer().then(buf => {
           this._buffer = buf;
@@ -538,9 +597,19 @@ export class PonyfillBody<TJSON = any> implements Body {
   }
 }
 
+/** ReadableStream that errors on first pull — used when static size ≠ Content-Length. */
+function createImmediateErrorReadableStream(error: Error): PonyfillReadableStream<Uint8Array> {
+  return new PonyfillReadableStream<Uint8Array>({
+    start(controller) {
+      controller.error(error);
+    },
+  });
+}
+
 /**
- * Counts bytes while reading and rejects as soon as the stream would deliver
- * more than `contentLength`. Ending with fewer bytes is also a mismatch.
+ * Counts bytes while reading a dynamic body via `.body` and rejects as soon as
+ * the stream would deliver more than `contentLength`. Ending short is also a mismatch.
+ * Only used for raw stream access — collect paths count in `_doCollectChunksFromReadableJob`.
  */
 function wrapReadableWithContentLengthCheck(
   body: PonyfillReadableStream<Uint8Array>,
