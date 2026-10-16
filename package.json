@@ -39,11 +39,11 @@
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js.git#v20.71.0"
   },
   "devDependencies": {
-    "@babel/core": "8.0.6",
+    "@babel/core": "8.0.7",
     "@babel/plugin-transform-class-properties": "8.0.1",
     "@babel/plugin-transform-explicit-resource-management": "8.0.5",
-    "@babel/preset-env": "8.0.6",
-    "@babel/preset-typescript": "8.0.1",
+    "@babel/preset-env": "8.0.7",
+    "@babel/preset-typescript": "8.0.7",
     "@changesets/changelog-github": "1.0.1",
     "@changesets/cli": "3.0.3",
     "@eslint/eslintrc": "3.3.7",
