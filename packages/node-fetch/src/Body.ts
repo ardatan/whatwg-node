@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Buffer } from 'node:buffer';
-import { addAbortSignal, Readable } from 'node:stream';
+import { addAbortSignal, Readable, Transform } from 'node:stream';
 import { Busboy, BusboyFileStream } from '@fastify/busboy';
-import { handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
+import { fakeRejectPromise, handleMaybePromise, MaybePromise } from '@whatwg-node/promise-helpers';
 import { hasArrayBufferMethod, hasBufferMethod, hasBytesMethod, PonyfillBlob } from './Blob.js';
+import { ContentLengthMismatchError } from './ContentLengthMismatchError.js';
 import { PonyfillFile } from './File.js';
 import { getStreamFromFormData, PonyfillFormData } from './FormData.js';
 import { PonyfillReadableStream } from './ReadableStream.js';
@@ -51,6 +52,12 @@ export class PonyfillBody<TJSON = any> implements Body {
   bodyUsed = false;
   contentType: string | null = null;
   contentLength: number | null = null;
+  /**
+   * When true, body reads enforce that the byte count matches `contentLength`
+   * (taken from a caller-supplied `Content-Length` header). Excess data fails
+   * as soon as it is observed.
+   */
+  private _enforceContentLength = false;
 
   constructor(
     private bodyInit: BodyPonyfillInit | null,
@@ -72,6 +79,28 @@ export class PonyfillBody<TJSON = any> implements Body {
   private _buffer?: Buffer<ArrayBuffer> | undefined;
   _signal?: AbortSignal | undefined;
 
+  private shouldEnforceContentLength(): boolean {
+    return this._enforceContentLength && Number.isFinite(this.contentLength);
+  }
+
+  private assertExactContentLength(byteLength: number): void {
+    if (!this.shouldEnforceContentLength()) {
+      return;
+    }
+    if (byteLength !== this.contentLength) {
+      throw new ContentLengthMismatchError();
+    }
+  }
+
+  private rejectedContentLengthMismatch(byteLength: number): Promise<never> | null {
+    try {
+      this.assertExactContentLength(byteLength);
+      return null;
+    } catch (err) {
+      return fakeRejectPromise(err);
+    }
+  }
+
   private generateBody(): PonyfillReadableStream<Uint8Array> | null {
     if (this._generatedBody?.readable?.destroyed && this._buffer) {
       this._generatedBody.readable = Readable.from(this._buffer);
@@ -79,14 +108,27 @@ export class PonyfillBody<TJSON = any> implements Body {
     if (this._generatedBody) {
       return this._generatedBody;
     }
-    const body = this._bodyFactory();
+    let body = this._bodyFactory();
+
+    if (body != null && this.shouldEnforceContentLength()) {
+      body = wrapReadableWithContentLengthCheck(body, this.contentLength!);
+    }
 
     this._generatedBody = body;
 
     return body;
   }
 
-  protected handleContentLengthHeader(this: PonyfillBody & { headers: Headers }, forceSet = false) {
+  protected handleContentLengthHeader(
+    this: PonyfillBody & { headers: Headers },
+    forceSet = false,
+    /**
+     * When true (Request), body reads must match a caller-supplied Content-Length.
+     * Response keeps this false — response bodies are often streamed without a
+     * trustworthy length, and synthetic error responses may carry Content-Length: 0.
+     */
+    enforceFromHeader = false,
+  ) {
     const contentTypeInHeaders = this.headers.get('content-type');
     if (!contentTypeInHeaders) {
       if (this.contentType) {
@@ -109,6 +151,11 @@ export class PonyfillBody<TJSON = any> implements Body {
       }
     } else {
       this.contentLength = parseInt(contentLengthInHeaders, 10);
+      // Only enforce on Request when the header was supplied by the caller
+      // (client / adapter), not when we derived Content-Length from a known-size body init.
+      if (enforceFromHeader) {
+        this._enforceContentLength = true;
+      }
     }
   }
 
@@ -143,7 +190,10 @@ export class PonyfillBody<TJSON = any> implements Body {
 
   _doCollectChunksFromReadableJob() {
     if (this.bodyType === BodyInitType.AsyncIterable) {
-      if (Array.fromAsync) {
+      // Route through generateBody so Content-Length enforcement wraps the stream.
+      if (this.shouldEnforceContentLength()) {
+        // fall through to the stream collector below
+      } else if (Array.fromAsync) {
         return handleMaybePromise(
           () => Array.fromAsync(this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>),
           chunks => {
@@ -151,33 +201,42 @@ export class PonyfillBody<TJSON = any> implements Body {
             return this._chunks;
           },
         );
+      } else {
+        const iterator = (this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>)[
+          Symbol.asyncIterator
+        ]();
+        const chunks: Uint8Array<ArrayBuffer>[] = [];
+        const collectValue = (): MaybePromise<Uint8Array<ArrayBuffer>[]> =>
+          handleMaybePromise(
+            () => iterator.next(),
+            ({ value, done }) => {
+              if (value) {
+                chunks.push(value);
+              }
+              if (!done) {
+                return collectValue();
+              }
+              this._chunks = chunks;
+              return this._chunks;
+            },
+          );
+        return collectValue();
       }
-      const iterator = (this.bodyInit as AsyncIterable<Uint8Array<ArrayBuffer>>)[
-        Symbol.asyncIterator
-      ]();
-      const chunks: Uint8Array<ArrayBuffer>[] = [];
-      const collectValue = (): MaybePromise<Uint8Array<ArrayBuffer>[]> =>
-        handleMaybePromise(
-          () => iterator.next(),
-          ({ value, done }) => {
-            if (value) {
-              chunks.push(value);
-            }
-            if (!done) {
-              return collectValue();
-            }
-            this._chunks = chunks;
-            return this._chunks;
-          },
-        );
-      return collectValue();
     }
     const _body = this.generateBody();
     if (!_body) {
+      const rejected = this.rejectedContentLengthMismatch(0);
+      if (rejected) {
+        return rejected;
+      }
       this._chunks = [];
       return fakePromise(this._chunks);
     }
     if (_body.readable.destroyed) {
+      const rejected = this.rejectedContentLengthMismatch(0);
+      if (rejected) {
+        return rejected;
+      }
       return fakePromise((this._chunks = []));
     }
     const chunks: Uint8Array<ArrayBuffer>[] = [];
@@ -208,16 +267,29 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
     if (this.bodyType === BodyInitType.String) {
       this._text = this.bodyInit as string;
+      const rejected = this.rejectedContentLengthMismatch(Buffer.byteLength(this._text));
+      if (rejected) {
+        return rejected;
+      }
       this._blob = new PonyfillBlob([this._text], {
         type: this.contentType || 'text/plain;charset=UTF-8',
         size: this.contentLength,
       });
+      return fakePromise(this._blob);
     }
     if (this.bodyType === BodyInitType.Blob) {
       this._blob = this.bodyInit as PonyfillBlob;
+      const rejected = this.rejectedContentLengthMismatch(this._blob.size);
+      if (rejected) {
+        return rejected;
+      }
       return fakePromise(this._blob);
     }
     if (this._buffer) {
+      const rejected = this.rejectedContentLengthMismatch(this._buffer.byteLength);
+      if (rejected) {
+        return rejected;
+      }
       this._blob = new PonyfillBlob([this._buffer], {
         type: this.contentType || '',
         size: this.contentLength,
@@ -361,10 +433,18 @@ export class PonyfillBody<TJSON = any> implements Body {
 
   buffer(): Promise<Buffer<ArrayBuffer>> {
     if (this._buffer) {
+      const rejected = this.rejectedContentLengthMismatch(this._buffer.byteLength);
+      if (rejected) {
+        return rejected;
+      }
       return fakePromise(this._buffer);
     }
     if (this._text) {
       this._buffer = Buffer.from(this._text, 'utf-8');
+      const rejected = this.rejectedContentLengthMismatch(this._buffer.byteLength);
+      if (rejected) {
+        return rejected;
+      }
       return fakePromise(this._buffer);
     }
     if (this.bodyType === BodyInitType.String) {
@@ -374,7 +454,7 @@ export class PonyfillBody<TJSON = any> implements Body {
         return this._buffer;
       });
     }
-    if (this.bodyType === BodyInitType.Blob) {
+    if (this.bodyType === BodyInitType.Blob && !this.shouldEnforceContentLength()) {
       if (hasBufferMethod(this.bodyInit)) {
         return this.bodyInit.buffer().then(buf => {
           this._buffer = buf;
@@ -445,6 +525,10 @@ export class PonyfillBody<TJSON = any> implements Body {
     }
     if (this.bodyType === BodyInitType.String) {
       this._text = this.bodyInit as string;
+      const rejected = this.rejectedContentLengthMismatch(Buffer.byteLength(this._text));
+      if (rejected) {
+        return rejected;
+      }
       return fakePromise(this._text);
     }
     return this.buffer().then(buffer => {
@@ -452,6 +536,40 @@ export class PonyfillBody<TJSON = any> implements Body {
       return this._text;
     });
   }
+}
+
+/**
+ * Counts bytes while reading and rejects as soon as the stream would deliver
+ * more than `contentLength`. Ending with fewer bytes is also a mismatch.
+ */
+function wrapReadableWithContentLengthCheck(
+  body: PonyfillReadableStream<Uint8Array>,
+  contentLength: number,
+): PonyfillReadableStream<Uint8Array> {
+  let bytesRead = 0;
+  const transform = new Transform({
+    transform(chunk, _encoding, callback) {
+      const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      if (bytesRead + buf.byteLength > contentLength) {
+        callback(new ContentLengthMismatchError());
+        return;
+      }
+      bytesRead += buf.byteLength;
+      callback(null, buf);
+    },
+    flush(callback) {
+      if (bytesRead !== contentLength) {
+        callback(new ContentLengthMismatchError());
+        return;
+      }
+      callback();
+    },
+  });
+  body.readable.pipe(transform);
+  body.readable.on('error', (err: Error) => {
+    transform.destroy(err);
+  });
+  return new PonyfillReadableStream<Uint8Array>(transform);
 }
 
 function processBodyInit(bodyInit: BodyPonyfillInit | null): {
