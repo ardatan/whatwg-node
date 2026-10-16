@@ -24,7 +24,7 @@ describe('Server Context', () => {
     });
     it('filters empty ctx', async () => {
       const adapter = createServerAdapter<any>(function handler(_req, ctx) {
-        return Response.json(ctx);
+        return Response.json({ foo: ctx.foo, bar: ctx.bar });
       });
       const ctxParts: any[] = [undefined, undefined, { foo: 'bar' }, undefined, { bar: 'baz' }];
       const res = await adapter(new Request('https://example.com'), ...ctxParts);

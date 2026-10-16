@@ -56,7 +56,7 @@ export function useErrorHandling<TServerContext>(
       const errorHandler = onError || createDefaultErrorHandler<TServerContext>(fetchAPI.Response);
       setRequestHandler(function handlerWithErrorHandling(request, serverContext) {
         return handleMaybePromise(
-          () => requestHandler(request, serverContext, fetchAPI),
+          () => requestHandler(request, serverContext),
           response => response,
           e =>
             errorHandler(e, request, serverContext, fetchAPI) ||

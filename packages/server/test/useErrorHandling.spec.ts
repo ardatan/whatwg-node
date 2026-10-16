@@ -26,9 +26,14 @@ describe('useErrorHandling', () => {
       expect(errorHandler).toHaveBeenCalledWith(
         new Error('Unexpected error'),
         request,
-        {
+        expect.objectContaining({
           waitUntil: expect.any(Function),
-        },
+          request,
+          fetchAPI: expect.objectContaining({
+            Request: fetchAPI.Request,
+            Response: fetchAPI.Response,
+          }),
+        }),
         expect.objectContaining({
           Request: fetchAPI.Request,
           Response: fetchAPI.Response,

@@ -126,15 +126,14 @@ export type ServerAdapter<
 export type ServerAdapterRequestHandler<TServerContext> = (
   request: Request,
   ctx: TServerContext & ServerAdapterInitialContext,
-  fetchAPI: FetchAPI,
 ) => MaybePromise<Response>;
 
-export type ServerAdapterNodeContext = {
+export type ServerAdapterNodeContext = ServerAdapterInitialContext & {
   req: NodeRequest;
   res: NodeResponse;
 };
 
-export type WaitUntilFn = (promise: Promise<void> | void) => void;
+export type WaitUntilFn = (promise: MaybePromise<void>) => void;
 
 export type FetchAPI = ReturnType<typeof import('@whatwg-node/fetch').createFetch>;
 
@@ -147,4 +146,17 @@ export type ServerAdapterInitialContext = {
    * @returns
    */
   waitUntil: WaitUntilFn;
+  /**
+   * The incoming request associated with the current server context.
+   *
+   * At runtime this is always the WHATWG Fetch `Request` for the invocation (set as
+   * an own property, so it shadows a framework `request` such as Koa's on the
+   * prototype). Typed as `object` so framework contexts that already declare
+   * `request` remain assignable to `Partial<ServerAdapterInitialContext>`.
+   */
+  request: object;
+  /**
+   * WHATWG Fetch API instance associated with the current server context.
+   */
+  fetchAPI: FetchAPI;
 };
