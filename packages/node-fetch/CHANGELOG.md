@@ -1,5 +1,17 @@
 # @whatwg-node/node-fetch
 
+## 0.9.2
+
+### Patch Changes
+
+- [#3694](https://github.com/ardatan/whatwg-node/pull/3694)
+  [`f927bd2`](https://github.com/ardatan/whatwg-node/commit/f927bd2cf77b2e4b5eaf62dce374c976412b7527)
+  Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies
+  updates:
+  - Updated dependency
+    [`@fastify/busboy@^3.2.3` ↗︎](https://www.npmjs.com/package/@fastify/busboy/v/3.2.3)
+    (from `^3.1.1`, in `dependencies`)
+
 ## 0.9.1
 
 ### Patch Changes
