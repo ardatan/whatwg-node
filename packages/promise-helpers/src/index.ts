@@ -7,7 +7,7 @@ export function isPromise<T>(value: MaybePromise<T>): value is Promise<T>;
 export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T>;
 export function isPromise<T>(value: MaybePromiseLike<T>): value is PromiseLike<T> {
   const maybePromise = value as any;
-  return maybePromise?.then != null && typeof maybePromise.then === 'function';
+  return typeof maybePromise?.then === 'function';
 }
 
 export function isActualPromise<T>(value: MaybePromiseLike<T>): value is Promise<T> {
