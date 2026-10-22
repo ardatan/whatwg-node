@@ -197,6 +197,44 @@ pullCount: 3
     expect((cancelledWith as Error).message).toBe('stop');
   });
 
+  it('reader.cancel(reason) fulfills a pending read() as done (WHATWG)', async () => {
+    let cancelledWith: unknown;
+    const rs = new PonyfillReadableStream({
+      start() {
+        // hang until cancel
+      },
+      cancel(reason) {
+        cancelledWith = reason;
+      },
+    });
+    const reader = rs.getReader();
+    const pendingRead = reader.read();
+    const reason = new Error('Oops!');
+    queueMicrotask(() => {
+      reader.cancel(reason).catch(() => undefined);
+    });
+    await expect(pendingRead).resolves.toEqual({ done: true, value: undefined });
+    expect(cancelledWith).toBe(reason);
+  });
+
+  it('stream.cancel(reason) fulfills a pending read() as done, not Premature close', async () => {
+    let cancelledWith: unknown;
+    const rs = new PonyfillReadableStream({
+      start() {},
+      cancel(reason) {
+        cancelledWith = reason;
+      },
+    });
+    const reader = rs.getReader();
+    const pendingRead = reader.read();
+    const reason = new Error('Oops!');
+    queueMicrotask(() => {
+      rs.cancel(reason).catch(() => undefined);
+    });
+    await expect(pendingRead).resolves.toEqual({ done: true, value: undefined });
+    expect(cancelledWith).toBe(reason);
+  });
+
   it('cancel(reason) resolves when there is no cancel hook', async () => {
     const rs = new PonyfillReadableStream({
       start(controller) {

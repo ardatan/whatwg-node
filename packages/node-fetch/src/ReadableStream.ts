@@ -183,6 +183,13 @@ export class PonyfillReadableStream<T> implements ReadableStream<T> {
     pendingCancelReasons.set(this.readable, { value: reason });
     const readable = this.readable;
     readable.once('error', noop);
+    // End the Node stream cleanly before destroy() so a pending reader.read() /
+    // asyncIterator.next() settles as `{ done: true }` (WHATWG ReadableStream
+    // cancel), instead of rejecting with ERR_STREAM_PREMATURE_CLOSE. The cancel
+    // reason still goes to underlyingSource.cancel via the WeakMap + destroy path.
+    if (!readable.readableEnded) {
+      readable.push(null);
+    }
     // Always destroy without an error: cancel intent is in the WeakMap for aware streams.
     // For wrapped streams, pipeThrough forwards cancel(reason) to the source explicitly.
     const whenDone = finished(readable).then(
