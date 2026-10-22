@@ -134,10 +134,14 @@ function createServerAdapter<
     if (req.constructor === expectedFetchAPI.Request) {
       return expectedFetchAPI;
     }
-    if (req.constructor === globalThis.Request) {
+    // Subclasses and Proxies (Next.js `NextRequest` / `proxyNextRequest`) are still
+    // platform Requests. Constructor identity misses both; `instanceof` follows the
+    // prototype chain, including a Proxy's getPrototypeOf. PonyfillRequest does not
+    // extend the platform Request, and the constructor check above keeps exact
+    // ponyfill instances on the ponyfill API.
+    if (globalThis.Request != null && req instanceof globalThis.Request) {
       return nativeFetchAPI;
     }
-    // TODO: This might need a normalization later, but for now return the ponyfill
     return expectedFetchAPI;
   }
   const givenHandleRequest =
