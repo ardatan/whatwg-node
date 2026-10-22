@@ -1,5 +1,28 @@
 # @whatwg-node/node-fetch
 
+## 0.9.2
+
+### Patch Changes
+
+- [#3694](https://github.com/ardatan/whatwg-node/pull/3694)
+  [`f927bd2`](https://github.com/ardatan/whatwg-node/commit/f927bd2cf77b2e4b5eaf62dce374c976412b7527)
+  Thanks [@dependabot](https://github.com/apps/dependabot)! - dependencies
+  updates:
+  - Updated dependency
+    [`@fastify/busboy@^3.2.3` ↗︎](https://www.npmjs.com/package/@fastify/busboy/v/3.2.3)
+    (from `^3.1.1`, in `dependencies`)
+
+- [#3715](https://github.com/ardatan/whatwg-node/pull/3715)
+  [`06e7013`](https://github.com/ardatan/whatwg-node/commit/06e70134287cc0b624a73b3d783a8ea9aab9ca7c)
+  Thanks [@ardatan](https://github.com/ardatan)! - Fulfill pending
+  `reader.read()` as `{ done: true }` when `cancel(reason)` runs, matching the
+  WHATWG ReadableStream cancel algorithm (and native undici).
+
+  Previously `cancel()` called `readable.destroy()` without ending the stream
+  first, so an in-flight `read()` rejected with `ERR_STREAM_PREMATURE_CLOSE` /
+  `Premature close` instead of settling as done. The cancel `reason` still
+  reaches `underlyingSource.cancel(reason)`.
+
 ## 0.9.1
 
 ### Patch Changes
