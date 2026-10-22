@@ -29,6 +29,7 @@ export default [
       '*.mjs',
       '*.cjs',
       '*.js',
+      'packages/server/test/fixtures/**',
       'test/web-platform-tests/**',
     ],
   },
