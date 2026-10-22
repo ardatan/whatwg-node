@@ -239,6 +239,75 @@ describe('useLimitRequestBodySize', () => {
       });
     });
 
+    it('accepts a native Request subclass and still limits its body', async () => {
+      class SubRequest extends Request {}
+      const adapter = createAdapter(64);
+      const ok = await adapter.fetch(
+        new SubRequest('http://localhost/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: 'hello',
+        }),
+      );
+      expect(ok.status).toBe(200);
+      await expect(ok.json()).resolves.toEqual({ body: 'hello' });
+
+      const proxied = new Proxy(
+        new SubRequest('http://localhost/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: 'hello',
+        }),
+        {
+          get(target, prop) {
+            // Next's proxy reads slots with the target as receiver, not the proxy.
+            const value = Reflect.get(target, prop, target);
+            return typeof value === 'function' ? value.bind(target) : value;
+          },
+        },
+      );
+      const proxiedResponse = await adapter.fetch(proxied);
+      expect(proxiedResponse.status).toBe(200);
+      await expect(proxiedResponse.json()).resolves.toEqual({ body: 'hello' });
+
+      const encoder = new globalThis.TextEncoder();
+      const stream = new globalThis.ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode('x'.repeat(80)));
+          controller.close();
+        },
+      });
+      const tooBig = await adapter.fetch(
+        new SubRequest('http://localhost/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: stream,
+          // @ts-expect-error duplex is required for streamed bodies
+          duplex: 'half',
+        }),
+      );
+      expect(tooBig.status).toBe(413);
+      await expect(tooBig.json()).resolves.toEqual({ error: 'Request body too large' });
+    });
+
+    const itPonyfillOnly = fetchAPI.Request === globalThis.Request ? it.skip : it;
+    itPonyfillOnly('keeps a ponyfill Request subclass on the ponyfill Fetch API', async () => {
+      class SubPonyfillRequest extends fetchAPI.Request {}
+      const adapter = createAdapter(10);
+      const response = await adapter.fetch(
+        new SubPonyfillRequest('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Length': '100',
+          },
+          body: 'short',
+        }),
+      );
+      expect(response.status).toBe(413);
+      expect(response.constructor).toBe(fetchAPI.Response);
+    });
+
     it('works with a native Request and ReadableStream', async () => {
       const adapter = createAdapter(10);
       const encoder = new globalThis.TextEncoder();
