@@ -1,5 +1,16 @@
 # @whatwg-node/server
 
+## 0.13.2
+
+### Patch Changes
+
+- [#3729](https://github.com/ardatan/whatwg-node/pull/3729)
+  [`031ce79`](https://github.com/ardatan/whatwg-node/commit/031ce79f6ce14657e4c7d2e92d3ff35dbcfea9c0)
+  Thanks [@renovate](https://github.com/apps/renovate)! - dependencies updates:
+  - Updated dependency
+    [`@envelop/instrumentation@^2.0.0` ↗︎](https://www.npmjs.com/package/@envelop/instrumentation/v/2.0.0)
+    (from `^1.0.0`, in `dependencies`)
+
 ## 0.13.1
 
 ### Patch Changes
