@@ -4,6 +4,6 @@
   "private": true,
   "dependencies": {
     "@whatwg-node/fetch": "0.12.1",
-    "@whatwg-node/server": "0.13.1"
+    "@whatwg-node/server": "0.13.2"
   }
 }
