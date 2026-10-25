@@ -13,7 +13,7 @@
   "dependencies": {
     "@e2e/shared-scripts": "0.0.0",
     "@e2e/shared-server": "0.0.157",
-    "encoding": "0.1.13",
+    "encoding": "0.1.14",
     "next": "16.4.2",
     "react": "19.3.1",
     "react-dom": "19.3.1"
