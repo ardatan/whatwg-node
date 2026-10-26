@@ -33,13 +33,35 @@ export function handleMaybePromise<TInput, TOutput>(
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
   finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
-  let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
-
+  // When a finally callback is present, keep the fake-promise chain so cleanup
+  // semantics stay identical (including async finally and success/error throws).
   if (finallyFactory) {
+    let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
     result$ = result$.finally(finallyFactory);
+    return unfakePromise(result$);
   }
 
-  return unfakePromise(result$);
+  // Sync-friendly path: call the factories directly when the input is not a
+  // thenable, so hot callers avoid allocating temporary fake-promise wrappers.
+  // onError still only handles inputFactory failures / rejected inputs — the
+  // same as Promise#then(success, onError), not success-factory throws.
+  let input: MaybePromiseLike<TInput>;
+  try {
+    input = inputFactory();
+  } catch (err) {
+    if (!outputErrorFactory) {
+      throw err;
+    }
+    const output = outputErrorFactory(err);
+    return isPromise(output) ? unfakePromise(fakePromise(output)) : output;
+  }
+
+  if (!isPromise(input)) {
+    const output = outputSuccessFactory(input as TInput);
+    return isPromise(output) ? unfakePromise(fakePromise(output)) : output;
+  }
+
+  return unfakePromise(fakePromise(input).then(outputSuccessFactory, outputErrorFactory));
 }
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
