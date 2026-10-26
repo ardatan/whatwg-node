@@ -37,6 +37,20 @@ describe('promise-helpers', () => {
         ).toBe('test');
       });
 
+      it('routes a throwing then getter on the input to onError', () => {
+        expect(
+          handleMaybePromise(
+            () => ({
+              get then() {
+                throw 'then-getter';
+              },
+            }),
+            res => res,
+            err => `handled:${err}`,
+          ),
+        ).toBe('handled:then-getter');
+      });
+
       it.each(
         cases.flatMap(c => [
           { ...c, success: 'fake' },

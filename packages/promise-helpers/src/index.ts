@@ -43,11 +43,16 @@ export function handleMaybePromise<TInput, TOutput>(
 
   // Sync-friendly path: call the factories directly when the input is not a
   // thenable, so hot callers avoid allocating temporary fake-promise wrappers.
-  // onError still only handles inputFactory failures / rejected inputs — the
-  // same as Promise#then(success, onError), not success-factory throws.
+  // onError still only handles inputFactory failures / rejected inputs, and
+  // thenable-detection failures (e.g. a throwing `then` getter), matching the
+  // previous fake-promise chain. Success-factory throws are not routed to
+  // onError (same as Promise#then(success, onError)).
   let input: MaybePromiseLike<TInput>;
+  let inputIsPromise: boolean;
   try {
     input = inputFactory();
+    // Keep thenable detection inside this boundary: accessing `then` can throw.
+    inputIsPromise = isPromise(input);
   } catch (err) {
     if (!outputErrorFactory) {
       throw err;
@@ -56,7 +61,7 @@ export function handleMaybePromise<TInput, TOutput>(
     return isPromise(output) ? unfakePromise(fakePromise(output)) : output;
   }
 
-  if (!isPromise(input)) {
+  if (!inputIsPromise) {
     const output = outputSuccessFactory(input as TInput);
     return isPromise(output) ? unfakePromise(fakePromise(output)) : output;
   }
