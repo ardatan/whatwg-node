@@ -33,13 +33,42 @@ export function handleMaybePromise<TInput, TOutput>(
   outputErrorFactory?: (err: any) => MaybePromiseLike<TOutput>,
   finallyFactory?: () => MaybePromiseLike<void>,
 ): MaybePromiseLike<TOutput> {
-  let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
-
+  // When a finally callback is present, keep the fake-promise chain so cleanup
+  // semantics stay identical (including async finally and success/error throws).
   if (finallyFactory) {
+    let result$ = fakePromise().then(inputFactory).then(outputSuccessFactory, outputErrorFactory);
     result$ = result$.finally(finallyFactory);
+    return unfakePromise(result$);
   }
 
-  return unfakePromise(result$);
+  // Sync-friendly path: call the factories directly when the input is not a
+  // thenable, so hot callers avoid allocating temporary fake-promise wrappers.
+  // onError still only handles inputFactory failures / rejected inputs, and
+  // thenable-detection failures (e.g. a throwing `then` getter), matching the
+  // previous fake-promise chain. Success-factory throws are not routed to
+  // onError (same as Promise#then(success, onError)).
+  let input: MaybePromiseLike<TInput>;
+  let inputIsPromise: boolean;
+  try {
+    // Match fakePromise().then(inputFactory): the resolved undefined is passed
+    // through, so factories that inspect arguments.length still see one argument.
+    input = (inputFactory as (value: undefined) => MaybePromiseLike<TInput>)(undefined);
+    // Keep thenable detection inside this boundary: accessing `then` can throw.
+    inputIsPromise = isPromise(input);
+  } catch (err) {
+    if (!outputErrorFactory) {
+      throw err;
+    }
+    const output = outputErrorFactory(err);
+    return isPromise(output) ? unfakePromise(fakePromise(output)) : output;
+  }
+
+  if (!inputIsPromise) {
+    const output = outputSuccessFactory(input as TInput);
+    return isPromise(output) ? unfakePromise(fakePromise(output)) : output;
+  }
+
+  return unfakePromise(fakePromise(input).then(outputSuccessFactory, outputErrorFactory));
 }
 
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
