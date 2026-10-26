@@ -50,7 +50,9 @@ export function handleMaybePromise<TInput, TOutput>(
   let input: MaybePromiseLike<TInput>;
   let inputIsPromise: boolean;
   try {
-    input = inputFactory();
+    // Match fakePromise().then(inputFactory): the resolved undefined is passed
+    // through, so factories that inspect arguments.length still see one argument.
+    input = (inputFactory as (value: undefined) => MaybePromiseLike<TInput>)(undefined);
     // Keep thenable detection inside this boundary: accessing `then` can throw.
     inputIsPromise = isPromise(input);
   } catch (err) {

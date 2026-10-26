@@ -40,7 +40,7 @@ describe('promise-helpers', () => {
       it('routes a throwing then getter on the input to onError', () => {
         expect(
           handleMaybePromise(
-            () => ({
+            (): any => ({
               get then() {
                 throw 'then-getter';
               },
@@ -49,6 +49,21 @@ describe('promise-helpers', () => {
             err => `handled:${err}`,
           ),
         ).toBe('handled:then-getter');
+      });
+
+      it('invokes inputFactory with one undefined argument like the fake-promise path', () => {
+        let observedLength = -1;
+        let observedValue: unknown = 'unset';
+        handleMaybePromise(
+          function inputFactory(this: unknown) {
+            observedLength = arguments.length;
+            observedValue = arguments[0];
+            return 'ok';
+          },
+          res => res,
+        );
+        expect(observedLength).toBe(1);
+        expect(observedValue).toBeUndefined();
       });
 
       it.each(
