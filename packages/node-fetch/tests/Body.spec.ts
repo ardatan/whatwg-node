@@ -58,6 +58,15 @@ describe('Body', () => {
     const result = await body.text();
     expect(result).toBe('');
   });
+  it('skips a UTF-8 byte order mark in text() and json()', async () => {
+    const text = JSON.stringify(exampleData);
+    const withBom = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(text)]);
+    expect(await new PonyfillBody(withBom).json()).toMatchObject(exampleData);
+    expect(await new PonyfillBody(Readable.from(withBom)).json()).toMatchObject(exampleData);
+    const body = new PonyfillBody(new Uint8Array(withBom));
+    expect(await body.text()).toBe(text);
+    expect(await body.bytes()).toEqual(withBom);
+  });
   it('works with custom decoding', async () => {
     const body = new PonyfillBody('hello world');
     const buf = await body.bytes();

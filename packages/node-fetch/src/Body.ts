@@ -448,7 +448,9 @@ export class PonyfillBody<TJSON = any> implements Body {
       return fakePromise(this._text);
     }
     return this.buffer().then(buffer => {
-      this._text = buffer.toString('utf-8');
+      // UTF-8 decode skips a leading byte order mark
+      const start = buffer[0] === 0xef && buffer[1] === 0xbb && buffer[2] === 0xbf ? 3 : 0;
+      this._text = buffer.toString('utf-8', start);
       return this._text;
     });
   }

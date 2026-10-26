@@ -2042,13 +2042,11 @@
           "cases": [
             {
               "name": "UTF-8 with BOM with Request.text()",
-              "success": false,
-              "message": "assert_equals: Request.text() should decode data as UTF-8 expected \"三村かな子\" but got \"﻿三村かな子\""
+              "success": true
             },
             {
               "name": "UTF-8 with BOM with Response.text()",
-              "success": false,
-              "message": "assert_equals: Response.text() should decode data as UTF-8 expected \"三村かな子\" but got \"﻿三村かな子\""
+              "success": true
             },
             {
               "name": "UTF-8 with BOM with fetched data (UTF-8 charset)",
