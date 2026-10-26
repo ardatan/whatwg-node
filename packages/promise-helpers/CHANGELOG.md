@@ -1,5 +1,19 @@
 # @whatwg-node/promise-helpers
 
+## 2.0.1
+
+### Patch Changes
+
+- [#3733](https://github.com/ardatan/whatwg-node/pull/3733)
+  [`75603bd`](https://github.com/ardatan/whatwg-node/commit/75603bd5fa3185954b19bc0a1b55dc271cb9c29b)
+  Thanks [@ardatan](https://github.com/ardatan)! - Make `handleMaybePromise`
+  avoid temporary fake-promise wrappers on the synchronous path.
+
+  When no `finally` callback is provided and the input factory returns a
+  non-thenable value, success/error factories run directly. Promise,
+  fake-promise, and custom thenable inputs still go through the existing
+  normalization path.
+
 ## 2.0.0
 
 ### Major Changes
