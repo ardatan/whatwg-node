@@ -84,7 +84,8 @@ export class PonyfillHeaders implements Headers {
               }
               continue;
             }
-            this._map.set(normalizedKey, value);
+            const existingValue = this._map.get(normalizedKey);
+            this._map.set(normalizedKey, existingValue ? `${existingValue}, ${value}` : value);
           }
         } else if (isHeadersLike(this.headersInit)) {
           this._map = new Map();
@@ -127,6 +128,13 @@ export class PonyfillHeaders implements Headers {
     return this._map;
   }
 
+  // A sequence can repeat a name, so it is iterated through the map, which combines the values
+  private buildMapForSequence() {
+    if (!this._map && Array.isArray(this.headersInit)) {
+      this.getMap();
+    }
+  }
+
   append(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
@@ -163,16 +171,9 @@ export class PonyfillHeaders implements Headers {
       this._setCookies = [value];
       return;
     }
-    if (!this._map && this.headersInit != null) {
-      if (Array.isArray(this.headersInit)) {
-        const found = this.headersInit.find(([headerKey]) => headerKey.toLowerCase() === key);
-        if (found) {
-          found[1] = value;
-        } else {
-          this.headersInit.push([key, value]);
-        }
-        return;
-      } else if (isHeadersLike(this.headersInit)) {
+    // A sequence can repeat a name, so it goes through the map
+    if (!this._map && this.headersInit != null && !Array.isArray(this.headersInit)) {
+      if (isHeadersLike(this.headersInit)) {
         this.headersInit.set(key, value);
         return;
       } else {
@@ -193,17 +194,12 @@ export class PonyfillHeaders implements Headers {
   }
 
   forEach(callback: (value: string, key: string, parent: Headers) => void): void {
+    this.buildMapForSequence();
     this._setCookies?.forEach(setCookie => {
       callback(setCookie, 'set-cookie', this);
     });
     if (!this._map) {
       if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          this.headersInit.forEach(([key, value]) => {
-            callback(value, key, this);
-          });
-          return;
-        }
         if (isHeadersLike(this.headersInit)) {
           this.headersInit.forEach(callback);
           return;
@@ -222,15 +218,12 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_keys(): IterableIterator<string> {
+    this.buildMapForSequence();
     if (this._setCookies?.length) {
       yield 'set-cookie';
     }
     if (!this._map) {
       if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([key]) => key)[Symbol.iterator]();
-          return;
-        }
         if (isHeadersLike(this.headersInit)) {
           yield* this.headersInit.keys();
           return;
@@ -247,15 +240,12 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_values(): IterableIterator<string> {
+    this.buildMapForSequence();
     if (this._setCookies?.length) {
       yield* this._setCookies;
     }
     if (!this._map) {
       if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit.map(([, value]) => value)[Symbol.iterator]();
-          return;
-        }
         if (isHeadersLike(this.headersInit)) {
           yield* this.headersInit.values();
           return;
@@ -272,15 +262,12 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_entries(): IterableIterator<[string, string]> {
+    this.buildMapForSequence();
     if (this._setCookies?.length) {
       yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
     }
     if (!this._map) {
       if (this.headersInit) {
-        if (Array.isArray(this.headersInit)) {
-          yield* this.headersInit;
-          return;
-        }
         if (isHeadersLike(this.headersInit)) {
           yield* this.headersInit.entries();
           return;

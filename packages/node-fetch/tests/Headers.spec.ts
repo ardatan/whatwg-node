@@ -77,4 +77,49 @@ describe('Headers', () => {
       expect(headers.getSetCookie()).toEqual(['a=b', 'c=d']);
     });
   });
+  describe('sequence with a repeated name', () => {
+    const init = (): [string, string][] => [
+      ['Link', '<a>'],
+      ['link', '<b>'],
+      ['x-single', 'c'],
+    ];
+    it('keeps every value when another header is changed', () => {
+      const appended = new PonyfillHeaders(init());
+      appended.append('x-other', 'd');
+      expect(appended.get('link')).toBe('<a>, <b>');
+      const deleted = new PonyfillHeaders(init());
+      deleted.delete('x-single');
+      expect(deleted.get('link')).toBe('<a>, <b>');
+    });
+    it('replaces every value on set', () => {
+      const headers = new PonyfillHeaders(init());
+      headers.set('LINK', '<c>');
+      expect(headers.get('link')).toBe('<c>');
+      expect([...headers]).toEqual([
+        ['link', '<c>'],
+        ['x-single', 'c'],
+      ]);
+    });
+    it('iterates the combined values', () => {
+      const headers = new PonyfillHeaders([
+        ...init(),
+        ['set-cookie', 'a=b'],
+        ['Set-Cookie', 'c=d'],
+      ]);
+      const expected = [
+        ['set-cookie', 'a=b'],
+        ['set-cookie', 'c=d'],
+        ['link', '<a>, <b>'],
+        ['x-single', 'c'],
+      ];
+      expect([...headers.entries()]).toEqual(expected);
+      expect([...headers.keys()]).toEqual(['set-cookie', 'link', 'x-single']);
+      expect([...headers.values()]).toEqual(['a=b', 'c=d', '<a>, <b>', 'c']);
+      const forEachEntries: [string, string][] = [];
+      headers.forEach((value, key) => {
+        forEachEntries.push([key, value]);
+      });
+      expect(forEachEntries).toEqual(expected);
+    });
+  });
 });
