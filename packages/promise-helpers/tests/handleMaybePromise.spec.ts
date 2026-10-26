@@ -55,9 +55,9 @@ describe('promise-helpers', () => {
         let observedLength = -1;
         let observedValue: unknown = 'unset';
         handleMaybePromise(
-          function inputFactory(this: unknown) {
-            observedLength = arguments.length;
-            observedValue = arguments[0];
+          (...args: unknown[]) => {
+            observedLength = args.length;
+            observedValue = args[0];
             return 'ok';
           },
           res => res,
