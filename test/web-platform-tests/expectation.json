@@ -5048,8 +5048,7 @@
             },
             {
               "name": "Iteration skips elements removed while iterating",
-              "success": false,
-              "message": "assert_array_equals: lengths differ, expected array [\"bar\", \"baz\"] length 2, got [\"foo\", \"baz\", \"BAR\"] length 3"
+              "success": true
             },
             {
               "name": "Removing elements already iterated over causes an element to be skipped during iteration",
