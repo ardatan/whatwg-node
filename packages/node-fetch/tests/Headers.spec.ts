@@ -107,14 +107,14 @@ describe('Headers', () => {
         ['Set-Cookie', 'c=d'],
       ]);
       const expected = [
+        ['link', '<a>, <b>'],
         ['set-cookie', 'a=b'],
         ['set-cookie', 'c=d'],
-        ['link', '<a>, <b>'],
         ['x-single', 'c'],
       ];
       expect([...headers.entries()]).toEqual(expected);
-      expect([...headers.keys()]).toEqual(['set-cookie', 'link', 'x-single']);
-      expect([...headers.values()]).toEqual(['a=b', 'c=d', '<a>, <b>', 'c']);
+      expect([...headers.keys()]).toEqual(['link', 'set-cookie', 'set-cookie', 'x-single']);
+      expect([...headers.values()]).toEqual(['<a>, <b>', 'a=b', 'c=d', 'c']);
       const forEachEntries: [string, string][] = [];
       headers.forEach((value, key) => {
         forEachEntries.push([key, value]);
@@ -136,6 +136,17 @@ describe('Headers', () => {
       expect([...empty]).toEqual([['x-empty', '']]);
       expect(empty.get('x-empty')).toBe('');
       expect(empty.has('x-empty')).toBe(true);
+    });
+    it('iterates combined values in sorted order', () => {
+      const headers = new PonyfillHeaders([
+        ['2', 'a'],
+        ['1', 'b'],
+        ['2', 'b'],
+      ]);
+      expect([...headers]).toEqual([
+        ['1', 'b'],
+        ['2', 'a, b'],
+      ]);
     });
     it('keeps set-cookie mutations after a later map build', () => {
       const replaced = new PonyfillHeaders([

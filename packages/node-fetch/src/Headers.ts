@@ -203,46 +203,93 @@ export class PonyfillHeaders implements Headers {
     this.getMap().delete(key);
   }
 
-  forEach(callback: (value: string, key: string, parent: Headers) => void): void {
+  // Fetch iterates the result of "sort and combine": names ascending by byte order.
+  private *sortedEntries(): IterableIterator<[string, string]> {
     this.buildMapForSequence();
-    this._setCookies?.forEach(setCookie => {
-      callback(setCookie, 'set-cookie', this);
-    });
+
     if (!this._map) {
       if (this.headersInit) {
         if (isHeadersLike(this.headersInit)) {
-          this.headersInit.forEach(callback);
+          const names: string[] = [];
+          const valuesByName = new Map<string, string[]>();
+          this.headersInit.forEach((value, key) => {
+            const name = key.toLowerCase();
+            let values = valuesByName.get(name);
+            if (!values) {
+              values = [];
+              valuesByName.set(name, values);
+              names.push(name);
+            }
+            values.push(value);
+          });
+          names.sort();
+          for (const name of names) {
+            const values = valuesByName.get(name)!;
+            if (name === 'set-cookie') {
+              for (const value of values) {
+                yield [name, value];
+              }
+            } else {
+              yield [name, values.join(', ')];
+            }
+          }
           return;
         }
-        Object.entries(this.headersInit).forEach(([key, value]) => {
-          if (value != null) {
-            callback(value, key, this);
+
+        const nameSet = new Set<string>();
+        for (const key of Object.keys(this.headersInit)) {
+          if (this.headersInit[key] != null) {
+            nameSet.add(key.toLowerCase());
           }
-        });
+        }
+        const names = [...nameSet].sort();
+        for (const name of names) {
+          if (name === 'set-cookie') {
+            const value = this._get(name);
+            if (value != null) {
+              yield ['set-cookie', value];
+            }
+            continue;
+          }
+          yield [name, this._get(name)!];
+        }
+        return;
+      }
+      // set-cookie may exist without a map (append/set on an empty Headers)
+      if (this._setCookies?.length) {
+        for (const cookie of this._setCookies) {
+          yield ['set-cookie', cookie];
+        }
       }
       return;
     }
-    this.getMap().forEach((value, key) => {
+
+    const names = [...this._map.keys()];
+    if (this._setCookies?.length) {
+      names.push('set-cookie');
+    }
+    names.sort();
+    for (const name of names) {
+      if (name === 'set-cookie') {
+        for (const cookie of this._setCookies!) {
+          yield ['set-cookie', cookie];
+        }
+        continue;
+      }
+      yield [name, this._map.get(name)!];
+    }
+  }
+
+  forEach(callback: (value: string, key: string, parent: Headers) => void): void {
+    for (const [key, value] of this.sortedEntries()) {
       callback(value, key, this);
-    });
+    }
   }
 
   *_keys(): IterableIterator<string> {
-    this.buildMapForSequence();
-    if (this._setCookies?.length) {
-      yield 'set-cookie';
+    for (const [key] of this.sortedEntries()) {
+      yield key;
     }
-    if (!this._map) {
-      if (this.headersInit) {
-        if (isHeadersLike(this.headersInit)) {
-          yield* this.headersInit.keys();
-          return;
-        }
-        yield* Object.keys(this.headersInit)[Symbol.iterator]();
-        return;
-      }
-    }
-    yield* this.getMap().keys();
   }
 
   keys(): HeadersIterator<string> {
@@ -250,21 +297,9 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_values(): IterableIterator<string> {
-    this.buildMapForSequence();
-    if (this._setCookies?.length) {
-      yield* this._setCookies;
+    for (const [, value] of this.sortedEntries()) {
+      yield value;
     }
-    if (!this._map) {
-      if (this.headersInit) {
-        if (isHeadersLike(this.headersInit)) {
-          yield* this.headersInit.values();
-          return;
-        }
-        yield* Object.values(this.headersInit)[Symbol.iterator]();
-        return;
-      }
-    }
-    yield* this.getMap().values();
   }
 
   values(): HeadersIterator<string> {
@@ -272,21 +307,7 @@ export class PonyfillHeaders implements Headers {
   }
 
   *_entries(): IterableIterator<[string, string]> {
-    this.buildMapForSequence();
-    if (this._setCookies?.length) {
-      yield* this._setCookies.map(cookie => ['set-cookie', cookie] as [string, string]);
-    }
-    if (!this._map) {
-      if (this.headersInit) {
-        if (isHeadersLike(this.headersInit)) {
-          yield* this.headersInit.entries();
-          return;
-        }
-        yield* Object.entries(this.headersInit);
-        return;
-      }
-    }
-    yield* this.getMap().entries();
+    yield* this.sortedEntries();
   }
 
   entries(): HeadersIterator<[string, string]> {

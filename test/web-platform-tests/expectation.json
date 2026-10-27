@@ -5120,8 +5120,7 @@
             },
             {
               "name": "Iterate combined values in sorted order",
-              "success": false,
-              "message": "assert_array_equals: expected property 0 to be \"1\" but got \"2\" (expected array [\"1\", \"b\"] got [\"2\", \"a\"])"
+              "success": true
             }
           ]
         },
