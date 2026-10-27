@@ -249,7 +249,8 @@ export class PonyfillHeaders implements Headers {
         names.sort();
         for (const name of names) {
           // A forEach callback may build the map via delete/set; honor live state.
-          const liveMap = this._map;
+          // Cast: this block started with !_map, but mutations can assign it.
+          const liveMap = this._map as Map<string, string> | undefined;
           if (liveMap) {
             if (name === 'set-cookie') {
               if (!this._setCookies?.length) {
