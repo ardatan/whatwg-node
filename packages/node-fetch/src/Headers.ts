@@ -120,7 +120,11 @@ export class PonyfillHeaders implements Headers {
                 this._setCookies.push(initValue);
                 continue;
               }
-              this._map.set(normalizedKey, initValue);
+              const existingValue = this._map.get(normalizedKey);
+              this._map.set(
+                normalizedKey,
+                existingValue === undefined ? initValue : `${existingValue}, ${initValue}`,
+              );
             }
           }
         }
@@ -142,8 +146,8 @@ export class PonyfillHeaders implements Headers {
   append(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
-      // Materialize sequence cookies first so later getMap() does not re-append them.
-      this.buildMapForSequence();
+      // Materialize initializer cookies before mutating them.
+      this.getMap();
       this._setCookies ||= [];
       this._setCookies.push(value);
       return;
@@ -174,8 +178,8 @@ export class PonyfillHeaders implements Headers {
   set(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
-      // Materialize sequence cookies first so later getMap() does not re-append them.
-      this.buildMapForSequence();
+      // Materialize initializer cookies before replacing them.
+      this.getMap();
       this._setCookies = [value];
       return;
     }
@@ -195,8 +199,8 @@ export class PonyfillHeaders implements Headers {
   delete(name: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
-      // Materialize sequence cookies first so later getMap() does not re-append them.
-      this.buildMapForSequence();
+      // Materialize initializer cookies before clearing them.
+      this.getMap();
       this._setCookies = [];
       return;
     }
@@ -244,6 +248,25 @@ export class PonyfillHeaders implements Headers {
 
         names.sort();
         for (const name of names) {
+          // A forEach callback may build the map via delete/set; honor live state.
+          const liveMap = this._map;
+          if (liveMap) {
+            if (name === 'set-cookie') {
+              if (!this._setCookies?.length) {
+                continue;
+              }
+              for (const cookie of this._setCookies) {
+                yield ['set-cookie', cookie];
+              }
+              continue;
+            }
+            const live = liveMap.get(name);
+            if (live === undefined) {
+              continue;
+            }
+            yield [name, live];
+            continue;
+          }
           const values = valuesByName.get(name)!;
           if (name === 'set-cookie') {
             for (const value of values) {

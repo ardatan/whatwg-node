@@ -177,6 +177,30 @@ describe('Headers', () => {
         }
       });
       expect(seen).toEqual(['a', 'b']);
+
+      const fromObject = new PonyfillHeaders({ a: '1', b: '2', c: '3' });
+      const seenFromObject: string[] = [];
+      fromObject.forEach((_value, key) => {
+        seenFromObject.push(key);
+        if (key === 'a') {
+          fromObject.delete('c');
+        }
+      });
+      expect(seenFromObject).toEqual(['a', 'b']);
+    });
+    it('replaces and deletes object-initializer set-cookie values', () => {
+      const replaced = new PonyfillHeaders({ 'set-cookie': 'a=1', x: '1' });
+      replaced.set('set-cookie', 'b=2');
+      expect(replaced.getSetCookie()).toEqual(['b=2']);
+      expect([...replaced]).toEqual([
+        ['set-cookie', 'b=2'],
+        ['x', '1'],
+      ]);
+
+      const deleted = new PonyfillHeaders({ 'set-cookie': 'a=1', x: '1' });
+      deleted.delete('set-cookie');
+      expect(deleted.getSetCookie()).toEqual([]);
+      expect([...deleted]).toEqual([['x', '1']]);
     });
     it('keeps set-cookie mutations after a later map build', () => {
       const replaced = new PonyfillHeaders([
