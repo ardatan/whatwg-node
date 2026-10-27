@@ -107,14 +107,14 @@ describe('Headers', () => {
         ['Set-Cookie', 'c=d'],
       ]);
       const expected = [
+        ['link', '<a>, <b>'],
         ['set-cookie', 'a=b'],
         ['set-cookie', 'c=d'],
-        ['link', '<a>, <b>'],
         ['x-single', 'c'],
       ];
       expect([...headers.entries()]).toEqual(expected);
-      expect([...headers.keys()]).toEqual(['set-cookie', 'link', 'x-single']);
-      expect([...headers.values()]).toEqual(['a=b', 'c=d', '<a>, <b>', 'c']);
+      expect([...headers.keys()]).toEqual(['link', 'set-cookie', 'set-cookie', 'x-single']);
+      expect([...headers.values()]).toEqual(['<a>, <b>', 'a=b', 'c=d', 'c']);
       const forEachEntries: [string, string][] = [];
       headers.forEach((value, key) => {
         forEachEntries.push([key, value]);
@@ -136,6 +136,71 @@ describe('Headers', () => {
       expect([...empty]).toEqual([['x-empty', '']]);
       expect(empty.get('x-empty')).toBe('');
       expect(empty.has('x-empty')).toBe(true);
+    });
+    it('iterates combined values in sorted order', () => {
+      const headers = new PonyfillHeaders([
+        ['2', 'a'],
+        ['1', 'b'],
+        ['2', 'b'],
+      ]);
+      expect([...headers]).toEqual([
+        ['1', 'b'],
+        ['2', 'a, b'],
+      ]);
+    });
+    it('iterates object-backed headers with appended cookies and case collisions', () => {
+      const headers = new PonyfillHeaders({
+        'X-Test': 'a',
+        'x-test': 'b',
+        z: '1',
+      } as Record<string, string>);
+      headers.append('set-cookie', 'a=1');
+      headers.append('set-cookie', 'b=2');
+      expect([...headers]).toEqual([
+        ['set-cookie', 'a=1'],
+        ['set-cookie', 'b=2'],
+        ['x-test', 'a, b'],
+        ['z', '1'],
+      ]);
+    });
+    it('skips headers deleted during forEach', () => {
+      const headers = new PonyfillHeaders([
+        ['a', '1'],
+        ['b', '2'],
+        ['c', '3'],
+      ]);
+      const seen: string[] = [];
+      headers.forEach((_value, key) => {
+        seen.push(key);
+        if (key === 'a') {
+          headers.delete('c');
+        }
+      });
+      expect(seen).toEqual(['a', 'b']);
+
+      const fromObject = new PonyfillHeaders({ a: '1', b: '2', c: '3' });
+      const seenFromObject: string[] = [];
+      fromObject.forEach((_value, key) => {
+        seenFromObject.push(key);
+        if (key === 'a') {
+          fromObject.delete('c');
+        }
+      });
+      expect(seenFromObject).toEqual(['a', 'b']);
+    });
+    it('replaces and deletes object-initializer set-cookie values', () => {
+      const replaced = new PonyfillHeaders({ 'set-cookie': 'a=1', x: '1' });
+      replaced.set('set-cookie', 'b=2');
+      expect(replaced.getSetCookie()).toEqual(['b=2']);
+      expect([...replaced]).toEqual([
+        ['set-cookie', 'b=2'],
+        ['x', '1'],
+      ]);
+
+      const deleted = new PonyfillHeaders({ 'set-cookie': 'a=1', x: '1' });
+      deleted.delete('set-cookie');
+      expect(deleted.getSetCookie()).toEqual([]);
+      expect([...deleted]).toEqual([['x', '1']]);
     });
     it('keeps set-cookie mutations after a later map build', () => {
       const replaced = new PonyfillHeaders([
