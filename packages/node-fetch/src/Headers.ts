@@ -142,6 +142,8 @@ export class PonyfillHeaders implements Headers {
   append(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      // Materialize sequence cookies first so later getMap() does not re-append them.
+      this.buildMapForSequence();
       this._setCookies ||= [];
       this._setCookies.push(value);
       return;
@@ -172,6 +174,8 @@ export class PonyfillHeaders implements Headers {
   set(name: string, value: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      // Materialize sequence cookies first so later getMap() does not re-append them.
+      this.buildMapForSequence();
       this._setCookies = [value];
       return;
     }
@@ -191,6 +195,8 @@ export class PonyfillHeaders implements Headers {
   delete(name: string): void {
     const key = name.toLowerCase();
     if (key === 'set-cookie') {
+      // Materialize sequence cookies first so later getMap() does not re-append them.
+      this.buildMapForSequence();
       this._setCookies = [];
       return;
     }

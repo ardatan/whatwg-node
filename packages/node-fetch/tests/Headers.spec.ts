@@ -137,5 +137,34 @@ describe('Headers', () => {
       expect(empty.get('x-empty')).toBe('');
       expect(empty.has('x-empty')).toBe(true);
     });
+    it('keeps set-cookie mutations after a later map build', () => {
+      const replaced = new PonyfillHeaders([
+        ['set-cookie', 'a=1'],
+        ['set-cookie', 'b=2'],
+        ['x', '1'],
+      ]);
+      replaced.set('set-cookie', 'c=3');
+      expect(replaced.getSetCookie()).toEqual(['c=3']);
+      expect([...replaced.entries()]).toEqual([
+        ['set-cookie', 'c=3'],
+        ['x', '1'],
+      ]);
+
+      const deleted = new PonyfillHeaders([
+        ['set-cookie', 'a=1'],
+        ['set-cookie', 'b=2'],
+      ]);
+      deleted.delete('set-cookie');
+      expect(deleted.getSetCookie()).toEqual([]);
+      expect([...deleted.entries()]).toEqual([]);
+
+      const appended = new PonyfillHeaders([['set-cookie', 'a=1']]);
+      appended.append('set-cookie', 'b=2');
+      expect(appended.getSetCookie()).toEqual(['a=1', 'b=2']);
+      expect([...appended.entries()]).toEqual([
+        ['set-cookie', 'a=1'],
+        ['set-cookie', 'b=2'],
+      ]);
+    });
   });
 });
