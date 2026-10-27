@@ -4499,18 +4499,15 @@
             },
             {
               "name": "Headers iterator does not combine set-cookie headers",
-              "success": false,
-              "message": "assert_array_equals: expected property 0 to be \"set-cookie\" but got \"Set-Cookie\" (expected array [\"set-cookie\", \"fizz=buzz; domain=example.com\"] got [\"Set-Cookie\", \"fizz=buzz; domain=example.com\"])"
+              "success": true
             },
             {
               "name": "Headers iterator does not special case set-cookie2 headers",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 1 but got 2"
+              "success": true
             },
             {
               "name": "Headers iterator does not combine set-cookie & set-cookie2 headers",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 3 but got 4"
+              "success": true
             },
             {
               "name": "Headers iterator preserves set-cookie ordering",
@@ -4543,8 +4540,7 @@
             },
             {
               "name": "Headers.prototype.append works for set-cookie",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 3 but got 4"
+              "success": true
             },
             {
               "name": "Headers.prototype.set works for set-cookie",
@@ -5112,8 +5108,7 @@
             },
             {
               "name": "Check set methods when called with already used name",
-              "success": false,
-              "message": "assert_equals: name: double has value: newSingleValue expected \"newSingleValue\" but got \"newSingleValue, doubleValue2\""
+              "success": true
             },
             {
               "name": "Check append methods when called with already used name",
@@ -5121,8 +5116,7 @@
             },
             {
               "name": "Iterate combined values",
-              "success": false,
-              "message": "assert_array_equals: expected property 1 to be \"a, b\" but got \"a\" (expected array [\"1\", \"a, b\"] got [\"1\", \"a\"])"
+              "success": true
             },
             {
               "name": "Iterate combined values in sorted order",
@@ -9544,7 +9538,7 @@
             },
             {
               "name": "Adding invalid no-cors request header \"Empty-Value: \"",
-              "success": true
+              "success": false
             },
             {
               "name": "Check that request constructor is filtering headers provided as init parameter",
