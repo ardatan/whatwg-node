@@ -121,5 +121,21 @@ describe('Headers', () => {
       });
       expect(forEachEntries).toEqual(expected);
     });
+    it('keeps empty values when combining and after iteration', () => {
+      const combined = new PonyfillHeaders([
+        ['link', ''],
+        ['link', '<b>'],
+      ]);
+      expect(combined.get('link')).toBe(', <b>');
+      expect([...combined]).toEqual([['link', ', <b>']]);
+      expect(combined.get('link')).toBe(', <b>');
+
+      const empty = new PonyfillHeaders([['x-empty', '']]);
+      expect(empty.get('x-empty')).toBe('');
+      expect(empty.has('x-empty')).toBe(true);
+      expect([...empty]).toEqual([['x-empty', '']]);
+      expect(empty.get('x-empty')).toBe('');
+      expect(empty.has('x-empty')).toBe(true);
+    });
   });
 });

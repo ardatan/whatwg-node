@@ -23,7 +23,8 @@ export class PonyfillHeaders implements Headers {
     }
     // If the map is built, reuse it
     if (this._map) {
-      return this._map.get(normalized) || null;
+      const mapped = this._map.get(normalized);
+      return mapped === undefined ? null : mapped;
     }
 
     // If the map is not built, try to get the value from the this.headersInit
@@ -85,7 +86,10 @@ export class PonyfillHeaders implements Headers {
               continue;
             }
             const existingValue = this._map.get(normalizedKey);
-            this._map.set(normalizedKey, existingValue ? `${existingValue}, ${value}` : value);
+            this._map.set(
+              normalizedKey,
+              existingValue === undefined ? value : `${existingValue}, ${value}`,
+            );
           }
         } else if (isHeadersLike(this.headersInit)) {
           this._map = new Map();
@@ -143,7 +147,7 @@ export class PonyfillHeaders implements Headers {
       return;
     }
     const existingValue = this.getMap().get(key);
-    const finalValue = existingValue ? `${existingValue}, ${value}` : value;
+    const finalValue = existingValue === undefined ? value : `${existingValue}, ${value}`;
     this.getMap().set(key, finalValue);
   }
 
@@ -162,7 +166,7 @@ export class PonyfillHeaders implements Headers {
     if (key === 'set-cookie') {
       return !!this._setCookies?.length;
     }
-    return !!this._get(name); // we might need to check if header exists and not just check if it's not nullable
+    return this._get(name) !== null;
   }
 
   set(name: string, value: string): void {
