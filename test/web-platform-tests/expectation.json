@@ -4515,13 +4515,11 @@
             },
             {
               "name": "Headers iterator preserves per header ordering, but sorts keys alphabetically",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 5 but got 7"
+              "success": true
             },
             {
               "name": "Headers iterator preserves per header ordering, but sorts keys alphabetically (and ignores value ordering)",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 5 but got 7"
+              "success": true
             },
             {
               "name": "Headers iterator is correctly updated with set-cookie changes",
@@ -4544,13 +4542,11 @@
             },
             {
               "name": "Headers.prototype.set works for set-cookie",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 1 but got 3"
+              "success": true
             },
             {
               "name": "Headers.prototype.delete works for set-cookie",
-              "success": false,
-              "message": "assert_equals: Array length is not equal expected 0 but got 2"
+              "success": true
             },
             {
               "name": "Headers.prototype.getSetCookie with no headers present",
@@ -5044,13 +5040,11 @@
             },
             {
               "name": "Check Symbol.iterator method",
-              "success": false,
-              "message": "assert_equals: expected \"content-typ\" but got \"name1\""
+              "success": true
             },
             {
               "name": "Check forEach method",
-              "success": false,
-              "message": "assert_equals: expected \"content-typ\" but got \"name1\""
+              "success": true
             },
             {
               "name": "Iteration skips elements removed while iterating",
