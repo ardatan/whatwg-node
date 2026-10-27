@@ -148,6 +148,36 @@ describe('Headers', () => {
         ['2', 'a, b'],
       ]);
     });
+    it('iterates object-backed headers with appended cookies and case collisions', () => {
+      const headers = new PonyfillHeaders({
+        'X-Test': 'a',
+        'x-test': 'b',
+        z: '1',
+      } as Record<string, string>);
+      headers.append('set-cookie', 'a=1');
+      headers.append('set-cookie', 'b=2');
+      expect([...headers]).toEqual([
+        ['set-cookie', 'a=1'],
+        ['set-cookie', 'b=2'],
+        ['x-test', 'a, b'],
+        ['z', '1'],
+      ]);
+    });
+    it('skips headers deleted during forEach', () => {
+      const headers = new PonyfillHeaders([
+        ['a', '1'],
+        ['b', '2'],
+        ['c', '3'],
+      ]);
+      const seen: string[] = [];
+      headers.forEach((_value, key) => {
+        seen.push(key);
+        if (key === 'a') {
+          headers.delete('c');
+        }
+      });
+      expect(seen).toEqual(['a', 'b']);
+    });
     it('keeps set-cookie mutations after a later map build', () => {
       const replaced = new PonyfillHeaders([
         ['set-cookie', 'a=1'],

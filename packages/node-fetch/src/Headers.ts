@@ -209,49 +209,49 @@ export class PonyfillHeaders implements Headers {
 
     if (!this._map) {
       if (this.headersInit) {
+        const names: string[] = [];
+        const valuesByName = new Map<string, string[]>();
+        const addValue = (name: string, value: string) => {
+          let values = valuesByName.get(name);
+          if (!values) {
+            values = [];
+            valuesByName.set(name, values);
+            names.push(name);
+          }
+          values.push(value);
+        };
+
         if (isHeadersLike(this.headersInit)) {
-          const names: string[] = [];
-          const valuesByName = new Map<string, string[]>();
           this.headersInit.forEach((value, key) => {
-            const name = key.toLowerCase();
-            let values = valuesByName.get(name);
-            if (!values) {
-              values = [];
-              valuesByName.set(name, values);
-              names.push(name);
-            }
-            values.push(value);
+            addValue(key.toLowerCase(), value);
           });
-          names.sort();
-          for (const name of names) {
-            const values = valuesByName.get(name)!;
-            if (name === 'set-cookie') {
-              for (const value of values) {
-                yield [name, value];
-              }
-            } else {
-              yield [name, values.join(', ')];
+        } else {
+          const record = this.headersInit as Record<string, string>;
+          for (const key of Object.keys(record)) {
+            const value = record[key];
+            if (value != null) {
+              addValue(key.toLowerCase(), value);
             }
           }
-          return;
         }
 
-        const nameSet = new Set<string>();
-        for (const key of Object.keys(this.headersInit)) {
-          if (this.headersInit[key] != null) {
-            nameSet.add(key.toLowerCase());
+        // Appended cookies can exist without building the map (keeps writeHead fast path).
+        if (this._setCookies?.length) {
+          for (const cookie of this._setCookies) {
+            addValue('set-cookie', cookie);
           }
         }
-        const names = [...nameSet].sort();
+
+        names.sort();
         for (const name of names) {
+          const values = valuesByName.get(name)!;
           if (name === 'set-cookie') {
-            const value = this._get(name);
-            if (value != null) {
-              yield ['set-cookie', value];
+            for (const value of values) {
+              yield [name, value];
             }
-            continue;
+          } else {
+            yield [name, values.join(', ')];
           }
-          yield [name, this._get(name)!];
         }
         return;
       }
@@ -271,12 +271,19 @@ export class PonyfillHeaders implements Headers {
     names.sort();
     for (const name of names) {
       if (name === 'set-cookie') {
-        for (const cookie of this._setCookies!) {
+        if (!this._setCookies?.length) {
+          continue;
+        }
+        for (const cookie of this._setCookies) {
           yield ['set-cookie', cookie];
         }
         continue;
       }
-      yield [name, this._map.get(name)!];
+      const value = this._map.get(name);
+      if (value === undefined) {
+        continue;
+      }
+      yield [name, value];
     }
   }
 
