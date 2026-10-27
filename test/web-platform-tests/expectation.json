@@ -9540,7 +9540,7 @@
             },
             {
               "name": "Adding invalid no-cors request header \"Empty-Value: \"",
-              "success": true
+              "success": false
             },
             {
               "name": "Check that request constructor is filtering headers provided as init parameter",
