@@ -1,5 +1,31 @@
 # @whatwg-node/node-fetch
 
+## 0.9.3
+
+### Patch Changes
+
+- [#3738](https://github.com/ardatan/whatwg-node/pull/3738)
+  [`10f0d28`](https://github.com/ardatan/whatwg-node/commit/10f0d284bd2c6aee81979cd5a7da4a89fe300b9b)
+  Thanks [@wleeaf](https://github.com/wleeaf)! - Skip a leading UTF-8 byte order
+  mark in `text()` and `json()`, as UTF-8 decode does. A JSON body that starts
+  with a byte order mark made `json()` throw a `SyntaxError`.
+
+- [#3746](https://github.com/ardatan/whatwg-node/pull/3746)
+  [`2a37f7d`](https://github.com/ardatan/whatwg-node/commit/2a37f7d78f6764cc7d2776c71af2c75528256178)
+  Thanks [@ardatan](https://github.com/ardatan)! - Sort header names when
+  iterating, per Fetch sort-and-combine. Repeated names stay combined, and
+  `set-cookie` values stay separate in sorted name order.
+
+- [`84f7f2e`](https://github.com/ardatan/whatwg-node/commit/84f7f2ecc9a033e508284276b1ff0d4cd1cee373)
+  Thanks [@wleeaf](https://github.com/wleeaf)! - Keep every value of a header
+  name that is repeated in a sequence passed to `Headers`.
+
+  Changing, adding or deleting another header kept only the last value of the
+  name, `set()` replaced only the first value, and iteration returned the pairs
+  as given instead of one combined entry with a lowercase name. A server
+  response built with `[["link", "<a>"], ["link", "<b>"]]` was sent with
+  `link: <b>` only.
+
 ## 0.9.2
 
 ### Patch Changes
