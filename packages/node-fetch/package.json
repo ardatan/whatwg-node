@@ -37,7 +37,7 @@
     "@fastify/busboy": "^3.2.3",
     "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/promise-helpers": "^2.0.0",
-    "tslib": "^2.6.3"
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
     "@types/pem": "^1.14.0",

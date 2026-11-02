@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@whatwg-node/cookie-store": "^0.3.0",
-    "tslib": "^2.6.3"
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
     "@whatwg-node/server": "^0.13.0"
