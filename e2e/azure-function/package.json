@@ -12,7 +12,7 @@
   "dependencies": {
     "@azure/functions": "^4.16.4",
     "@e2e/shared-scripts": "0.0.0",
-    "tslib": "^2.6.3"
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
     "@pulumi/azure-native": "3.29.0",

@@ -38,7 +38,7 @@
     "@whatwg-node/disposablestack": "^0.1.0",
     "@whatwg-node/fetch": "^0.12.0",
     "@whatwg-node/promise-helpers": "^2.0.0",
-    "tslib": "^2.6.3"
+    "tslib": "^2.9.1"
   },
   "devDependencies": {
     "@hapi/hapi": "21.4.12",
