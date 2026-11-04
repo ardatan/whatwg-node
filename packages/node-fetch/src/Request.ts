@@ -80,7 +80,7 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     this.priority = 'auto';
 
     if (this.method !== 'GET' && this.method !== 'HEAD') {
-      this.handleContentLengthHeader(true);
+      this.handleContentLengthHeader(true, true);
     }
 
     if (requestInit?.agent != null) {

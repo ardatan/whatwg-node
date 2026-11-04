@@ -135,8 +135,12 @@ export function getRequestFromUWSRequest({
     getReadableStream = createChunkReadableStream;
   }
   const headers = new fetchAPI.Headers();
+  let clientContentLength: string | null = null;
   req.forEach((key, value) => {
     headers.append(key, value);
+    if (key.toLowerCase() === 'content-length') {
+      clientContentLength = value;
+    }
   });
   let url = `http://localhost${req.getUrl()}`;
   const query = req.getQuery();
@@ -154,6 +158,12 @@ export function getRequestFromUWSRequest({
     // @ts-ignore - not in the TS types yet
     duplex,
   });
+  // Ponyfill Request force-sets `Content-Length: 0` when init has no body. uWS attaches the
+  // real body later via accessors, so that synthetic 0 would make nested reads (e.g. formData)
+  // fail Content-Length enforcement. Only keep Content-Length when the client sent it.
+  if (clientContentLength == null) {
+    headers.delete('content-length');
+  }
   function getBufferFromChunks(): Buffer<ArrayBuffer> {
     if (!buffer) {
       buffer = chunks.length === 1 ? chunks[0] : Buffer.concat(chunks);

@@ -1,6 +1,7 @@
 export { fetchPonyfill as fetch } from './fetch.js';
 export { PonyfillHeaders as Headers } from './Headers.js';
 export { PonyfillBody as Body } from './Body.js';
+export { ContentLengthMismatchError } from './ContentLengthMismatchError.js';
 export { PonyfillRequest as Request, type RequestPonyfillInit as RequestInit } from './Request.js';
 export {
   PonyfillResponse as Response,
