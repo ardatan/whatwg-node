@@ -59,12 +59,13 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
-      jest:
+      jest-babel:
         patterns:
           - '@jest/*'
           - 'jest'
           - 'ts-jest'
           - 'babel-jest'
+          - '@babel/*'
         update-types:
           - 'major'
           - 'minor'
@@ -72,13 +73,6 @@ updates:
       pulumi:
         patterns:
           - '@pulumi/*'
-        update-types:
-          - 'major'
-          - 'minor'
-          - 'patch'
-      babel:
-        patterns:
-          - '@babel/*'
         update-types:
           - 'major'
           - 'minor'
