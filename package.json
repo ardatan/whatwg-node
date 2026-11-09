@@ -60,7 +60,7 @@
     "babel-jest": "30.4.1",
     "bob-the-bundler": "7.0.1",
     "bun": "1.4.4",
-    "cookie": "2.0.1",
+    "cookie": "2.0.2",
     "deno": "2.9.6",
     "eslint": "10.14.0",
     "eslint-config-prettier": "10.1.8",
@@ -87,7 +87,7 @@
   },
   "overrides": {
     "@pulumi/pulumi": "3.274.1",
-    "cookie": "2.0.1",
+    "cookie": "2.0.2",
     "esbuild": "0.28.2",
     "glob": "14.0.3",
     "lodash": "4.18.1",
