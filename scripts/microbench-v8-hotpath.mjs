@@ -397,15 +397,15 @@ const bodyCachedProxy = pairedRun(
 );
 
 const bodyProxy = pairedRun(
-  `body facade allocate+getReader N=${N_BODY}`,
-  'Proxy per access',
+  `body facade vs shipped cached Proxy N=${N_BODY}`,
+  'cached Proxy (shipped)',
   'cached plain facade',
   () => {
     const pony = makePonyfillLike();
     const readable = makeReadableLike();
+    const body = bodyViaProxy(pony, readable);
     let sink = 0;
     for (let i = 0; i < N_BODY; i++) {
-      const body = bodyViaProxy(pony, readable);
       sink += touch(body).length;
     }
     return sink;
@@ -463,7 +463,8 @@ verdict('fakePromise class+prototype (then)', fakeThen, 10);
 // Correctness-preserving uWS copy rarely wins enough to ship (~5% noise).
 verdict('uWS allocUnsafe+set vs double from', bufCopy, 25);
 verdict('Body cached Proxy vs Proxy per access', bodyCachedProxy, 20);
-verdict('Body cached facade vs Proxy', bodyProxy, 20);
+// Facade must beat the shipped cached Proxy, not a fresh Proxy-per-access baseline.
+verdict('Body cached facade vs cached Proxy', bodyProxy, 20);
 verdict('Body plain facade vs Proxy (fresh)', bodyProxyFresh, 10);
 
 const keep = verdicts.filter(v => v.win);

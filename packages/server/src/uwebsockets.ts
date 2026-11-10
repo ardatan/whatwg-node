@@ -123,7 +123,11 @@ export function getRequestFromUWSRequest({
             streamCtrl.error(controller.signal.reason);
             return;
           }
-          if (streamCtrl.desiredSize) {
+          // desiredSize is 0 when a chunk is queued and unread; still close so
+          // readers observe end after draining. null means already closed/errored.
+          // Skipping empty final onData chunks (byteLength === 0) used to rely on
+          // enqueueing an empty Buffer to make desiredSize truthy - that path is gone.
+          if (streamCtrl.desiredSize != null) {
             streamCtrl.close();
           }
         });
