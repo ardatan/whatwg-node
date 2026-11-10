@@ -82,13 +82,21 @@ export function getRequestFromUWSRequest({
   // so empty-body completion still marks `stopped` for text/json helpers), then
   // {@link discardUnreadUWSRequestBody} can stop retaining chunks if unused.
   let discarding = false;
-  // bodyHeld: body was obtained or a consumer was attached — skip unread discard.
-  // bodyConsumed: Fetch `bodyUsed` — true only after a body method runs or a stream is locked.
+  // bodyHeld: body was obtained or a consumer was attached - skip unread discard.
+  // bodyConsumed: Fetch `bodyUsed` - true only after a body method runs or a stream is locked.
   let bodyHeld = false;
   let bodyConsumed = false;
 
   res.onData(function (ab, isLast) {
-    if (!discarding && !stopped) {
+    if (!discarding && !stopped && ab.byteLength > 0) {
+      // uWS neuters the ArrayBuffer when onData returns (see HttpResponse.onData
+      // in uWebSockets.js). `Buffer.from(ab)` is only a view and is corrupt for
+      // any chunk retained past the callback - confirmed with multi-chunk POSTs
+      // (view-only keeps ~0 / partial length). Inner Buffer.from creates the
+      // view; outer Buffer.from copies bytes into an owned Buffer.
+      // Interleaved e2e on the same server: copyBytesFrom / allocUnsafe+set /
+      // onDataV2 (same chunk retain) stayed within noise; collectBody can be
+      // faster for whole-body collect but cannot feed a streaming Request body.
       push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
     }
     if (isLast) {
