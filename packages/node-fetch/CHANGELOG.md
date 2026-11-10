@@ -1,5 +1,20 @@
 # @whatwg-node/node-fetch
 
+## 0.9.4
+
+### Patch Changes
+
+- [#3793](https://github.com/ardatan/whatwg-node/pull/3793)
+  [`f778c82`](https://github.com/ardatan/whatwg-node/commit/f778c82583d5ef0c88e580ba67e94567008d3f43)
+  Thanks [@ardatan](https://github.com/ardatan)! - Cache the `body` Proxy while
+  the underlying Node readable is unchanged.
+
+  Repeated `body` accesses no longer allocate a fresh Proxy (and method binds)
+  on every get when the generated stream identity is stable.
+- Updated dependencies
+  [[`f778c82`](https://github.com/ardatan/whatwg-node/commit/f778c82583d5ef0c88e580ba67e94567008d3f43)]:
+  - @whatwg-node/promise-helpers@2.0.2
+
 ## 0.9.3
 
 ### Patch Changes

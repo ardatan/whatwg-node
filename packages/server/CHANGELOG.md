@@ -1,5 +1,24 @@
 # @whatwg-node/server
 
+## 0.13.3
+
+### Patch Changes
+
+- [#3793](https://github.com/ardatan/whatwg-node/pull/3793)
+  [`f778c82`](https://github.com/ardatan/whatwg-node/commit/f778c82583d5ef0c88e580ba67e94567008d3f43)
+  Thanks [@ardatan](https://github.com/ardatan)! - Skip empty uWS `onData`
+  chunks and close request body streams safely when a chunk is queued or
+  canceled.
+
+  Final empty upload callbacks no longer allocate a zero-length Buffer. Closing
+  uses `desiredSize != null` so readers still see end-of-stream after draining a
+  queued chunk (`desiredSize === 0`). Canceling a body stream removes its
+  push/stop callbacks so a later final `onData` cannot `close()` a canceled
+  controller and leave clones hung.
+- Updated dependencies
+  [[`f778c82`](https://github.com/ardatan/whatwg-node/commit/f778c82583d5ef0c88e580ba67e94567008d3f43)]:
+  - @whatwg-node/promise-helpers@2.0.2
+
 ## 0.13.2
 
 ### Patch Changes
