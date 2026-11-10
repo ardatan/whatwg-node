@@ -106,6 +106,8 @@ export function getRequestFromUWSRequest({
   });
 
   function createChunkReadableStream(): ReadableStream {
+    let pushFn: ((chunk: Buffer) => void) | undefined;
+    let stopFn: (() => void) | undefined;
     return new fetchAPI.ReadableStream({
       start(streamCtrl) {
         for (const chunk of chunks) {
@@ -115,22 +117,44 @@ export function getRequestFromUWSRequest({
           streamCtrl.close();
           return;
         }
-        pushFns.push((chunk: Buffer) => {
+        pushFn = (chunk: Buffer) => {
           streamCtrl.enqueue(chunk);
-        });
-        stopFns.push(() => {
+        };
+        stopFn = () => {
           if (controller.signal.reason) {
             streamCtrl.error(controller.signal.reason);
             return;
           }
           // desiredSize is 0 when a chunk is queued and unread; still close so
           // readers observe end after draining. null means already closed/errored.
-          // Skipping empty final onData chunks (byteLength === 0) used to rely on
-          // enqueueing an empty Buffer to make desiredSize truthy - that path is gone.
+          // After cancel(), platforms often leave desiredSize at 0 (not null) and
+          // close() throws - cancel() below removes this stopFn first.
           if (streamCtrl.desiredSize != null) {
-            streamCtrl.close();
+            try {
+              streamCtrl.close();
+            } catch {
+              // Already closed or canceled.
+            }
           }
-        });
+        };
+        pushFns.push(pushFn);
+        stopFns.push(stopFn);
+      },
+      cancel() {
+        // Drop this stream's callbacks so a later final onData / stop() cannot
+        // close() a canceled controller (and abort remaining stopFns, e.g. clones).
+        if (pushFn) {
+          const i = pushFns.indexOf(pushFn);
+          if (i !== -1) {
+            pushFns.splice(i, 1);
+          }
+        }
+        if (stopFn) {
+          const i = stopFns.indexOf(stopFn);
+          if (i !== -1) {
+            stopFns.splice(i, 1);
+          }
+        }
       },
     });
   }
