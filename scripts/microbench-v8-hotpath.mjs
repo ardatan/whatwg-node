@@ -31,32 +31,43 @@ function formatMb(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 }
 
+function measureOnce(fn, retain) {
+  gc();
+  const before = heapUsed();
+  const t0 = performance.now();
+  const retained = fn();
+  const dt = performance.now() - t0;
+  const after = heapUsed();
+  if (!retain && Array.isArray(retained)) retained.length = 0;
+  return { dt, heap: Math.max(0, after - before) };
+}
+
 function pairedRun(name, aLabel, bLabel, aFn, bFn, { runs = 7, retain = false } = {}) {
   const aElapsed = [];
   const bElapsed = [];
   const aHeap = [];
   const bHeap = [];
+  const order = [];
 
   for (let i = 0; i < runs; i++) {
-    gc();
-    const beforeA = heapUsed();
-    const t0 = performance.now();
-    const retainedA = aFn();
-    const elapsedA = performance.now() - t0;
-    const afterA = heapUsed();
-    aElapsed.push(elapsedA);
-    aHeap.push(Math.max(0, afterA - beforeA));
-    if (!retain && Array.isArray(retainedA)) retainedA.length = 0;
-
-    gc();
-    const beforeB = heapUsed();
-    const t1 = performance.now();
-    const retainedB = bFn();
-    const elapsedB = performance.now() - t1;
-    const afterB = heapUsed();
-    bElapsed.push(elapsedB);
-    bHeap.push(Math.max(0, afterB - beforeB));
-    if (!retain && Array.isArray(retainedB)) retainedB.length = 0;
+    // Alternate A/B so allocator / JIT warm-up from one side does not bias every sample.
+    const aFirst = i % 2 === 0;
+    order.push(aFirst ? 'AB' : 'BA');
+    if (aFirst) {
+      const a = measureOnce(aFn, retain);
+      aElapsed.push(a.dt);
+      aHeap.push(a.heap);
+      const b = measureOnce(bFn, retain);
+      bElapsed.push(b.dt);
+      bHeap.push(b.heap);
+    } else {
+      const b = measureOnce(bFn, retain);
+      bElapsed.push(b.dt);
+      bHeap.push(b.heap);
+      const a = measureOnce(aFn, retain);
+      aElapsed.push(a.dt);
+      aHeap.push(a.heap);
+    }
   }
 
   const aMedE = median(aElapsed);
@@ -70,8 +81,9 @@ function pairedRun(name, aLabel, bLabel, aFn, bFn, { runs = 7, retain = false } 
   console.log(
     `| Variant | Median elapsed | Median heap delta |\n| --- | ---: | ---: |\n| ${aLabel} | ${formatMs(aMedE)} | ${formatMb(aMedH)} |\n| ${bLabel} | ${formatMs(bMedE)} | ${formatMb(bMedH)} |\n| Improvement | ${eImp.toFixed(1)}% | ${hImp.toFixed(1)}% |`,
   );
+  console.log(`order: ${order.join(' ')}`);
 
-  return { aMedE, bMedE, aMedH, bMedH, eImp, hImp };
+  return { aMedE, bMedE, aMedH, bMedH, eImp, hImp, order };
 }
 
 // --- fakePromise: object literal vs prototype class ---
@@ -352,6 +364,38 @@ function bodyViaCachedFacade(ponyfill, readable) {
 
 const N_BODY = 200_000;
 
+/** Sink so property reads cannot be DCE'd away by V8. */
+function touch(body) {
+  return typeof body.getReader;
+}
+
+const bodyCachedProxy = pairedRun(
+  `body Proxy allocate+getReader N=${N_BODY}`,
+  'Proxy per access',
+  'cached Proxy (shipped)',
+  () => {
+    const pony = makePonyfillLike();
+    const readable = makeReadableLike();
+    let sink = 0;
+    for (let i = 0; i < N_BODY; i++) {
+      const body = bodyViaProxy(pony, readable);
+      sink += touch(body).length;
+    }
+    return sink;
+  },
+  () => {
+    const pony = makePonyfillLike();
+    const readable = makeReadableLike();
+    // Matches Body.ts: build the Proxy once, reuse while the readable is unchanged.
+    const body = bodyViaProxy(pony, readable);
+    let sink = 0;
+    for (let i = 0; i < N_BODY; i++) {
+      sink += touch(body).length;
+    }
+    return sink;
+  },
+);
+
 const bodyProxy = pairedRun(
   `body facade allocate+getReader N=${N_BODY}`,
   'Proxy per access',
@@ -359,19 +403,22 @@ const bodyProxy = pairedRun(
   () => {
     const pony = makePonyfillLike();
     const readable = makeReadableLike();
+    let sink = 0;
     for (let i = 0; i < N_BODY; i++) {
       const body = bodyViaProxy(pony, readable);
-      body.getReader;
+      sink += touch(body).length;
     }
+    return sink;
   },
   () => {
     const pony = makePonyfillLike();
     const readable = makeReadableLike();
-    // Cache once, reuse - what we'd do if Body.body memoized
     const body = bodyViaCachedFacade(pony, readable);
+    let sink = 0;
     for (let i = 0; i < N_BODY; i++) {
-      body.getReader;
+      sink += touch(body).length;
     }
+    return sink;
   },
 );
 
@@ -382,18 +429,22 @@ const bodyProxyFresh = pairedRun(
   () => {
     const pony = makePonyfillLike();
     const readable = makeReadableLike();
+    let sink = 0;
     for (let i = 0; i < N_BODY; i++) {
       const body = bodyViaProxy(pony, readable);
-      body.getReader;
+      sink += touch(body).length;
     }
+    return sink;
   },
   () => {
     const pony = makePonyfillLike();
     const readable = makeReadableLike();
+    let sink = 0;
     for (let i = 0; i < N_BODY; i++) {
       const body = bodyViaCachedFacade(pony, readable);
-      body.getReader;
+      sink += touch(body).length;
     }
+    return sink;
   },
 );
 
@@ -411,6 +462,7 @@ verdict('fakePromise class+prototype (alloc)', fakeAlloc, 15);
 verdict('fakePromise class+prototype (then)', fakeThen, 10);
 // Correctness-preserving uWS copy rarely wins enough to ship (~5% noise).
 verdict('uWS allocUnsafe+set vs double from', bufCopy, 25);
+verdict('Body cached Proxy vs Proxy per access', bodyCachedProxy, 20);
 verdict('Body cached facade vs Proxy', bodyProxy, 20);
 verdict('Body plain facade vs Proxy (fresh)', bodyProxyFresh, 10);
 

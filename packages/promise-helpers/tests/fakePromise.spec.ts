@@ -26,5 +26,6 @@ it('shares prototype methods across rejected fake promises', async () => {
   const b = fakeRejectPromise(new Error('b'));
   expect(Object.getPrototypeOf(a)).toBe(Object.getPrototypeOf(b));
   expect(Object.prototype.toString.call(a)).toBe('[object Promise]');
-  await expect(a).rejects.toThrow('a');
+  // Bun's expect().rejects only accepts native Promise; adopt via Promise.resolve.
+  await expect(Promise.resolve(a)).rejects.toThrow('a');
 });
