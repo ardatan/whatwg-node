@@ -1,5 +1,19 @@
 # @whatwg-node/promise-helpers
 
+## 2.0.2
+
+### Patch Changes
+
+- [#3793](https://github.com/ardatan/whatwg-node/pull/3793)
+  [`f778c82`](https://github.com/ardatan/whatwg-node/commit/f778c82583d5ef0c88e580ba67e94567008d3f43)
+  Thanks [@ardatan](https://github.com/ardatan)! - Use shared prototype classes
+  for `fakePromise` / `fakeRejectPromise` instances.
+
+  Resolved and rejected fake promises (and foreign-thenable wrappers) are no
+  longer allocated as object literals with own `then`/`catch`/`finally` methods.
+  A shared constructor keeps a stable V8 hidden class while preserving the same
+  brand (`Symbol.for`) and unwrapping behavior.
+
 ## 2.0.1
 
 ### Patch Changes
