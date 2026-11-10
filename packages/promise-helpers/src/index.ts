@@ -71,6 +71,149 @@ export function handleMaybePromise<TInput, TOutput>(
   return unfakePromise(fakePromise(input).then(outputSuccessFactory, outputErrorFactory));
 }
 
+/**
+ * Resolved fake-promise instances share one hidden class: methods live on the
+ * prototype instead of as own properties of a fresh object literal each call.
+ */
+class FakePromise<T = unknown> implements Promise<T> {
+  __fakePromiseValue: T;
+  // Brand checked by unfakePromise / isFakePromise
+  [kFakePromise]: 'resolved';
+
+  constructor(value: T) {
+    this.__fakePromiseValue = value;
+    this[kFakePromise] = 'resolved';
+  }
+
+  then<TResult1 = T, TResult2 = never>(
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+    _onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2> {
+    if (onfulfilled) {
+      try {
+        return fakePromise(onfulfilled(this.__fakePromiseValue)) as Promise<TResult1 | TResult2>;
+      } catch (err) {
+        return fakeRejectPromise(err);
+      }
+    }
+    return this as unknown as Promise<TResult1 | TResult2>;
+  }
+
+  catch<TResult = never>(
+    _onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+  ): Promise<T | TResult> {
+    return this as unknown as Promise<T | TResult>;
+  }
+
+  finally(onfinally?: (() => void) | null): Promise<T> {
+    if (onfinally) {
+      try {
+        const value = this.__fakePromiseValue;
+        return fakePromise(onfinally()).then(
+          () => value,
+          () => value,
+        ) as Promise<T>;
+      } catch (err) {
+        return fakeRejectPromise(err);
+      }
+    }
+    return this;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Promise';
+  }
+}
+
+/**
+ * Rejected fake-promise instances - same shared-prototype rationale as
+ * {@link FakePromise}.
+ */
+class FakeRejectPromise<T = never> implements Promise<T> {
+  __fakeRejectError: unknown;
+  [kFakePromise]: 'rejected';
+
+  constructor(error: unknown) {
+    this.__fakeRejectError = error;
+    this[kFakePromise] = 'rejected';
+  }
+
+  then<TResult1 = T, TResult2 = never>(
+    _onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2> {
+    if (onrejected) {
+      try {
+        return fakePromise(onrejected(this.__fakeRejectError)) as Promise<TResult1 | TResult2>;
+      } catch (err) {
+        return fakeRejectPromise(err);
+      }
+    }
+    return this as unknown as Promise<TResult1 | TResult2>;
+  }
+
+  catch<TResult = never>(
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+  ): Promise<T | TResult> {
+    if (onrejected) {
+      try {
+        return fakePromise(onrejected(this.__fakeRejectError)) as Promise<T | TResult>;
+      } catch (err) {
+        return fakeRejectPromise(err);
+      }
+    }
+    return this as unknown as Promise<T | TResult>;
+  }
+
+  finally(onfinally?: (() => void) | null): Promise<T> {
+    if (onfinally) {
+      try {
+        onfinally();
+      } catch (err) {
+        return fakeRejectPromise(err);
+      }
+    }
+    return this;
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Promise';
+  }
+}
+
+/**
+ * Thin wrapper around a foreign thenable so method shapes stay on a shared
+ * prototype (same V8 rationale as {@link FakePromise}).
+ */
+class ThenableFakePromise<T = unknown> implements Promise<T> {
+  private _thenable: PromiseLike<T>;
+
+  constructor(thenable: PromiseLike<T>) {
+    this._thenable = thenable;
+  }
+
+  then<TResult1 = T, TResult2 = never>(
+    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+  ): Promise<TResult1 | TResult2> {
+    return fakePromise(this._thenable.then(onfulfilled, onrejected));
+  }
+
+  catch<TResult = never>(
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+  ): Promise<T | TResult> {
+    return fakePromise(this._thenable.then(res => res, onrejected));
+  }
+
+  finally(onfinally?: (() => void) | null): Promise<T> {
+    return fakePromise(onfinally ? promiseLikeFinally(this._thenable, onfinally) : this._thenable);
+  }
+
+  get [Symbol.toStringTag]() {
+    return 'Promise';
+  }
+}
+
 export function fakePromise<T>(value: MaybePromise<T>): Promise<T>;
 export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T>;
 export function fakePromise(value: void): Promise<void>;
@@ -80,47 +223,12 @@ export function fakePromise<T>(value: MaybePromiseLike<T>): Promise<T> {
   }
 
   if (isPromise(value)) {
-    return {
-      then: (resolve, reject) => fakePromise(value.then(resolve, reject)),
-      catch: reject => fakePromise(value.then(res => res, reject)),
-      finally: cb => fakePromise(cb ? promiseLikeFinally(value, cb) : value),
-      [Symbol.toStringTag]: 'Promise',
-    };
+    return new ThenableFakePromise(value) as Promise<T>;
   }
 
-  // Write a fake promise to avoid the promise constructor
-  // being called with `new Promise` in the browser.
-  return {
-    then(resolve) {
-      if (resolve) {
-        try {
-          return fakePromise(resolve(value));
-        } catch (err) {
-          return fakeRejectPromise(err);
-        }
-      }
-      return this;
-    },
-    catch() {
-      return this;
-    },
-    finally(cb) {
-      if (cb) {
-        try {
-          return fakePromise(cb()).then(
-            () => value,
-            () => value,
-          );
-        } catch (err) {
-          return fakeRejectPromise(err);
-        }
-      }
-      return this;
-    },
-    [Symbol.toStringTag]: 'Promise',
-    __fakePromiseValue: value,
-    [kFakePromise]: 'resolved',
-  } as Promise<T>;
+  // Avoid `new Promise` for already-resolved values; shared prototype keeps a
+  // stable V8 hidden class across hot sync call sites.
+  return new FakePromise(value as T) as Promise<T>;
 }
 
 export interface DeferredPromise<T = void> {
@@ -194,41 +302,7 @@ export function iterateAsync<TInput, TOutput>(
 }
 
 export function fakeRejectPromise<T>(error: unknown): Promise<T> {
-  return {
-    then(_resolve, reject) {
-      if (reject) {
-        try {
-          return fakePromise(reject(error));
-        } catch (err) {
-          return fakeRejectPromise(err);
-        }
-      }
-      return this;
-    },
-    catch(reject: (error: unknown) => any) {
-      if (reject) {
-        try {
-          return fakePromise(reject(error));
-        } catch (err) {
-          return fakeRejectPromise(err);
-        }
-      }
-      return this;
-    },
-    finally(cb) {
-      if (cb) {
-        try {
-          cb();
-        } catch (err) {
-          return fakeRejectPromise(err);
-        }
-      }
-      return this;
-    },
-    __fakeRejectError: error,
-    [Symbol.toStringTag]: 'Promise',
-    [kFakePromise]: 'rejected',
-  } as Promise<never>;
+  return new FakeRejectPromise(error) as Promise<T>;
 }
 
 /**
