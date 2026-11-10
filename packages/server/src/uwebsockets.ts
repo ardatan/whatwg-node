@@ -95,8 +95,9 @@ export function getRequestFromUWSRequest({
       // (view-only keeps ~0 / partial length). Inner Buffer.from creates the
       // view; outer Buffer.from copies bytes into an owned Buffer.
       // Interleaved e2e on the same server: copyBytesFrom / allocUnsafe+set /
-      // onDataV2 (same chunk retain) stayed within noise; collectBody can be
-      // faster for whole-body collect but cannot feed a streaming Request body.
+      // onDataV2 stayed within noise. collectBody also neuters on return; with
+      // an owned copy (required after await for json/text) it is not reliably
+      // faster than onData, and it cannot stream request.body.
       push(Buffer.from(Buffer.from(ab, 0, ab.byteLength)));
     }
     if (isLast) {
