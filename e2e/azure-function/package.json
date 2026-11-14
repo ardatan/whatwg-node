@@ -10,7 +10,7 @@
     "start": "func start"
   },
   "dependencies": {
-    "@azure/functions": "^4.16.4",
+    "@azure/functions": "^4.17.1",
     "@e2e/shared-scripts": "0.0.0",
     "tslib": "^2.9.1"
   },
