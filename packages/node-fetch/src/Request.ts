@@ -26,6 +26,20 @@ function isURL(obj: any): obj is URL {
   return obj?.href != null;
 }
 
+const inheritedRequestInitKeys = [
+  'agent',
+  'cache',
+  'credentials',
+  'duplex',
+  'headersSerializer',
+  'integrity',
+  'keepalive',
+  'method',
+  'mode',
+  'redirect',
+  'signal',
+] as const;
+
 export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements Request {
   constructor(input: RequestInfo | URL, options?: RequestPonyfillInit) {
     let _url: string | undefined;
@@ -50,8 +64,37 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
     }
 
     if (options != null) {
-      bodyInit = options.body || null;
-      requestInit = options;
+      if (requestInit) {
+        // Members that `init` leaves out keep the input request's values
+        const inputRequest = requestInit as Record<string, unknown>;
+        const mergedInit: Record<string, unknown> = { ...options };
+        for (const key of inheritedRequestInitKeys) {
+          if (mergedInit[key] === undefined) {
+            mergedInit[key] = inputRequest[key];
+          }
+        }
+        const inputBody = bodyInit;
+        const method = (mergedInit['method'] as string | undefined)?.toUpperCase();
+        if (options.body != null) {
+          bodyInit = options.body;
+        } else if (method === 'GET' || method === 'HEAD') {
+          bodyInit = null;
+        }
+        if (options.headers === undefined) {
+          const headers = new PonyfillHeaders(
+            Array.from(inputRequest['headers'] as Iterable<[string, string]>),
+          );
+          // The input's Content-Length describes its body, not a replaced or dropped one
+          if (bodyInit !== inputBody) {
+            headers.delete('content-length');
+          }
+          mergedInit['headers'] = headers;
+        }
+        requestInit = mergedInit as RequestPonyfillInit;
+      } else {
+        bodyInit = options.body || null;
+        requestInit = options;
+      }
     }
 
     super(bodyInit, requestInit);
