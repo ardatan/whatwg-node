@@ -68,8 +68,16 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
         // Members that `init` leaves out keep the input request's values
         const inputRequest = requestInit as Record<string, unknown>;
         const mergedInit: Record<string, unknown> = { ...options };
+        const initMembers = options as Record<string, unknown>;
         for (const key of inheritedRequestInitKeys) {
-          if (mergedInit[key] === undefined) {
+          // Read through property access so members defined as getters (e.g. on a Request) count
+          const value = initMembers[key];
+          if (value !== undefined) {
+            mergedInit[key] = value;
+          } else if (key === 'signal' && input instanceof PonyfillRequest) {
+            // Avoid the `signal` getter, which would create a signal on the input request
+            mergedInit[key] = input._signal;
+          } else {
             mergedInit[key] = inputRequest[key];
           }
         }

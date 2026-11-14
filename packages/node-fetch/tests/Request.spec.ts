@@ -69,6 +69,20 @@ describe('Request', () => {
     expect(copy.signal.aborted).toBe(true);
   });
 
+  it('should use the members of a Request passed as init', () => {
+    const inputController = new AbortController();
+    const initController = new AbortController();
+    const input = new PonyfillRequest('http://a', { signal: inputController.signal });
+    const init = new PonyfillRequest('http://b', {
+      method: 'PUT',
+      signal: initController.signal,
+    });
+    const copy = new PonyfillRequest(input, init);
+    expect(copy.method).toBe('PUT');
+    initController.abort();
+    expect(copy.signal.aborted).toBe(true);
+  });
+
   it('should recompute Content-Length when init replaces the body', async () => {
     const original = new PonyfillRequest('http://a', { method: 'POST', body: 'payload' });
     const copy = new PonyfillRequest(original, { body: 'a much longer body' });
