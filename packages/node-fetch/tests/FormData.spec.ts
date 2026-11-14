@@ -1,6 +1,9 @@
 import { Blob as NodeBlob } from 'node:buffer';
+import { createServer } from 'node:http';
+import { AddressInfo } from 'node:net';
 import { describe, expect, it } from '@jest/globals';
 import { PonyfillBlob } from '../src/Blob.js';
+import { fetchPonyfill } from '../src/fetch.js';
 import { PonyfillFile } from '../src/File.js';
 import { PonyfillFormData } from '../src/FormData.js';
 import { PonyfillRequest } from '../src/Request.js';
@@ -186,4 +189,62 @@ describe('Form Data', () => {
       expect(requestText).toContain(`Hello world!`);
     });
   }
+
+  it('keeps every value of a repeated urlencoded field', async () => {
+    const req = new PonyfillRequest('http://a', {
+      method: 'POST',
+      body: 'tag=a&tag=b&tag=c',
+      headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    });
+    expect((await req.formData()).getAll('tag')).toEqual(['a', 'b', 'c']);
+  });
+
+  it('keeps every value of a repeated multipart field and file', async () => {
+    const formData = new PonyfillFormData();
+    formData.append('tag', 'a');
+    formData.append('tag', 'b');
+    formData.append('file', new PonyfillFile(['1'], 'one.txt'));
+    formData.append('file', new PonyfillFile(['2'], 'two.txt'));
+    const encoded = new PonyfillResponse(formData);
+    const parsed = await new PonyfillResponse(await encoded.arrayBuffer(), {
+      headers: { 'content-type': encoded.headers.get('content-type')! },
+    }).formData();
+    expect(parsed.getAll('tag')).toEqual(['a', 'b']);
+    expect(parsed.getAll('file').map(file => (file as File).name)).toEqual(['one.txt', 'two.txt']);
+  });
+
+  it('reads a URLSearchParams body as text', async () => {
+    const res = new PonyfillResponse(new PonyfillURLSearchParams({ a: '1 2' }));
+    expect(await res.text()).toBe('a=1+2');
+    expect(
+      await new PonyfillResponse(new PonyfillURLSearchParams({ b: '3' }))
+        .blob()
+        .then(blob => blob.text()),
+    ).toBe('b=3');
+    expect(
+      new PonyfillRequest('http://a', {
+        method: 'POST',
+        body: new PonyfillURLSearchParams({ a: '1 2' }),
+      }).headers.get('content-length'),
+    ).toBe('5');
+  });
+
+  it('sends a URLSearchParams request body', async () => {
+    const server = createServer((req, res) => {
+      const chunks: Buffer[] = [];
+      req.on('data', chunk => chunks.push(chunk));
+      req.on('end', () => res.end(Buffer.concat(chunks)));
+    });
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    try {
+      const { port } = server.address() as AddressInfo;
+      const res = await fetchPonyfill(`http://127.0.0.1:${port}`, {
+        method: 'POST',
+        body: new PonyfillURLSearchParams({ a: '1 2' }),
+      });
+      expect(await res.text()).toBe('a=1+2');
+    } finally {
+      server.close();
+    }
+  });
 });
