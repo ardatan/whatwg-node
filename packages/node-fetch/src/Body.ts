@@ -297,6 +297,15 @@ export class PonyfillBody<TJSON = any> implements Body {
         addAbortSignal(this._signal, bb);
       }
 
+      // A file is ready only when its stream closes, which can be after later fields, so entries
+      // keep the slot of their part and are appended once every earlier part is ready
+      const entries: ((() => void) | undefined)[] = [];
+      let appended = 0;
+      const appendReadyEntries = () => {
+        while (appended < entries.length && entries[appended]) {
+          entries[appended++]!();
+        }
+      };
       let completed = false;
       const complete = (err: unknown) => {
         if (completed) return;
@@ -332,11 +341,13 @@ export class PonyfillBody<TJSON = any> implements Body {
             new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`),
           );
         }
-        this._formData!.append(name, value);
+        entries.push(() => this._formData!.append(name, value));
+        appendReadyEntries();
       });
 
       bb.on('file', (name, fileStream, filename, _transferEncoding, mimeType) => {
         currFile = fileStream;
+        const index = entries.push(undefined) - 1;
         const chunks: BlobPart[] = [];
         fileStream.on('data', chunk => {
           chunks.push(chunk);
@@ -351,7 +362,8 @@ export class PonyfillBody<TJSON = any> implements Body {
           }
           currFile = null;
           const file = new PonyfillFile(chunks, filename, { type: mimeType });
-          this._formData!.append(name, file);
+          entries[index] = () => this._formData!.append(name, file);
+          appendReadyEntries();
         });
       });
 

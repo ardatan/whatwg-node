@@ -213,6 +213,31 @@ describe('Form Data', () => {
     expect(parsed.getAll('file').map(file => (file as File).name)).toEqual(['one.txt', 'two.txt']);
   });
 
+  it('keeps multipart entries with the same name in part order', async () => {
+    const boundary = 'boundary';
+    const body = [
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="entry"; filename="first.txt"',
+      'Content-Type: text/plain',
+      '',
+      'file',
+      `--${boundary}`,
+      'Content-Disposition: form-data; name="entry"',
+      '',
+      'text',
+      `--${boundary}--`,
+      '',
+    ].join('\r\n');
+    const parsed = await new PonyfillResponse(body, {
+      headers: { 'content-type': `multipart/form-data; boundary=${boundary}` },
+    }).formData();
+    const entries = parsed.getAll('entry');
+    expect(entries.map(entry => (typeof entry === 'string' ? entry : entry.name))).toEqual([
+      'first.txt',
+      'text',
+    ]);
+  });
+
   it('reads a URLSearchParams body as text', async () => {
     const res = new PonyfillResponse(new PonyfillURLSearchParams({ a: '1 2' }));
     expect(await res.text()).toBe('a=1+2');
