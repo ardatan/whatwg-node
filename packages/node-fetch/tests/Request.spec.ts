@@ -83,6 +83,22 @@ describe('Request', () => {
     expect(copy.signal.aborted).toBe(true);
   });
 
+  it('should read init members defined as getters', () => {
+    const input = new PonyfillRequest('http://a', { headers: { 'x-input': '1' } });
+    const init = Object.create({
+      get headers() {
+        return { 'x-init': '2' };
+      },
+      get referrer() {
+        return 'http://referrer/';
+      },
+    });
+    const copy = new PonyfillRequest(input, init);
+    expect(copy.headers.get('x-init')).toBe('2');
+    expect(copy.headers.get('x-input')).toBeNull();
+    expect(copy.referrer).toBe('http://referrer/');
+  });
+
   it('should recompute Content-Length when init replaces the body', async () => {
     const original = new PonyfillRequest('http://a', { method: 'POST', body: 'payload' });
     const copy = new PonyfillRequest(original, { body: 'a much longer body' });

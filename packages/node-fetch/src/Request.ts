@@ -81,6 +81,11 @@ export class PonyfillRequest<TJSON = any> extends PonyfillBody<TJSON> implements
             mergedInit[key] = inputRequest[key];
           }
         }
+        for (const key of ['headers', 'referrer', 'referrerPolicy'] as const) {
+          if (initMembers[key] !== undefined) {
+            mergedInit[key] = initMembers[key];
+          }
+        }
         const inputBody = bodyInit;
         const method = (mergedInit['method'] as string | undefined)?.toUpperCase();
         if (options.body != null) {
