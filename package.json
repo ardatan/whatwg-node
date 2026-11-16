@@ -62,7 +62,7 @@
     "bun": "1.4.4",
     "cookie": "2.0.2",
     "deno": "2.9.6",
-    "eslint": "10.14.0",
+    "eslint": "10.15.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-config-standard": "17.1.0",
     "eslint-plugin-import": "2.32.0",
@@ -96,7 +96,7 @@
       "sharp": "0.35.5"
     },
     "next": {
-      "postcss": "8.5.32"
+      "postcss": "8.5.33"
     },
     "qs": "6.17.1",
     "sharp": "0.35.5",
