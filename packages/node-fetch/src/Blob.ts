@@ -116,30 +116,28 @@ export class PonyfillBlob implements Blob {
     }
 
     const jobs: Promise<void>[] = [];
-    const bufferChunks: Buffer[] = this.blobParts.map((blobPart, i) => {
+    const bufferChunks: Buffer[] = [];
+    this.blobParts.forEach((blobPart, i) => {
       if (hasBufferMethod(blobPart)) {
         jobs.push(
           blobPart.buffer().then(buf => {
             bufferChunks[i] = buf;
           }),
         );
-        return undefined as any;
       } else if (hasArrayBufferMethod(blobPart)) {
         jobs.push(
           blobPart.arrayBuffer().then(arrayBuf => {
             bufferChunks[i] = Buffer.from(arrayBuf, undefined, blobPart.size);
           }),
         );
-        return undefined as any;
       } else if (hasBytesMethod(blobPart)) {
         jobs.push(
           blobPart.bytes().then(bytes => {
             bufferChunks[i] = Buffer.from(bytes);
           }),
         );
-        return undefined as any;
       } else {
-        return getBlobPartAsBuffer(blobPart);
+        bufferChunks[i] = getBlobPartAsBuffer(blobPart);
       }
     });
     if (jobs.length > 0) {

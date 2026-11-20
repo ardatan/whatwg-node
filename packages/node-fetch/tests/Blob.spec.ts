@@ -92,4 +92,9 @@ describe('Blob', () => {
     }
     expect(Buffer.concat(chunks).toString());
   });
+
+  it('reads a blob made from another blob', async () => {
+    const blob = new PonyfillBlob(['ab', new PonyfillBlob(['cd'])]);
+    expect(await blob.text()).toBe('abcd');
+  });
 });
