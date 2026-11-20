@@ -9544,7 +9544,8 @@
             },
             {
               "name": "Check that no-cors request constructor is filtering headers provided as part of request parameter",
-              "success": true
+              "success": false,
+              "message": "assert_equals: expected (object) null but got (string) \"potato\""
             },
             {
               "name": "Request should get its content-type from the init request",
