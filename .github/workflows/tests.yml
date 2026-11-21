@@ -79,19 +79,29 @@ jobs:
         with:
           install-command: bash scripts/ci-npm-install.sh
           node-version: ${{ matrix.node-version }}
-      - name: Cache npm, Jest, and Puppeteer
+      # Cache only Puppeteer Chrome. ~/.npm is already cached by setup-node via
+      # shared-config/setup; bundling it here duplicated hundreds of MB per
+      # node/PR/lockfile and blew past the 10GB Actions cache quota.
+      # Key on the puppeteer version only so unrelated lockfile bumps do not
+      # create a fresh multi-hundred-MB Chrome cache entry.
+      - name: Resolve Puppeteer version
+        id: puppeteer
+        run: |
+          echo "version=$(node -p "require('./package.json').dependencies.puppeteer")" >> "$GITHUB_OUTPUT"
+      - name: Cache Puppeteer Chrome
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
-          path: |
-            ~/.npm
-            .cache/jest
-            ~/.cache/puppeteer
+          path: ~/.cache/puppeteer
+          key: ${{ runner.os }}-puppeteer-${{ steps.puppeteer.outputs.version }}
+      - name: Cache Jest
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache/jest
           key: >-
-            ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-puppeteer-${{
+            ${{ runner.os }}-${{ matrix.node-version }}-jest-${{
             hashFiles('package-lock.json') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-puppeteer-
-            ${{ runner.os }}-${{ matrix.node-version }}-npm-jest-
+            ${{ runner.os }}-${{ matrix.node-version }}-jest-
       - name: Install Puppeteer Chrome
         run: npx puppeteer browsers install chrome
       - parallel:

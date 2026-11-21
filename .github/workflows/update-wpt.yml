@@ -76,6 +76,7 @@ jobs:
         with:
           name: wpt-refresh
           path: /tmp/wpt-refresh
+          retention-days: 3
 
   open-pr:
     name: open bump PR
