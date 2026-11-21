@@ -71,6 +71,9 @@ jobs:
           name: wpt-expectation
           path: test/web-platform-tests/expectation.json
           if-no-files-found: ignore
+          # Only needed to bridge the WPT job → commit job (or briefly for
+          # local rebase). Default 90d retention accumulated 600+ copies.
+          retention-days: 3
 
   # Separate job so the WPT run (untrusted upstream scripts) stays read-only.
   # Only same-repo PRs can be pushed to. A regression still fails `wpt` and
