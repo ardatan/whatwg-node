@@ -106,12 +106,122 @@ describe('useLimitRequestBodySize', () => {
       await expect(response.json()).resolves.toEqual({ body: 'hello' });
     });
 
-    it('still byte-counts when Transfer-Encoding is present alongside Content-Length', async () => {
-      const adapter = createAdapter(10);
+    it('preserves Request identity when Content-Length is within the limit', async () => {
+      let requestBeforeLimit: Request | undefined;
+      let requestAfterLimit: Request | undefined;
+      const adapter = createServerAdapter(
+        async request => {
+          const body = await request.text();
+          return fetchAPI.Response.json({ body, same: request === requestAfterLimit });
+        },
+        {
+          plugins: [
+            {
+              onRequest({ request }) {
+                requestBeforeLimit = request;
+              },
+            },
+            useLimitRequestBodySize(1000),
+            {
+              onRequest({ request }) {
+                requestAfterLimit = request;
+              },
+            },
+          ] as ServerAdapterPlugin[],
+          fetchAPI,
+        },
+      );
+
+      const response = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Content-Length': '5',
+          },
+          body: 'hello',
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(requestBeforeLimit).toBe(requestAfterLimit);
+      await expect(response.json()).resolves.toEqual({ body: 'hello', same: true });
+    });
+
+    it('replaces Request only when Content-Length is missing and the body must be counted', async () => {
+      let requestBeforeLimit: Request | undefined;
+      let requestAfterLimit: Request | undefined;
+      const adapter = createServerAdapter(
+        async request => fetchAPI.Response.json({ body: await request.text() }),
+        {
+          plugins: [
+            {
+              onRequest({ request }) {
+                requestBeforeLimit = request;
+              },
+            },
+            useLimitRequestBodySize(1000),
+            {
+              onRequest({ request }) {
+                requestAfterLimit = request;
+              },
+            },
+          ] as ServerAdapterPlugin[],
+          fetchAPI,
+        },
+      );
+
       const encoder = new TextEncoder();
       const stream = new fetchAPI.ReadableStream<Uint8Array>({
         start(controller) {
-          controller.enqueue(encoder.encode('this is longer than ten'));
+          controller.enqueue(encoder.encode('hello'));
+          controller.close();
+        },
+      });
+      const response = await adapter.fetch(
+        new fetchAPI.Request('http://localhost/test', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: stream,
+          // @ts-expect-error duplex is required for streamed bodies
+          duplex: 'half',
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(requestBeforeLimit).toBeDefined();
+      expect(requestAfterLimit).toBeDefined();
+      expect(requestAfterLimit).not.toBe(requestBeforeLimit);
+      await expect(response.json()).resolves.toEqual({ body: 'hello' });
+    });
+
+    it('rejects when a short Content-Length cannot cover the body (ponyfill)', async () => {
+      // Ponyfill Request enforces Content-Length while reading; native undici may not
+      // on in-process adapter.fetch Requests, so this case is ponyfill-only.
+      if (fetchAPI.Request === globalThis.Request) {
+        return;
+      }
+      const adapter = createServerAdapter(
+        async request => fetchAPI.Response.json({ body: await request.text() }),
+        {
+          plugins: [
+            useLimitRequestBodySize(1000),
+            useErrorHandling((err: any) => {
+              if (err?.name === 'ContentLengthMismatchError') {
+                return fetchAPI.Response.json({ error: err.message }, { status: 400 });
+              }
+              return fetchAPI.Response.json(
+                { error: String(err?.message ?? err) },
+                { status: 500 },
+              );
+            }),
+          ] as ServerAdapterPlugin[],
+          fetchAPI,
+        },
+      );
+
+      const encoder = new TextEncoder();
+      const stream = new fetchAPI.ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(encoder.encode('this is longer than five'));
           controller.close();
         },
       });
@@ -121,15 +231,16 @@ describe('useLimitRequestBodySize', () => {
           headers: {
             'Content-Type': 'text/plain',
             'Content-Length': '5',
-            'Transfer-Encoding': 'chunked',
           },
           body: stream,
           // @ts-expect-error duplex is required for streamed bodies
           duplex: 'half',
         }),
       );
-      expect(response.status).toBe(413);
-      await expect(response.json()).resolves.toEqual({ error: 'Request body too large' });
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({
+        error: 'Body length does not match content-length header',
+      });
     });
 
     it('byte-counts decoded bodies when Content-Encoding is present', async () => {

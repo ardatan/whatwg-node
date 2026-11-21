@@ -33,12 +33,17 @@ export function useContentEncoding<TServerContext>(): ServerAdapterPlugin<TServe
           for (const contentEncoding of contentEncodings) {
             newBody = request.body.pipeThrough(new fetchAPI.DecompressionStream(contentEncoding));
           }
+          // Decoded bytes no longer match the wire Content-Length; drop it so
+          // downstream limiters count the decompressed stream instead of trusting
+          // the compressed size.
+          const headers = new fetchAPI.Headers(request.headers);
+          headers.delete('content-length');
           setRequest(
             new fetchAPI.Request(request.url, {
               body: newBody,
               cache: request.cache,
               credentials: request.credentials,
-              headers: request.headers,
+              headers,
               integrity: request.integrity,
               keepalive: request.keepalive,
               method: request.method,
