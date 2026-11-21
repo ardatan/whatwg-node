@@ -25,8 +25,9 @@ jobs:
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const keepRef = 'refs/heads/master';
-            let deleted = 0;
-            let kept = 0;
+            // Collect every page first. Deleting while paginating shifts later
+            // entries onto earlier page numbers and can skip eligible caches.
+            const caches = [];
             let page = 1;
             for (;;) {
               const { data } = await github.rest.actions.getActionsCacheList({
@@ -35,22 +36,25 @@ jobs:
                 per_page: 100,
                 page,
               });
-              const caches = data.actions_caches || [];
-              if (caches.length === 0) break;
-              for (const cache of caches) {
-                if (cache.ref === keepRef) {
-                  kept++;
-                  continue;
-                }
-                await github.rest.actions.deleteActionsCacheById({
-                  owner,
-                  repo,
-                  cache_id: cache.id,
-                });
-                deleted++;
-                core.info(`Deleted cache ${cache.id} (${cache.key}) ref=${cache.ref}`);
-              }
-              if (caches.length < 100) break;
+              const batch = data.actions_caches || [];
+              if (batch.length === 0) break;
+              caches.push(...batch);
+              if (batch.length < 100) break;
               page++;
+            }
+            let deleted = 0;
+            let kept = 0;
+            for (const cache of caches) {
+              if (cache.ref === keepRef) {
+                kept++;
+                continue;
+              }
+              await github.rest.actions.deleteActionsCacheById({
+                owner,
+                repo,
+                cache_id: cache.id,
+              });
+              deleted++;
+              core.info(`Deleted cache ${cache.id} (${cache.key}) ref=${cache.ref}`);
             }
             core.info(`Done. deleted=${deleted} kept=${kept}`);

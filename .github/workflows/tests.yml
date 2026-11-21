@@ -87,7 +87,7 @@ jobs:
       - name: Resolve Puppeteer version
         id: puppeteer
         run: |
-          echo "version=$(node -p "require('./package.json').dependencies.puppeteer")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').devDependencies.puppeteer")" >> "$GITHUB_OUTPUT"
       - name: Cache Puppeteer Chrome
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
