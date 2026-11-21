@@ -98,8 +98,7 @@ jobs:
         with:
           path: .cache/jest
           key: >-
-            ${{ runner.os }}-${{ matrix.node-version }}-jest-${{
-            hashFiles('package-lock.json') }}
+            ${{ runner.os }}-${{ matrix.node-version }}-jest-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.node-version }}-jest-
       - name: Install Puppeteer Chrome
