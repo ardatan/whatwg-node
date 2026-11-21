@@ -1,17 +1,15 @@
 name: cleanup-actions-storage
 
-# Three complementary prunes for Actions cache storage:
-# 1) pull_request closed: drop caches for that PR's refs
+# 1) pull_request_target closed: drop caches for that PR's refs (works for forks)
 # 2) schedule / workflow_dispatch: drop every non-default-branch cache
 # 3) push (lockfile/package.json) or workflow_dispatch: on the default branch,
 #    drop lockfile-keyed caches that no longer match the current lockfile hash
 
 on:
   schedule:
-    # Weekly Monday 05:00 UTC
     - cron: '0 5 * * 1'
   workflow_dispatch:
-  pull_request:
+  pull_request_target:
     types: [closed]
   push:
     branches: [master]
@@ -28,9 +26,11 @@ jobs:
     name: prune Actions caches
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout default branch
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
 
       - name: Resolve current cache fingerprints
         id: meta
@@ -46,6 +46,7 @@ jobs:
           DEFAULT_BRANCH: master
           PR_NUMBER: ${{ github.event.pull_request.number || '' }}
           HEAD_REF: ${{ github.head_ref || '' }}
+          SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           LOCK_HASH: ${{ steps.meta.outputs.lock_hash || '' }}
           PUPPETEER_VERSION: ${{ steps.meta.outputs.puppeteer || '' }}
         with:
@@ -58,8 +59,6 @@ jobs:
             const puppeteerVersion = process.env.PUPPETEER_VERSION || '';
 
             async function listAllCaches() {
-              // Collect every page before deleting. Deleting while paginating
-              // shifts later entries onto earlier pages and can skip caches.
               const caches = [];
               let page = 1;
               for (;;) {
@@ -79,12 +78,21 @@ jobs:
             }
 
             async function deleteCache(cache) {
-              await github.rest.actions.deleteActionsCacheById({
-                owner,
-                repo,
-                cache_id: cache.id,
-              });
-              core.info(`Deleted id=${cache.id} key=${cache.key} ref=${cache.ref}`);
+              try {
+                await github.rest.actions.deleteActionsCacheById({
+                  owner,
+                  repo,
+                  cache_id: cache.id,
+                });
+                core.info(`Deleted id=${cache.id} key=${cache.key} ref=${cache.ref}`);
+                return 'deleted';
+              } catch (error) {
+                if (error.status === 404) {
+                  core.info(`Already gone id=${cache.id} key=${cache.key} ref=${cache.ref}`);
+                  return 'already-gone';
+                }
+                throw error;
+              }
             }
 
             function isCurrentDefaultBranchCache(cache) {
@@ -93,7 +101,6 @@ jobs:
                 return true;
               }
               if (cache.key.startsWith('codeql-')) return true;
-              // Keep keys that are not lockfile-hash based (no sha256 hex).
               if (!/[a-f0-9]{64}/i.test(cache.key)) return true;
               return false;
             }
@@ -102,14 +109,19 @@ jobs:
             let deleted = 0;
             let kept = 0;
 
-            if (eventName === 'pull_request') {
+            if (eventName === 'pull_request_target' || eventName === 'pull_request') {
               const n = process.env.PR_NUMBER;
               const headRef = process.env.HEAD_REF;
+              const sameRepo = process.env.SAME_REPO === 'true';
               const targets = new Set([
                 `refs/pull/${n}/merge`,
                 `refs/pull/${n}/head`,
               ]);
-              if (headRef) targets.add(`refs/heads/${headRef}`);
+              // Never target the default branch. Only delete a head branch ref
+              // for same-repo PRs (fork head branches are not on this repo).
+              if (sameRepo && headRef && `refs/heads/${headRef}` !== keepRef) {
+                targets.add(`refs/heads/${headRef}`);
+              }
 
               core.info(`PR closed: deleting caches for ${[...targets].join(', ')}`);
               for (const cache of caches) {
@@ -134,9 +146,7 @@ jobs:
               }
 
               if (eventName === 'push' || eventName === 'workflow_dispatch') {
-                core.info(
-                  `Pruning stale default-branch caches (lock_hash=${lockHash || 'none'}, puppeteer=${puppeteerVersion || 'none'})`,
-                );
+                core.info(`Pruning stale default-branch caches (lock_hash=${lockHash || 'none'})`);
                 for (const cache of caches) {
                   if (cache.ref !== keepRef) continue;
                   if (isCurrentDefaultBranchCache(cache)) {
