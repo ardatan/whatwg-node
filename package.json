@@ -81,7 +81,7 @@
     "rimraf": "6.1.4",
     "tar": "7.5.23",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "undici": "8.12.4",
+    "undici": "8.13.1",
     "vite-tsconfig-paths": "6.1.1",
     "vitest": "5.1.1"
   },
@@ -92,7 +92,7 @@
     "glob": "14.0.6",
     "lodash": "4.18.1",
     "miniflare": {
-      "undici": "8.12.4",
+      "undici": "8.13.1",
       "sharp": "0.35.5"
     },
     "next": {
@@ -102,7 +102,7 @@
     "sharp": "0.35.5",
     "tar": "7.5.23",
     "tmp": "0.2.7",
-    "undici": "8.12.4",
+    "undici": "8.13.1",
     "vite": "8.3.8"
   },
   "allowScripts": {
