@@ -41,15 +41,21 @@ function defaultResponseFromError(error: HTTPError, fetchAPI: FetchAPI) {
 /**
  * Limits the size of incoming HTTP request bodies.
  *
- * Requests whose `Content-Length` exceeds `limit` (or whose `Content-Length` is invalid) are
- * rejected early via `endResponse`. Bodies are also counted while streaming (via
- * `TransformStream`), including when `Content-Length` is missing, wrong, or overridden — so a
- * short `Content-Length` cannot bypass the limit. `Transfer-Encoding` and `Content-Encoding`
- * cases are covered by the same byte counter.
+ * When `Content-Length` is present and valid, the limit is applied from that header alone and the
+ * `Request` identity is left unchanged. `@whatwg-node/node-fetch` enforces that the body cannot
+ * deliver more bytes than `Content-Length` while it is being read (fail-fast on excess), so a
+ * short `Content-Length` cannot bypass the limit on the ponyfill path. On Node's HTTP parser the
+ * body is already framed to `Content-Length`, so the same trust holds for native `Request`s built
+ * from `IncomingMessage`.
  *
- * When using `useContentEncoding`, register it **before** this plugin so the byte counter sees
- * decoded bytes. `onRequest` hooks run in `plugins` array order; the reverse order would count
- * compressed size and then allow decompression past `limit`.
+ * When `Content-Length` is missing (e.g. chunked transfer), bodies are counted while streaming via
+ * `TransformStream` (which replaces the `Request`). `Transfer-Encoding` / `Content-Encoding` cases
+ * without a usable length fall into that path.
+ *
+ * When using `useContentEncoding`, register it **before** this plugin so a missing
+ * `Content-Length` after decoding is still byte-counted on decoded bytes. `onRequest` hooks run in
+ * `plugins` array order; the reverse order would count compressed size and then allow decompression
+ * past `limit`.
  *
  * To disable limiting, omit this plugin from the adapter.
  */
@@ -77,6 +83,8 @@ export function useLimitRequestBodySize<TServerContext = {}>(
           endResponse(responseFromError(new RequestBodyTooLargeError(), fetchAPI));
           return;
         }
+        // Content-Length is within the limit. Trust it — do not replace the Request.
+        return;
       }
 
       if (!request.body) {
