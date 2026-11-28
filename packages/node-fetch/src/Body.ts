@@ -56,13 +56,17 @@ export class PonyfillBody<TJSON = any> implements Body {
     private bodyInit: BodyPonyfillInit | null,
     private options: PonyfillBodyOptions = {},
   ) {
-    const { bodyFactory, contentType, contentLength, bodyType, buffer } = processBodyInit(bodyInit);
+    const { bodyFactory, contentType, contentLength, bodyType, buffer, text } =
+      processBodyInit(bodyInit);
     this._bodyFactory = bodyFactory;
     this.contentType = contentType;
     this.contentLength = contentLength;
     this.bodyType = bodyType;
     this._buffer = buffer;
     this._signal = options.signal;
+    if (text != null) {
+      this.bodyInit = text;
+    }
   }
 
   private bodyType?: BodyInitType | undefined;
@@ -293,6 +297,15 @@ export class PonyfillBody<TJSON = any> implements Body {
         addAbortSignal(this._signal, bb);
       }
 
+      // A file is ready only when its stream closes, which can be after later fields, so entries
+      // keep the slot of their part and are appended once every earlier part is ready
+      const entries: ((() => void) | undefined)[] = [];
+      let appended = 0;
+      const appendReadyEntries = () => {
+        while (appended < entries.length && entries[appended]) {
+          entries[appended++]!();
+        }
+      };
       let completed = false;
       const complete = (err: unknown) => {
         if (completed) return;
@@ -328,11 +341,13 @@ export class PonyfillBody<TJSON = any> implements Body {
             new Error(`Field value size exceeded: ${formDataLimits?.fieldSize} bytes`),
           );
         }
-        this._formData!.set(name, value);
+        entries.push(() => this._formData!.append(name, value));
+        appendReadyEntries();
       });
 
       bb.on('file', (name, fileStream, filename, _transferEncoding, mimeType) => {
         currFile = fileStream;
+        const index = entries.push(undefined) - 1;
         const chunks: BlobPart[] = [];
         fileStream.on('data', chunk => {
           chunks.push(chunk);
@@ -347,7 +362,8 @@ export class PonyfillBody<TJSON = any> implements Body {
           }
           currFile = null;
           const file = new PonyfillFile(chunks, filename, { type: mimeType });
-          this._formData!.set(name, file);
+          entries[index] = () => this._formData!.append(name, file);
+          appendReadyEntries();
         });
       });
 
@@ -471,6 +487,7 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
   contentType: string | null;
   contentLength: number | null;
   buffer?: Buffer<ArrayBuffer>;
+  text?: string;
   bodyFactory(): PonyfillReadableStream<Uint8Array> | null;
 } {
   if (bodyInit == null) {
@@ -569,15 +586,11 @@ function processBodyInit(bodyInit: BodyPonyfillInit | null): {
     };
   }
   if (isURLSearchParams(bodyInit)) {
-    const contentType = 'application/x-www-form-urlencoded;charset=UTF-8';
+    const text = bodyInit.toString();
     return {
-      bodyType: BodyInitType.String,
-      contentType,
-      contentLength: null,
-      bodyFactory() {
-        const body = new PonyfillReadableStream<Uint8Array>(Readable.from(bodyInit.toString()));
-        return body;
-      },
+      ...processBodyInit(text),
+      contentType: 'application/x-www-form-urlencoded;charset=UTF-8',
+      text,
     };
   }
   if (isFormData(bodyInit)) {
